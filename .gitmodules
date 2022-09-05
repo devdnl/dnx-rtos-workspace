@@ -4,3 +4,6 @@
 [submodule "system"]
 	path = system
 	url = git@bitbucket.org:devdnl/dnx-rtos-os.git
+[submodule "tools/configtool"]
+	path = tools/configtool
+	url = git@bitbucket.org:devdnl/configtool.git
