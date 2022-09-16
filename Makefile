@@ -29,7 +29,9 @@
 # FILE AND DIRECTORY NAMES
 #---------------------------------------------------------------------------------------------------
 # defines project path with binaries
-TARGET_DIR_NAME = build 
+TARGET_DIR_NAME = build
+TOOLCHAIN = arm-none-eabi-
+PROJNAME = project
 
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
@@ -76,11 +78,17 @@ THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
 ####################################################################################################
 .PHONY : all
 all : system appset
+	@$(MKDIR) $(TARGET_DIR_NAME)
+	@$(CAT) system/build/output/dnx.elf > $(TARGET_DIR_NAME)/$(PROJNAME).elf
+	@$(OBJCOPY) --dump-section .text=$(TARGET_DIR_NAME)/appset.text appset/build/output/appset.elf
+	@$(OBJCOPY) --add-section .text.appset=$(TARGET_DIR_NAME)/appset.text build/$(PROJNAME).elf
+	@$(OBJCOPY) --change-section-address .text.appset=0x8010000 $(TARGET_DIR_NAME)/$(PROJNAME).elf
 
 .PHONY : clean
 clean :
 	@$(MAKE) -C system -s -j 1 -fMakefile clean
 	@$(MAKE) -C appset -s -j 1 -fMakefile clean
+	@$(RM) -r $(TARGET_DIR_NAME)
 
 .PHONY : system
 system :
