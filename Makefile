@@ -38,31 +38,21 @@ PROJNAME = project
 #---------------------------------------------------------------------------------------------------
 SHELL      = /bin/bash
 ECHO       = /bin/echo -e
-RM         = /bin/rm -f
+REMOVE     = /bin/rm -f
+COPY       = /bin/cp -r
+RENAME     = /bin/mv
 MKDIR      = /bin/mkdir -p
-DATE       = /bin/date
 CAT        = /bin/cat
 GREP       = /bin/grep
-UNAME      = /bin/uname -s
 SIZEOF     = /usr/bin/stat -c %s
-MKDEP      = /usr/bin/makedepend
 WC         = /usr/bin/wc
 PYTHON3    = /usr/bin/python3
-CC         = $(TOOLCHAIN)gcc
-CXX        = $(TOOLCHAIN)g++
-LD         = $(TOOLCHAIN)g++
-AS         = $(TOOLCHAIN)gcc -x assembler-with-cpp
-AR         = $(TOOLCHAIN)ar
+PYTHON2    = /usr/bin/python2
 OBJCOPY    = $(TOOLCHAIN)objcopy
 OBJDUMP    = $(TOOLCHAIN)objdump
 SIZE       = $(TOOLCHAIN)size
 CONFIGTOOL = ./tools/configtool.sh
 FLASH_CPU  = ./tools/flash.sh
-RESET_CPU  = ./tools/reset.sh
-GIT_HOOKS  = ./tools/apply_git_hooks.sh
-DOXYGEN    = ./tools/doxygen.sh
-RELEASEPKG = ./tools/releasepkg.sh
-RUNGENS    = ./tools/rungens.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -82,21 +72,34 @@ all : system appset
 	@$(CAT) system/build/output/dnx.elf > $(TARGET_DIR_NAME)/$(PROJNAME).elf
 	@$(OBJCOPY) --dump-section .text=$(TARGET_DIR_NAME)/appset.text appset/build/output/appset.elf
 	@$(OBJCOPY) --add-section .text.appset=$(TARGET_DIR_NAME)/appset.text build/$(PROJNAME).elf
+	@$(REMOVE) $(TARGET_DIR_NAME)/appset.text
 	@$(OBJCOPY) --change-section-address .text.appset=0x8010000 $(TARGET_DIR_NAME)/$(PROJNAME).elf
 
 .PHONY : clean
 clean :
+	@if [ -d system/config-default ]; then $(REMOVE) -rf system/config; $(RENAME) -f system/config-default system/config; fi
+	@if [ -d appset/config-default ]; then $(REMOVE) -rf appset/config; $(RENAME) -f appset/config-default appset/config; fi
 	@$(MAKE) -C system -s -j 1 -fMakefile clean
 	@$(MAKE) -C appset -s -j 1 -fMakefile clean
-	@$(RM) -r $(TARGET_DIR_NAME)
+	@$(REMOVE) -r $(TARGET_DIR_NAME)
 
 .PHONY : system
 system :
+	@if [ -d system/config-default ]; then $(REMOVE) -rf system/config; $(RENAME) -f system/config-default system/config; fi
+	@$(RENAME) system/config system/config-default
+	@$(COPY) config/system system/config
 	@$(MAKE) -C system -s -j 1 -fMakefile all
+	@$(REMOVE) -rf system/config
+	@$(RENAME) system/config-default system/config
 
 .PHONY : appset
 appset :
+	@if [ -d appset/config-default ]; then $(REMOVE) -rf appset/config; $(RENAME) -f appset/config-default appset/config; fi
+	@$(RENAME) appset/config appset/config-default
+	@$(COPY) config/appset appset/config
 	@$(MAKE) -C appset -s -j 1 -fMakefile all
+	@$(REMOVE) -rf appset/config
+	@$(RENAME) appset/config-default appset/config
 
 .PHONY : install
 install : install-system install-appset
@@ -108,7 +111,11 @@ install-system :
 .PHONY : install-appset
 install-appset :
 	@$(MAKE) -C appset -s -j 1 -fMakefile install
-	
+
+.PHONY : config
+config :
+	@$(CONFIGTOOL)
+
 .PHONY : config-system
 config-system :
 	@$(CONFIGTOOL) ../../system/config/config.h
@@ -116,7 +123,7 @@ config-system :
 .PHONY : config-appset
 config-appset :
 	@$(CONFIGTOOL) ../../appset/config/config.h
-	
+
 ####################################################################################################
 # help
 ####################################################################################################
@@ -132,6 +139,7 @@ help :
 	@$(ECHO) "   install             install (flash) all build files"
 	@$(ECHO) "   install-system      install (flash) system files"
 	@$(ECHO) "   install-appset      install (flash) appset files"
+	@$(ECHO) "   config              start configurator"
 	@$(ECHO) "   config-system       system configuration"
 	@$(ECHO) "   config-appset       appset configuration"
 	@$(ECHO) ""
