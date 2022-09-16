@@ -102,7 +102,8 @@ appset :
 	@$(RENAME) appset/config-default appset/config
 
 .PHONY : install
-install : install-system install-appset
+install :
+	@$(FLASH_CPU)
 
 .PHONY : install-system
 install-system :
