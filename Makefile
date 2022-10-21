@@ -124,6 +124,14 @@ config-system :
 .PHONY : config-appset
 config-appset :
 	@$(CONFIGTOOL) ../../appset/config/config.h
+	
+.PHONY : appset-rungens
+appset-rungens :
+	@$(MAKE) -C appset -s -j 1 -fMakefile rungens
+
+.PHONY : system-rungens
+system-rungens :
+	@$(MAKE) -C system -s -j 1 -fMakefile rungens
 
 ####################################################################################################
 # help
