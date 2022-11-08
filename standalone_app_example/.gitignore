@@ -1,0 +1,13 @@
+build/
+*.o
+*.lst
+*.d
+*.bak
+*.bin
+*.hex
+*.elf
+*.*~
+*.toc
+*.out
+*.log
+*.aux
