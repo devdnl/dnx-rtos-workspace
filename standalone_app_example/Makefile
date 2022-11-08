@@ -313,20 +313,13 @@ config : clean apply_git_hooks
 ####################################################################################################
 # analisis
 ####################################################################################################
-.PHONY : check checkprog quickcheck appsyntaxcheck
+.PHONY : check quickcheck
 check :
 	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 \
 	              --enable=warning,style,performance,portability,information,missingInclude \
 	              --force --inconclusive \
 	              --include=./config/project/flags.h \
 	              $(SEARCHPATH) $(CSRC) $(CXXSRC)
-
-checkprog :
-	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 --enable=warning,style,missingInclude \
-	              --inconclusive \
-	              -DCOMPILE_EPOCH_TIME=0 \
-	              $(SEARCHPATH)\
-	              $(foreach file, $(CSRC_PROGRAMS),$(APP_PRG_LOC)/$(file))
 
 quickcheck :
 	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 \
@@ -356,7 +349,7 @@ hex :
 	@$(ECHO) 'Creating objects size list...'
 	@$(SIZE) -B -t --common $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).size
 
-	@$(ECHO) 'Creating executable file...'
+	@$(ECHO) 'Creating dnx RTOS executable file...'
 	@$(SHELL) $(MKEXE) $(TARGET_PATH)/$(PROJECT) 1 $(TARGET_PATH)/$(PROJECT)
 
 	@$(ECHO) "Application size: $$($(SIZEOF) $(TARGET_PATH)/$(PROJECT)) bytes\n"
@@ -382,7 +375,7 @@ generate :
 	@$(MKDIR) $(TARGET_PATH)
 
 	@$(MKDIR) $(GEN_PROG_DIR)
-	@$(ECHO) "Adding user's programs and libraries to the project..."
+	@$(ECHO) "Adding program and libraries to the project..."
 	@$(SHELL) $(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR)
 
 	@$(ECHO) "Obtaining git hash..."
@@ -413,25 +406,7 @@ dependencies :
 .PHONY : linkobjects
 linkobjects :
 	@$(ECHO) "Linking..."
-	@#$(LD) $(TARGET_PATH)/$(PROJECT).a $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
 	@$(LD) $(OBJECTS_ALL) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
-
-####################################################################################################
-# create objects archive
-####################################################################################################
-buildarchive :
-	@$(ECHO) "Archiving..."
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_ASRC)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CSRC_PROGRAMS)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CSRC_LIB)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CSRC_CORE)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CSRC_NOARCH)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CSRC_ARCH)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CXXSRC_PROGRAMS)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CXXSRC_LIB)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CXXSRC_CORE)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CXXSRC_NOARCH)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CXXSRC_ARCH)
 
 ####################################################################################################
 # build objects
