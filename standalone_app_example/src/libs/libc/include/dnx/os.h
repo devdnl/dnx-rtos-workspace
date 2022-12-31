@@ -504,6 +504,34 @@ static inline void system_reboot(void)
 
 //==============================================================================
 /**
+ * @brief Function restarts the system and execute specified address.
+ *
+ * The function restart system. Function does not write unsaved data.
+ * The function can be used to handle bootloaders.
+ *
+ * @return This function does not return.
+ *
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+        #include <unistd.h>
+
+        // ...
+
+        sync();
+
+        system_reboot_to_address(0x8010000);
+
+   @endcode
+ */
+//==============================================================================
+static inline void system_reboot_to_address(u32_t addr)
+{
+        _libc_syscall(_LIBC_SYS_REBOOTTOADDR, &addr);
+}
+
+//==============================================================================
+/**
  * @brief Function shutdown the system.
  *
  * The function shutdown system. Function does not write unsaved data.

@@ -28,10 +28,9 @@
 #---------------------------------------------------------------------------------------------------
 # FILE AND DIRECTORY NAMES
 #---------------------------------------------------------------------------------------------------
-# defines project path with binaries
-TARGET_DIR_NAME = build
+PROJECT = project
 TOOLCHAIN = arm-none-eabi-
-PROJNAME = project
+TARGET_DIR_NAME = build
 
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
@@ -43,6 +42,7 @@ COPY       = /bin/cp -r
 RENAME     = /bin/mv
 MKDIR      = /bin/mkdir -p
 CAT        = /bin/cat
+SREC_CAT   = /bin/srec_cat
 GREP       = /bin/grep
 SIZEOF     = /usr/bin/stat -c %s
 WC         = /usr/bin/wc
@@ -66,90 +66,174 @@ THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
 ####################################################################################################
 # targets
 ####################################################################################################
-.PHONY : all
-all : system appset
-	@$(MKDIR) $(TARGET_DIR_NAME)
-	@$(CAT) system/build/output/dnx.elf > $(TARGET_DIR_NAME)/$(PROJNAME).elf
-	@$(OBJCOPY) --dump-section .text=$(TARGET_DIR_NAME)/appset.text appset/build/output/appset.elf
-	@$(OBJCOPY) --add-section .text.appset=$(TARGET_DIR_NAME)/appset.text build/$(PROJNAME).elf
-	@$(REMOVE) $(TARGET_DIR_NAME)/appset.text
-	@$(OBJCOPY) --change-section-address .text.appset=0x8010000 $(TARGET_DIR_NAME)/$(PROJNAME).elf
-
-.PHONY : clean
-clean :
-	@if [ -d system/config-default ]; then $(REMOVE) -rf system/config; $(RENAME) -f system/config-default system/config; fi
-	@if [ -d appset/config-default ]; then $(REMOVE) -rf appset/config; $(RENAME) -f appset/config-default appset/config; fi
-	@$(MAKE) -C system -s -j 1 -fMakefile clean
-	@$(MAKE) -C appset -s -j 1 -fMakefile clean
-	@$(REMOVE) -r $(TARGET_DIR_NAME)
-
-.PHONY : system
-system :
-	@if [ -d system/config-default ]; then $(REMOVE) -rf system/config; $(RENAME) -f system/config-default system/config; fi
-	@$(RENAME) system/config system/config-default
-	@$(COPY) config/system system/config
-	@$(MAKE) -C system -s -j 1 -fMakefile all
-	@$(REMOVE) -rf system/config
-	@$(RENAME) system/config-default system/config
-
-.PHONY : appset
-appset :
-	@if [ -d appset/config-default ]; then $(REMOVE) -rf appset/config; $(RENAME) -f appset/config-default appset/config; fi
-	@$(RENAME) appset/config appset/config-default
-	@$(COPY) config/appset appset/config
-	@$(MAKE) -C appset -s -j 1 -fMakefile all
-	@$(REMOVE) -rf appset/config
-	@$(RENAME) appset/config-default appset/config
-
-.PHONY : install
-install :
-	@$(FLASH_CPU)
-
-.PHONY : install-system
-install-system :
-	@$(MAKE) -C system -s -j 1 -fMakefile install
-
-.PHONY : install-appset
-install-appset :
-	@$(MAKE) -C appset -s -j 1 -fMakefile install
-
-.PHONY : config
-config :
-	@$(CONFIGTOOL)
-
-.PHONY : config-system
-config-system :
-	@$(CONFIGTOOL) ../../system/config/config.h
-	
-.PHONY : config-appset
-config-appset :
-	@$(CONFIGTOOL) ../../appset/config/config.h
-	
-.PHONY : appset-rungens
-appset-rungens :
-	@$(MAKE) -C appset -s -j 1 -fMakefile rungens
-
-.PHONY : system-rungens
-system-rungens :
-	@$(MAKE) -C system -s -j 1 -fMakefile rungens
-
-####################################################################################################
-# help
-####################################################################################################
 .PHONY : help
 help :
 	@$(ECHO) "This is help for this $(THIS_MAKEFILE)"
 	@$(ECHO) "Possible targets:"
 	@$(ECHO) "   help                this help"
-	@$(ECHO) "   all                 build all sources in respository"
 	@$(ECHO) "   clean               clean project"
-	@$(ECHO) "   system              build system"
-	@$(ECHO) "   appset              build application set"
+	@$(ECHO) "   all                 build application with bootloader in single hex file"
+	@$(ECHO) "   btl                 build bootloader (system + btlset)"
+	@$(ECHO) "   app                 build application (system + appset)"
+	@$(ECHO) "   appsystem           build application's system"
+	@$(ECHO) "   appset              build application's appset"
+	@$(ECHO) "   btlsystem           build bootloader's system"
+	@$(ECHO) "   btlset              build bootloader's appset"
 	@$(ECHO) "   install             install (flash) all build files"
-	@$(ECHO) "   install-system      install (flash) system files"
-	@$(ECHO) "   install-appset      install (flash) appset files"
-	@$(ECHO) "   config              start configurator"
-	@$(ECHO) "   config-system       system configuration"
-	@$(ECHO) "   config-appset       appset configuration"
+	@$(ECHO) "   install-app         install (flash) application"
+	@$(ECHO) "   install-btl         install (flash) bootloader"
+	@$(ECHO) "   install-appsystem   install (flash) application system"
+	@$(ECHO) "   install-appset      install (flash) application appset"
+	@$(ECHO) "   config              start empty configurator"
+	@$(ECHO) "   config-appsystem    application system configuration"
+	@$(ECHO) "   config-appset       application appset configuration"
+	@$(ECHO) "   config-btlsystem    bootloader system configuration"
+	@$(ECHO) "   config-btlset       bootloader appset configuration"
 	@$(ECHO) ""
+
+
+.PHONY : all
+all : _build_prepare btl app
+	@$(SREC_CAT) $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex -Intel $(TARGET_DIR_NAME)/$(PROJECT)_app.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_btl_app.hex -Intel;\
+
+
+.PHONY : _build_prepare
+_build_prepare :
+	@$(MKDIR) $(TARGET_DIR_NAME)
+
+
+.PHONY : btl bootloader
+bootloader : btl
+btl : _build_prepare btlsystem btlset
+	@$(SREC_CAT) $(TARGET_DIR_NAME)/btlsystem.hex -Intel $(TARGET_DIR_NAME)/btlset.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex -Intel
+	@$(OBJCOPY) --input-target=ihex --output-target=binary $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex $(TARGET_DIR_NAME)/$(PROJECT)_btl.bin
+
+
+.PHONY : app application
+application : app
+app : _build_prepare appsystem appset
+	@$(SREC_CAT) $(TARGET_DIR_NAME)/appsystem.hex -Intel $(TARGET_DIR_NAME)/appset.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_app.hex -Intel
+
+
+.PHONY : clean
+clean :
+	@$(ECHO) -n "Cleaning system files: "
+	@if [ -d system/config-default ]; then $(REMOVE) -rf system/config; $(RENAME) -f system/config-default system/config; fi
+	@$(MAKE) -C system -s -j 1 -fMakefile clean
+
+	@$(ECHO) -n "Cleaning appset files: "
+	@if [ -d appset/config-default ]; then $(REMOVE) -rf appset/config; $(RENAME) -f appset/config-default appset/config; fi
+	@$(MAKE) -C appset -s -j 1 -fMakefile clean
+
+	@$(ECHO) -n "Cleaning btlset files: "
+	@if [ -d btlset/config-default ]; then $(REMOVE) -rf btlset/config; $(RENAME) -f btlset/config-default btlset/config; fi
+	@if [ -d btlset ]; then $(MAKE) -C btlset -s -j 1 -fMakefile clean; else $(ECHO) "No bootloader project."; fi
+
+
+	@$(REMOVE) -r $(TARGET_DIR_NAME)
+
+
+.PHONY : appsystem
+appsystem : _build_prepare
+	@if [ -d system/config-default ]; then $(REMOVE) -rf system/config; $(RENAME) -f system/config-default system/config; fi
+	@$(RENAME) system/config system/config-default
+	@$(COPY) config/app/system system/config
+	@$(MAKE) -C system -s -j 1 -fMakefile clean all
+	@$(REMOVE) -rf system/config
+	@$(RENAME) system/config-default system/config
+	@$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/appsystem.hex
+	@$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/appsystem.elf
+	@$(COPY) system/build/output/dnx.bin $(TARGET_DIR_NAME)/appsystem.bin
+
+
+.PHONY : appset
+appset : _build_prepare
+	@if [ -d appset/config-default ]; then $(REMOVE) -rf appset/config; $(RENAME) -f appset/config-default appset/config; fi
+	@$(RENAME) appset/config appset/config-default
+	@$(COPY) config/app/appset appset/config
+	@$(MAKE) -C appset -s -j 1 -fMakefile all
+	@$(REMOVE) -rf appset/config
+	@$(RENAME) appset/config-default appset/config
+	@$(COPY) appset/build/output/appset.hex $(TARGET_DIR_NAME)/appset.hex
+	@$(COPY) appset/build/output/appset.elf $(TARGET_DIR_NAME)/appset.elf
+	@$(COPY) appset/build/output/appset.bin $(TARGET_DIR_NAME)/appset.bin
+
+
+.PHONY : btlsystem
+btlsystem : _build_prepare
+	@if [ -d system/config-default ]; then $(REMOVE) -rf system/config; $(RENAME) -f system/config-default system/config; fi
+	@$(RENAME) system/config system/config-default
+	@$(COPY) config/btl/system system/config
+	@$(MAKE) -C system -s -j 1 -fMakefile clean all
+	@$(REMOVE) -rf system/config
+	@$(RENAME) system/config-default system/config
+	@$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/btlsystem.hex
+	@$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/btlsystem.elf
+
+
+.PHONY : btlset
+btlset : _build_prepare
+	@if [ -d btlset/config-default ]; then $(REMOVE) -rf btlset/config; $(RENAME) -f btlset/config-default btlset/config; fi
+	@$(RENAME) btlset/config btlset/config-default
+	@$(COPY) config/btl/appset btlset/config
+	@$(MAKE) -C btlset -s -j 1 -fMakefile all
+	@$(REMOVE) -rf btlset/config
+	@$(RENAME) btlset/config-default btlset/config
+	@$(COPY) btlset/build/output/btlset.hex $(TARGET_DIR_NAME)/btlset.hex
+	@$(COPY) btlset/build/output/btlset.elf $(TARGET_DIR_NAME)/btlset.elf
+
+
+.PHONY : install
+install :
+	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/$(PROJECT)_btl_app.hex
+
+
+.PHONY : install-app
+install-app :
+	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/$(PROJECT)_app.hex
+
+
+.PHONY : install-btl
+install-btl :
+	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/$(PROJECT)_btl.hex
+
+
+.PHONY : install-appsystem
+install-appsystem :
+	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/appsystem.hex
+
+
+.PHONY : install-appset
+install-appset :
+	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/appset.hex
+
+
+.PHONY : config
+config :
+	@$(CONFIGTOOL)
+
+
+.PHONY : config-appsystem
+config-appsystem :
+	@$(CONFIGTOOL) ../../config/app/system/config.h
+
+
+.PHONY : config-appset
+config-appset :
+	@$(CONFIGTOOL) ../../config/app/appset/config.h
+
+
+.PHONY : config-btlsystem
+config-btlsystem :
+	@$(CONFIGTOOL) ../../config/btl/system/config.h
+
+
+.PHONY : config-btlset
+config-btlset :
+	@$(CONFIGTOOL) ../../config/btl/appset/config.h
+
+
+.PHONY : appset-rungens
+appset-rungens :
+	@$(MAKE) -C appset -s -j 1 -fMakefile rungens
 

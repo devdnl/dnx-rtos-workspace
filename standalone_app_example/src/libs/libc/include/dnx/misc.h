@@ -684,6 +684,22 @@ extern "C" {
 #define cast(type, var) ((type)(var))
 #endif
 
+//==============================================================================
+/**
+ * @brief Scope macro.
+ *
+ * @param _at_entry     expression executed at entry of scope
+ * @param _condition    true/false condition of scope
+ * @param _at_exit      expression executed at the end of scope
+ *
+ * @node  The scope_run boolean can be used to control scope execution.
+ */
+//==============================================================================
+#define scope(_at_entry, _condition, _at_exit)\
+        for (bool __ = true; __; __ = false)\
+                for (_at_entry; __ && _condition; _at_exit, __ = false) \
+                        for (bool ___ = true; ___; ___ = false)
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/

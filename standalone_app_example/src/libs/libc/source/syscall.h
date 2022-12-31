@@ -194,6 +194,7 @@ typedef enum {
         _LIBC_SYS_THREADJOIN,             // int errno (const tid_t *tid , int *status, const uint32_t *timeout)
         _LIBC_SYS_ISHEAPADDR,             // int errno (const void *addr)
         _LIBC_SYS_CACHEFLUSH,             // int errno (void)
+        _LIBC_SYS_REBOOTTOADDR,           // int errno (const void *addr)
 } _libc_syscall_t;
 
 /*==============================================================================
