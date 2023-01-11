@@ -593,6 +593,14 @@ this:SetToolTip("TCP_TTL: Default Time-To-Live value.")
 --*/
 #define __NETWORK_TCP_TTL__ 255
 /*--
+this:AddWidget("Spinbox", 1, 600, "TCP_MSL")
+this:SetToolTip("TCP_MSL: Maximum segment lifetime is the time a TCP segment can exist in the\n"..
+                "internetwork system. It is arbitrarily defined to be 2 minutes long.\n"..
+                "The Maximum Segment Lifetime value is used to determine the TIME_WAIT\n"..
+                "interval (2*MSL). Interval in seconds.")
+--*/
+#define __NETWORK_TCP_MSL__ 60
+/*--
 this:AddWidget("Spinbox", 1, 255, "TCP_WND")
 this:SetToolTip("TCP_WND: The size of a TCP window (n * TCP_MSS).")
 --*/
