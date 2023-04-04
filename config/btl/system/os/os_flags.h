@@ -86,16 +86,10 @@ this:SetToolTip("Context switch frequency has influence to system response for e
 #define __OS_TASK_SCHED_FREQ__ 1000
 
 /*--
-this:AddWidget("Spinbox", 1, 32, "Maximum number of user process threads")
-this:SetToolTip("Number of threads that can be started by user process.")
+this:AddWidget("Spinbox", 8, 32, "Maximum number of process threads")
+this:SetToolTip("Number of threads that can be started by process.")
 --*/
-#define __OS_TASK_MAX_USER_THREADS__ 4
-
-/*--
-this:AddWidget("Spinbox", 2, 32, "Maximum number of kworker threads")
-this:SetToolTip("Number of threads that can be started by system process.")
---*/
-#define __OS_TASK_MAX_SYSTEM_THREADS__ 6
+#define __OS_PROCESS_MAX_THREADS__ 16
 
 /*--
 this:AddExtraWidget("Label", "LabelFeatures", "\nSystem features (advanced)", -1, "bold")

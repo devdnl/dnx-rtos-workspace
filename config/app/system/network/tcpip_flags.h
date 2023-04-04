@@ -136,7 +136,7 @@ this:AddExtraWidget("Label", "LabelMEMPNUM", "\nInternal memory pool sizes", -1,
 this:GoBackWidget("MEMPNUM")
 ++*/
 /*--
-this:AddWidget("Spinbox", 0, 100, "MEMP_NUM_PBUF")
+this:AddWidget("Spinbox", 10, 2048, "MEMP_NUM_PBUF")
 this:SetToolTip("MEMP_NUM_PBUF: the number of memp struct pbufs. If the application\n"..
                 "sends a lot of data out of ROM (or other static memory), this\n"..
                 "should be set high.")
@@ -780,10 +780,10 @@ this:SetToolTip("LWIP_NETIF_LOOPBACK==1: Support sending packets with a destinat
 --*/
 #define __NETWORK_LWIP_NETIF_LOOPBACK__ 0
 /*--
-this:AddWidget("Spinbox", 0, 100, "LWIP_LOOPBACK_MAX_PBUFS")
+this:AddWidget("Spinbox", 1, 1024, "LWIP_LOOPBACK_MAX_PBUFS")
 this:SetToolTip("LWIP_LOOPBACK_MAX_PBUFS: Maximum number of pbufs\non queue for loopback sending for each netif (0 = disabled).")
 --*/
-#define __NETWORK_LWIP_LOOPBACK_MAX_PBUFS__ 0
+#define __NETWORK_LWIP_LOOPBACK_MAX_PBUFS__ 32
 
 
 

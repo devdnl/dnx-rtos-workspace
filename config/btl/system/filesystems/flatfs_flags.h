@@ -42,6 +42,7 @@ this:SetLayout("TitledGridBack", 2, "Home > File Systems > flatfs",
 
 /*--
 this:AddWidget("Checkbox", "Enable file system debug")
+this:AddExtraWidget("Void", "VoidEnable")
 --*/
 #define __FLATFS_LOG_ENABLE__ _NO_
 
