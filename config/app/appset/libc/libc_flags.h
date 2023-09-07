@@ -61,10 +61,16 @@ this:AddExtraWidget("Void", "VoidMisc")
 ++*/
 
 /*--
-this:AddWidget("Editline", true, "system() shell program")
+this:AddWidget("Editline", true, "The system() shell program")
 this:SetToolTip("This is a program that execute command passed to system() function.")
 --*/
 #define __LIBC_SYSTEM_PROG__ "dsh -e"
+
+/*--
+this:AddWidget("Editline", false, "The ioctl() requests definition file")
+this:SetToolTip("File with ioctl() function requests definitions.")
+--*/
+#define __LIBC_IOCTL_REQUEST_FILE__ <libc/include/machine/ioctl/ioctl_requests.h>
 
 #endif /* _LIBC_FLAGS_H_ */
 /*==============================================================================
