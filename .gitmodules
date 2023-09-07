@@ -1,9 +1,9 @@
-[submodule "appset"]
-	path = appset
-	url = git@bitbucket.org:devdnl/dnx-rtos-appset.git
 [submodule "system"]
 	path = system
 	url = git@bitbucket.org:devdnl/dnx-rtos-os.git
 [submodule "tools/configtool"]
 	path = tools/configtool
 	url = git@bitbucket.org:devdnl/configtool.git
+[submodule "app-appset"]
+	path = app-appset
+	url = git@bitbucket.org:devdnl/dnx-rtos-appset.git
