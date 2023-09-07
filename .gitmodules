@@ -7,3 +7,6 @@
 [submodule "app-appset"]
 	path = app-appset
 	url = git@bitbucket.org:devdnl/dnx-rtos-appset.git
+[submodule "btl-appset"]
+	path = btl-appset
+	url = git@bitbucket.org:devdnl/dnx-rtos-appset.git

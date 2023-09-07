@@ -92,27 +92,14 @@ help :
 	@$(ECHO) ""
 
 
-.PHONY : all
-all : _build_prepare btl app
-	@$(SREC_CAT) $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex -Intel $(TARGET_DIR_NAME)/$(PROJECT)_app.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_btl_app.hex -Intel;\
-
-
 .PHONY : _build_prepare
 _build_prepare :
 	@$(MKDIR) $(TARGET_DIR_NAME)
 
 
-.PHONY : btl bootloader
-bootloader : btl
-btl : _build_prepare btlsystem btlset
-	@$(SREC_CAT) $(TARGET_DIR_NAME)/btlsystem.hex -Intel $(TARGET_DIR_NAME)/btlset.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex -Intel
-	@$(OBJCOPY) --input-target=ihex --output-target=binary $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex $(TARGET_DIR_NAME)/$(PROJECT)_btl.bin
-
-
-.PHONY : app application
-application : app
-app : _build_prepare appsystem appset
-	@$(SREC_CAT) $(TARGET_DIR_NAME)/appsystem.hex -Intel $(TARGET_DIR_NAME)/appset.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_app.hex -Intel
+.PHONY : all
+all : _build_prepare btl app
+	@$(SREC_CAT) $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex -Intel $(TARGET_DIR_NAME)/$(PROJECT)_app.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_btl_app.hex -Intel;\
 
 
 .PHONY : clean
@@ -121,66 +108,76 @@ clean :
 	@if [ -d system/config-default ]; then $(REMOVE) -rf system/config; $(RENAME) -f system/config-default system/config; fi
 	@$(MAKE) -C system -s -j 1 -fMakefile clean
 
-	@$(ECHO) -n "Cleaning appset files: "
-	@if [ -d appset/config-default ]; then $(REMOVE) -rf appset/config; $(RENAME) -f appset/config-default appset/config; fi
-	@$(MAKE) -C appset -s -j 1 -fMakefile clean
+	@$(ECHO) -n "Cleaning app-appset files: "
+	@if [ -d app-appset/config-default ]; then $(REMOVE) -rf app-appset/config; $(RENAME) -f app-appset/config-default app-appset/config; fi
+	@$(MAKE) -C app-appset -s -j 1 -fMakefile clean
 
-	@$(ECHO) -n "Cleaning btlset files: "
-	@if [ -d btlset/config-default ]; then $(REMOVE) -rf btlset/config; $(RENAME) -f btlset/config-default btlset/config; fi
-	@if [ -d btlset ]; then $(MAKE) -C btlset -s -j 1 -fMakefile clean; else $(ECHO) "No bootloader project."; fi
-
+	@$(ECHO) -n "Cleaning btl-appset files: "
+	@if [ -d btl-appset/config-default ]; then $(REMOVE) -rf btl-appset/config; $(RENAME) -f btl-appset/config-default btl-appset/config; fi
+	@if [ -d btl-appset ]; then $(MAKE) -C btl-appset -s -j 1 -fMakefile clean; else $(ECHO) "No bootloader project."; fi
 
 	@$(REMOVE) -r $(TARGET_DIR_NAME)
 
 
-.PHONY : appsystem
-appsystem : _build_prepare
+.PHONY : app
+app : _build_prepare app-system app-appset
+	@$(SREC_CAT) $(TARGET_DIR_NAME)/app-system.hex -Intel $(TARGET_DIR_NAME)/app-appset.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_app.hex -Intel
+
+
+.PHONY : btl
+btl : _build_prepare btl-system btl-appset
+	@$(SREC_CAT) $(TARGET_DIR_NAME)/btl-system.hex -Intel $(TARGET_DIR_NAME)/btl-appset.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex -Intel
+	@$(OBJCOPY) --input-target=ihex --output-target=binary $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex $(TARGET_DIR_NAME)/$(PROJECT)_btl.bin
+
+
+.PHONY : app-system
+app-system : _build_prepare
 	@if [ -d system/config-default ]; then $(REMOVE) -rf system/config; $(RENAME) -f system/config-default system/config; fi
 	@$(RENAME) system/config system/config-default
 	@$(COPY) config/app/system system/config
 	@$(MAKE) -C system -s -j 1 -fMakefile clean all
 	@$(REMOVE) -rf system/config
 	@$(RENAME) system/config-default system/config
-	@$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/appsystem.hex
-	@$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/appsystem.elf
-	@$(COPY) system/build/output/dnx.bin $(TARGET_DIR_NAME)/appsystem.bin
+	@$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/app-system.hex
+	@$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/app-system.elf
+	@$(COPY) system/build/output/dnx.bin $(TARGET_DIR_NAME)/app-system.bin
 
 
-.PHONY : appset
-appset : _build_prepare
-	@if [ -d appset/config-default ]; then $(REMOVE) -rf appset/config; $(RENAME) -f appset/config-default appset/config; fi
-	@$(RENAME) appset/config appset/config-default
-	@$(COPY) config/app/appset appset/config
-	@$(MAKE) -C appset -s -j 1 -fMakefile all
-	@$(REMOVE) -rf appset/config
-	@$(RENAME) appset/config-default appset/config
-	@$(COPY) appset/build/output/appset.hex $(TARGET_DIR_NAME)/appset.hex
-	@$(COPY) appset/build/output/appset.elf $(TARGET_DIR_NAME)/appset.elf
-	@$(COPY) appset/build/output/appset.bin $(TARGET_DIR_NAME)/appset.bin
+.PHONY : app-appset
+app-appset : _build_prepare
+	@if [ -d app-appset/config-default ]; then $(REMOVE) -rf app-appset/config; $(RENAME) -f app-appset/config-default app-appset/config; fi
+	@$(RENAME) app-appset/config app-appset/config-default
+	@$(COPY) config/app/appset app-appset/config
+	@$(MAKE) -C app-appset -s -j 1 -fMakefile all
+	@$(REMOVE) -rf app-appset/config
+	@$(RENAME) app-appset/config-default app-appset/config
+	@$(COPY) app-appset/build/output/appset.hex $(TARGET_DIR_NAME)/app-appset.hex
+	@$(COPY) app-appset/build/output/appset.elf $(TARGET_DIR_NAME)/app-appset.elf
+	@$(COPY) app-appset/build/output/appset.bin $(TARGET_DIR_NAME)/app-appset.bin
 
 
-.PHONY : btlsystem
-btlsystem : _build_prepare
+.PHONY : btl-system
+btl-system : _build_prepare
 	@if [ -d system/config-default ]; then $(REMOVE) -rf system/config; $(RENAME) -f system/config-default system/config; fi
 	@$(RENAME) system/config system/config-default
 	@$(COPY) config/btl/system system/config
 	@$(MAKE) -C system -s -j 1 -fMakefile clean all
 	@$(REMOVE) -rf system/config
 	@$(RENAME) system/config-default system/config
-	@$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/btlsystem.hex
-	@$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/btlsystem.elf
+	@$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/btl-system.hex
+	@$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/btl-system.elf
 
 
-.PHONY : btlset
-btlset : _build_prepare
-	@if [ -d btlset/config-default ]; then $(REMOVE) -rf btlset/config; $(RENAME) -f btlset/config-default btlset/config; fi
-	@$(RENAME) btlset/config btlset/config-default
-	@$(COPY) config/btl/appset btlset/config
-	@$(MAKE) -C btlset -s -j 1 -fMakefile all
-	@$(REMOVE) -rf btlset/config
-	@$(RENAME) btlset/config-default btlset/config
-	@$(COPY) btlset/build/output/btlset.hex $(TARGET_DIR_NAME)/btlset.hex
-	@$(COPY) btlset/build/output/btlset.elf $(TARGET_DIR_NAME)/btlset.elf
+.PHONY : btl-appset
+btl-appset : _build_prepare
+	@if [ -d btl-appset/config-default ]; then $(REMOVE) -rf btl-appset/config; $(RENAME) -f btl-appset/config-default btl-appset/config; fi
+	@$(RENAME) btl-appset/config btl-appset/config-default
+	@$(COPY) config/btl/appset btl-appset/config
+	@$(MAKE) -C btl-appset -s -j 1 -fMakefile all
+	@$(REMOVE) -rf btl-appset/config
+	@$(RENAME) btl-appset/config-default btl-appset/config
+	@$(COPY) btl-appset/build/output/appset.hex $(TARGET_DIR_NAME)/btl-appset.hex
+	@$(COPY) btl-appset/build/output/appset.elf $(TARGET_DIR_NAME)/btl-appset.elf
 
 
 .PHONY : install
@@ -198,14 +195,14 @@ install-btl :
 	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/$(PROJECT)_btl.hex
 
 
-.PHONY : install-appsystem
-install-appsystem :
-	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/appsystem.hex
+.PHONY : install-app-system
+install-app-system :
+	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/app-system.hex
 
 
-.PHONY : install-appset
-install-appset :
-	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/appset.hex
+.PHONY : install-app-appset
+install-app-appset :
+	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/app-appset.hex
 
 
 .PHONY : config
@@ -213,23 +210,23 @@ config :
 	@$(CONFIGTOOL)
 
 
-.PHONY : config-appsystem
-config-appsystem :
+.PHONY : config-app-system
+config-app-system :
 	@$(CONFIGTOOL) ../../config/app/system/config.h
 
 
-.PHONY : config-appset
-config-appset :
+.PHONY : config-app-appset
+config-app-appset :
 	@$(CONFIGTOOL) ../../config/app/appset/config.h
 
 
-.PHONY : config-btlsystem
-config-btlsystem :
+.PHONY : config-btl-system
+config-btl-system :
 	@$(CONFIGTOOL) ../../config/btl/system/config.h
 
 
-.PHONY : config-btlset
-config-btlset :
+.PHONY : config-btl-appset
+config-btl-appset :
 	@$(CONFIGTOOL) ../../config/btl/appset/config.h
 
 
