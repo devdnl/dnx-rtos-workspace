@@ -33,7 +33,7 @@
 			</provider>
 		</extension>
 	</configuration>
-	<configuration id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425" name="Build Appset">
+	<configuration id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425" name="Build app-appset">
 		<extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
 			<provider copy-of="extension" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider"/>
 			<provider-reference id="org.eclipse.cdt.core.ReferencedProjectsLanguageSettingsProvider" ref="shared-provider"/>
@@ -44,7 +44,7 @@
 			</provider>
 		</extension>
 	</configuration>
-	<configuration id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.2062922048" name="Build system">
+	<configuration id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.2062922048" name="Build app-system">
 		<extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
 			<provider copy-of="extension" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider"/>
 			<provider-reference id="org.eclipse.cdt.core.ReferencedProjectsLanguageSettingsProvider" ref="shared-provider"/>

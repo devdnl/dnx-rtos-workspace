@@ -6,7 +6,7 @@
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.doReset" value="false"/>
     <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.imageFileName" value=""/>
     <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.imageOffset" value=""/>
-    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.initCommands" value="add-symbol-file &quot;appset/build/output/appset.elf&quot;&#10;add-symbol-file &quot;system/build/output/dnx.elf&quot;&#10;"/>
+    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.initCommands" value="add-symbol-file &quot;app-appset/build/output/appset.elf&quot;&#10;add-symbol-file &quot;system/build/output/dnx.elf&quot;&#10;"/>
     <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.jtagDeviceId" value="org.eclipse.cdt.debug.gdbjtag.core.jtagdevice.OpenOCDSocket"/>
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.loadImage" value="false"/>
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.loadSymbols" value="false"/>
@@ -31,7 +31,7 @@
     <intAttribute key="org.eclipse.cdt.launch.ATTR_BUILD_BEFORE_LAUNCH_ATTR" value="0"/>
     <stringAttribute key="org.eclipse.cdt.launch.COREFILE_PATH" value=""/>
     <stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_START_MODE" value="remote"/>
-    <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="build/project.elf"/>
+    <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="build/app-appset.elf"/>
     <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="dnx-RTOS-workspace"/>
     <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="true"/>
     <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value=""/>
