@@ -70,7 +70,7 @@ this:SetToolTip("This is a program that execute command passed to system() funct
 this:AddWidget("Editline", false, "The ioctl() requests definition file")
 this:SetToolTip("File with ioctl() function requests definitions.")
 --*/
-#define __LIBC_IOCTL_REQUEST_FILE__ <libc/include/machine/ioctl/ioctl_requests.h>
+#define __LIBC_IOCTL_REQUEST_FILE__ "../../build/ioctl/ioctl_requests.h"
 
 #endif /* _LIBC_FLAGS_H_ */
 /*==============================================================================

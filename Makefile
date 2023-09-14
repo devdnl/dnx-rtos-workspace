@@ -141,6 +141,7 @@ app-system : _build_prepare
 	@$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/app-system.hex
 	@$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/app-system.elf
 	@$(COPY) system/build/output/dnx.bin $(TARGET_DIR_NAME)/app-system.bin
+	@$(COPY) system/build/ioctl $(TARGET_DIR_NAME)/ioctl
 
 
 .PHONY : app-appset
