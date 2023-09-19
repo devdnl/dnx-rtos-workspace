@@ -159,6 +159,7 @@ LFLAGS   = -g \
            -Wl,-Map=$(TARGET_PATH)/$(PROJECT).map,--cref,--no-warn-mismatch \
            -Wall \
            -specs=nano.specs -specs=rdimon.specs \
+           -Wl,--print-memory-usage \
            -lm
 
 #---------------------------------------------------------------------------------------------------

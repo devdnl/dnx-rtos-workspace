@@ -31,8 +31,8 @@
 ==============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -49,7 +49,7 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static int result = 1000;
+static int  result = 1000;
 static u8_t buffer[4096];
 
 /*==============================================================================
@@ -67,17 +67,14 @@ static u8_t buffer[4096];
 //==============================================================================
 int main(int argc, char *argv[])
 {
-        (void)argc;
-        (void)argv;
-
-        printf("hello world from RAM!\n");
+        printf("Hello world from RAM!\n");
 
         for (int i = 0; i < argc; i++) {
-            printf("%u: '%s'\n", i, argv[i]);
+                printf("%u: '%s'\n", i, argv[i]);
 
-            if (i > 0) {
-              result += atoi(argv[i]);
-            }
+                if (i > 0) {
+                        result += atoi(argv[i]);
+                }
         }
 
         printf("Result is: %d/%Xh\n", result, result);
@@ -90,7 +87,6 @@ int main(int argc, char *argv[])
         puts("Sleeping...");
         sleep(5);
         puts("Bye!");
-
 
         return -200;
 }
