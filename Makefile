@@ -72,6 +72,8 @@ help :
 	@$(ECHO) "Possible targets:"
 	@$(ECHO) "   help                this help"
 	@$(ECHO) "   clean               clean project"
+	@$(ECHO) "   clean-app-appset    clean application's appset"
+	@$(ECHO) "   clean-btl-appset    clean bootloader's appset"
 	@$(ECHO) "   all                 build application with bootloader in single hex file"
 	@$(ECHO) "   btl                 build bootloader (system + appset)"
 	@$(ECHO) "   app                 build application (system + appset)"
@@ -144,6 +146,11 @@ app-system : _build_prepare
 	@$(COPY) system/build/ioctl $(TARGET_DIR_NAME)/ioctl
 
 
+.PHONY : clean-app-appset
+clean-app-appset : _build_prepare
+	@$(MAKE) -C app-appset -s -j 1 -fMakefile clean
+
+
 .PHONY : app-appset
 app-appset : _build_prepare
 	@$(MAKE) -C app-appset -s -j 1 -fMakefile all
@@ -172,6 +179,10 @@ btl-appset : _build_prepare
 	@$(COPY) btl-appset/build/output/appset.hex $(TARGET_DIR_NAME)/btl-appset.hex
 	@$(COPY) btl-appset/build/output/appset.elf $(TARGET_DIR_NAME)/btl-appset.elf
 	@$(COPY) btl-appset/build/output/appset.bin $(TARGET_DIR_NAME)/btl-appset.bin
+
+.PHONY : clean-btl-appset
+clean-btl-appset : _build_prepare
+	@$(MAKE) -C btl-appset -s -j 1 -fMakefile clean
 
 
 .PHONY : install
