@@ -1,0 +1,33 @@
+# Makefile for GNU make
+
+CSRC_LIB   += libc/source/alloc.c
+CSRC_LIB   += libc/source/concurrent.c
+CSRC_LIB   += libc/source/conv.c
+CSRC_LIB   += libc/source/ctime_r.c
+CSRC_LIB   += libc/source/fgets.c
+CSRC_LIB   += libc/source/file.c
+CSRC_LIB   += libc/source/fputc.c
+CSRC_LIB   += libc/source/fputs.c
+CSRC_LIB   += libc/source/getc.c
+CSRC_LIB   += libc/source/locale.c
+CSRC_LIB   += libc/source/mktime.c
+CSRC_LIB   += libc/source/perror.c
+CSRC_LIB   += libc/source/rand.c
+CSRC_LIB   += libc/source/strcasecmp.c
+CSRC_LIB   += libc/source/strchrrep.c
+CSRC_LIB   += libc/source/strerror.c
+CSRC_LIB   += libc/source/strftime.c
+CSRC_LIB   += libc/source/strlcat.c
+CSRC_LIB   += libc/source/strlcpy.c
+CSRC_LIB   += libc/source/strncasecmp.c
+CSRC_LIB   += libc/source/strndup.c
+CSRC_LIB   += libc/source/system.c
+CSRC_LIB   += libc/source/socket.c
+CSRC_LIB   += libc/source/syscall.c
+CSRC_LIB   += libc/source/threads.c
+CSRC_LIB   += libc/source/vfprintf.c
+CSRC_LIB   += libc/source/vfscanf.c
+CSRC_LIB   += libc/source/vsnprintf.c
+CSRC_LIB   += libc/source/vsscanf.c
+CXXSRC_LIB +=
+HDRLOC_LIB += libc/include

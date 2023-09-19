@@ -146,12 +146,7 @@ app-system : _build_prepare
 
 .PHONY : app-appset
 app-appset : _build_prepare
-	@if [ -d app-appset/config-default ]; then $(REMOVE) -rf app-appset/config; $(RENAME) -f app-appset/config-default app-appset/config; fi
-	@$(RENAME) app-appset/config app-appset/config-default
-	@$(COPY) config/app/appset app-appset/config
 	@$(MAKE) -C app-appset -s -j 1 -fMakefile all
-	@$(REMOVE) -rf app-appset/config
-	@$(RENAME) app-appset/config-default app-appset/config
 	@$(COPY) app-appset/build/output/appset.hex $(TARGET_DIR_NAME)/app-appset.hex
 	@$(COPY) app-appset/build/output/appset.elf $(TARGET_DIR_NAME)/app-appset.elf
 	@$(COPY) app-appset/build/output/appset.bin $(TARGET_DIR_NAME)/app-appset.bin
@@ -167,18 +162,16 @@ btl-system : _build_prepare
 	@$(RENAME) system/config-default system/config
 	@$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/btl-system.hex
 	@$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/btl-system.elf
+	@$(COPY) system/build/output/dnx.bin $(TARGET_DIR_NAME)/btl-system.bin
+	@$(COPY) system/build/ioctl $(TARGET_DIR_NAME)/ioctl
 
 
 .PHONY : btl-appset
 btl-appset : _build_prepare
-	@if [ -d btl-appset/config-default ]; then $(REMOVE) -rf btl-appset/config; $(RENAME) -f btl-appset/config-default btl-appset/config; fi
-	@$(RENAME) btl-appset/config btl-appset/config-default
-	@$(COPY) config/btl/appset btl-appset/config
 	@$(MAKE) -C btl-appset -s -j 1 -fMakefile all
-	@$(REMOVE) -rf btl-appset/config
-	@$(RENAME) btl-appset/config-default btl-appset/config
 	@$(COPY) btl-appset/build/output/appset.hex $(TARGET_DIR_NAME)/btl-appset.hex
 	@$(COPY) btl-appset/build/output/appset.elf $(TARGET_DIR_NAME)/btl-appset.elf
+	@$(COPY) btl-appset/build/output/appset.bin $(TARGET_DIR_NAME)/btl-appset.bin
 
 
 .PHONY : install
@@ -218,7 +211,7 @@ config-app-system :
 
 .PHONY : config-app-appset
 config-app-appset :
-	@$(CONFIGTOOL) ../../config/app/appset/config.h
+	@$(CONFIGTOOL) ../../app-appset/config/config.h
 
 
 .PHONY : config-btl-system
@@ -228,7 +221,7 @@ config-btl-system :
 
 .PHONY : config-btl-appset
 config-btl-appset :
-	@$(CONFIGTOOL) ../../config/btl/appset/config.h
+	@$(CONFIGTOOL) ../../btl-appset/config/config.h
 
 
 .PHONY : appset-rungens

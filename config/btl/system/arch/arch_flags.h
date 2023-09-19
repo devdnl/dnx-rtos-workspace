@@ -1011,9 +1011,9 @@ __ENABLE_CAN__=_NO_
 #     this:SetFlagValue("__ENABLE_NVM__", "_NO_")
 # end
 #--*/
-#define __ENABLE_NVM__ _NO_
+#define __ENABLE_NVM__ _YES_
 #/*
-__ENABLE_NVM__=_NO_
+__ENABLE_NVM__=_YES_
 #*/
 
 #/*--

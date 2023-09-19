@@ -1,0 +1,7 @@
+File system can be mounted by using &ROMFS_HANDLE pointer address passed as string
+to mount command/function as follow:
+
+    extern const void *const ROMFS_HANDLE;
+    char src_path[16];
+    snprintf(src_path, sizeof(src_path), "@%p", ROMFS_HANDLE);
+    mount("romfs", src_path, "/run", "");
