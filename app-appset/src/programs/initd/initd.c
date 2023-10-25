@@ -91,6 +91,12 @@ static void create_base_file_system_structure(void)
         mkdir("/run", 0666);    // this folder store runtime files
         mkdir("/mnt", 0666);    // this folder store SD card content
 
+
+        extern const void *const ROMFS_HANDLE;
+        char                     src_path[16];
+        snprintf(src_path, sizeof(src_path), "@%p", ROMFS_HANDLE);
+        mount("romfs", src_path, "/mnt", "");
+
         /*
          * NOTE: Number and naming of folders depends on user needs. There can
          *       be mounted additional file systems that does not requires

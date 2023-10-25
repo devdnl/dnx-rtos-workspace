@@ -362,7 +362,7 @@ generate :
 
 	@$(MKDIR) $(GEN_PROG_DIR)
 	@$(ECHO) "Adding user's programs and libraries to the project..."
-	@$(SHELL) $(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR)
+	@$(SHELL) $(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR) "*"
 
 	@$(MKDIR) "build/romfs"
 	@$(PYTHON2) ./tools/romfsmap.py $(RES_ROMFS) $(ROMFS_DIR)
