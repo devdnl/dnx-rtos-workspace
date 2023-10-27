@@ -85,6 +85,13 @@ this:AddItem("Enable", "SDMMC_CLOCK_POWER_SAVE_ENABLE")
 #define __SDMMC_CFG_SDMMC1_PWRSAVE__ SDMMC_CLOCK_POWER_SAVE_DISABLE
 
 /*--
+this:AddWidget("Combobox", "Device type")
+this:AddItem("SD Card", "_SDMMC_TYPE_SDCARD")
+this:AddItem("MMC/eMMC", "_SDMMC_TYPE_MMC")
+--*/
+#define __SDMMC_CFG_SDMMC1_TYPE__ _SDMMC_TYPE_SDCARD
+
+/*--
 this:AddWidget("Combobox", "Driver mode")
 this:AddItem("Polling", "_SDMMC_MODE_POLLING")
 this:AddItem("IRQ", "_SDMMC_MODE_IRQ")
@@ -140,6 +147,13 @@ this:AddItem("Disable", "SDMMC_CLOCK_POWER_SAVE_DISABLE")
 this:AddItem("Enable", "SDMMC_CLOCK_POWER_SAVE_ENABLE")
 --*/
 #define __SDMMC_CFG_SDMMC2_PWRSAVE__ SDMMC_CLOCK_POWER_SAVE_DISABLE
+
+/*--
+this:AddWidget("Combobox", "Device type")
+this:AddItem("SD Card", "_SDMMC_TYPE_SDCARD")
+this:AddItem("MMC/eMMC", "_SDMMC_TYPE_MMC")
+--*/
+#define __SDMMC_CFG_SDMMC2_TYPE__ _SDMMC_TYPE_SDCARD
 
 /*--
 this:AddWidget("Combobox", "Driver mode")
