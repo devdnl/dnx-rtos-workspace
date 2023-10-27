@@ -6,4 +6,4 @@ else
     dev=$1
 fi
 
-LANG=utf-8  minicom -C /tmp/minicom.log -D "$dev" -b 230400
+LANG=utf-8  minicom -C /tmp/minicom.log -D "$dev" -b 115200
