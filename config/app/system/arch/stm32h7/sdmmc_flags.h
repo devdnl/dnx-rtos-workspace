@@ -64,7 +64,7 @@ this:AddItem("1-bit wide bus", "SDMMC_BUS_WIDE_1B")
 this:AddItem("4-bit wide bus", "SDMMC_BUS_WIDE_4B")
 this:AddItem("8-bit wide bus", "SDMMC_BUS_WIDE_8B")
 --*/
-#define __SDMMC_CFG_SDMMC1_BUS_WIDE__ SDMMC_BUS_WIDE_8B
+#define __SDMMC_CFG_SDMMC1_BUS_WIDE__ SDMMC_BUS_WIDE_4B
 
 /*--
 this:AddWidget("Spinbox", 1, 256, "Clock divide factor")
@@ -74,7 +74,7 @@ this:AddWidget("Spinbox", 1, 256, "Clock divide factor")
 /*--
 this:AddWidget("Spinbox", 100, 2000, "Card operation timeout [ms]")
 --*/
-#define __SDMMC_CFG_SDMMC1_TIMEOUT__ 500
+#define __SDMMC_CFG_SDMMC1_CARD_TIMEOUT__ 500
 
 /*--
 this:AddWidget("Combobox", "Power save")
@@ -88,7 +88,7 @@ this:AddWidget("Combobox", "Device type")
 this:AddItem("SD Card", "_SDMMC_TYPE_SDCARD")
 this:AddItem("MMC/eMMC", "_SDMMC_TYPE_MMC")
 --*/
-#define __SDMMC_CFG_SDMMC1_TYPE__ _SDMMC_TYPE_MMC
+#define __SDMMC_CFG_SDMMC1_TYPE__ _SDMMC_TYPE_SDCARD
 
 /*--
 this:AddWidget("Combobox", "Driver mode")
@@ -106,7 +106,7 @@ this:AddItem("High", "SDMMC_SPEED_MODE_HIGH")
 this:AddItem("DDR (MMC only)", "SDMMC_SPEED_MODE_DDR")
 this:AddItem("Ultra (SD only)", "SDMMC_SPEED_MODE_ULTRA")
 --*/
-#define __SDMMC_CFG_SDMMC1_SPEED_MODE__ SDMMC_SPEED_MODE_DDR
+#define __SDMMC_CFG_SDMMC1_SPEED_MODE__ SDMMC_SPEED_MODE_DEFAULT
 
 /*--
 this:AddWidget("Combobox", "IRQ priority")
@@ -148,7 +148,7 @@ this:AddWidget("Spinbox", 1, 256, "Clock divide factor")
 /*--
 this:AddWidget("Spinbox", 100, 2000, "Card operation timeout [ms]")
 --*/
-#define __SDMMC_CFG_SDMMC2_TIMEOUT__ 500
+#define __SDMMC_CFG_SDMMC2_CARD_TIMEOUT__ 500
 
 /*--
 this:AddWidget("Combobox", "Power save")
