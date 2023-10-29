@@ -716,30 +716,17 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 
 #// MODULE LIST BEGIN
 #/*--
-# if uC.PERIPH[uC.NAME].USBH ~= nil then
-#     this:PutWidgets("USBH", "arch/"..uC.ARCH.."/usbh_flags.h")
-#     this:SetToolTip("USB Host driver")
+# if uC.PERIPH[uC.NAME].ADC ~= nil then
+#     this:PutWidgets("ADC", "arch/"..uC.ARCH.."/adc_flags.h")
+#     this:SetToolTip("ADC Driver")
 # else
 #     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_USBH__", "_NO_")
+#     this:SetFlagValue("__ENABLE_ADC__", "_NO_")
 # end
 #--*/
-#define __ENABLE_USBH__ _NO_
+#define __ENABLE_ADC__ _NO_
 #/*
-__ENABLE_USBH__=_NO_
-#*/
-
-#/*--
-# if uC.PERIPH[uC.NAME].GPIO ~= nil then
-#     this:PutWidgets("GPIO", "arch/"..uC.ARCH.."/gpio_flags.h")
-# else
-#     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_GPIO__", "_NO_")
-# end
-#--*/
-#define __ENABLE_GPIO__ _YES_
-#/*
-__ENABLE_GPIO__=_YES_
+__ENABLE_ADC__=_NO_
 #*/
 
 #/*--
@@ -758,6 +745,20 @@ __ENABLE_AFM__=_NO_
 #*/
 
 #/*--
+# if uC.PERIPH[uC.NAME].CAN ~= nil then
+#     this:PutWidgets("CAN", "arch/"..uC.ARCH.."/can_flags.h")
+#     this:SetToolTip("CAN driver")
+# else
+#     this:AddWidget("Value")
+#     this:SetFlagValue("__ENABLE_CAN__", "_NO_")
+# end
+#--*/
+#define __ENABLE_CAN__ _NO_
+#/*
+__ENABLE_CAN__=_NO_
+#*/
+
+#/*--
 # if uC.PERIPH[uC.NAME].CLK ~= nil then
 #     this:PutWidgets("CLK", "arch/"..uC.ARCH.."/clk_flags.h")
 # else
@@ -771,20 +772,7 @@ __ENABLE_CLK__=_YES_
 #*/
 
 #/*--
-# if uC.PERIPH[uC.NAME].RTC ~= nil then
-#     this:PutWidgets("RTC")
-# else
-#     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_RTC__", "_NO_")
-# end
-#--*/
-#define __ENABLE_RTC__ _NO_
-#/*
-__ENABLE_RTC__=_NO_
-#*/
-
-#/*--
-# if uC.PERIPH[uC.NAME].RTC ~= nil then
+# if uC.PERIPH[uC.NAME].CRC ~= nil then
 #     this:PutWidgets("CRC")
 # else
 #     this:AddWidget("Value")
@@ -794,6 +782,57 @@ __ENABLE_RTC__=_NO_
 #define __ENABLE_CRC__ _NO_
 #/*
 __ENABLE_CRC__=_NO_
+#*/
+
+#/*--
+# if uC.PERIPH[uC.NAME].DCI ~= nil then
+#     this:PutWidgets("DCI", "arch/"..uC.ARCH.."/dci_flags.h")
+#     this:SetToolTip("Digital Camera Interface Driver")
+# else
+#     this:AddWidget("Value")
+#     this:SetFlagValue("__ENABLE_DCI__", "_NO_")
+# end
+#--*/
+#define __ENABLE_DCI__ _NO_
+#/*
+__ENABLE_DCI__=_NO_
+#*/
+
+#/*--
+# this:PutWidgets("DHT11")
+# this:SetToolTip("To use this module set devices pins to open drain.")
+#--*/
+#define __ENABLE_DHT11__ _NO_
+#/*
+__ENABLE_DHT11__=_NO_
+#*/
+
+#/*--
+# if uC.PERIPH[uC.NAME].DMA ~= nil then
+#     this:PutWidgets("DMA")
+#     this:SetToolTip("General usage DMA driver.")
+# else
+#     this:AddWidget("Value")
+#     this:SetFlagValue("__ENABLE_DMA__", "_NO_")
+# end
+#--*/
+#define __ENABLE_DMA__ _NO_
+#/*
+__ENABLE_DMA__=_NO_
+#*/
+
+#/*--
+# if uC.PERIPH[uC.NAME].EMI ~= nil then
+#     this:PutWidgets("EMI", "arch/"..uC.ARCH.."/emi_flags.h")
+#     this:SetToolTip("External Memory Interface")
+# else
+#     this:AddWidget("Value")
+#     this:SetFlagValue("__ENABLE_EMI__", "_NO_")
+# end
+#--*/
+#define __ENABLE_EMI__ _NO_
+#/*
+__ENABLE_EMI__=_NO_
 #*/
 
 #/*--
@@ -810,55 +849,25 @@ __ENABLE_ETH__=_NO_
 #*/
 
 #/*--
-# if uC.PERIPH[uC.NAME].SPI ~= nil then
-#     this:PutWidgets("SPI", "arch/"..uC.ARCH.."/spi_flags.h")
-# else
-#     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_SPI__", "_NO_")
-# end
+# this:PutWidgets("FBRIDGE")
+# this:SetToolTip("File Bridge")
 #--*/
-#define __ENABLE_SPI__ _NO_
+#define __ENABLE_FBRIDGE__ _NO_
 #/*
-__ENABLE_SPI__=_NO_
+__ENABLE_FBRIDGE__=_NO_
 #*/
 
 #/*--
-# if uC.PERIPH[uC.NAME].UART ~= nil then
-#     this:PutWidgets("UART", "arch/"..uC.ARCH.."/uart_flags.h")
+# if uC.PERIPH[uC.NAME].GPIO ~= nil then
+#     this:PutWidgets("GPIO", "arch/"..uC.ARCH.."/gpio_flags.h")
 # else
 #     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_UART__", "_NO_")
+#     this:SetFlagValue("__ENABLE_GPIO__", "_NO_")
 # end
 #--*/
-#define __ENABLE_UART__ _YES_
+#define __ENABLE_GPIO__ _YES_
 #/*
-__ENABLE_UART__=_YES_
-#*/
-
-#/*--
-# if uC.PERIPH[uC.NAME].WDG ~= nil then
-#     this:PutWidgets("WDG", "arch/"..uC.ARCH.."/wdg_flags.h")
-# else
-#     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_WDG__", "_NO_")
-# end
-#--*/
-#define __ENABLE_WDG__ _NO_
-#/*
-__ENABLE_WDG__=_NO_
-#*/
-
-#/*--
-# if uC.PERIPH[uC.NAME].USBD ~= nil then
-#     this:PutWidgets("USBD", "arch/"..uC.ARCH.."/usbd_flags.h")
-# else
-#     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_USBD__", "_NO_")
-# end
-#--*/
-#define __ENABLE_USBD__ _NO_
-#/*
-__ENABLE_USBD__=_NO_
+__ENABLE_GPIO__=_YES_
 #*/
 
 #/*--
@@ -872,6 +881,15 @@ __ENABLE_USBD__=_NO_
 #define __ENABLE_I2C__ _NO_
 #/*
 __ENABLE_I2C__=_NO_
+#*/
+
+#/*--
+# this:PutWidgets("I2CEE")
+# this:SetToolTip("I2C EEPROM driver for 24Cxx devices.")
+#--*/
+#define __ENABLE_I2CEE__ _NO_
+#/*
+__ENABLE_I2CEE__=_NO_
 #*/
 
 #/*--
@@ -896,96 +914,17 @@ __ENABLE_LOOP__=_NO_
 #*/
 
 #/*--
-# this:PutWidgets("I2CEE")
-# this:SetToolTip("I2C EEPROM driver for 24Cxx devices.")
-#--*/
-#define __ENABLE_I2CEE__ _NO_
-#/*
-__ENABLE_I2CEE__=_NO_
-#*/
-
-#/*--
-# this:PutWidgets("SDSPI")
-# this:SetToolTip("SD Card driver for SPI interface.\n"..
-#                 "Note: make sure that the MISO pin is set to input\n"..
-#                 "pulled-up mode or is connected to external pull-up resistor.")
-#--*/
-#define __ENABLE_SDSPI__ _NO_
-#/*
-__ENABLE_SDSPI__=_NO_
-#*/
-
-#/*--
-# this:PutWidgets("TTY", "arch/noarch/tty_flags.h")
-#--*/
-#define __ENABLE_TTY__ _YES_
-#/*
-__ENABLE_TTY__=_YES_
-#*/
-
-#/*--
-# this:PutWidgets("DHT11")
-# this:SetToolTip("To use this module set devices pins to open drain.")
-#--*/
-#define __ENABLE_DHT11__ _NO_
-#/*
-__ENABLE_DHT11__=_NO_
-#*/
-
-#/*--
-# if uC.PERIPH[uC.NAME].EMI ~= nil then
-#     this:PutWidgets("EMI", "arch/"..uC.ARCH.."/emi_flags.h")
-#     this:SetToolTip("External Memory Interface")
+# if uC.PERIPH[uC.NAME].LTDC ~= nil then
+#     this:PutWidgets("LTDC", "arch/"..uC.ARCH.."/ltdc_flags.h")
+#     this:SetToolTip("LCD-TFT Display Controller module")
 # else
 #     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_EMI__", "_NO_")
+#     this:SetFlagValue("__ENABLE_LTDC__", "_NO_")
 # end
 #--*/
-#define __ENABLE_EMI__ _NO_
+#define __ENABLE_LTDC__ _NO_
 #/*
-__ENABLE_EMI__=_NO_
-#*/
-
-#/*--
-# if uC.PERIPH[uC.NAME].DMA ~= nil then
-#     this:PutWidgets("DMA")
-#     this:SetToolTip("General usage DMA driver.")
-# else
-#     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_DMA__", "_NO_")
-# end
-#--*/
-#define __ENABLE_DMA__ _NO_
-#/*
-__ENABLE_DMA__=_NO_
-#*/
-
-#/*--
-# if uC.PERIPH[uC.NAME].DCI ~= nil then
-#     this:PutWidgets("DCI", "arch/"..uC.ARCH.."/dci_flags.h")
-#     this:SetToolTip("Digital Camera Interface Driver")
-# else
-#     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_DCI__", "_NO_")
-# end
-#--*/
-#define __ENABLE_DCI__ _NO_
-#/*
-__ENABLE_DCI__=_NO_
-#*/
-
-#/*--
-# if uC.PERIPH[uC.NAME].CAN ~= nil then
-#     this:PutWidgets("CAN", "arch/"..uC.ARCH.."/can_flags.h")
-#     this:SetToolTip("CAN driver")
-# else
-#     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_CAN__", "_NO_")
-# end
-#--*/
-#define __ENABLE_CAN__ _NO_
-#/*
-__ENABLE_CAN__=_NO_
+__ENABLE_LTDC__=_NO_
 #*/
 
 #/*--
@@ -1003,6 +942,15 @@ __ENABLE_NVM__=_NO_
 #*/
 
 #/*--
+# this:PutWidgets("PART")
+# this:SetToolTip("Partition device driver")
+#--*/
+#define __ENABLE_PART__ _NO_
+#/*
+__ENABLE_PART__=_NO_
+#*/
+
+#/*--
 # if uC.PERIPH[uC.NAME].PWM ~= nil then
 #     this:PutWidgets("PWM")
 #     this:SetToolTip("PWM driver")
@@ -1017,81 +965,16 @@ __ENABLE_PWM__=_NO_
 #*/
 
 #/*--
-# this:PutWidgets("SPIEE")
-# this:SetToolTip("SPI EEPROM")
-#--*/
-#define __ENABLE_SPIEE__ _NO_
-#/*
-__ENABLE_SPIEE__=_NO_
-#*/
-
-#/*--
-# if uC.PERIPH[uC.NAME].SND ~= nil then
-#     this:PutWidgets("SND", "arch/"..uC.ARCH.."/snd_flags.h")
-#     this:SetToolTip("Sound interface driver")
+# if uC.PERIPH[uC.NAME].RTC ~= nil then
+#     this:PutWidgets("RTC")
 # else
 #     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_SND__", "_NO_")
+#     this:SetFlagValue("__ENABLE_RTC__", "_NO_")
 # end
 #--*/
-#define __ENABLE_SND__ _NO_
+#define __ENABLE_RTC__ _NO_
 #/*
-__ENABLE_SND__=_NO_
-#*/
-
-#/*--
-# this:PutWidgets("PART")
-# this:SetToolTip("Partition device driver")
-#--*/
-#define __ENABLE_PART__ _NO_
-#/*
-__ENABLE_PART__=_NO_
-#*/
-
-#/*--
-# this:PutWidgets("URANDOM")
-# this:SetToolTip("Pseudo random generator device")
-#--*/
-#define __ENABLE_URANDOM__ _NO_
-#/*
-__ENABLE_URANDOM__=_NO_
-#*/
-
-#/*--
-# this:PutWidgets("ZERO")
-# this:SetToolTip("Zero data device")
-#--*/
-#define __ENABLE_ZERO__ _NO_
-#/*
-__ENABLE_ZERO__=_NO_
-#*/
-
-#/*--
-# if uC.PERIPH[uC.NAME].TIMENC ~= nil then
-#     this:PutWidgets("TIMENC", "arch/"..uC.ARCH.."/timenc_flags.h")
-#     this:SetToolTip("Timer driven AB encoder")
-# else
-#     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_TIMENC__", "_NO_")
-# end
-#--*/
-#define __ENABLE_TIMENC__ _NO_
-#/*
-__ENABLE_TIMENC__=_NO_
-#*/
-
-#/*--
-# if uC.PERIPH[uC.NAME].LTDC ~= nil then
-#     this:PutWidgets("LTDC", "arch/"..uC.ARCH.."/ltdc_flags.h")
-#     this:SetToolTip("LCD-TFT Display Controller module")
-# else
-#     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_LTDC__", "_NO_")
-# end
-#--*/
-#define __ENABLE_LTDC__ _NO_
-#/*
-__ENABLE_LTDC__=_NO_
+__ENABLE_RTC__=_NO_
 #*/
 
 #/*--
@@ -1109,26 +992,143 @@ __ENABLE_SDMMC__=_NO_
 #*/
 
 #/*--
-# this:PutWidgets("FBRIDGE")
-# this:SetToolTip("File Bridge")
+# this:PutWidgets("SDSPI")
+# this:SetToolTip("SD Card driver for SPI interface.\n"..
+#                 "Note: make sure that the MISO pin is set to input\n"..
+#                 "pulled-up mode or is connected to external pull-up resistor.")
 #--*/
-#define __ENABLE_FBRIDGE__ _NO_
+#define __ENABLE_SDSPI__ _NO_
 #/*
-__ENABLE_FBRIDGE__=_NO_
+__ENABLE_SDSPI__=_NO_
 #*/
 
 #/*--
-# if uC.PERIPH[uC.NAME].ADC ~= nil then
-#     this:PutWidgets("ADC", "arch/"..uC.ARCH.."/adc_flags.h")
-#     this:SetToolTip("ADC Driver")
+# if uC.PERIPH[uC.NAME].SND ~= nil then
+#     this:PutWidgets("SND", "arch/"..uC.ARCH.."/snd_flags.h")
+#     this:SetToolTip("Sound interface driver")
 # else
 #     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_ADC__", "_NO_")
+#     this:SetFlagValue("__ENABLE_SND__", "_NO_")
 # end
 #--*/
-#define __ENABLE_ADC__ _NO_
+#define __ENABLE_SND__ _NO_
 #/*
-__ENABLE_ADC__=_NO_
+__ENABLE_SND__=_NO_
+#*/
+
+#/*--
+# if uC.PERIPH[uC.NAME].SPI ~= nil then
+#     this:PutWidgets("SPI", "arch/"..uC.ARCH.."/spi_flags.h")
+# else
+#     this:AddWidget("Value")
+#     this:SetFlagValue("__ENABLE_SPI__", "_NO_")
+# end
+#--*/
+#define __ENABLE_SPI__ _NO_
+#/*
+__ENABLE_SPI__=_NO_
+#*/
+
+#/*--
+# this:PutWidgets("SPIEE")
+# this:SetToolTip("SPI EEPROM")
+#--*/
+#define __ENABLE_SPIEE__ _NO_
+#/*
+__ENABLE_SPIEE__=_NO_
+#*/
+
+#/*--
+# if uC.PERIPH[uC.NAME].TIMENC ~= nil then
+#     this:PutWidgets("TIMENC", "arch/"..uC.ARCH.."/timenc_flags.h")
+#     this:SetToolTip("Timer driven AB encoder")
+# else
+#     this:AddWidget("Value")
+#     this:SetFlagValue("__ENABLE_TIMENC__", "_NO_")
+# end
+#--*/
+#define __ENABLE_TIMENC__ _NO_
+#/*
+__ENABLE_TIMENC__=_NO_
+#*/
+
+#/*--
+# this:PutWidgets("TTY", "arch/noarch/tty_flags.h")
+#--*/
+#define __ENABLE_TTY__ _YES_
+#/*
+__ENABLE_TTY__=_YES_
+#*/
+
+#/*--
+# if uC.PERIPH[uC.NAME].UART ~= nil then
+#     this:PutWidgets("UART", "arch/"..uC.ARCH.."/uart_flags.h")
+# else
+#     this:AddWidget("Value")
+#     this:SetFlagValue("__ENABLE_UART__", "_NO_")
+# end
+#--*/
+#define __ENABLE_UART__ _YES_
+#/*
+__ENABLE_UART__=_YES_
+#*/
+
+#/*--
+# this:PutWidgets("URANDOM")
+# this:SetToolTip("Pseudo random generator device")
+#--*/
+#define __ENABLE_URANDOM__ _NO_
+#/*
+__ENABLE_URANDOM__=_NO_
+#*/
+
+#/*--
+# if uC.PERIPH[uC.NAME].USBD ~= nil then
+#     this:PutWidgets("USBD", "arch/"..uC.ARCH.."/usbd_flags.h")
+# else
+#     this:AddWidget("Value")
+#     this:SetFlagValue("__ENABLE_USBD__", "_NO_")
+# end
+#--*/
+#define __ENABLE_USBD__ _NO_
+#/*
+__ENABLE_USBD__=_NO_
+#*/
+
+#/*--
+# if uC.PERIPH[uC.NAME].USBH ~= nil then
+#     this:PutWidgets("USBH", "arch/"..uC.ARCH.."/usbh_flags.h")
+#     this:SetToolTip("USB Host driver")
+# else
+#     this:AddWidget("Value")
+#     this:SetFlagValue("__ENABLE_USBH__", "_NO_")
+# end
+#--*/
+#define __ENABLE_USBH__ _NO_
+#/*
+__ENABLE_USBH__=_NO_
+#*/
+
+#/*--
+# if uC.PERIPH[uC.NAME].WDG ~= nil then
+#     this:PutWidgets("WDG", "arch/"..uC.ARCH.."/wdg_flags.h")
+# else
+#     this:AddWidget("Value")
+#     this:SetFlagValue("__ENABLE_WDG__", "_NO_")
+# end
+#--*/
+#define __ENABLE_WDG__ _NO_
+#/*
+__ENABLE_WDG__=_NO_
+#*/
+
+#/*--
+# this:PutWidgets("ZERO")
+# this:SetToolTip("Zero data device")
+#--*/
+#define __ENABLE_ZERO__ _NO_
+#/*
+__ENABLE_ZERO__=_NO_
 #*/
 
 #// MODULE LIST END

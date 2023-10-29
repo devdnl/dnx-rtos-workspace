@@ -70,12 +70,12 @@ this:AddItem("8-bit wide bus", "SDIO_BUS_WIDE_8B")
 /*--
 this:AddWidget("Spinbox", 1, 256, "Clock divide factor")
 --*/
-#define __SDMMC_CFG_SDMMC1_CKDIV__ 3
+#define __SDMMC_CFG_SDMMC1_CKDIV__ 1
 
 /*--
-this:AddWidget("Spinbox", 100, 2000, "Card operation timeout [ms]")
+this:AddWidget("Spinbox", 100, 60000, "Card operation timeout [ms]")
 --*/
-#define __SDMMC_CFG_SDMMC1_CARD_TIMEOUT__ 5000
+#define __SDMMC_CFG_SDMMC1_CARD_TIMEOUT__ 500
 
 /*--
 this:AddWidget("Combobox", "Power save")
@@ -103,7 +103,7 @@ this:AddItem("DMA", "_SDMMC_MODE_DMA")
 this:AddWidget("Combobox", "IRQ priority")
 uC.AddPriorityItems(this, false)
 --*/
-#define __SDMMC_CFG_SDMMC1_IRQ_PRIORITY__ 13
+#define __SDMMC_CFG_SDMMC1_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 #endif /* _SDMMC_FLAGS_H_ */
 /*==============================================================================

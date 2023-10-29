@@ -73,7 +73,7 @@ this:AddWidget("Spinbox", 1, 256, "Clock divide factor")
 #define __SDMMC_CFG_SDMMC1_CKDIV__ 1
 
 /*--
-this:AddWidget("Spinbox", 100, 2000, "Card operation timeout [ms]")
+this:AddWidget("Spinbox", 100, 60000, "Card operation timeout [ms]")
 --*/
 #define __SDMMC_CFG_SDMMC1_CARD_TIMEOUT__ 500
 
@@ -97,7 +97,7 @@ this:AddItem("Polling", "_SDMMC_MODE_POLLING")
 this:AddItem("IRQ", "_SDMMC_MODE_IRQ")
 this:AddItem("DMA", "_SDMMC_MODE_DMA")
 --*/
-#define __SDMMC_CFG_SDMMC1_MODE__ _SDMMC_MODE_IRQ
+#define __SDMMC_CFG_SDMMC1_MODE__ _SDMMC_MODE_DMA
 
 /*--
 this:AddWidget("Combobox", "IRQ priority")
@@ -161,7 +161,7 @@ this:AddItem("Polling", "_SDMMC_MODE_POLLING")
 this:AddItem("IRQ", "_SDMMC_MODE_IRQ")
 this:AddItem("DMA", "_SDMMC_MODE_DMA")
 --*/
-#define __SDMMC_CFG_SDMMC2_MODE__ _SDMMC_MODE_IRQ
+#define __SDMMC_CFG_SDMMC2_MODE__ _SDMMC_MODE_DMA
 
 /*--
 this:AddWidget("Combobox", "IRQ priority")
