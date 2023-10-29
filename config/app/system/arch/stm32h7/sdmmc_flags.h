@@ -64,7 +64,7 @@ this:AddItem("1-bit wide bus", "SDMMC_BUS_WIDE_1B")
 this:AddItem("4-bit wide bus", "SDMMC_BUS_WIDE_4B")
 this:AddItem("8-bit wide bus", "SDMMC_BUS_WIDE_8B")
 --*/
-#define __SDMMC_CFG_SDMMC1_BUS_WIDE__ SDMMC_BUS_WIDE_4B
+#define __SDMMC_CFG_SDMMC1_BUS_WIDE__ SDMMC_BUS_WIDE_1B
 
 /*--
 this:AddWidget("Spinbox", 1, 256, "Clock divide factor")
@@ -162,7 +162,7 @@ this:AddWidget("Combobox", "Device type")
 this:AddItem("SD Card", "_SDMMC_TYPE_SDCARD")
 this:AddItem("MMC/eMMC", "_SDMMC_TYPE_MMC")
 --*/
-#define __SDMMC_CFG_SDMMC2_TYPE__ _SDMMC_TYPE_MMC
+#define __SDMMC_CFG_SDMMC2_TYPE__ _SDMMC_TYPE_SDCARD
 
 /*--
 this:AddWidget("Combobox", "Driver mode")
@@ -170,7 +170,7 @@ this:AddItem("Polling", "_SDMMC_MODE_POLLING")
 this:AddItem("IRQ", "_SDMMC_MODE_IRQ")
 this:AddItem("DMA", "_SDMMC_MODE_DMA")
 --*/
-#define __SDMMC_CFG_SDMMC2_MODE__ _SDMMC_MODE_IRQ
+#define __SDMMC_CFG_SDMMC2_MODE__ _SDMMC_MODE_DMA
 
 /*--
 this:AddWidget("Combobox", "Speed mode")
