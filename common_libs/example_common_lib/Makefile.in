@@ -1,0 +1,6 @@
+# Makefile for GNU make
+# This Makefile can be used directly in lib folder in appset.
+
+CSRC_LIB   += example_common_lib/example_common_lib.c
+CXXSRC_LIB += 
+HDRLOC_LIB += example_common_lib

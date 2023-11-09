@@ -219,10 +219,10 @@ extern "C" {
 #ifdef __cplusplus
 #       include <stdlib.h>
 #       include <stddef.h>
-        inline void* operator new     (size_t size) {return malloc(size);}
-        inline void* operator new[]   (size_t size) {return malloc(size);}
-        inline void  operator delete  (void* ptr  ) {free(ptr);}
-        inline void  operator delete[](void* ptr  ) {free(ptr);}
+        inline void* operator new     (size_t size) noexcept {return malloc(size);}
+        inline void* operator new[]   (size_t size) noexcept {return malloc(size);}
+        inline void  operator delete  (void* ptr  ) noexcept {free(ptr);}
+        inline void  operator delete[](void* ptr  ) noexcept {free(ptr);}
 #       define _PROGMAN_CXX extern "C"
 #       define _PROGMAN_EXTERN_C extern "C"
 #else
@@ -230,21 +230,18 @@ extern "C" {
 #       define _PROGMAN_EXTERN_C extern
 #endif
 
-#define PROGRAM_PARAMS(_name_, stack_depth)\
-        static int main(int argc, char *argv[]);\
-        _PROGMAN_CXX const size_t __builtin_app_##_name_##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
-        _PROGMAN_CXX const size_t __builtin_app_##_name_##_ss__ = stack_depth;\
-        _PROGMAN_CXX int __builtin_app_##_name_##_main(int argc, char *argv[]) {return main(argc, argv);}
 
-#define int_main(_name_, stack_depth, argc, argv)\
+#define main __main
+#define PROGRAM_PARAMS(_name_, stack_depth)\
+        static int __main(int argc, char *argv[]);\
         _PROGMAN_CXX const size_t __builtin_app_##_name_##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
         _PROGMAN_CXX const size_t __builtin_app_##_name_##_ss__ = stack_depth;\
-        _PROGMAN_CXX int __builtin_app_##_name_##_main(argc, argv)
+        _PROGMAN_CXX int __builtin_app_##_name_##_main(int argc, char *argv[]) {return __main(argc, argv);}
 
 #define stdin  (((_libc_app_ctx_t*)(_libc_appctx_get()))->_stdin)
 #define stdout (((_libc_app_ctx_t*)(_libc_appctx_get()))->_stdout)
 #define stderr (((_libc_app_ctx_t*)(_libc_appctx_get()))->_stderr)
-#define _getglobal ((struct _GVAR_STRUCT_NAME*const)_libc_global_get())
+#define _getglobal ((struct _GVAR_STRUCT_NAME*)_libc_global_get())
 #define global _getglobal
 
 /*==============================================================================
