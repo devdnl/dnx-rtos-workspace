@@ -41,3 +41,4 @@ InsertBraces: true
 ObjCBlockIndentWidth: 8
 PointerAlignment: Right
 SpaceInEmptyBlock: false
+SortIncludes: Never

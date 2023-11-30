@@ -928,6 +928,15 @@ __ENABLE_LTDC__=_NO_
 #*/
 
 #/*--
+# this:PutWidgets("MEMBLOCK")
+# this:SetToolTip("Memory Block as file representation")
+#--*/
+#define __ENABLE_MEMBLOCK__ _NO_
+#/*
+__ENABLE_MEMBLOCK__=_NO_
+#*/
+
+#/*--
 # if uC.PERIPH[uC.NAME].NVM ~= nil then
 #     this:PutWidgets("NVM")
 #     this:SetToolTip("NVM driver")
