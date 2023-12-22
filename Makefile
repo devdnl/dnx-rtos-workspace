@@ -111,11 +111,9 @@ clean :
 	@$(MAKE) -C system -s -j 1 -fMakefile clean
 
 	@$(ECHO) -n "Cleaning app-appset files: "
-	@if [ -d app-appset/config-default ]; then $(REMOVE) -rf app-appset/config; $(RENAME) -f app-appset/config-default app-appset/config; fi
 	@$(MAKE) -C app-appset -s -j 1 -fMakefile clean
 
 	@$(ECHO) -n "Cleaning btl-appset files: "
-	@if [ -d btl-appset/config-default ]; then $(REMOVE) -rf btl-appset/config; $(RENAME) -f btl-appset/config-default btl-appset/config; fi
 	@if [ -d btl-appset ]; then $(MAKE) -C btl-appset -s -j 1 -fMakefile clean; else $(ECHO) "No bootloader project."; fi
 
 	@$(REMOVE) -r $(TARGET_DIR_NAME)

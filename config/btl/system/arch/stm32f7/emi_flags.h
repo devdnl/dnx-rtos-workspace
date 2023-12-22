@@ -102,37 +102,37 @@ this:AddItem("3 x HCLK periods", "3")
 #define __EMI_SDRAM_SDCLK__ 2
 
 /*--
-this:AddWidget("Spinbox", 1, 16, "Row precharge delay")
+this:AddWidget("Spinbox", 1, 16, "Row precharge delay (tRP)")
 --*/
 #define __EMI_SDRAM_TRP__ 16
 
 /*--
-this:AddWidget("Spinbox", 1, 16, "Row cycle delay")
+this:AddWidget("Spinbox", 1, 16, "Row cycle delay (tRC)")
 --*/
 #define __EMI_SDRAM_TRC__ 16
 
 /*--
-this:AddWidget("Spinbox", 1, 3, "CAS Latency")
+this:AddWidget("Spinbox", 1, 3, "CAS Latency (CAS)")
 --*/
 #define __EMI_SDRAM_CAS__ 3
 
 /*--
-this:AddWidget("Spinbox", 1, 16, "Self refresh time")
+this:AddWidget("Spinbox", 1, 16, "Self refresh time (tRAS)")
 --*/
 #define __EMI_SDRAM_TRAS__ 16
 
 /*--
-this:AddWidget("Spinbox", 1, 16, "Exit Self-refresh delay")
+this:AddWidget("Spinbox", 1, 16, "Exit Self-refresh delay (tXSR)")
 --*/
 #define __EMI_SDRAM_TXSR__ 16
 
 /*--
-this:AddWidget("Spinbox", 1, 16, "Write Recovery Time")
+this:AddWidget("Spinbox", 1, 16, "Write Recovery Time (tWR)")
 --*/
 #define __EMI_SDRAM_TWR__ 2
 
 /*--
-this:AddWidget("Spinbox", 1, 16, "Load to Active delay")
+this:AddWidget("Spinbox", 1, 16, "Load to Active delay (tMRD)")
 this:SetToolTip("Define the delay between a Load Mode Register command and an "..
                 "Active or Refresh command.")
 --*/
@@ -194,7 +194,7 @@ this:AddItem("11 bits", "3")
 #define __EMI_SDRAM_1_NC__ 0
 
 /*--
-this:AddWidget("Spinbox", 1, 16, "Row to column delay")
+this:AddWidget("Spinbox", 1, 16, "Row to column delay (tRCD)")
 --*/
 #define __EMI_SDRAM_1_TRCD__ 16
 
@@ -254,7 +254,7 @@ this:AddItem("11 bits", "3")
 #define __EMI_SDRAM_2_NC__ 0
 
 /*--
-this:AddWidget("Spinbox", 1, 16, "Row to column delay")
+this:AddWidget("Spinbox", 1, 16, "Row to column delay (tRCD)")
 --*/
 #define __EMI_SDRAM_2_TRCD__ 16
 
