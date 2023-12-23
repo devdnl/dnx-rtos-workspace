@@ -122,11 +122,13 @@ clean :
 .PHONY : app
 app : _build_prepare app-system app-appset
 	@$(SREC_CAT) $(TARGET_DIR_NAME)/app-system.hex -Intel $(TARGET_DIR_NAME)/app-appset.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_app.hex -Intel
+	@if [ -f $(TARGET_DIR_NAME)/app-appset-romfs.hex ]; then $(SREC_CAT) $(TARGET_DIR_NAME)/$(PROJECT)_app.hex -Intel $(TARGET_DIR_NAME)/app-appset-romfs.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_app.hex -Intel; fi
 
 
 .PHONY : btl
 btl : _build_prepare btl-system btl-appset
 	@$(SREC_CAT) $(TARGET_DIR_NAME)/btl-system.hex -Intel $(TARGET_DIR_NAME)/btl-appset.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex -Intel
+	@if [ -f $(TARGET_DIR_NAME)/app-appset-romfs.hex ]; then $(SREC_CAT) $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex -Intel $(TARGET_DIR_NAME)/btl-appset-romfs.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex -Intel; fi
 	@$(OBJCOPY) --input-target=ihex --output-target=binary $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex $(TARGET_DIR_NAME)/$(PROJECT)_btl.bin
 
 
@@ -144,17 +146,18 @@ app-system : _build_prepare
 	@$(COPY) system/build/ioctl $(TARGET_DIR_NAME)/ioctl
 
 
-.PHONY : clean-app-appset
-clean-app-appset : _build_prepare
-	@$(MAKE) -C app-appset -s -j 1 -fMakefile clean
-
-
 .PHONY : app-appset
 app-appset : _build_prepare
 	@$(MAKE) -C app-appset -s -j 1 -fMakefile all
 	@$(COPY) app-appset/build/output/appset.hex $(TARGET_DIR_NAME)/app-appset.hex
 	@$(COPY) app-appset/build/output/appset.elf $(TARGET_DIR_NAME)/app-appset.elf
 	@$(COPY) app-appset/build/output/appset.bin $(TARGET_DIR_NAME)/app-appset.bin
+	@if [ -f app-appset/build/output/appset.romfs ]; then $(COPY) app-appset/build/output/appset.romfs $(TARGET_DIR_NAME)/app-appset-romfs.hex; fi
+
+
+.PHONY : clean-app-appset
+clean-app-appset : _build_prepare
+	@$(MAKE) -C app-appset -s -j 1 -fMakefile clean
 
 
 .PHONY : btl-system
@@ -177,6 +180,7 @@ btl-appset : _build_prepare
 	@$(COPY) btl-appset/build/output/appset.hex $(TARGET_DIR_NAME)/btl-appset.hex
 	@$(COPY) btl-appset/build/output/appset.elf $(TARGET_DIR_NAME)/btl-appset.elf
 	@$(COPY) btl-appset/build/output/appset.bin $(TARGET_DIR_NAME)/btl-appset.bin
+	@if [ -f btl-appset/build/output/appset.romfs ]; then $(COPY) btl-appset/build/output/appset.romfs $(TARGET_DIR_NAME)/btl-appset-romfs.hex; fi
 
 .PHONY : clean-btl-appset
 clean-btl-appset : _build_prepare
@@ -206,6 +210,7 @@ install-app-system :
 .PHONY : install-app-appset
 install-app-appset :
 	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/app-appset.hex
+	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/app-appset-romfs.hex
 
 
 .PHONY : config

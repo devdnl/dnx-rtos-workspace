@@ -37,6 +37,8 @@ Brief   File package container.
 ==============================================================================*/
 #define ALLOC_BUF_SIZE         8192
 
+#define FPKG_CRC32_INIT        0xFFFFFFFF
+
 #define FILE_DESCRIPTOR_MAGIC  0x43534446
 #define FILE_ENTRY_MAGIC       0x544E4546
 #define CONTAINER_HEADER_MAGIC 0x474B5046
@@ -87,7 +89,7 @@ struct fpkg {
 struct fpkg_file {
         fpkg_t  *self;
         uint32_t size;
-        int32_t  seek;
+        uint32_t seek;
         uint32_t content_prng_seed;
         uint32_t current_seed;
         uint32_t content_offset;
@@ -110,14 +112,14 @@ static void xcrypt(void *buf, uint32_t buflen, uint32_t *seed);
 
 static bool is_file_valid(fpkg_t *self, bool full_check);
 
-static bool is_container_header_valid(fpkg_t *self, const container_header_t *hdr);
+static bool is_container_header_valid(const container_header_t *hdr);
 
-static bool is_file_entry_valid(fpkg_t *self, const file_entry_t *file_entry);
+static bool is_file_entry_valid(const file_entry_t *file_entry);
 
-static bool is_file_descriptor_valid(fpkg_t *self, const file_descriptor_t *file_desc);
+static bool is_file_descriptor_valid(const file_descriptor_t *file_desc);
 
-static bool is_file_descriptor_name_valid(fpkg_t *self,
-        const file_descriptor_t *file_desc, const char *name);
+static bool is_file_descriptor_name_valid(const file_descriptor_t *file_desc,
+        const char                                                *name);
 
 static int read_container_header(fpkg_t *self, container_header_t *hdr);
 
@@ -472,7 +474,7 @@ int fpkg__fseek(fpkg_file_t *file, int32_t seek, fpkg_seek_mode_t mode)
                 return -1;
         }
 
-        int32_t old_seek = file->seek;
+        uint32_t old_seek = file->seek;
 
         switch (mode) {
         case fpkg_seek_mode__set:
@@ -491,10 +493,7 @@ int fpkg__fseek(fpkg_file_t *file, int32_t seek, fpkg_seek_mode_t mode)
                 break;
         }
 
-        if (file->seek < 0) {
-                file->seek = 0;
-
-        } else if (seek > file->size) {
+        if (seek > file->size) {
                 file->seek = file->size;
         }
 
@@ -885,7 +884,7 @@ static bool is_file_valid(fpkg_t *self, bool full_check)
                         return false;
                 }
 
-                if (not is_container_header_valid(self, &header)) {
+                if (not is_container_header_valid(&header)) {
                         return false;
                 }
 
@@ -901,7 +900,7 @@ static bool is_file_valid(fpkg_t *self, bool full_check)
                                 break;
                         }
 
-                        if (not is_file_entry_valid(self, &file_entry)) {
+                        if (not is_file_entry_valid(&file_entry)) {
                                 valid = false;
                                 break;
                         }
@@ -912,7 +911,7 @@ static bool is_file_valid(fpkg_t *self, bool full_check)
                                 break;
                         }
 
-                        if (not is_file_descriptor_valid(self, &file_desc)) {
+                        if (not is_file_descriptor_valid(&file_desc)) {
                                 valid = false;
                                 break;
                         }
@@ -924,8 +923,7 @@ static bool is_file_valid(fpkg_t *self, bool full_check)
                                 break;
                         }
 
-                        if (not is_file_descriptor_name_valid(self, &file_desc,
-                                    buf_name)) {
+                        if (not is_file_descriptor_name_valid(&file_desc, buf_name)) {
                                 valid = false;
                                 break;
                         }
@@ -941,13 +939,12 @@ static bool is_file_valid(fpkg_t *self, bool full_check)
 /**
  * @brief  Function check if container header is coherent.
  *
- * @param  self                 container instance
  * @param  header               header to check
  *
  * @return True if valid, otherwise false.
  */
 //==============================================================================
-static bool is_container_header_valid(fpkg_t *self, const container_header_t *hdr)
+static bool is_container_header_valid(const container_header_t *hdr)
 {
         bool valid = false;
 
@@ -972,13 +969,12 @@ static bool is_container_header_valid(fpkg_t *self, const container_header_t *hd
 /**
  * @brief  Check file entry coherency.
  *
- * @param  self                 container instance
  * @param  file_entry           file entry
  *
  * @return True if valid, otherwise false.
  */
 //==============================================================================
-static bool is_file_entry_valid(fpkg_t *self, const file_entry_t *file_entry)
+static bool is_file_entry_valid(const file_entry_t *file_entry)
 {
         uint32_t crc = calc_CRC32(&file_entry->file_descriptor_address,
                 sizeof(*file_entry) - offsetof(file_entry_t, file_descriptor_address),
@@ -992,7 +988,6 @@ static bool is_file_entry_valid(fpkg_t *self, const file_entry_t *file_entry)
 /**
  * @brief  Check file descriptor coherency.
  *
- * @param  self                 container instance
  * @param  file_desc_address    file descriptor address
  * @param  buf                  operational buffer for file CRC32 calculation (can be
  * NULL)
@@ -1001,9 +996,8 @@ static bool is_file_entry_valid(fpkg_t *self, const file_entry_t *file_entry)
  * @return True if valid, otherwise false.
  */
 //==============================================================================
-static bool is_file_descriptor_valid(fpkg_t *self, const file_descriptor_t *file_desc)
+static bool is_file_descriptor_valid(const file_descriptor_t *file_desc)
 {
-
         uint32_t crc = calc_CRC32(&file_desc->file_name_len,
                 sizeof(*file_desc) - offsetof(file_descriptor_t, file_name_len),
                 FPKG_CRC32_INIT);
@@ -1016,7 +1010,6 @@ static bool is_file_descriptor_valid(fpkg_t *self, const file_descriptor_t *file
 /**
  * @brief  Check file descriptor coherency.
  *
- * @param  self                 container instance
  * @param  file_desc_address    file descriptor address
  * @param  buf                  operational buffer for file CRC32 calculation (can be
  * NULL)
@@ -1025,8 +1018,8 @@ static bool is_file_descriptor_valid(fpkg_t *self, const file_descriptor_t *file
  * @return True if valid, otherwise false.
  */
 //==============================================================================
-static bool is_file_descriptor_name_valid(fpkg_t *self,
-        const file_descriptor_t *file_desc, const char *name)
+static bool is_file_descriptor_name_valid(const file_descriptor_t *file_desc,
+        const char                                                *name)
 {
         uint32_t crc = calc_CRC32(name, file_desc->file_name_len, FPKG_CRC32_INIT);
 

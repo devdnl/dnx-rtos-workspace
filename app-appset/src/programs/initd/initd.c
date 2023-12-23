@@ -91,12 +91,6 @@ static void create_base_file_system_structure(void)
         mkdir("/run", 0666);    // this folder store runtime files
         mkdir("/mnt", 0666);    // this folder store SD card content
 
-
-        extern const void *const ROMFS_HANDLE;
-        char                     src_path[16];
-        snprintf(src_path, sizeof(src_path), "@%p", ROMFS_HANDLE);
-        mount("romfs", src_path, "/mnt", "");
-
         /*
          * NOTE: Number and naming of folders depends on user needs. There can
          *       be mounted additional file systems that does not requires
@@ -253,6 +247,22 @@ static void initialize_additional_drivers(void)
         } else {
                 perror("eth");
         }
+}
+
+//==============================================================================
+/**
+ * @brief Mount ROMFS file system.
+ */
+//==============================================================================
+static void mount_ROMFS(void)
+{
+        driver_init2("MEMBLOCK", 0, 0, "/dev/romfs", &(MEMBLOCK_config_t) {
+                .memory_address = ROMFS_ADDRESS,
+                .block_size     = ROMFS_SIZE,
+                .access         = O_RDONLY,
+        });
+
+        mount("romfs", "/dev/romfs", "/mnt", "validate");
 }
 
 //==============================================================================
@@ -491,7 +501,8 @@ int main(int argc, char *argv[])
         // 5. Initialize additional drivers
         initialize_additional_drivers();
 
-        // 6. Initialize and mount of SD Card (optional)
+        // 6. Initialize and mount additional file systems
+        mount_ROMFS();
         mount_SD_card();
 
         // 7. Print system log messages

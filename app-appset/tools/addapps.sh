@@ -164,8 +164,7 @@ function create_program_registration_file()
 
     echo "// function never called"
     echo "int main(void) {"
-    echo "        extern const void *const ROMFS_HANDLE;"
-    echo "        _program_table_desc.program_entry->main(0, (void*)&ROMFS_HANDLE);"
+    echo "        _program_table_desc.program_entry->main(0, NULL);"
     echo "        return 0;"
     echo "}"
 }
