@@ -1,7 +1,10 @@
-File system can be mounted by using &ROMFS_HANDLE pointer address passed as string
-to mount command/function as follow:
+File system can be mounted by using MEMBLOCK driver mapped to the memory region
+that contains ROMFS file system.
 
-    extern const void *const ROMFS_HANDLE;
-    char src_path[16];
-    snprintf(src_path, sizeof(src_path), "@%p", ROMFS_HANDLE);
-    mount("romfs", src_path, "/run", "");
+    driver_init2("MEMBLOCK", 0, 0, "/dev/romfs", &(MEMBLOCK_config_t) {
+        .memory_address = ROMFS_ADDRESS,
+        .block_size     = ROMFS_SIZE,
+        .access         = O_RDONLY,
+    });
+
+    mount("romfs", "/dev/romfs", "/mnt", "");

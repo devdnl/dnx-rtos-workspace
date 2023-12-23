@@ -123,6 +123,14 @@ __CPU_ARCH__=stm32f1
 #--*/
 #define __LIBC_DNX_RTOS_ADDRESS__ 0x08000000
 
+#/*--
+#this:AddWidget("Editline", false, "ROMFS address")
+#this:SetToolTip("ROMFS image address. Use 0 to disable creating ROMFS.")
+#--*/
+#define __ROMFS_ADDRESS__ 0x08070000
+#/*
+__ROMFS_ADDRESS__=0x08070000
+#*/
 
 #if (__CPU_ARCH__ == stm32f1)
 #define ARCH_stm32f1
