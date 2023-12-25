@@ -131,8 +131,9 @@ AS_EXT  = s
 #---------------------------------------------------------------------------------------------------
 # defines project path with binaries
 TARGET_DIR_NAME = build
+TARGET_PATH     = $(TARGET_DIR_NAME)/output
 GEN_PROG_DIR    = $(TARGET_DIR_NAME)/program
-ROMFS_IMG       = $(TARGET_DIR_NAME)/romfs.img
+ROMFS_IMG       = $(TARGET_PATH)/appset-romfs.bin 
 RES_ROMFS       = "res/romfs"
 
 # defines object folder name
@@ -205,9 +206,6 @@ SEARCHPATH_ARCH     = $(foreach var, $(_HDRLOC_ARCH),-I$(var))
 
 # main target without defined prefixes
 TARGET = $(__CPU_ARCH__)
-
-# target path
-TARGET_PATH = $(TARGET_DIR_NAME)/output
 
 # object path
 OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
@@ -342,8 +340,10 @@ hex :
 	@$(SIZE) -B -t --common $(TARGET_PATH)/$(PROJECT).a > $(TARGET_PATH)/$(PROJECT).size
 	
 	@$(ECHO) 'Creating ROMFS hex image...'
-	@$(SREC_CAT) $(ROMFS_IMG) -binary -offset $(__ROMFS_ADDRESS__) -output $(TARGET_PATH)/appset.romfs -Intel
-	@if [[ $(__ROMFS_ADDRESS__) == 0 ]]; then $(RM) $(ROMFS_IMG) $(TARGET_PATH)/appset.romfs; fi
+	@if [[ $(__ROMFS_ADDRESS__) != 0 ]]; then $(SREC_CAT) $(ROMFS_IMG) -binary\
+		-offset $(__ROMFS_ADDRESS__) -output $(TARGET_PATH)/appset-romfs.hex -Intel; fi
+	@if [[ $(__ROMFS_ADDRESS__) != 0 ]]; then $(SREC_CAT) $(TARGET_PATH)/appset-romfs.hex -Intel\
+		 $(TARGET_PATH)/$(PROJECT).hex -Intel -o $(TARGET_PATH)/$(PROJECT).hex -Intel; fi
 
 ####################################################################################################
 # show compile status
@@ -364,6 +364,7 @@ status :
 .PHONY : generate
 generate :
 	@$(MKDIR) $(TARGET_PATH)
+	@$(RM) $(TARGET_PATH)/*.*
 
 	@$(MKDIR) $(GEN_PROG_DIR)
 	@$(ECHO) "Adding user's programs and libraries to the project..."
@@ -378,7 +379,7 @@ generate :
 	
 	@$(ECHO) "#define ROMFS_ADDRESS $(__ROMFS_ADDRESS__)" >> build/defs.h
 	@$(ECHO) -ne "#define ROMFS_SIZE " >> build/defs.h
-	@$(SHELL) -c "$(SIZEOF) $(ROMFS_IMG)" >> build/defs.h
+	@$(SIZEOF) $(ROMFS_IMG) >> build/defs.h
 
 ####################################################################################################
 # Start all generators
@@ -401,7 +402,6 @@ apply_git_hooks :
 dependencies :
 	@$(ECHO) "Creating dependencies for '$(TARGET)' target..."
 	@$(MKDIR) $(TARGET_PATH)
-	@$(RM) $(TARGET_PATH)/*.*
 	@$(ECHO) "" > $(TARGET_PATH)/$(DEP_FILE_NAME)
 	@$(MKDEP)    -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH_TARGET) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1
 	@$(MKDEP) -a -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH_PROGRAMS) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1
