@@ -55,10 +55,10 @@ _YES_ = 1
 #include "./filesystems/filesystems_flags.h"
 #include "./network/network_flags.h"
 #/* include all configuration flags in Makefile
-include ./config/project/project_flags.h
-include ./config/arch/arch_flags.h
-include ./config/filesystems/filesystems_flags.h
-include ./config/network/network_flags.h
+include $(CONFIG_DIR)/project/project_flags.h
+include $(CONFIG_DIR)/arch/arch_flags.h
+include $(CONFIG_DIR)/filesystems/filesystems_flags.h
+include $(CONFIG_DIR)/network/network_flags.h
 #*/
 
 #/*--

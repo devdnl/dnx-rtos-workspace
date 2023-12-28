@@ -602,7 +602,7 @@
 #++*/
 
 #/* include of CPU mandatory file in Makefile
-include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
+include $(CONFIG_DIR)/arch/$(__CPU_ARCH__)/cpu_flags.h
 #*/
 
 #define ARCH_noarch

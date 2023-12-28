@@ -107,7 +107,6 @@ all : _build_prepare btl app
 .PHONY : clean
 clean :
 	@$(ECHO) -n "Cleaning system files: "
-	@if [ -d system/config-default ]; then $(REMOVE) -rf system/config; $(RENAME) -f system/config-default system/config; fi
 	@$(MAKE) -C system -s -j 1 -fMakefile clean
 
 	@$(ECHO) -n "Cleaning app-appset files: "
@@ -132,12 +131,7 @@ btl : _build_prepare btl-system btl-appset
 
 .PHONY : app-system
 app-system : _build_prepare
-	@if [ -d system/config-default ]; then $(REMOVE) -rf system/config; $(RENAME) -f system/config-default system/config; fi
-	@$(RENAME) system/config system/config-default
-	@$(COPY) config/app/system system/config
-	@$(MAKE) -C system -s -j 1 -fMakefile clean all
-	@$(REMOVE) -rf system/config
-	@$(RENAME) system/config-default system/config
+	@$(MAKE) -C system -s -j 1 -fMakefile clean all CONFIG_DIR=../config/app/system
 	@$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/app-system.hex
 	@$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/app-system.elf
 	@$(COPY) system/build/output/dnx.bin $(TARGET_DIR_NAME)/app-system.bin
@@ -159,12 +153,7 @@ clean-app-appset : _build_prepare
 
 .PHONY : btl-system
 btl-system : _build_prepare
-	@if [ -d system/config-default ]; then $(REMOVE) -rf system/config; $(RENAME) -f system/config-default system/config; fi
-	@$(RENAME) system/config system/config-default
-	@$(COPY) config/btl/system system/config
-	@$(MAKE) -C system -s -j 1 -fMakefile clean all
-	@$(REMOVE) -rf system/config
-	@$(RENAME) system/config-default system/config
+	@$(MAKE) -C system -s -j 1 -fMakefile clean all CONFIG_DIR=../config/btl/system
 	@$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/btl-system.hex
 	@$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/btl-system.elf
 	@$(COPY) system/build/output/dnx.bin $(TARGET_DIR_NAME)/btl-system.bin

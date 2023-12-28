@@ -79,23 +79,14 @@ __ENABLE_CANNET_STACK__=_NO_
 
 #if __ENABLE_TCPIP_STACK__ == _YES_
 #include "tcpip_flags.h"
-#/*
-#include ./config/network/tcpip_flags.h
-#*/
 #endif
 
 #if __ENABLE_SIPC_STACK__ == _YES_
 #include "sipc_flags.h"
-#/*
-include ./config/network/sipc_flags.h
-#*/
 #endif
 
 #if __ENABLE_CANNET_STACK__ == _YES_
 #include "cannet_flags.h"
-#/*
-include ./config/network/cannet_flags.h
-#*/
 #endif
 
 

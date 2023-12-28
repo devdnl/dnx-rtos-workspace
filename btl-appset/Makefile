@@ -131,8 +131,9 @@ AS_EXT  = s
 #---------------------------------------------------------------------------------------------------
 # defines project path with binaries
 TARGET_DIR_NAME = build
+TARGET_PATH     = $(TARGET_DIR_NAME)/output
 GEN_PROG_DIR    = $(TARGET_DIR_NAME)/program
-ROMFS_DIR       = $(TARGET_DIR_NAME)/romfs
+ROMFS_IMG       = $(TARGET_PATH)/appset-romfs.bin 
 RES_ROMFS       = "res/romfs"
 
 # defines object folder name
@@ -161,7 +162,6 @@ SIZEOF     = /usr/bin/stat -c %s
 MKDEP      = /usr/bin/makedepend
 WC         = /usr/bin/wc
 PYTHON3    = /usr/bin/python3
-PYTHON2    = /usr/bin/python2
 CC         = $(TOOLCHAIN)gcc
 CXX        = $(TOOLCHAIN)g++
 LD         = $(TOOLCHAIN)g++
@@ -180,6 +180,8 @@ DOXYGEN    = ./tools/doxygen.sh
 RELEASEPKG = ./tools/releasepkg.sh
 RUNGENS    = ./tools/rungens.sh
 FINDGVAR   = ./tools/find_global_vars.sh
+SREC_CAT   = /bin/srec_cat
+MKFPKG     = $(PYTHON3) ../system/tools/mkfpkg.py
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -204,9 +206,6 @@ SEARCHPATH_ARCH     = $(foreach var, $(_HDRLOC_ARCH),-I$(var))
 
 # main target without defined prefixes
 TARGET = $(__CPU_ARCH__)
-
-# target path
-TARGET_PATH = $(TARGET_DIR_NAME)/output
 
 # object path
 OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
@@ -339,6 +338,12 @@ hex :
 
 	@$(ECHO) 'Creating objects size list...'
 	@$(SIZE) -B -t --common $(TARGET_PATH)/$(PROJECT).a > $(TARGET_PATH)/$(PROJECT).size
+	
+	@$(ECHO) 'Creating ROMFS hex image...'
+	@if [[ $(__ROMFS_ADDRESS__) != 0 ]]; then $(SREC_CAT) $(ROMFS_IMG) -binary\
+		-offset $(__ROMFS_ADDRESS__) -output $(TARGET_PATH)/appset-romfs.hex -Intel; fi
+	@if [[ $(__ROMFS_ADDRESS__) != 0 ]]; then $(SREC_CAT) $(TARGET_PATH)/appset-romfs.hex -Intel\
+		 $(TARGET_PATH)/$(PROJECT).hex -Intel -o $(TARGET_PATH)/$(PROJECT).hex -Intel; fi
 
 ####################################################################################################
 # show compile status
@@ -359,17 +364,22 @@ status :
 .PHONY : generate
 generate :
 	@$(MKDIR) $(TARGET_PATH)
+	@$(RM) $(TARGET_PATH)/*.*
 
 	@$(MKDIR) $(GEN_PROG_DIR)
 	@$(ECHO) "Adding user's programs and libraries to the project..."
-	@$(SHELL) $(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR)
+	@$(SHELL) $(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR) "*"
 
-	@$(MKDIR) "build/romfs"
-	@$(PYTHON2) ./tools/romfsmap.py $(RES_ROMFS) $(ROMFS_DIR)
+	@$(ECHO) "Creating ROMFS image..."
+	@$(MKFPKG) $(RES_ROMFS) $(ROMFS_IMG)
 
 	@$(ECHO) "Obtaining git hash..."
 	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" > build/defs.h
 	@$(ECHO) "#define BRANCH_NAME \"$(shell git symbolic-ref --short HEAD 2>/dev/null)"\" >> build/defs.h
+	
+	@$(ECHO) "#define ROMFS_ADDRESS $(__ROMFS_ADDRESS__)" >> build/defs.h
+	@$(ECHO) -ne "#define ROMFS_SIZE " >> build/defs.h
+	@$(SIZEOF) $(ROMFS_IMG) >> build/defs.h
 
 ####################################################################################################
 # Start all generators
@@ -392,7 +402,6 @@ apply_git_hooks :
 dependencies :
 	@$(ECHO) "Creating dependencies for '$(TARGET)' target..."
 	@$(MKDIR) $(TARGET_PATH)
-	@$(RM) $(TARGET_PATH)/*.*
 	@$(ECHO) "" > $(TARGET_PATH)/$(DEP_FILE_NAME)
 	@$(MKDEP)    -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH_TARGET) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1
 	@$(MKDEP) -a -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH_PROGRAMS) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1

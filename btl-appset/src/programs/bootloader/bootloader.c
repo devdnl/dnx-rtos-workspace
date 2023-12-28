@@ -134,7 +134,7 @@ static void initialize_basic_drivers(void)
 
         driver_init("TTY", 0, 1, "/dev/tty1");
 
-        driver_init("SDIO", 0, 0, "/dev/sd");
+        driver_init("SDMMC", 0, 0, "/dev/sd");
 }
 
 //==============================================================================
@@ -165,12 +165,6 @@ static void show_kernel_panic_message(void)
 //==============================================================================
 static void mount_file_systems(void)
 {
-        int fd = open("/dev/sd", O_RDWR);
-        if (fd != -1) {
-                ioctl(fd, IOCTL_SDIO__INITIALIZE_CARD);
-                close(fd);
-        }
-
         if (mount("flatfs", "/dev/sd", "/sd", "") != 0) {
                 perror("/dev/sd");
         }
