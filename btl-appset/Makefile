@@ -339,11 +339,11 @@ hex :
 	@$(ECHO) 'Creating objects size list...'
 	@$(SIZE) -B -t --common $(TARGET_PATH)/$(PROJECT).a > $(TARGET_PATH)/$(PROJECT).size
 	
-	@$(ECHO) 'Creating ROMFS hex image...'
-	@if [[ $(__ROMFS_ADDRESS__) != 0 ]]; then $(SREC_CAT) $(ROMFS_IMG) -binary\
-		-offset $(__ROMFS_ADDRESS__) -output $(TARGET_PATH)/appset-romfs.hex -Intel; fi
-	@if [[ $(__ROMFS_ADDRESS__) != 0 ]]; then $(SREC_CAT) $(TARGET_PATH)/appset-romfs.hex -Intel\
-		 $(TARGET_PATH)/$(PROJECT).hex -Intel -o $(TARGET_PATH)/$(PROJECT).hex -Intel; fi
+	@if [[ $(__ROMFS_ADDRESS__) != 0 ]]; then \
+		$(ECHO) 'Creating ROMFS hex image...';\
+		$(SREC_CAT) $(ROMFS_IMG) -binary -offset $(__ROMFS_ADDRESS__) -output $(TARGET_PATH)/appset-romfs.hex -Intel;\
+		$(SREC_CAT) $(TARGET_PATH)/appset-romfs.hex -Intel $(TARGET_PATH)/$(PROJECT).hex -Intel -o $(TARGET_PATH)/$(PROJECT).hex -Intel;\
+	fi
 
 ####################################################################################################
 # show compile status

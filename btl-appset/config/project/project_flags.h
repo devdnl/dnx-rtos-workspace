@@ -125,7 +125,7 @@ __CPU_ARCH__=stm32f1
 
 #/*--
 #this:AddWidget("Editline", false, "ROMFS address")
-#this:SetToolTip("ROMFS image address. Use 0 to disable creating ROMFS.")
+#this:SetToolTip("ROMFS image address. Use 0 to disable appending ROMFS to appset hex image.")
 #--*/
 #define __ROMFS_ADDRESS__ 0x08070000
 #/*

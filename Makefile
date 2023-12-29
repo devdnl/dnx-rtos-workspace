@@ -47,7 +47,6 @@ GREP       = /bin/grep
 SIZEOF     = /usr/bin/stat -c %s
 WC         = /usr/bin/wc
 PYTHON3    = /usr/bin/python3
-PYTHON2    = /usr/bin/python2
 OBJCOPY    = $(TOOLCHAIN)objcopy
 OBJDUMP    = $(TOOLCHAIN)objdump
 SIZE       = $(TOOLCHAIN)size

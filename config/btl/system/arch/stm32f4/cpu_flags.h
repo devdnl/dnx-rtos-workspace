@@ -291,10 +291,11 @@ __CUSTOM_LD_SCRIPT__=_NO_
 
 #/*--
 # this:AddWidget("Editline", true, "Custom linker script file path")
+# this:SetToolTip("File is relative to configuration directory.")
 #--*/
-#define __CUSTOM_LD_SCRIPT_FILE__ "./config/custom_script.ld"
+#define __CUSTOM_LD_SCRIPT_FILE__ "custom_script.ld"
 #/*
-__CUSTOM_LD_SCRIPT_FILE__="./config/custom_script.ld"
+__CUSTOM_LD_SCRIPT_FILE__="custom_script.ld"
 #*/
 
 #//-----------------------------------------------------------------------------
@@ -313,7 +314,7 @@ CPUCONFIG_CXXFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 
 CPUCONFIG_LDFLAGS=-mcpu=cortex-m4 -mthumb -mthumb-interwork -nostartfiles
 
 ifeq ($(__CUSTOM_LD_SCRIPT__), _YES_)
-CPUCONFIG_LDFLAGS += -T$(__CUSTOM_LD_SCRIPT_FILE__)
+CPUCONFIG_LDFLAGS += -T$(CONFIG_DIR)/$(__CUSTOM_LD_SCRIPT_FILE__)
 else
 CPUCONFIG_LDFLAGS += -T./src/cpu/stm32f4/ld/$(__LD_SCRIPT__).ld
 endif
