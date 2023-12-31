@@ -256,7 +256,7 @@ if this:PinExist("A", 0) then
 end
 --*/
 #define __GPIO_PA_PIN_0_NAME__ PA0_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 0, PA0_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 0, __GPIO_PA_PIN_0_NAME__);
 
 /*--
 if this:PinExist("A", 0) then
@@ -309,7 +309,7 @@ if this:PinExist("A", 1) then
 end
 --*/
 #define __GPIO_PA_PIN_1_NAME__ PA1_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 1, PA1_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 1, __GPIO_PA_PIN_1_NAME__);
 
 /*--
 if this:PinExist("A", 1) then
@@ -360,7 +360,7 @@ if this:PinExist("A", 2) then
 end
 --*/
 #define __GPIO_PA_PIN_2_NAME__ PA2_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 2, PA2_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 2, __GPIO_PA_PIN_2_NAME__);
 
 /*--
 if this:PinExist("A", 2) then
@@ -413,7 +413,7 @@ if this:PinExist("A", 3) then
 end
 --*/
 #define __GPIO_PA_PIN_3_NAME__ PA3_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 3, PA3_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 3, __GPIO_PA_PIN_3_NAME__);
 
 /*--
 if this:PinExist("A", 3) then
@@ -465,7 +465,7 @@ if this:PinExist("A", 4) then
 end
 --*/
 #define __GPIO_PA_PIN_4_NAME__ PA4_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 4, PA4_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 4, __GPIO_PA_PIN_4_NAME__);
 
 /*--
 if this:PinExist("A", 4) then
@@ -516,7 +516,7 @@ if this:PinExist("A", 5) then
 end
 --*/
 #define __GPIO_PA_PIN_5_NAME__ PA5_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 5, PA5_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 5, __GPIO_PA_PIN_5_NAME__);
 
 /*--
 if this:PinExist("A", 5) then
@@ -568,7 +568,7 @@ if this:PinExist("A", 6) then
 end
 --*/
 #define __GPIO_PA_PIN_6_NAME__ PA6_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 6, PA6_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 6, __GPIO_PA_PIN_6_NAME__);
 
 /*--
 if this:PinExist("A", 6) then
@@ -622,7 +622,7 @@ if this:PinExist("A", 7) then
 end
 --*/
 #define __GPIO_PA_PIN_7_NAME__ PA7_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 7, PA7_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 7, __GPIO_PA_PIN_7_NAME__);
 
 /*--
 if this:PinExist("A", 7) then
@@ -673,7 +673,7 @@ if this:PinExist("A", 8) then
 end
 --*/
 #define __GPIO_PA_PIN_8_NAME__ PA8_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 8, PA8_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 8, __GPIO_PA_PIN_8_NAME__);
 
 /*--
 if this:PinExist("A", 8) then
@@ -724,7 +724,7 @@ if this:PinExist("A", 9) then
 end
 --*/
 #define __GPIO_PA_PIN_9_NAME__ PA9_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 9, PA9_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 9, __GPIO_PA_PIN_9_NAME__);
 
 /*--
 if this:PinExist("A", 9) then
@@ -773,7 +773,7 @@ if this:PinExist("A", 10) then
 end
 --*/
 #define __GPIO_PA_PIN_10_NAME__ PA10_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 10, PA10_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 10, __GPIO_PA_PIN_10_NAME__);
 
 /*--
 if this:PinExist("A", 10) then
@@ -823,7 +823,7 @@ if this:PinExist("A", 11) then
 end
 --*/
 #define __GPIO_PA_PIN_11_NAME__ PA11_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 11, PA11_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 11, __GPIO_PA_PIN_11_NAME__);
 
 /*--
 if this:PinExist("A", 11) then
@@ -873,7 +873,7 @@ if this:PinExist("A", 12) then
 end
 --*/
 #define __GPIO_PA_PIN_12_NAME__ PA12_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 12, PA12_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 12, __GPIO_PA_PIN_12_NAME__);
 
 /*--
 if this:PinExist("A", 12) then
@@ -919,7 +919,7 @@ if this:PinExist("A", 13) then
 end
 --*/
 #define __GPIO_PA_PIN_13_NAME__ JTMS_SWDIO
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 13, JTMS_SWDIO);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 13, __GPIO_PA_PIN_13_NAME__);
 
 /*--
 if this:PinExist("A", 13) then
@@ -965,7 +965,7 @@ if this:PinExist("A", 14) then
 end
 --*/
 #define __GPIO_PA_PIN_14_NAME__ JTCK_SWCLK
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 14, JTCK_SWCLK);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 14, __GPIO_PA_PIN_14_NAME__);
 
 /*--
 if this:PinExist("A", 14) then
@@ -1016,7 +1016,7 @@ if this:PinExist("A", 15) then
 end
 --*/
 #define __GPIO_PA_PIN_15_NAME__ JTDI
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 15, JTDI);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 15, __GPIO_PA_PIN_15_NAME__);
 
 /*--
 if this:PinExist("A", 15) then
@@ -1069,7 +1069,7 @@ if this:PinExist("B", 0) then
 end
 --*/
 #define __GPIO_PB_PIN_0_NAME__ PB0_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 0, PB0_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 0, __GPIO_PB_PIN_0_NAME__);
 
 /*--
 if this:PinExist("B", 0) then
@@ -1121,7 +1121,7 @@ if this:PinExist("B", 1) then
 end
 --*/
 #define __GPIO_PB_PIN_1_NAME__ PB1_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 1, PB1_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 1, __GPIO_PB_PIN_1_NAME__);
 
 /*--
 if this:PinExist("B", 1) then
@@ -1166,7 +1166,7 @@ if this:PinExist("B", 2) then
 end
 --*/
 #define __GPIO_PB_PIN_2_NAME__ PB2_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 2, PB2_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 2, __GPIO_PB_PIN_2_NAME__);
 
 /*--
 if this:PinExist("B", 2) then
@@ -1217,7 +1217,7 @@ if this:PinExist("B", 3) then
 end
 --*/
 #define __GPIO_PB_PIN_3_NAME__ PB3_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 3, PB3_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 3, __GPIO_PB_PIN_3_NAME__);
 
 /*--
 if this:PinExist("B", 3) then
@@ -1267,7 +1267,7 @@ if this:PinExist("B", 4) then
 end
 --*/
 #define __GPIO_PB_PIN_4_NAME__ PB4_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 4, PB4_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 4, __GPIO_PB_PIN_4_NAME__);
 
 /*--
 if this:PinExist("B", 4) then
@@ -1323,7 +1323,7 @@ if this:PinExist("B", 5) then
 end
 --*/
 #define __GPIO_PB_PIN_5_NAME__ PB5_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 5, PB5_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 5, __GPIO_PB_PIN_5_NAME__);
 
 /*--
 if this:PinExist("B", 5) then
@@ -1375,7 +1375,7 @@ if this:PinExist("B", 6) then
 end
 --*/
 #define __GPIO_PB_PIN_6_NAME__ PB6_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 6, PB6_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 6, __GPIO_PB_PIN_6_NAME__);
 
 /*--
 if this:PinExist("B", 6) then
@@ -1425,7 +1425,7 @@ if this:PinExist("B", 7) then
 end
 --*/
 #define __GPIO_PB_PIN_7_NAME__ PB7_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 7, PB7_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 7, __GPIO_PB_PIN_7_NAME__);
 
 /*--
 if this:PinExist("B", 7) then
@@ -1478,7 +1478,7 @@ if this:PinExist("B", 8) then
 end
 --*/
 #define __GPIO_PB_PIN_8_NAME__ PB8_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 8, PB8_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 8, __GPIO_PB_PIN_8_NAME__);
 
 /*--
 if this:PinExist("B", 8) then
@@ -1532,7 +1532,7 @@ if this:PinExist("B", 9) then
 end
 --*/
 #define __GPIO_PB_PIN_9_NAME__ PB9_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 9, PB9_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 9, __GPIO_PB_PIN_9_NAME__);
 
 /*--
 if this:PinExist("B", 9) then
@@ -1586,7 +1586,7 @@ if this:PinExist("B", 10) then
 end
 --*/
 #define __GPIO_PB_PIN_10_NAME__ PB10_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 10, PB10_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 10, __GPIO_PB_PIN_10_NAME__);
 
 /*--
 if this:PinExist("B", 10) then
@@ -1639,7 +1639,7 @@ if this:PinExist("B", 11) then
 end
 --*/
 #define __GPIO_PB_PIN_11_NAME__ PB11_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 11, PB11_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 11, __GPIO_PB_PIN_11_NAME__);
 
 /*--
 if this:PinExist("B", 11) then
@@ -1694,7 +1694,7 @@ if this:PinExist("B", 12) then
 end
 --*/
 #define __GPIO_PB_PIN_12_NAME__ PB12_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 12, PB12_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 12, __GPIO_PB_PIN_12_NAME__);
 
 /*--
 if this:PinExist("B", 12) then
@@ -1747,7 +1747,7 @@ if this:PinExist("B", 13) then
 end
 --*/
 #define __GPIO_PB_PIN_13_NAME__ PB13_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 13, PB13_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 13, __GPIO_PB_PIN_13_NAME__);
 
 /*--
 if this:PinExist("B", 13) then
@@ -1799,7 +1799,7 @@ if this:PinExist("B", 14) then
 end
 --*/
 #define __GPIO_PB_PIN_14_NAME__ PB14_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 14, PB14_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 14, __GPIO_PB_PIN_14_NAME__);
 
 /*--
 if this:PinExist("B", 14) then
@@ -1851,7 +1851,7 @@ if this:PinExist("B", 15) then
 end
 --*/
 #define __GPIO_PB_PIN_15_NAME__ PB15_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 15, PB15_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 15, __GPIO_PB_PIN_15_NAME__);
 
 /*--
 if this:PinExist("B", 15) then
@@ -1900,7 +1900,7 @@ if this:PinExist("C", 0) then
 end
 --*/
 #define __GPIO_PC_PIN_0_NAME__ PC0_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 0, PC0_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 0, __GPIO_PC_PIN_0_NAME__);
 
 /*--
 if this:PinExist("C", 0) then
@@ -1950,7 +1950,7 @@ if this:PinExist("C", 1) then
 end
 --*/
 #define __GPIO_PC_PIN_1_NAME__ PC1_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 1, PC1_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 1, __GPIO_PC_PIN_1_NAME__);
 
 /*--
 if this:PinExist("C", 1) then
@@ -2000,7 +2000,7 @@ if this:PinExist("C", 2) then
 end
 --*/
 #define __GPIO_PC_PIN_2_NAME__ PC2_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 2, PC2_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 2, __GPIO_PC_PIN_2_NAME__);
 
 /*--
 if this:PinExist("C", 2) then
@@ -2050,7 +2050,7 @@ if this:PinExist("C", 3) then
 end
 --*/
 #define __GPIO_PC_PIN_3_NAME__ PC3_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 3, PC3_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 3, __GPIO_PC_PIN_3_NAME__);
 
 /*--
 if this:PinExist("C", 3) then
@@ -2098,7 +2098,7 @@ if this:PinExist("C", 4) then
 end
 --*/
 #define __GPIO_PC_PIN_4_NAME__ PC4_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 4, PC4_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 4, __GPIO_PC_PIN_4_NAME__);
 
 /*--
 if this:PinExist("C", 4) then
@@ -2146,7 +2146,7 @@ if this:PinExist("C", 5) then
 end
 --*/
 #define __GPIO_PC_PIN_5_NAME__ PC5_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 5, PC5_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 5, __GPIO_PC_PIN_5_NAME__);
 
 /*--
 if this:PinExist("C", 5) then
@@ -2198,7 +2198,7 @@ if this:PinExist("C", 6) then
 end
 --*/
 #define __GPIO_PC_PIN_6_NAME__ PC6_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 6, PC6_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 6, __GPIO_PC_PIN_6_NAME__);
 
 /*--
 if this:PinExist("C", 6) then
@@ -2250,7 +2250,7 @@ if this:PinExist("C", 7) then
 end
 --*/
 #define __GPIO_PC_PIN_7_NAME__ PC7_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 7, PC7_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 7, __GPIO_PC_PIN_7_NAME__);
 
 /*--
 if this:PinExist("C", 7) then
@@ -2301,7 +2301,7 @@ if this:PinExist("C", 8) then
 end
 --*/
 #define __GPIO_PC_PIN_8_NAME__ PC8_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 8, PC8_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 8, __GPIO_PC_PIN_8_NAME__);
 
 /*--
 if this:PinExist("C", 8) then
@@ -2354,7 +2354,7 @@ if this:PinExist("C", 9) then
 end
 --*/
 #define __GPIO_PC_PIN_9_NAME__ PC9_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 9, PC9_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 9, __GPIO_PC_PIN_9_NAME__);
 
 /*--
 if this:PinExist("C", 9) then
@@ -2407,7 +2407,7 @@ if this:PinExist("C", 10) then
 end
 --*/
 #define __GPIO_PC_PIN_10_NAME__ PC10_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 10, PC10_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 10, __GPIO_PC_PIN_10_NAME__);
 
 /*--
 if this:PinExist("C", 10) then
@@ -2459,7 +2459,7 @@ if this:PinExist("C", 11) then
 end
 --*/
 #define __GPIO_PC_PIN_11_NAME__ PC11_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 11, PC11_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 11, __GPIO_PC_PIN_11_NAME__);
 
 /*--
 if this:PinExist("C", 11) then
@@ -2511,7 +2511,7 @@ if this:PinExist("C", 12) then
 end
 --*/
 #define __GPIO_PC_PIN_12_NAME__ PC12_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 12, PC12_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 12, __GPIO_PC_PIN_12_NAME__);
 
 /*--
 if this:PinExist("C", 12) then
@@ -2556,7 +2556,7 @@ if this:PinExist("C", 13) then
 end
 --*/
 #define __GPIO_PC_PIN_13_NAME__ PC13_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 13, PC13_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 13, __GPIO_PC_PIN_13_NAME__);
 
 /*--
 if this:PinExist("C", 13) then
@@ -2601,7 +2601,7 @@ if this:PinExist("C", 14) then
 end
 --*/
 #define __GPIO_PC_PIN_14_NAME__ PC14_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 14, PC14_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 14, __GPIO_PC_PIN_14_NAME__);
 
 /*--
 if this:PinExist("C", 14) then
@@ -2646,7 +2646,7 @@ if this:PinExist("C", 15) then
 end
 --*/
 #define __GPIO_PC_PIN_15_NAME__ PC15_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 15, PC15_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 15, __GPIO_PC_PIN_15_NAME__);
 
 /*--
 if this:PinExist("C", 15) then
@@ -2694,7 +2694,7 @@ if this:PinExist("D", 0) then
 end
 --*/
 #define __GPIO_PD_PIN_0_NAME__ PD0_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 0, PD0_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 0, __GPIO_PD_PIN_0_NAME__);
 
 /*--
 if this:PinExist("D", 0) then
@@ -2741,7 +2741,7 @@ if this:PinExist("D", 1) then
 end
 --*/
 #define __GPIO_PD_PIN_1_NAME__ PD1_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 1, PD1_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 1, __GPIO_PD_PIN_1_NAME__);
 
 /*--
 if this:PinExist("D", 1) then
@@ -2791,7 +2791,7 @@ if this:PinExist("D", 2) then
 end
 --*/
 #define __GPIO_PD_PIN_2_NAME__ PD2_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 2, PD2_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 2, __GPIO_PD_PIN_2_NAME__);
 
 /*--
 if this:PinExist("D", 2) then
@@ -2842,7 +2842,7 @@ if this:PinExist("D", 3) then
 end
 --*/
 #define __GPIO_PD_PIN_3_NAME__ PD3_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 3, PD3_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 3, __GPIO_PD_PIN_3_NAME__);
 
 /*--
 if this:PinExist("D", 3) then
@@ -2889,7 +2889,7 @@ if this:PinExist("D", 4) then
 end
 --*/
 #define __GPIO_PD_PIN_4_NAME__ PD4_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 4, PD4_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 4, __GPIO_PD_PIN_4_NAME__);
 
 /*--
 if this:PinExist("D", 4) then
@@ -2936,7 +2936,7 @@ if this:PinExist("D", 5) then
 end
 --*/
 #define __GPIO_PD_PIN_5_NAME__ PD5_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 5, PD5_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 5, __GPIO_PD_PIN_5_NAME__);
 
 /*--
 if this:PinExist("D", 5) then
@@ -2988,7 +2988,7 @@ if this:PinExist("D", 6) then
 end
 --*/
 #define __GPIO_PD_PIN_6_NAME__ PD6_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 6, PD6_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 6, __GPIO_PD_PIN_6_NAME__);
 
 /*--
 if this:PinExist("D", 6) then
@@ -3036,7 +3036,7 @@ if this:PinExist("D", 7) then
 end
 --*/
 #define __GPIO_PD_PIN_7_NAME__ PD7_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 7, PD7_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 7, __GPIO_PD_PIN_7_NAME__);
 
 /*--
 if this:PinExist("D", 7) then
@@ -3083,7 +3083,7 @@ if this:PinExist("D", 8) then
 end
 --*/
 #define __GPIO_PD_PIN_8_NAME__ PD8_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 8, PD8_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 8, __GPIO_PD_PIN_8_NAME__);
 
 /*--
 if this:PinExist("D", 8) then
@@ -3130,7 +3130,7 @@ if this:PinExist("D", 9) then
 end
 --*/
 #define __GPIO_PD_PIN_9_NAME__ PD9_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 9, PD9_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 9, __GPIO_PD_PIN_9_NAME__);
 
 /*--
 if this:PinExist("D", 9) then
@@ -3178,7 +3178,7 @@ if this:PinExist("D", 10) then
 end
 --*/
 #define __GPIO_PD_PIN_10_NAME__ PD10_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 10, PD10_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 10, __GPIO_PD_PIN_10_NAME__);
 
 /*--
 if this:PinExist("D", 10) then
@@ -3227,7 +3227,7 @@ if this:PinExist("D", 11) then
 end
 --*/
 #define __GPIO_PD_PIN_11_NAME__ PD11_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 11, PD11_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 11, __GPIO_PD_PIN_11_NAME__);
 
 /*--
 if this:PinExist("D", 11) then
@@ -3277,7 +3277,7 @@ if this:PinExist("D", 12) then
 end
 --*/
 #define __GPIO_PD_PIN_12_NAME__ PD12_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 12, PD12_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 12, __GPIO_PD_PIN_12_NAME__);
 
 /*--
 if this:PinExist("D", 12) then
@@ -3325,7 +3325,7 @@ if this:PinExist("D", 13) then
 end
 --*/
 #define __GPIO_PD_PIN_13_NAME__ PD13_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 13, PD13_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 13, __GPIO_PD_PIN_13_NAME__);
 
 /*--
 if this:PinExist("D", 13) then
@@ -3372,7 +3372,7 @@ if this:PinExist("D", 14) then
 end
 --*/
 #define __GPIO_PD_PIN_14_NAME__ PD14_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 14, PD14_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 14, __GPIO_PD_PIN_14_NAME__);
 
 /*--
 if this:PinExist("D", 14) then
@@ -3419,7 +3419,7 @@ if this:PinExist("D", 15) then
 end
 --*/
 #define __GPIO_PD_PIN_15_NAME__ PD15_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 15, PD15_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 15, __GPIO_PD_PIN_15_NAME__);
 
 /*--
 if this:PinExist("D", 15) then
@@ -3469,7 +3469,7 @@ if this:PinExist("E", 0) then
 end
 --*/
 #define __GPIO_PE_PIN_0_NAME__ PE0_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 0, PE0_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 0, __GPIO_PE_PIN_0_NAME__);
 
 /*--
 if this:PinExist("E", 0) then
@@ -3517,7 +3517,7 @@ if this:PinExist("E", 1) then
 end
 --*/
 #define __GPIO_PE_PIN_1_NAME__ PE1_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 1, PE1_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 1, __GPIO_PE_PIN_1_NAME__);
 
 /*--
 if this:PinExist("E", 1) then
@@ -3568,7 +3568,7 @@ if this:PinExist("E", 2) then
 end
 --*/
 #define __GPIO_PE_PIN_2_NAME__ PE2_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 2, PE2_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 2, __GPIO_PE_PIN_2_NAME__);
 
 /*--
 if this:PinExist("E", 2) then
@@ -3616,7 +3616,7 @@ if this:PinExist("E", 3) then
 end
 --*/
 #define __GPIO_PE_PIN_3_NAME__ PE3_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 3, PE3_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 3, __GPIO_PE_PIN_3_NAME__);
 
 /*--
 if this:PinExist("E", 3) then
@@ -3667,7 +3667,7 @@ if this:PinExist("E", 4) then
 end
 --*/
 #define __GPIO_PE_PIN_4_NAME__ PE4_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 4, PE4_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 4, __GPIO_PE_PIN_4_NAME__);
 
 /*--
 if this:PinExist("E", 4) then
@@ -3719,7 +3719,7 @@ if this:PinExist("E", 5) then
 end
 --*/
 #define __GPIO_PE_PIN_5_NAME__ PE5_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 5, PE5_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 5, __GPIO_PE_PIN_5_NAME__);
 
 /*--
 if this:PinExist("E", 5) then
@@ -3771,7 +3771,7 @@ if this:PinExist("E", 6) then
 end
 --*/
 #define __GPIO_PE_PIN_6_NAME__ PE6_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 6, PE6_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 6, __GPIO_PE_PIN_6_NAME__);
 
 /*--
 if this:PinExist("E", 6) then
@@ -3820,7 +3820,7 @@ if this:PinExist("E", 7) then
 end
 --*/
 #define __GPIO_PE_PIN_7_NAME__ PE7_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 7, PE7_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 7, __GPIO_PE_PIN_7_NAME__);
 
 /*--
 if this:PinExist("E", 7) then
@@ -3869,7 +3869,7 @@ if this:PinExist("E", 8) then
 end
 --*/
 #define __GPIO_PE_PIN_8_NAME__ PE8_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 8, PE8_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 8, __GPIO_PE_PIN_8_NAME__);
 
 /*--
 if this:PinExist("E", 8) then
@@ -3917,7 +3917,7 @@ if this:PinExist("E", 9) then
 end
 --*/
 #define __GPIO_PE_PIN_9_NAME__ PE9_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 9, PE9_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 9, __GPIO_PE_PIN_9_NAME__);
 
 /*--
 if this:PinExist("E", 9) then
@@ -3965,7 +3965,7 @@ if this:PinExist("E", 10) then
 end
 --*/
 #define __GPIO_PE_PIN_10_NAME__ PE10_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 10, PE10_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 10, __GPIO_PE_PIN_10_NAME__);
 
 /*--
 if this:PinExist("E", 10) then
@@ -4014,7 +4014,7 @@ if this:PinExist("E", 11) then
 end
 --*/
 #define __GPIO_PE_PIN_11_NAME__ PE11_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 11, PE11_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 11, __GPIO_PE_PIN_11_NAME__);
 
 /*--
 if this:PinExist("E", 11) then
@@ -4063,7 +4063,7 @@ if this:PinExist("E", 12) then
 end
 --*/
 #define __GPIO_PE_PIN_12_NAME__ PE12_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 12, PE12_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 12, __GPIO_PE_PIN_12_NAME__);
 
 /*--
 if this:PinExist("E", 12) then
@@ -4112,7 +4112,7 @@ if this:PinExist("E", 13) then
 end
 --*/
 #define __GPIO_PE_PIN_13_NAME__ PE13_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 13, PE13_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 13, __GPIO_PE_PIN_13_NAME__);
 
 /*--
 if this:PinExist("E", 13) then
@@ -4161,7 +4161,7 @@ if this:PinExist("E", 14) then
 end
 --*/
 #define __GPIO_PE_PIN_14_NAME__ PE14_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 14, PE14_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 14, __GPIO_PE_PIN_14_NAME__);
 
 /*--
 if this:PinExist("E", 14) then
@@ -4209,7 +4209,7 @@ if this:PinExist("E", 15) then
 end
 --*/
 #define __GPIO_PE_PIN_15_NAME__ PE15_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 15, PE15_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 15, __GPIO_PE_PIN_15_NAME__);
 
 /*--
 if this:PinExist("E", 15) then
@@ -4257,7 +4257,7 @@ if this:PinExist("F", 0) then
 end
 --*/
 #define __GPIO_PF_PIN_0_NAME__ PF0_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 0, PF0_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 0, __GPIO_PF_PIN_0_NAME__);
 
 /*--
 if this:PinExist("F", 0) then
@@ -4304,7 +4304,7 @@ if this:PinExist("F", 1) then
 end
 --*/
 #define __GPIO_PF_PIN_1_NAME__ PF1_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 1, PF1_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 1, __GPIO_PF_PIN_1_NAME__);
 
 /*--
 if this:PinExist("F", 1) then
@@ -4351,7 +4351,7 @@ if this:PinExist("F", 2) then
 end
 --*/
 #define __GPIO_PF_PIN_2_NAME__ PF2_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 2, PF2_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 2, __GPIO_PF_PIN_2_NAME__);
 
 /*--
 if this:PinExist("F", 2) then
@@ -4397,7 +4397,7 @@ if this:PinExist("F", 3) then
 end
 --*/
 #define __GPIO_PF_PIN_3_NAME__ PF3_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 3, PF3_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 3, __GPIO_PF_PIN_3_NAME__);
 
 /*--
 if this:PinExist("F", 3) then
@@ -4443,7 +4443,7 @@ if this:PinExist("F", 4) then
 end
 --*/
 #define __GPIO_PF_PIN_4_NAME__ PF4_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 4, PF4_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 4, __GPIO_PF_PIN_4_NAME__);
 
 /*--
 if this:PinExist("F", 4) then
@@ -4489,7 +4489,7 @@ if this:PinExist("F", 5) then
 end
 --*/
 #define __GPIO_PF_PIN_5_NAME__ PF5_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 5, PF5_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 5, __GPIO_PF_PIN_5_NAME__);
 
 /*--
 if this:PinExist("F", 5) then
@@ -4540,7 +4540,7 @@ if this:PinExist("F", 6) then
 end
 --*/
 #define __GPIO_PF_PIN_6_NAME__ PF6_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 6, PF6_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 6, __GPIO_PF_PIN_6_NAME__);
 
 /*--
 if this:PinExist("F", 6) then
@@ -4591,7 +4591,7 @@ if this:PinExist("F", 7) then
 end
 --*/
 #define __GPIO_PF_PIN_7_NAME__ PF7_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 7, PF7_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 7, __GPIO_PF_PIN_7_NAME__);
 
 /*--
 if this:PinExist("F", 7) then
@@ -4641,7 +4641,7 @@ if this:PinExist("F", 8) then
 end
 --*/
 #define __GPIO_PF_PIN_8_NAME__ PF8_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 8, PF8_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 8, __GPIO_PF_PIN_8_NAME__);
 
 /*--
 if this:PinExist("F", 8) then
@@ -4691,7 +4691,7 @@ if this:PinExist("F", 9) then
 end
 --*/
 #define __GPIO_PF_PIN_9_NAME__ PF9_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 9, PF9_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 9, __GPIO_PF_PIN_9_NAME__);
 
 /*--
 if this:PinExist("F", 9) then
@@ -4740,7 +4740,7 @@ if this:PinExist("F", 10) then
 end
 --*/
 #define __GPIO_PF_PIN_10_NAME__ PF10_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 10, PF10_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 10, __GPIO_PF_PIN_10_NAME__);
 
 /*--
 if this:PinExist("F", 10) then
@@ -4788,7 +4788,7 @@ if this:PinExist("F", 11) then
 end
 --*/
 #define __GPIO_PF_PIN_11_NAME__ PF11_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 11, PF11_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 11, __GPIO_PF_PIN_11_NAME__);
 
 /*--
 if this:PinExist("F", 11) then
@@ -4834,7 +4834,7 @@ if this:PinExist("F", 12) then
 end
 --*/
 #define __GPIO_PF_PIN_12_NAME__ PF12_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 12, PF12_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 12, __GPIO_PF_PIN_12_NAME__);
 
 /*--
 if this:PinExist("F", 12) then
@@ -4880,7 +4880,7 @@ if this:PinExist("F", 13) then
 end
 --*/
 #define __GPIO_PF_PIN_13_NAME__ PF13_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 13, PF13_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 13, __GPIO_PF_PIN_13_NAME__);
 
 /*--
 if this:PinExist("F", 13) then
@@ -4926,7 +4926,7 @@ if this:PinExist("F", 14) then
 end
 --*/
 #define __GPIO_PF_PIN_14_NAME__ PF14_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 14, PF14_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 14, __GPIO_PF_PIN_14_NAME__);
 
 /*--
 if this:PinExist("F", 14) then
@@ -4972,7 +4972,7 @@ if this:PinExist("F", 15) then
 end
 --*/
 #define __GPIO_PF_PIN_15_NAME__ PF15_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 15, PF15_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 15, __GPIO_PF_PIN_15_NAME__);
 
 /*--
 if this:PinExist("F", 15) then
@@ -5019,7 +5019,7 @@ if this:PinExist("G", 0) then
 end
 --*/
 #define __GPIO_PG_PIN_0_NAME__ PG0_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 0, PG0_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 0, __GPIO_PG_PIN_0_NAME__);
 
 /*--
 if this:PinExist("G", 0) then
@@ -5065,7 +5065,7 @@ if this:PinExist("G", 1) then
 end
 --*/
 #define __GPIO_PG_PIN_1_NAME__ PG1_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 1, PG1_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 1, __GPIO_PG_PIN_1_NAME__);
 
 /*--
 if this:PinExist("G", 1) then
@@ -5111,7 +5111,7 @@ if this:PinExist("G", 2) then
 end
 --*/
 #define __GPIO_PG_PIN_2_NAME__ PG2_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 2, PG2_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 2, __GPIO_PG_PIN_2_NAME__);
 
 /*--
 if this:PinExist("G", 2) then
@@ -5157,7 +5157,7 @@ if this:PinExist("G", 3) then
 end
 --*/
 #define __GPIO_PG_PIN_3_NAME__ PG3_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 3, PG3_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 3, __GPIO_PG_PIN_3_NAME__);
 
 /*--
 if this:PinExist("G", 3) then
@@ -5204,7 +5204,7 @@ if this:PinExist("G", 4) then
 end
 --*/
 #define __GPIO_PG_PIN_4_NAME__ PG4_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 4, PG4_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 4, __GPIO_PG_PIN_4_NAME__);
 
 /*--
 if this:PinExist("G", 4) then
@@ -5251,7 +5251,7 @@ if this:PinExist("G", 5) then
 end
 --*/
 #define __GPIO_PG_PIN_5_NAME__ PG5_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 5, PG5_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 5, __GPIO_PG_PIN_5_NAME__);
 
 /*--
 if this:PinExist("G", 5) then
@@ -5299,7 +5299,7 @@ if this:PinExist("G", 6) then
 end
 --*/
 #define __GPIO_PG_PIN_6_NAME__ PG6_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 6, PG6_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 6, __GPIO_PG_PIN_6_NAME__);
 
 /*--
 if this:PinExist("G", 6) then
@@ -5350,7 +5350,7 @@ if this:PinExist("G", 7) then
 end
 --*/
 #define __GPIO_PG_PIN_7_NAME__ PG7_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 7, PG7_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 7, __GPIO_PG_PIN_7_NAME__);
 
 /*--
 if this:PinExist("G", 7) then
@@ -5400,7 +5400,7 @@ if this:PinExist("G", 8) then
 end
 --*/
 #define __GPIO_PG_PIN_8_NAME__ PG8_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 8, PG8_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 8, __GPIO_PG_PIN_8_NAME__);
 
 /*--
 if this:PinExist("G", 8) then
@@ -5451,7 +5451,7 @@ if this:PinExist("G", 9) then
 end
 --*/
 #define __GPIO_PG_PIN_9_NAME__ PG9_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 9, PG9_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 9, __GPIO_PG_PIN_9_NAME__);
 
 /*--
 if this:PinExist("G", 9) then
@@ -5501,7 +5501,7 @@ if this:PinExist("G", 10) then
 end
 --*/
 #define __GPIO_PG_PIN_10_NAME__ PG10_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 10, PG10_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 10, __GPIO_PG_PIN_10_NAME__);
 
 /*--
 if this:PinExist("G", 10) then
@@ -5551,7 +5551,7 @@ if this:PinExist("G", 11) then
 end
 --*/
 #define __GPIO_PG_PIN_11_NAME__ PG11_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 11, PG11_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 11, __GPIO_PG_PIN_11_NAME__);
 
 /*--
 if this:PinExist("G", 11) then
@@ -5601,7 +5601,7 @@ if this:PinExist("G", 12) then
 end
 --*/
 #define __GPIO_PG_PIN_12_NAME__ PG12_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 12, PG12_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 12, __GPIO_PG_PIN_12_NAME__);
 
 /*--
 if this:PinExist("G", 12) then
@@ -5653,7 +5653,7 @@ if this:PinExist("G", 13) then
 end
 --*/
 #define __GPIO_PG_PIN_13_NAME__ PG13_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 13, PG13_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 13, __GPIO_PG_PIN_13_NAME__);
 
 /*--
 if this:PinExist("G", 13) then
@@ -5706,7 +5706,7 @@ if this:PinExist("G", 14) then
 end
 --*/
 #define __GPIO_PG_PIN_14_NAME__ PG14_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 14, PG14_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 14, __GPIO_PG_PIN_14_NAME__);
 
 /*--
 if this:PinExist("G", 14) then
@@ -5754,7 +5754,7 @@ if this:PinExist("G", 15) then
 end
 --*/
 #define __GPIO_PG_PIN_15_NAME__ PG15_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 15, PG15_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 15, __GPIO_PG_PIN_15_NAME__);
 
 /*--
 if this:PinExist("G", 15) then
@@ -5800,7 +5800,7 @@ if this:PinExist("H", 0) then
 end
 --*/
 #define __GPIO_PH_PIN_0_NAME__ PH0_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 0, PH0_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 0, __GPIO_PH_PIN_0_NAME__);
 
 /*--
 if this:PinExist("H", 0) then
@@ -5845,7 +5845,7 @@ if this:PinExist("H", 1) then
 end
 --*/
 #define __GPIO_PH_PIN_1_NAME__ PH1_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 1, PH1_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 1, __GPIO_PH_PIN_1_NAME__);
 
 /*--
 if this:PinExist("H", 1) then
@@ -5894,7 +5894,7 @@ if this:PinExist("H", 2) then
 end
 --*/
 #define __GPIO_PH_PIN_2_NAME__ PH2_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 2, PH2_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 2, __GPIO_PH_PIN_2_NAME__);
 
 /*--
 if this:PinExist("H", 2) then
@@ -5943,7 +5943,7 @@ if this:PinExist("H", 3) then
 end
 --*/
 #define __GPIO_PH_PIN_3_NAME__ PH3_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 3, PH3_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 3, __GPIO_PH_PIN_3_NAME__);
 
 /*--
 if this:PinExist("H", 3) then
@@ -5992,7 +5992,7 @@ if this:PinExist("H", 4) then
 end
 --*/
 #define __GPIO_PH_PIN_4_NAME__ PH4_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 4, PH4_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 4, __GPIO_PH_PIN_4_NAME__);
 
 /*--
 if this:PinExist("H", 4) then
@@ -6040,7 +6040,7 @@ if this:PinExist("H", 5) then
 end
 --*/
 #define __GPIO_PH_PIN_5_NAME__ PH5_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 5, PH5_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 5, __GPIO_PH_PIN_5_NAME__);
 
 /*--
 if this:PinExist("H", 5) then
@@ -6091,7 +6091,7 @@ if this:PinExist("H", 6) then
 end
 --*/
 #define __GPIO_PH_PIN_6_NAME__ PH6_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 6, PH6_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 6, __GPIO_PH_PIN_6_NAME__);
 
 /*--
 if this:PinExist("H", 6) then
@@ -6141,7 +6141,7 @@ if this:PinExist("H", 7) then
 end
 --*/
 #define __GPIO_PH_PIN_7_NAME__ PH7_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 7, PH7_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 7, __GPIO_PH_PIN_7_NAME__);
 
 /*--
 if this:PinExist("H", 7) then
@@ -6190,7 +6190,7 @@ if this:PinExist("H", 8) then
 end
 --*/
 #define __GPIO_PH_PIN_8_NAME__ PH8_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 8, PH8_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 8, __GPIO_PH_PIN_8_NAME__);
 
 /*--
 if this:PinExist("H", 8) then
@@ -6240,7 +6240,7 @@ if this:PinExist("H", 9) then
 end
 --*/
 #define __GPIO_PH_PIN_9_NAME__ PH9_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 9, PH9_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 9, __GPIO_PH_PIN_9_NAME__);
 
 /*--
 if this:PinExist("H", 9) then
@@ -6289,7 +6289,7 @@ if this:PinExist("H", 10) then
 end
 --*/
 #define __GPIO_PH_PIN_10_NAME__ PH10_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 10, PH10_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 10, __GPIO_PH_PIN_10_NAME__);
 
 /*--
 if this:PinExist("H", 10) then
@@ -6338,7 +6338,7 @@ if this:PinExist("H", 11) then
 end
 --*/
 #define __GPIO_PH_PIN_11_NAME__ PH11_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 11, PH11_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 11, __GPIO_PH_PIN_11_NAME__);
 
 /*--
 if this:PinExist("H", 11) then
@@ -6387,7 +6387,7 @@ if this:PinExist("H", 12) then
 end
 --*/
 #define __GPIO_PH_PIN_12_NAME__ PH12_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 12, PH12_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 12, __GPIO_PH_PIN_12_NAME__);
 
 /*--
 if this:PinExist("H", 12) then
@@ -6436,7 +6436,7 @@ if this:PinExist("H", 13) then
 end
 --*/
 #define __GPIO_PH_PIN_13_NAME__ PH13_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 13, PH13_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 13, __GPIO_PH_PIN_13_NAME__);
 
 /*--
 if this:PinExist("H", 13) then
@@ -6485,7 +6485,7 @@ if this:PinExist("H", 14) then
 end
 --*/
 #define __GPIO_PH_PIN_14_NAME__ PH14_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 14, PH14_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 14, __GPIO_PH_PIN_14_NAME__);
 
 /*--
 if this:PinExist("H", 14) then
@@ -6534,7 +6534,7 @@ if this:PinExist("H", 15) then
 end
 --*/
 #define __GPIO_PH_PIN_15_NAME__ PH15_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 15, PH15_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 15, __GPIO_PH_PIN_15_NAME__);
 
 /*--
 if this:PinExist("H", 15) then
@@ -6586,7 +6586,7 @@ if this:PinExist("I", 0) then
 end
 --*/
 #define __GPIO_PI_PIN_0_NAME__ PI0_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 0, PI0_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 0, __GPIO_PI_PIN_0_NAME__);
 
 /*--
 if this:PinExist("I", 0) then
@@ -6636,7 +6636,7 @@ if this:PinExist("I", 1) then
 end
 --*/
 #define __GPIO_PI_PIN_1_NAME__ PI1_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 1, PI1_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 1, __GPIO_PI_PIN_1_NAME__);
 
 /*--
 if this:PinExist("I", 1) then
@@ -6687,7 +6687,7 @@ if this:PinExist("I", 2) then
 end
 --*/
 #define __GPIO_PI_PIN_2_NAME__ PI2_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 2, PI2_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 2, __GPIO_PI_PIN_2_NAME__);
 
 /*--
 if this:PinExist("I", 2) then
@@ -6737,7 +6737,7 @@ if this:PinExist("I", 3) then
 end
 --*/
 #define __GPIO_PI_PIN_3_NAME__ PI3_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 3, PI3_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 3, __GPIO_PI_PIN_3_NAME__);
 
 /*--
 if this:PinExist("I", 3) then
@@ -6786,7 +6786,7 @@ if this:PinExist("I", 4) then
 end
 --*/
 #define __GPIO_PI_PIN_4_NAME__ PI4_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 4, PI4_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 4, __GPIO_PI_PIN_4_NAME__);
 
 /*--
 if this:PinExist("I", 4) then
@@ -6835,7 +6835,7 @@ if this:PinExist("I", 5) then
 end
 --*/
 #define __GPIO_PI_PIN_5_NAME__ PI5_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 5, PI5_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 5, __GPIO_PI_PIN_5_NAME__);
 
 /*--
 if this:PinExist("I", 5) then
@@ -6884,7 +6884,7 @@ if this:PinExist("I", 6) then
 end
 --*/
 #define __GPIO_PI_PIN_6_NAME__ PI6_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 6, PI6_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 6, __GPIO_PI_PIN_6_NAME__);
 
 /*--
 if this:PinExist("I", 6) then
@@ -6933,7 +6933,7 @@ if this:PinExist("I", 7) then
 end
 --*/
 #define __GPIO_PI_PIN_7_NAME__ PI7_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 7, PI7_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 7, __GPIO_PI_PIN_7_NAME__);
 
 /*--
 if this:PinExist("I", 7) then
@@ -6978,7 +6978,7 @@ if this:PinExist("I", 8) then
 end
 --*/
 #define __GPIO_PI_PIN_8_NAME__ PI8_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 8, PI8_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 8, __GPIO_PI_PIN_8_NAME__);
 
 /*--
 if this:PinExist("I", 8) then
@@ -7026,7 +7026,7 @@ if this:PinExist("I", 9) then
 end
 --*/
 #define __GPIO_PI_PIN_9_NAME__ PI9_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 9, PI9_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 9, __GPIO_PI_PIN_9_NAME__);
 
 /*--
 if this:PinExist("I", 9) then
@@ -7074,7 +7074,7 @@ if this:PinExist("I", 10) then
 end
 --*/
 #define __GPIO_PI_PIN_10_NAME__ PI10_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 10, PI10_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 10, __GPIO_PI_PIN_10_NAME__);
 
 /*--
 if this:PinExist("I", 10) then
@@ -7121,7 +7121,7 @@ if this:PinExist("I", 11) then
 end
 --*/
 #define __GPIO_PI_PIN_11_NAME__ PI11_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 11, PI11_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 11, __GPIO_PI_PIN_11_NAME__);
 
 /*--
 if this:PinExist("I", 11) then
@@ -7167,7 +7167,7 @@ if this:PinExist("I", 12) then
 end
 --*/
 #define __GPIO_PI_PIN_12_NAME__ PI12_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 12, PI12_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 12, __GPIO_PI_PIN_12_NAME__);
 
 /*--
 if this:PinExist("I", 12) then
@@ -7213,7 +7213,7 @@ if this:PinExist("I", 13) then
 end
 --*/
 #define __GPIO_PI_PIN_13_NAME__ PI13_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 13, PI13_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 13, __GPIO_PI_PIN_13_NAME__);
 
 /*--
 if this:PinExist("I", 13) then
@@ -7259,7 +7259,7 @@ if this:PinExist("I", 14) then
 end
 --*/
 #define __GPIO_PI_PIN_14_NAME__ PI14_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 14, PI14_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 14, __GPIO_PI_PIN_14_NAME__);
 
 /*--
 if this:PinExist("I", 14) then
@@ -7306,7 +7306,7 @@ if this:PinExist("I", 15) then
 end
 --*/
 #define __GPIO_PI_PIN_15_NAME__ PI15_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 15, PI15_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 15, __GPIO_PI_PIN_15_NAME__);
 
 /*--
 if this:PinExist("I", 15) then
@@ -7354,7 +7354,7 @@ if this:PinExist("J", 0) then
 end
 --*/
 #define __GPIO_PJ_PIN_0_NAME__ PJ0_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 0, PJ0_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 0, __GPIO_PJ_PIN_0_NAME__);
 
 /*--
 if this:PinExist("J", 0) then
@@ -7400,7 +7400,7 @@ if this:PinExist("J", 1) then
 end
 --*/
 #define __GPIO_PJ_PIN_1_NAME__ PJ1_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 1, PJ1_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 1, __GPIO_PJ_PIN_1_NAME__);
 
 /*--
 if this:PinExist("J", 1) then
@@ -7447,7 +7447,7 @@ if this:PinExist("J", 2) then
 end
 --*/
 #define __GPIO_PJ_PIN_2_NAME__ PJ2_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 2, PJ2_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 2, __GPIO_PJ_PIN_2_NAME__);
 
 /*--
 if this:PinExist("J", 2) then
@@ -7493,7 +7493,7 @@ if this:PinExist("J", 3) then
 end
 --*/
 #define __GPIO_PJ_PIN_3_NAME__ PJ3_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 3, PJ3_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 3, __GPIO_PJ_PIN_3_NAME__);
 
 /*--
 if this:PinExist("J", 3) then
@@ -7539,7 +7539,7 @@ if this:PinExist("J", 4) then
 end
 --*/
 #define __GPIO_PJ_PIN_4_NAME__ PJ4_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 4, PJ4_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 4, __GPIO_PJ_PIN_4_NAME__);
 
 /*--
 if this:PinExist("J", 4) then
@@ -7585,7 +7585,7 @@ if this:PinExist("J", 5) then
 end
 --*/
 #define __GPIO_PJ_PIN_5_NAME__ PJ5_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 5, PJ5_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 5, __GPIO_PJ_PIN_5_NAME__);
 
 /*--
 if this:PinExist("J", 5) then
@@ -7631,7 +7631,7 @@ if this:PinExist("J", 6) then
 end
 --*/
 #define __GPIO_PJ_PIN_6_NAME__ PJ6_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 6, PJ6_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 6, __GPIO_PJ_PIN_6_NAME__);
 
 /*--
 if this:PinExist("J", 6) then
@@ -7677,7 +7677,7 @@ if this:PinExist("J", 7) then
 end
 --*/
 #define __GPIO_PJ_PIN_7_NAME__ PJ7_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 7, PJ7_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 7, __GPIO_PJ_PIN_7_NAME__);
 
 /*--
 if this:PinExist("J", 7) then
@@ -7723,7 +7723,7 @@ if this:PinExist("J", 8) then
 end
 --*/
 #define __GPIO_PJ_PIN_8_NAME__ PJ8_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 8, PJ8_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 8, __GPIO_PJ_PIN_8_NAME__);
 
 /*--
 if this:PinExist("J", 8) then
@@ -7769,7 +7769,7 @@ if this:PinExist("J", 9) then
 end
 --*/
 #define __GPIO_PJ_PIN_9_NAME__ PJ9_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 9, PJ9_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 9, __GPIO_PJ_PIN_9_NAME__);
 
 /*--
 if this:PinExist("J", 9) then
@@ -7815,7 +7815,7 @@ if this:PinExist("J", 10) then
 end
 --*/
 #define __GPIO_PJ_PIN_10_NAME__ PJ10_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 10, PJ10_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 10, __GPIO_PJ_PIN_10_NAME__);
 
 /*--
 if this:PinExist("J", 10) then
@@ -7861,7 +7861,7 @@ if this:PinExist("J", 11) then
 end
 --*/
 #define __GPIO_PJ_PIN_11_NAME__ PJ11_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 11, PJ11_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 11, __GPIO_PJ_PIN_11_NAME__);
 
 /*--
 if this:PinExist("J", 11) then
@@ -7908,7 +7908,7 @@ if this:PinExist("J", 12) then
 end
 --*/
 #define __GPIO_PJ_PIN_12_NAME__ PJ12_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 12, PJ12_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 12, __GPIO_PJ_PIN_12_NAME__);
 
 /*--
 if this:PinExist("J", 12) then
@@ -7955,7 +7955,7 @@ if this:PinExist("J", 13) then
 end
 --*/
 #define __GPIO_PJ_PIN_13_NAME__ PJ13_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 13, PJ13_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 13, __GPIO_PJ_PIN_13_NAME__);
 
 /*--
 if this:PinExist("J", 13) then
@@ -8001,7 +8001,7 @@ if this:PinExist("J", 14) then
 end
 --*/
 #define __GPIO_PJ_PIN_14_NAME__ PJ14_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 14, PJ14_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 14, __GPIO_PJ_PIN_14_NAME__);
 
 /*--
 if this:PinExist("J", 14) then
@@ -8047,7 +8047,7 @@ if this:PinExist("J", 15) then
 end
 --*/
 #define __GPIO_PJ_PIN_15_NAME__ PJ15_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 15, PJ15_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 15, __GPIO_PJ_PIN_15_NAME__);
 
 /*--
 if this:PinExist("J", 15) then
@@ -8094,7 +8094,7 @@ if this:PinExist("K", 0) then
 end
 --*/
 #define __GPIO_PK_PIN_0_NAME__ PK0_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 0, PK0_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 0, __GPIO_PK_PIN_0_NAME__);
 
 /*--
 if this:PinExist("K", 0) then
@@ -8140,7 +8140,7 @@ if this:PinExist("K", 1) then
 end
 --*/
 #define __GPIO_PK_PIN_1_NAME__ PK1_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 1, PK1_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 1, __GPIO_PK_PIN_1_NAME__);
 
 /*--
 if this:PinExist("K", 1) then
@@ -8186,7 +8186,7 @@ if this:PinExist("K", 2) then
 end
 --*/
 #define __GPIO_PK_PIN_2_NAME__ PK2_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 2, PK2_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 2, __GPIO_PK_PIN_2_NAME__);
 
 /*--
 if this:PinExist("K", 2) then
@@ -8232,7 +8232,7 @@ if this:PinExist("K", 3) then
 end
 --*/
 #define __GPIO_PK_PIN_3_NAME__ PK3_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 3, PK3_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 3, __GPIO_PK_PIN_3_NAME__);
 
 /*--
 if this:PinExist("K", 3) then
@@ -8278,7 +8278,7 @@ if this:PinExist("K", 4) then
 end
 --*/
 #define __GPIO_PK_PIN_4_NAME__ PK4_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 4, PK4_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 4, __GPIO_PK_PIN_4_NAME__);
 
 /*--
 if this:PinExist("K", 4) then
@@ -8324,7 +8324,7 @@ if this:PinExist("K", 5) then
 end
 --*/
 #define __GPIO_PK_PIN_5_NAME__ PK5_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 5, PK5_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 5, __GPIO_PK_PIN_5_NAME__);
 
 /*--
 if this:PinExist("K", 5) then
@@ -8370,7 +8370,7 @@ if this:PinExist("K", 6) then
 end
 --*/
 #define __GPIO_PK_PIN_6_NAME__ PK6_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 6, PK6_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 6, __GPIO_PK_PIN_6_NAME__);
 
 /*--
 if this:PinExist("K", 6) then
@@ -8416,7 +8416,7 @@ if this:PinExist("K", 7) then
 end
 --*/
 #define __GPIO_PK_PIN_7_NAME__ PK7_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 7, PK7_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 7, __GPIO_PK_PIN_7_NAME__);
 
 /*--
 if this:PinExist("K", 7) then
@@ -8461,7 +8461,7 @@ if this:PinExist("K", 8) then
 end
 --*/
 #define __GPIO_PK_PIN_8_NAME__ PK8_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 8, PK8_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 8, __GPIO_PK_PIN_8_NAME__);
 
 /*--
 if this:PinExist("K", 8) then
@@ -8506,7 +8506,7 @@ if this:PinExist("K", 9) then
 end
 --*/
 #define __GPIO_PK_PIN_9_NAME__ PK9_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 9, PK9_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 9, __GPIO_PK_PIN_9_NAME__);
 
 /*--
 if this:PinExist("K", 9) then
@@ -8551,7 +8551,7 @@ if this:PinExist("K", 10) then
 end
 --*/
 #define __GPIO_PK_PIN_10_NAME__ PK10_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 10, PK10_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 10, __GPIO_PK_PIN_10_NAME__);
 
 /*--
 if this:PinExist("K", 10) then
@@ -8596,7 +8596,7 @@ if this:PinExist("K", 11) then
 end
 --*/
 #define __GPIO_PK_PIN_11_NAME__ PK11_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 11, PK11_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 11, __GPIO_PK_PIN_11_NAME__);
 
 /*--
 if this:PinExist("K", 11) then
@@ -8641,7 +8641,7 @@ if this:PinExist("K", 12) then
 end
 --*/
 #define __GPIO_PK_PIN_12_NAME__ PK12_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 12, PK12_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 12, __GPIO_PK_PIN_12_NAME__);
 
 /*--
 if this:PinExist("K", 12) then
@@ -8686,7 +8686,7 @@ if this:PinExist("K", 13) then
 end
 --*/
 #define __GPIO_PK_PIN_13_NAME__ PK13_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 13, PK13_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 13, __GPIO_PK_PIN_13_NAME__);
 
 /*--
 if this:PinExist("K", 13) then
@@ -8731,7 +8731,7 @@ if this:PinExist("K", 14) then
 end
 --*/
 #define __GPIO_PK_PIN_14_NAME__ PK14_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 14, PK14_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 14, __GPIO_PK_PIN_14_NAME__);
 
 /*--
 if this:PinExist("K", 14) then
@@ -8776,7 +8776,7 @@ if this:PinExist("K", 15) then
 end
 --*/
 #define __GPIO_PK_PIN_15_NAME__ PK15_NC
-_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 15, PK15_NC);
+_GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 15, __GPIO_PK_PIN_15_NAME__);
 
 /*--
 if this:PinExist("K", 15) then
