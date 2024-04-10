@@ -91,6 +91,7 @@ CXXFLAGS = -c \
            -Wall \
            -Wextra \
            -Wparentheses \
+           -Wno-nonnull-compare  \
            -Werror=parentheses \
            -Werror=type-limits \
            -Werror=return-type \
@@ -376,6 +377,7 @@ generate :
 	@$(ECHO) "Obtaining git hash..."
 	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" > build/defs.h
 	@$(ECHO) "#define BRANCH_NAME \"$(shell git symbolic-ref --short HEAD 2>/dev/null)"\" >> build/defs.h
+	@$(ECHO) "#define BUILD_TIME \"$(shell date)\"" >> build/defs.h
 	
 	@$(ECHO) "#define ROMFS_ADDRESS $(__ROMFS_ADDRESS__)" >> build/defs.h
 	@$(ECHO) -ne "#define ROMFS_SIZE " >> build/defs.h

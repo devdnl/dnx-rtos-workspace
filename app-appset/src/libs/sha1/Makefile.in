@@ -1,5 +1,8 @@
 # Makefile for GNU make
 
-CSRC_LIB   += sha1/sha1.c
+COMMON_LIBS_SHA1_ROOT = ../../../common_libs
+
+CSRC_LIB   += $(COMMON_LIBS_SHA1_ROOT)/sha1/sha1.c
 CXXSRC_LIB +=
-HDRLOC_LIB += sha1
+HDRLOC_LIB += $(COMMON_LIBS_SHA1_ROOT)/
+HDRLOC_LIB += $(COMMON_LIBS_SHA1_ROOT)/sha1

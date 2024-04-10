@@ -137,10 +137,6 @@ end
 this:AddExtraWidget("Label", "LabelDefaults", "Defaults", -1, "bold")
 this:AddExtraWidget("Void", "VoidDefaults")
 ++*/
-/*--
-this:AddWidget("Editline", false, "Flush Byte")
---*/
-#define __SPI_DEFAULT_FLUSH_BYTE__ 0xFF
 
 /*--
 this:AddWidget("Combobox", "Clock divider")

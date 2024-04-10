@@ -1,5 +1,8 @@
 # Makefile for GNU make
 
-CSRC_LIB   += ipc/ipc.c
-CXXSRC_LIB += 
-HDRLOC_LIB += ipc/
+COMMON_LIBS_IPC_ROOT = ../../../common_libs
+
+CSRC_LIB   += $(COMMON_LIBS_IPC_ROOT)/ipc/ipc.c
+CXXSRC_LIB +=
+HDRLOC_LIB += $(COMMON_LIBS_IPC_ROOT)/
+HDRLOC_LIB += $(COMMON_LIBS_IPC_ROOT)/ipc/

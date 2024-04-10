@@ -234,7 +234,7 @@ this:AddItem("8 bits", "0")
 this:AddItem("16 bits", "1")
 this:AddItem("32 bits", "2")
 --*/
-#define __EMI_SDRAM_2_MWID__ 1
+#define __EMI_SDRAM_2_MWID__ 2
 
 /*--
 this:AddWidget("Combobox", "Number of row address bits")
@@ -251,7 +251,7 @@ this:AddItem("9 bits", "1")
 this:AddItem("10 bits", "2")
 this:AddItem("11 bits", "3")
 --*/
-#define __EMI_SDRAM_2_NC__ 0
+#define __EMI_SDRAM_2_NC__ 1
 
 /*--
 this:AddWidget("Spinbox", 1, 16, "Row to column delay (tRCD)")
@@ -261,12 +261,12 @@ this:AddWidget("Spinbox", 1, 16, "Row to column delay (tRCD)")
 /*--
 this:AddWidget("Spinbox", 1, 2048, "Heap regions")
 --*/
-#define __EMI_SDRAM_2_HEAP_REGIONS__ 1
+#define __EMI_SDRAM_2_HEAP_REGIONS__ 32
 
 /*--
 this:AddWidget("Spinbox", 1, 65536, "Heap region size [KiB]")
 --*/
-#define __EMI_SDRAM_2_HEAP_REGION_SIZE__ 8192
+#define __EMI_SDRAM_2_HEAP_REGION_SIZE__ 512
 
 
 //------------------------------------------------------------------------------

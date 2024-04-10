@@ -11,6 +11,8 @@ AlignConsecutiveMacros:
   Enabled: true
   AcrossEmptyLines: true
   AcrossComments: false
+AlignTrailingComments:
+  Kind: Always
 AlignEscapedNewlines: Left
 AllowAllArgumentsOnNextLine: false
 AllowAllConstructorInitializersOnNextLine: false

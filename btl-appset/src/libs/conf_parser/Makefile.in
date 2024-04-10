@@ -1,5 +1,8 @@
 # Makefile for GNU make
 
-CSRC_LIB   += conf_parser/conf_parser.c
+COMMON_LIBS_CONF_PARSER_ROOT = ../../../common_libs
+
+CSRC_LIB   += $(COMMON_LIBS_CONF_PARSER_ROOT)/conf_parser/conf_parser.c
 CXXSRC_LIB += 
-HDRLOC_LIB += conf_parser/
+HDRLOC_LIB += $(COMMON_LIBS_CONF_PARSER_ROOT)/
+HDRLOC_LIB += $(COMMON_LIBS_CONF_PARSER_ROOT)/conf_parser
