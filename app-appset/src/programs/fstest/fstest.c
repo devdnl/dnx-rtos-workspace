@@ -29,12 +29,14 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <stdio.h>
 #include <dnx/misc.h>
+#include <dnx/thread.h>
 #include <dnx/vt100.h>
 #include <errno.h>
-#include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 /*==============================================================================
   Local macros
@@ -66,8 +68,8 @@ GLOBAL_VARIABLES_SECTION {
 static const char *SUCCESS_MSG = "SUCCESS";
 
 static const test_entry_t TEST_TAB[] = {
-        {.test_name = "File create and remove",          .test_fn = test_file_create_and_remove},
-        {.test_name = "Seek/Write/Read file operations", .test_fn = test_file_seek             },
+        {.test_name = "File create and remove", .test_fn = test_file_create_and_remove},
+        {.test_name = "Seek/Write/Read file operations", .test_fn = test_file_seek},
 };
 
 /*==============================================================================
@@ -97,9 +99,16 @@ int main(int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
 
+        process_stat_t proc_stat;
+        process_stat(getpid(), &proc_stat);
+        u16_t stack_max_usage = proc_stat.stack_max_usage;
+
         for (size_t i = 0; i < ARRAY_SIZE(TEST_TAB); i++) {
                 print_test_result(&TEST_TAB[i]);
         }
+
+        process_stat(getpid(), &proc_stat);
+        int fs_stack_usage = proc_stat.stack_max_usage - stack_max_usage;
 
         puts("");
         printf(VT100_FONT_COLOR_YELLOW "SUMMARY:" VT100_RESET_ATTRIBUTES " total tests: "
@@ -108,6 +117,8 @@ int main(int argc, char *argv[])
                                        "%lu\n",
                 ARRAY_SIZE(TEST_TAB), global->passed_test,
                 ARRAY_SIZE(TEST_TAB) - global->passed_test);
+
+        printf("Stack used for file system: %i levels.\n", fs_stack_usage);
 
         return 0;
 }

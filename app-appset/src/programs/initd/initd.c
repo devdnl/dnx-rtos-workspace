@@ -456,6 +456,8 @@ static void start_user_programs(void)
                .p_stdout   = "/dev/tty2"
         };
 
+        process_create("netmgr --daemon /conf/netmgr.conf", &attr2);
+
         process_create("user-program-name", &attr2);
 
         /*

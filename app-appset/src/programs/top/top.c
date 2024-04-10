@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
         ioctl(fileno(stdout), IOCTL_TTY__CLEAR_SCR);
 
         int     key   = ' ';
-        clock_t timer = clock() + global->refresh_inteval_s;
+        clock_t timer = -(clock() + global->refresh_inteval_s);
 
         while ((key != 'q') && (key != '\0') && (key != ETX)) {
 
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
                 printf("\n");
 
                 printf(VT100_FONT_COLOR_BLACK VT100_BACK_COLOR_WHITE
-                       "PID PR     MEM   STS %%STU  %%CPU  SCPS TH RES CMD"
+                       "PID PR   MEMBS STSLV %%STU  %%CPU  SCPS TH RES CMD"
                        VT100_RESET_ATTRIBUTES "\n");
 
                 size_t seek = 0;
