@@ -68,22 +68,22 @@ for i=1,15 do this:AddItem(tostring(i).." clock periods", tostring(i)) end
 /*--
 this:AddWidget("Spinbox", 0, 1000, "SCL rising time [ns]")
 --*/
-#define __I2C1_SCL_RISE_TIME_ns__ 100
+#define __I2C1_SCL_RISE_TIME_ns__ 300
 
 /*--
 this:AddWidget("Spinbox", 0, 1000, "SCL falling time [ns]")
 --*/
-#define __I2C1_SCL_FALL_TIME_ns__ 100
+#define __I2C1_SCL_FALL_TIME_ns__ 300
 
 /*--
 this:AddWidget("Spinbox", 10, 1000, "Data hold time SCL-SDA [ns]")
 --*/
-#define __I2C1_DATA_HOLD_TIME_ns__ 10
+#define __I2C1_DATA_HOLD_TIME_ns__ 50
 
 /*--
 this:AddWidget("Spinbox", 10, 1000, "Data setup time SCL-SDA [ns]")
 --*/
-#define __I2C1_DATA_SETUP_TIME_ns__ 10
+#define __I2C1_DATA_SETUP_TIME_ns__ 50
 
 /*--
 this:AddWidget("Combobox", "IRQ priority")

@@ -1,8 +1,0 @@
-# Makefile for GNU make
-
-COMMON_LIBS_EXAMPLE_COMMON_LIB_ROOT = ../../../common_libs
-
-CSRC_LIB   += $(COMMON_LIBS_EXAMPLE_COMMON_LIB_ROOT)/example_common_lib/example_common_lib.c
-CXXSRC_LIB +=
-HDRLOC_LIB += $(COMMON_LIBS_EXAMPLE_COMMON_LIB_ROOT)/
-HDRLOC_LIB += $(COMMON_LIBS_EXAMPLE_COMMON_LIB_ROOT)/example_common_lib

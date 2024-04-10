@@ -29,6 +29,9 @@
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/${env_var:ARM_GCC_TOOLCHAIN_VERSION}/include/&quot;"/>
 									<listOptionValue builtIn="false" value="../app-appset/src/libs/libc/include"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.178026589" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
@@ -53,6 +56,9 @@
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/${env_var:ARM_GCC_TOOLCHAIN_VERSION}/include/&quot;"/>
 									<listOptionValue builtIn="false" value="../app-appset/src/libs/libc/include"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.356385541" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -65,6 +71,11 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.1169027113" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.416110086" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.1249378555" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.341569670" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
@@ -105,6 +116,9 @@
 								<option id="gnu.c.compiler.option.debugging.level.1102610950" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.874912161" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value=".././src/system/include/stdc"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.1827974321" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
@@ -123,6 +137,9 @@
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.890478979" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value=".././src/system/include/stdc"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.500335297" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -135,6 +152,11 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.833740137" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
 							<tool errorParsers="org.eclipse.cdt.core.GASErrorParser" id="cdt.managedbuild.tool.gnu.cross.assembler.2141463476" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.30511836" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1728444165" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
@@ -175,6 +197,9 @@
 								<option id="gnu.c.compiler.option.debugging.level.1410329667" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.49784195" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value=".././src/system/include/stdc"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.2061150996" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
@@ -193,6 +218,9 @@
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.165594638" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value=".././src/system/include/stdc"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.36664821" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -205,6 +233,11 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.1593508505" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
 							<tool errorParsers="org.eclipse.cdt.core.GASErrorParser" id="cdt.managedbuild.tool.gnu.cross.assembler.232429188" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.1300078726" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.181628153" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
@@ -241,7 +274,10 @@
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.1318616404" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.debugging.level.2035330072" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.1575659933" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 									<listOptionValue builtIn="false" value="../appset/src/libs/libc/include"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/${env_var:ARM_GCC_TOOLCHAIN_VERSION}/include/&quot;"/>
 								</option>
@@ -268,6 +304,9 @@
 									<listOptionValue builtIn="false" value="../appset/src/libs/libc/include"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/${env_var:ARM_GCC_TOOLCHAIN_VERSION}/include/&quot;"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1462746332" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -280,6 +319,11 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.1608856149" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.786290840" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.21062961" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1629502486" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
@@ -319,6 +363,9 @@
 									<listOptionValue builtIn="false" value="../appset/src/libs/libc/include"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/${env_var:ARM_GCC_TOOLCHAIN_VERSION}/include/&quot;"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.1599884127" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
@@ -343,6 +390,9 @@
 									<listOptionValue builtIn="false" value="../appset/src/libs/libc/include"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/${env_var:ARM_GCC_TOOLCHAIN_VERSION}/include/&quot;"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1137176205" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -355,6 +405,11 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.2113329585" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.14055884" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.446647750" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.323750465" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
@@ -394,6 +449,9 @@
 									<listOptionValue builtIn="false" value="../appset/src/libs/libc/include"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/${env_var:ARM_GCC_TOOLCHAIN_VERSION}/include/&quot;"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.316521207" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
@@ -418,6 +476,9 @@
 									<listOptionValue builtIn="false" value="../appset/src/libs/libc/include"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/${env_var:ARM_GCC_TOOLCHAIN_VERSION}/include/&quot;"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.495254563" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -430,6 +491,11 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.269974396" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.1137289034" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.479526590" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.424267441" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
@@ -469,6 +535,9 @@
 									<listOptionValue builtIn="false" value="../appset/src/libs/libc/include"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/${env_var:ARM_GCC_TOOLCHAIN_VERSION}/include/&quot;"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.1251490470" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
@@ -493,6 +562,9 @@
 									<listOptionValue builtIn="false" value="../appset/src/libs/libc/include"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/${env_var:ARM_GCC_TOOLCHAIN_VERSION}/include/&quot;"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.816929422" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -505,6 +577,11 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.834934393" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.1990682698" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.1393615201" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.538109419" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
@@ -544,6 +621,9 @@
 									<listOptionValue builtIn="false" value="../appset/src/libs/libc/include"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/${env_var:ARM_GCC_TOOLCHAIN_VERSION}/include/&quot;"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.1804738511" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
@@ -568,6 +648,9 @@
 									<listOptionValue builtIn="false" value="../appset/src/libs/libc/include"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/${env_var:ARM_GCC_TOOLCHAIN_VERSION}/include/&quot;"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.2026436484" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -580,6 +663,11 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.1007522274" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.1966553135" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.304825550" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.588726180" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
@@ -619,6 +707,9 @@
 									<listOptionValue builtIn="false" value="../appset/src/libs/libc/include"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/${env_var:ARM_GCC_TOOLCHAIN_VERSION}/include/&quot;"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.222147766" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
@@ -643,6 +734,9 @@
 									<listOptionValue builtIn="false" value="../appset/src/libs/libc/include"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/${env_var:ARM_GCC_TOOLCHAIN_VERSION}/include/&quot;"/>
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1614221912" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -655,6 +749,11 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.1760388455" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.556720098" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.1058940978" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="../common_libs"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc"/>
+									<listOptionValue builtIn="false" value="../common_libs/libc/include"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1964947443" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
@@ -699,38 +798,74 @@
 		</configuration>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.230662172.603295802;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.230662172.603295802.;cdt.managedbuild.tool.gnu.cross.c.compiler.773309136;cdt.managedbuild.tool.gnu.c.compiler.input.1009566916">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.93172562;cdt.managedbuild.tool.gnu.cpp.compiler.input.356385541">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.2062922048.2137028753;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.2062922048.2137028753.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.425549394;cdt.managedbuild.tool.gnu.cpp.compiler.input.816929422">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1730630010;cdt.managedbuild.config.gnu.cross.exe.debug.1730630010.;cdt.managedbuild.tool.gnu.cross.c.compiler.2083059844;cdt.managedbuild.tool.gnu.c.compiler.input.344115894">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.230662172.603295802;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.230662172.603295802.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.368359956;cdt.managedbuild.tool.gnu.cpp.compiler.input.1614221912">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.1150019443;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.1150019443.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1182258658;cdt.managedbuild.tool.gnu.cpp.compiler.input.495254563">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.705406428;cdt.managedbuild.tool.gnu.cpp.compiler.input.500335297">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.2062922048;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.2062922048.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.386164944;cdt.managedbuild.tool.gnu.cpp.compiler.input.1137176205">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.;cdt.managedbuild.tool.gnu.cross.c.compiler.1565281953;cdt.managedbuild.tool.gnu.c.compiler.input.720850547">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.502121346;cdt.managedbuild.tool.gnu.cpp.compiler.input.36664821">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.1898002494;cdt.managedbuild.config.gnu.cross.exe.release.1898002494.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.804202585;cdt.managedbuild.tool.gnu.cpp.compiler.input.532566815">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.230662172;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.230662172.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1160250040;cdt.managedbuild.tool.gnu.cpp.compiler.input.2026436484">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.2062922048.2137028753;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.2062922048.2137028753.;cdt.managedbuild.tool.gnu.cross.c.compiler.199660643;cdt.managedbuild.tool.gnu.c.compiler.input.1918508955">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.2004628455;cdt.managedbuild.tool.gnu.cpp.compiler.input.1462746332">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.2062922048;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.2062922048.;cdt.managedbuild.tool.gnu.cross.c.compiler.1497750017;cdt.managedbuild.tool.gnu.c.compiler.input.85509365">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.;cdt.managedbuild.tool.gnu.cross.c.compiler.987628345;cdt.managedbuild.tool.gnu.c.compiler.input.1584393736">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.1898002494;cdt.managedbuild.config.gnu.cross.exe.release.1898002494.;cdt.managedbuild.tool.gnu.cross.c.compiler.1928992054;cdt.managedbuild.tool.gnu.c.compiler.input.2135207824">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.502121346;cdt.managedbuild.tool.gnu.cpp.compiler.input.36664821">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.230662172;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.230662172.;cdt.managedbuild.tool.gnu.cross.c.compiler.981369083;cdt.managedbuild.tool.gnu.c.compiler.input.193633140">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1730630010;cdt.managedbuild.config.gnu.cross.exe.debug.1730630010.;cdt.managedbuild.tool.gnu.cross.c.compiler.2083059844;cdt.managedbuild.tool.gnu.c.compiler.input.344115894">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572.;cdt.managedbuild.tool.gnu.cross.c.compiler.802503407;cdt.managedbuild.tool.gnu.c.compiler.input.1820399009">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.;cdt.managedbuild.tool.gnu.cross.c.compiler.2049266888;cdt.managedbuild.tool.gnu.c.compiler.input.89215382">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.1898002494;cdt.managedbuild.config.gnu.cross.exe.release.1898002494.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.804202585;cdt.managedbuild.tool.gnu.cpp.compiler.input.532566815">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1730630010;cdt.managedbuild.config.gnu.cross.exe.debug.1730630010.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1500340638;cdt.managedbuild.tool.gnu.cpp.compiler.input.2025971206">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.705406428;cdt.managedbuild.tool.gnu.cpp.compiler.input.500335297">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572.;cdt.managedbuild.tool.gnu.cross.c.compiler.802503407;cdt.managedbuild.tool.gnu.c.compiler.input.1820399009">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.93172562;cdt.managedbuild.tool.gnu.cpp.compiler.input.356385541">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.;cdt.managedbuild.tool.gnu.cross.c.compiler.1565281953;cdt.managedbuild.tool.gnu.c.compiler.input.720850547">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.1150019443;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.777139425.1150019443.;cdt.managedbuild.tool.gnu.cross.c.compiler.893654764;cdt.managedbuild.tool.gnu.c.compiler.input.171776143">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 	</storageModule>
-	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>

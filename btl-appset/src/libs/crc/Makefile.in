@@ -1,5 +1,8 @@
 # Makefile for GNU make
 
-CSRC_LIB   += crc/crc.c
+COMMON_LIBS_CRC_ROOT = ../../../common_libs
+
+CSRC_LIB   += $(COMMON_LIBS_CRC_ROOT)/crc/crc.c
 CXXSRC_LIB += 
-HDRLOC_LIB += crc
+HDRLOC_LIB += $(COMMON_LIBS_CRC_ROOT)/
+HDRLOC_LIB += $(COMMON_LIBS_CRC_ROOT)/crc

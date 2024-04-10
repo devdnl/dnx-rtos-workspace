@@ -71,13 +71,6 @@ this:AddExtraWidget("Label", "LabelTask", "\nTask management", -1, "bold")
 this:AddExtraWidget("Void", "VoidTask")
 ++*/
 /*--
-this:AddWidget("Spinbox", 3, 255, "Number of task priorities")
-this:SetToolTip("This value determines total number of task priorities. By using this value task priorities are calculated. "..
-                "If this value is set to e.g. 7, then system priorities are in range from -3 to 3.")
---*/
-#define __OS_TASK_MAX_PRIORITIES__ 3
-
-/*--
 this:AddWidget("Spinbox", 10, 1000, "Context switch frequency [Hz]")
 this:SetToolTip("Context switch frequency has influence to system response for events.\n"..
                 "If your system should response faster for events set this value to higher ones.\n"..

@@ -37,7 +37,7 @@ TARGET_DIR_NAME = build
 #---------------------------------------------------------------------------------------------------
 SHELL      = /bin/bash
 ECHO       = /bin/echo -e
-REMOVE     = /bin/rm -f
+REMOVE     = /bin/rm -rf
 COPY       = /bin/cp -r
 RENAME     = /bin/mv
 MKDIR      = /bin/mkdir -p
@@ -130,11 +130,13 @@ btl : _build_prepare btl-system btl-appset
 
 .PHONY : app-system
 app-system : _build_prepare
+	@$(REMOVE) system/build/ioctl
 	@$(MAKE) -C system -s -j 1 -fMakefile clean all CONFIG_DIR=../config/app/system
 	@$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/app-system.hex
 	@$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/app-system.elf
 	@$(COPY) system/build/output/dnx.bin $(TARGET_DIR_NAME)/app-system.bin
-	@$(COPY) system/build/ioctl $(TARGET_DIR_NAME)/ioctl
+	@$(COPY) system/build/ioctl $(TARGET_DIR_NAME)
+	@$(REMOVE) system/build/ioctl
 
 
 .PHONY : app-appset
@@ -152,11 +154,13 @@ clean-app-appset : _build_prepare
 
 .PHONY : btl-system
 btl-system : _build_prepare
+	@$(REMOVE) system/build/ioctl
 	@$(MAKE) -C system -s -j 1 -fMakefile clean all CONFIG_DIR=../config/btl/system
 	@$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/btl-system.hex
 	@$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/btl-system.elf
 	@$(COPY) system/build/output/dnx.bin $(TARGET_DIR_NAME)/btl-system.bin
-	@$(COPY) system/build/ioctl $(TARGET_DIR_NAME)/ioctl
+	@$(COPY) system/build/ioctl $(TARGET_DIR_NAME)
+	@$(REMOVE) system/build/ioctl
 
 
 .PHONY : btl-appset

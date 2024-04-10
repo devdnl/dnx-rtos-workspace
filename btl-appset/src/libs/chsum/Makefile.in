@@ -1,5 +1,8 @@
 # Makefile for GNU make
 
-CSRC_LIB   += chsum/chsum.c
+COMMON_LIBS_CHSUM_ROOT = ../../../common_libs
+
+CSRC_LIB   += $(COMMON_LIBS_CHSUM_ROOT)/chsum/chsum.c
 CXXSRC_LIB += 
-HDRLOC_LIB += chsum
+HDRLOC_LIB += $(COMMON_LIBS_CHSUM_ROOT)/
+HDRLOC_LIB += $(COMMON_LIBS_CHSUM_ROOT)/chsum
