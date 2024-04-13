@@ -45,10 +45,6 @@ this:SetLayout("TitledGridBack", 2, "Home > Microcontroller > SPI",
 this:AddExtraWidget("Label", "LabelDefaults", "Defaults", -1, "bold")
 this:AddExtraWidget("Void", "VoidDefaults")
 ++*/
-/*--
-this:AddWidget("Editline", false, "Flush Byte")
---*/
-#define __SPI_DEFAULT_FLUSH_BYTE__ 0xFF
 
 /*--
 this:AddWidget("Combobox", "Clock divider")
@@ -90,7 +86,7 @@ this:AddItem("Polling", "_SPI_MODE_POLLING")
 this:AddItem("IRQ", "_SPI_MODE_IRQ")
 this:AddItem("DMA", "_SPI_MODE_DMA")
 --*/
-#define __SPI_SPI1_MODE__ _SPI_MODE_DMA
+#define __SPI_SPI1_MODE__ _SPI_MODE_POLLING
 
 /*--
 this:AddWidget("Combobox", "SPI2 mode")
@@ -98,7 +94,7 @@ this:AddItem("Polling", "_SPI_MODE_POLLING")
 this:AddItem("IRQ", "_SPI_MODE_IRQ")
 this:AddItem("DMA", "_SPI_MODE_DMA")
 --*/
-#define __SPI_SPI2_MODE__ _SPI_MODE_DMA
+#define __SPI_SPI2_MODE__ _SPI_MODE_POLLING
 
 /*--
 this:AddWidget("Combobox", "SPI3 mode")
@@ -106,7 +102,7 @@ this:AddItem("Polling", "_SPI_MODE_POLLING")
 this:AddItem("IRQ", "_SPI_MODE_IRQ")
 this:AddItem("DMA", "_SPI_MODE_DMA")
 --*/
-#define __SPI_SPI3_MODE__ _SPI_MODE_DMA
+#define __SPI_SPI3_MODE__ _SPI_MODE_POLLING
 
 /*--
 this:AddWidget("Combobox", "SPI4 mode")
@@ -114,7 +110,7 @@ this:AddItem("Polling", "_SPI_MODE_POLLING")
 this:AddItem("IRQ", "_SPI_MODE_IRQ")
 this:AddItem("DMA", "_SPI_MODE_DMA")
 --*/
-#define __SPI_SPI4_MODE__ _SPI_MODE_DMA
+#define __SPI_SPI4_MODE__ _SPI_MODE_POLLING
 
 /*--
 this:AddWidget("Combobox", "SPI5 mode")
@@ -122,7 +118,7 @@ this:AddItem("Polling", "_SPI_MODE_POLLING")
 this:AddItem("IRQ", "_SPI_MODE_IRQ")
 this:AddItem("DMA", "_SPI_MODE_DMA")
 --*/
-#define __SPI_SPI5_MODE__ _SPI_MODE_DMA
+#define __SPI_SPI5_MODE__ _SPI_MODE_POLLING
 
 /*--
 this:AddWidget("Combobox", "SPI6 mode")
@@ -130,7 +126,7 @@ this:AddItem("Polling", "_SPI_MODE_POLLING")
 this:AddItem("IRQ", "_SPI_MODE_IRQ")
 this:AddItem("DMA", "_SPI_MODE_DMA")
 --*/
-#define __SPI_SPI6_MODE__ _SPI_MODE_DMA
+#define __SPI_SPI6_MODE__ _SPI_MODE_POLLING
 
 #endif /* _SPI_FLAGS_H_ */
 /*==============================================================================

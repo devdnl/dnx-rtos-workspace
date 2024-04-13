@@ -606,6 +606,7 @@ include $(CONFIG_DIR)/arch/$(__CPU_ARCH__)/cpu_flags.h
 #*/
 
 #define ARCH_noarch
+#include "noarch/enc28j60_flags.h"
 #include "noarch/zero_flags.h"
 #include "noarch/urandom_flags.h"
 #include "noarch/part_flags.h"
@@ -821,6 +822,15 @@ __ENABLE_DHT11__=_NO_
 #define __ENABLE_DMA__ _NO_
 #/*
 __ENABLE_DMA__=_NO_
+#*/
+
+#/*--
+# this:PutWidgets("ENC28J60")
+# this:SetToolTip("ENC28J60 chip driver")
+#--*/
+#define __ENABLE_ENC28J60__ _NO_
+#/*
+__ENABLE_ENC28J60__=_NO_
 #*/
 
 #/*--
