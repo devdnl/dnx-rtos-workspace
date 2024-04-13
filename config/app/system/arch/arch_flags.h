@@ -606,16 +606,7 @@ include $(CONFIG_DIR)/arch/$(__CPU_ARCH__)/cpu_flags.h
 #*/
 
 #define ARCH_noarch
-#include "noarch/enc28j60_flags.h"
-#include "noarch/zero_flags.h"
-#include "noarch/urandom_flags.h"
-#include "noarch/part_flags.h"
-#include "noarch/spiee_flags.h"
-#include "noarch/loop_flags.h"
 #include "noarch/tty_flags.h"
-#include "noarch/sdspi_flags.h"
-#include "noarch/dht11_flags.h"
-#include "noarch/i2cee_flags.h"
 
 #if (__CPU_ARCH__ == stm32f1)
 #include "stm32f1/adc_flags.h"
