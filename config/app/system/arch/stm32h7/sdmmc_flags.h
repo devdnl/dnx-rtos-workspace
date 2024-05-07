@@ -64,7 +64,7 @@ this:AddItem("1-bit wide bus", "SDMMC_BUS_WIDE_1B")
 this:AddItem("4-bit wide bus", "SDMMC_BUS_WIDE_4B")
 this:AddItem("8-bit wide bus", "SDMMC_BUS_WIDE_8B")
 --*/
-#define __SDMMC_CFG_SDMMC1_BUS_WIDE__ SDMMC_BUS_WIDE_1B
+#define __SDMMC_CFG_SDMMC1_BUS_WIDE__ SDMMC_BUS_WIDE_4B
 
 /*--
 this:AddWidget("Spinbox", 1, 256, "Clock divide factor")
@@ -106,7 +106,7 @@ this:AddItem("High", "SDMMC_SPEED_MODE_HIGH")
 this:AddItem("DDR (MMC only)", "SDMMC_SPEED_MODE_DDR")
 this:AddItem("Ultra (SD only)", "SDMMC_SPEED_MODE_ULTRA")
 --*/
-#define __SDMMC_CFG_SDMMC1_SPEED_MODE__ SDMMC_SPEED_MODE_DEFAULT
+#define __SDMMC_CFG_SDMMC1_SPEED_MODE__ SDMMC_SPEED_MODE_HIGH
 
 /*--
 this:AddWidget("Combobox", "IRQ priority")

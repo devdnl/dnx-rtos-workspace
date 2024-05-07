@@ -33,6 +33,7 @@ ForEachMacros:
   - GLOBAL_VARIABLES_SECTION
   - foreach_temp_name_to_id
   - llist_foreach
+  - llist_foreach_reverse
   - mutex_scope
   - scope
   - ATOMIC

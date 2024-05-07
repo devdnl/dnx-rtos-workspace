@@ -51,7 +51,7 @@ Brief   Ethernet info
   Local objects
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
-        ETH_status_t status;
+        ETHIF_status_t status;
 };
 
 static const char *ETH_STATE[]  = {"RESET", "READY", "ERROR"};
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
         } else {
                 int fd = open(argv[1], O_RDONLY);
                 if (fd != -1) {
-                        err = ioctl(fd, IOCTL_ETH__GET_STATUS, &global->status);
+                        err = ioctl(fd, IOCTL_ETHIF__GET_STATUS, &global->status);
                         if (!err) {
                                 printf("Configured: %s\n", global->status.configured ? "YES" : "NO");
                                 printf("State     : %16s\n", ETH_STATE[global->status.state]);

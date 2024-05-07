@@ -26,7 +26,8 @@
 
 *//*==========================================================================*/
 
-/** clang-format off
+// clang-format off
+/**
 \defgroup dnx-net-h <dnx/net.h>
 
 Network handling library.
@@ -205,9 +206,9 @@ int_main(client, STACK_DEPTH_LOW, int argc, char *argv[])
         return EXIT_SUCCESS;
 }
 @endcode
-clang-format on
 */
 /**@{*/
+// clang-format on
 
 #ifndef _LIBC_NET_H_
 #define _LIBC_NET_H_
@@ -279,9 +280,11 @@ typedef struct _libc_socket SOCKET;
 ------------------------------------------------------------------------------*/
 /** Network family. */
 typedef enum {
-        NET_FAMILY__INET,   //!< Internet network.
-        NET_FAMILY__SIPC,   //!< Serial Inter-Processor Communication
-        NET_FAMILY__CANNET, //!< CAN network Communication
+        NET_FAMILY__INET,                   //!< Internet network.
+        NET_FAMILY__SIPC,                   //!< Serial Inter-Processor Communication
+        NET_FAMILY__CANNET,                 //!< CAN network Communication
+        NET_FAMILY__UNIX,                   //!< Unix Domain Socket Communication
+        NET_FAMILY__UDS = NET_FAMILY__UNIX, //!< Unix Domain Socket Communication
         _NET_FAMILY__COUNT
 } NET_family_t;
 
@@ -430,6 +433,34 @@ typedef struct {
         u16_t addr; /*!< Address.*/
         u8_t  port; /*!< Port.*/
 } NET_CANNET_sockaddr_t;
+
+/*------------------------------------------------------------------------------
+  UDS NETWORK FAMILY
+------------------------------------------------------------------------------*/
+/** UDS network state. */
+typedef enum {
+        NETM_UDS_STATE__DOWN, //!< Network not configured.
+        NETM_UDS_STATE__UP,   //!< Network configured.
+} NETM_UDS_state_t;
+
+/** UDS configuration. */
+typedef struct {
+        u32_t stub;
+} NETM_UDS_config_t;
+
+/** UDS status. */
+typedef struct {
+        NETM_UDS_state_t state;      /*!< Connection state.*/
+        u64_t            tx_bytes;   /*!< Number of transmitted bytes.*/
+        u64_t            rx_bytes;   /*!< Number of received bytes.*/
+        u64_t            tx_packets; /*!< Number of transmitted packets.*/
+        u64_t            rx_packets; /*!< Number of received packets.*/
+} NETM_UDS_status_t;
+
+/** UDS socket address. */
+typedef struct {
+        char path[64];
+} NETM_UDS_sockaddr_t;
 
 /*==============================================================================
   Exported objects

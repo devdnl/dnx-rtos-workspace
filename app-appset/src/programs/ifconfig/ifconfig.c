@@ -37,10 +37,10 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define KiB                             cast(u32_t, 1024)
-#define MiB                             cast(u32_t, 1024*1024)
-#define CONVERT_TO_KiB(_val)            (_val >> 10)
-#define CONVERT_TO_MiB(_val)            (_val >> 20)
+#define KiB                  cast(u32_t, 1024)
+#define MiB                  cast(u32_t, 1024 * 1024)
+#define CONVERT_TO_KiB(_val) (_val >> 10)
+#define CONVERT_TO_MiB(_val) (_val >> 20)
 
 /*==============================================================================
   Local types, enums definitions
@@ -57,9 +57,10 @@ GLOBAL_VARIABLES_SECTION {
         char *network[32];
 
         union {
-                NET_INET_status_t inet;
-                NET_SIPC_status_t sipc;
+                NET_INET_status_t   inet;
+                NET_SIPC_status_t   sipc;
                 NET_CANNET_status_t cannet;
+                NETM_UDS_status_t   uds;
         } status;
 };
 
@@ -99,6 +100,9 @@ static void print_help_msg(const char *prog_name)
         printf("Options for CANNET:\n");
         printf("  %s CANNET up=address\n", prog_name);
         printf("\n");
+        printf("Options for UDS:\n");
+        printf("  %s UDS up\n", prog_name);
+        printf("\n");
 }
 
 //==============================================================================
@@ -110,10 +114,10 @@ static void print_help_msg(const char *prog_name)
 //==============================================================================
 static const char *convert_unit(u64_t *val)
 {
-        if (*val >= 10*MiB) {
+        if (*val >= 10 * MiB) {
                 *val = CONVERT_TO_MiB(*val);
                 return "MiB";
-        } else if (*val >= 10*KiB) {
+        } else if (*val >= 10 * KiB) {
                 *val = CONVERT_TO_KiB(*val);
                 return "KiB";
         } else {
@@ -134,7 +138,7 @@ static void INET_up(const char *netname, const char *options)
                         .mode    = NET_INET_MODE__DHCP_START,
                         .address = NET_INET_IPv4_ANY,
                         .mask    = NET_INET_IPv4_ANY,
-                        .gateway = NET_INET_IPv4_ANY
+                        .gateway = NET_INET_IPv4_ANY,
                 };
 
                 if (ifup(netname, &DHCP, sizeof(DHCP)) != 0) {
@@ -146,13 +150,12 @@ static void INET_up(const char *netname, const char *options)
                 int ma = INT_MAX, mb = INT_MAX, mc = INT_MAX, md = INT_MAX;
                 int ga = INT_MAX, gb = INT_MAX, gc = INT_MAX, gd = INT_MAX;
 
-                sscanf(options, "%4u.%4u.%4u.%4u,"
-                                "%4u.%4u.%4u.%4u,"
-                                "%4u.%4u.%4u.%4u",
+                sscanf(options,
+                        "%4u.%4u.%4u.%4u,"
+                        "%4u.%4u.%4u.%4u,"
+                        "%4u.%4u.%4u.%4u",
 
-                       &aa, &ab, &ac, &ad,
-                       &ma, &mb, &mc, &md,
-                       &ga, &gb, &gc, &gd);
+                        &aa, &ab, &ac, &ad, &ma, &mb, &mc, &md, &ga, &gb, &gc, &gd);
 
                 if ((aa > 255) or (ab > 255) or (ac > 255) or (ad > 255)) {
                         fputs("Incorrect format of IP address.\n", stderr);
@@ -171,9 +174,9 @@ static void INET_up(const char *netname, const char *options)
 
                 NET_INET_config_t config = {
                         .mode    = NET_INET_MODE__STATIC,
-                        .address = NET_INET_IPv4(aa,ab,ac,ad),
-                        .mask    = NET_INET_IPv4(ma,mb,mc,md),
-                        .gateway = NET_INET_IPv4(ga,gb,gc,gd)
+                        .address = NET_INET_IPv4(aa, ab, ac, ad),
+                        .mask    = NET_INET_IPv4(ma, mb, mc, md),
+                        .gateway = NET_INET_IPv4(ga, gb, gc, gd),
                 };
 
                 if (ifup(netname, &config, sizeof(config)) != 0) {
@@ -182,7 +185,6 @@ static void INET_up(const char *netname, const char *options)
         }
 }
 
-
 //==============================================================================
 /**
  * @brief Function gets INET connection status.
@@ -190,13 +192,8 @@ static void INET_up(const char *netname, const char *options)
 //==============================================================================
 static void INET_print_status(void)
 {
-        static const char *INET_STATE[] = {
-               "NOT CONFIGURED",
-               "STATIC IP",
-               "DHCP CONFIGURING",
-               "DHCP",
-               "LINK DISCONNECTED"
-        };
+        static const char *INET_STATE[] = {"NOT CONFIGURED", "STATIC IP",
+                "DHCP CONFIGURING", "DHCP", "LINK DISCONNECTED"};
 
         const char *tx_unit = convert_unit(&global->status.inet.tx_bytes);
         const char *rx_unit = convert_unit(&global->status.inet.rx_bytes);
@@ -210,35 +207,30 @@ static void INET_print_status(void)
                "  RX packets: %llu (%llu %s)\n"
                "  TX packets: %llu (%llu %s)\n",
 
-               INET_STATE[global->status.inet.state],
+                INET_STATE[global->status.inet.state],
 
-               global->status.inet.hw_addr[0],
-               global->status.inet.hw_addr[1],
-               global->status.inet.hw_addr[2],
-               global->status.inet.hw_addr[3],
-               global->status.inet.hw_addr[4],
-               global->status.inet.hw_addr[5],
+                global->status.inet.hw_addr[0], global->status.inet.hw_addr[1],
+                global->status.inet.hw_addr[2], global->status.inet.hw_addr[3],
+                global->status.inet.hw_addr[4], global->status.inet.hw_addr[5],
 
-               NET_INET_IPv4_a(global->status.inet.address),
-               NET_INET_IPv4_b(global->status.inet.address),
-               NET_INET_IPv4_c(global->status.inet.address),
-               NET_INET_IPv4_d(global->status.inet.address),
+                NET_INET_IPv4_a(global->status.inet.address),
+                NET_INET_IPv4_b(global->status.inet.address),
+                NET_INET_IPv4_c(global->status.inet.address),
+                NET_INET_IPv4_d(global->status.inet.address),
 
-               NET_INET_IPv4_a(global->status.inet.gateway),
-               NET_INET_IPv4_b(global->status.inet.gateway),
-               NET_INET_IPv4_c(global->status.inet.gateway),
-               NET_INET_IPv4_d(global->status.inet.gateway),
+                NET_INET_IPv4_a(global->status.inet.gateway),
+                NET_INET_IPv4_b(global->status.inet.gateway),
+                NET_INET_IPv4_c(global->status.inet.gateway),
+                NET_INET_IPv4_d(global->status.inet.gateway),
 
-               NET_INET_IPv4_a(global->status.inet.mask),
-               NET_INET_IPv4_b(global->status.inet.mask),
-               NET_INET_IPv4_c(global->status.inet.mask),
-               NET_INET_IPv4_d(global->status.inet.mask),
+                NET_INET_IPv4_a(global->status.inet.mask),
+                NET_INET_IPv4_b(global->status.inet.mask),
+                NET_INET_IPv4_c(global->status.inet.mask),
+                NET_INET_IPv4_d(global->status.inet.mask),
 
-               global->status.inet.rx_packets, global->status.inet.rx_bytes, rx_unit,
-               global->status.inet.tx_packets, global->status.inet.tx_bytes, tx_unit
-       );
+                global->status.inet.rx_packets, global->status.inet.rx_bytes, rx_unit,
+                global->status.inet.tx_packets, global->status.inet.tx_bytes, tx_unit);
 }
-
 
 //==============================================================================
 /**
@@ -264,15 +256,12 @@ static void SIPC_up(const char *netname, const char *options)
 
 //==============================================================================
 /**
- * @brief Function gets INET connection status.
+ * @brief Function gets SIPC connection status.
  */
 //==============================================================================
 static void SIPC_print_status(void)
 {
-        static const char *SIPC_STATE[] = {
-               "NOT CONFIGURED",
-               "CONFIGURED"
-        };
+        static const char *SIPC_STATE[] = {"NOT CONFIGURED", "CONFIGURED"};
 
         const char *tx_unit = convert_unit(&global->status.sipc.tx_bytes);
         const char *rx_unit = convert_unit(&global->status.sipc.rx_bytes);
@@ -283,23 +272,21 @@ static void SIPC_print_status(void)
                "  RX packets: %llu (%llu %s)\n"
                "  TX packets: %llu (%llu %s)\n",
 
-               SIPC_STATE[global->status.sipc.state],
-               global->status.sipc.MTU,
-               global->status.sipc.rx_packets, global->status.sipc.rx_bytes, rx_unit,
-               global->status.sipc.tx_packets, global->status.sipc.tx_bytes, tx_unit
-       );
+                SIPC_STATE[global->status.sipc.state], global->status.sipc.MTU,
+                global->status.sipc.rx_packets, global->status.sipc.rx_bytes, rx_unit,
+                global->status.sipc.tx_packets, global->status.sipc.tx_bytes, tx_unit);
 }
-
 
 //==============================================================================
 /**
- * @brief Function setup SIPC connection.
+ * @brief Function setup CANNET connection.
  * @param options       string options
  */
 //==============================================================================
 static void CANNET_up(const char *netname, const char *options)
 {
         NET_CANNET_config_t conf;
+
         u32_t addr = 0;
         sscanf(options, "%lu", &addr);
         conf.addr = addr;
@@ -311,15 +298,12 @@ static void CANNET_up(const char *netname, const char *options)
 
 //==============================================================================
 /**
- * @brief Function gets INET connection status.
+ * @brief Function gets CANNET connection status.
  */
 //==============================================================================
 static void CANNET_print_status(void)
 {
-        static const char *CANNET_STATE[] = {
-               "NOT CONFIGURED",
-               "CONFIGURED"
-        };
+        static const char *CANNET_STATE[] = {"NOT CONFIGURED", "CONFIGURED"};
 
         const char *tx_unit = convert_unit(&global->status.cannet.tx_bytes);
         const char *rx_unit = convert_unit(&global->status.cannet.rx_bytes);
@@ -331,12 +315,45 @@ static void CANNET_print_status(void)
                "  RX packets: %llu (%llu %s)\n"
                "  TX packets: %llu (%llu %s)\n",
 
-               CANNET_STATE[global->status.cannet.state],
-               global->status.cannet.addr,
-               global->status.cannet.MTU,
-               global->status.cannet.rx_packets, global->status.cannet.rx_bytes, rx_unit,
-               global->status.cannet.tx_packets, global->status.cannet.tx_bytes, tx_unit
-       );
+                CANNET_STATE[global->status.cannet.state], global->status.cannet.addr,
+                global->status.cannet.MTU, global->status.cannet.rx_packets,
+                global->status.cannet.rx_bytes, rx_unit, global->status.cannet.tx_packets,
+                global->status.cannet.tx_bytes, tx_unit);
+}
+
+//==============================================================================
+/**
+ * @brief Function setup UDS connection.
+ * @param options       string options
+ */
+//==============================================================================
+static void UDS_up(const char *netname, const char *options)
+{
+        if (ifup(netname, NULL, 0) != 0) {
+                perror(netname);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function gets UDS connection status.
+ */
+//==============================================================================
+static void UDS_print_status(void)
+{
+        static const char *STATE[] = {"NOT CONFIGURED", "CONFIGURED"};
+
+        const char *tx_unit = convert_unit(&global->status.cannet.tx_bytes);
+        const char *rx_unit = convert_unit(&global->status.cannet.rx_bytes);
+
+        printf("UDS\n"
+               "  Status: %s\n"
+               "  RX packets: %llu (%llu %s)\n"
+               "  TX packets: %llu (%llu %s)\n",
+
+                STATE[global->status.uds.state], global->status.uds.rx_packets,
+                global->status.uds.rx_bytes, rx_unit, global->status.uds.tx_packets,
+                global->status.uds.tx_bytes, tx_unit);
 }
 
 //==============================================================================
@@ -359,6 +376,9 @@ static void print_network_status(const char *network, NET_family_t family)
 
         } else if (family == NET_FAMILY__CANNET) {
                 CANNET_print_status();
+
+        } else if (family == NET_FAMILY__UDS) {
+                UDS_print_status();
         }
 
         puts("");
@@ -380,13 +400,15 @@ int main(int argc, char *argv[])
 
         if (argc == 1) {
                 uint num_of_networks = 0;
-                for (; global->network[num_of_networks]; num_of_networks++);
+                for (; global->network[num_of_networks]; num_of_networks++)
+                        ;
                 printf("Number of networks: %u\n", num_of_networks);
 
                 char **network = global->network;
                 while (*network) {
                         NET_family_t family;
-                        if (ifstatus(*network, &family, &global->status, sizeof(global->status)) == 0) {
+                        if (ifstatus(*network, &family, &global->status,
+                                    sizeof(global->status)) == 0) {
                                 print_network_status(*network, family);
                         }
                         network++;
@@ -421,7 +443,8 @@ int main(int argc, char *argv[])
                 // configure selected network
                 if (netname) {
                         NET_family_t family;
-                        if (ifstatus(netname, &family, &global->status, sizeof(global->status)) == 0) {
+                        if (ifstatus(netname, &family, &global->status,
+                                    sizeof(global->status)) == 0) {
                                 if (down) {
                                         ifdown(netname);
 
@@ -437,6 +460,9 @@ int main(int argc, char *argv[])
 
                                         } else if (family == NET_FAMILY__CANNET) {
                                                 CANNET_up(netname, up_args);
+
+                                        } else if (family == NET_FAMILY__UDS) {
+                                                UDS_up(netname, up_args);
                                         }
                                 } else {
                                         print_network_status(netname, family);

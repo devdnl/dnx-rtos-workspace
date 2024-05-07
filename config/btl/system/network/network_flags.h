@@ -48,6 +48,16 @@
 #++*/
 
 #/*--
+# this:AddWidget("Checkbox", "Enable Unix Domain Socket")
+# this:AddExtraWidget("Hyperlink", "UDSConfigure", "Configure")
+# this:SetEvent("clicked", "UDSConfigure", function() this:LoadFile("network/uds_flags.h") end)
+#--*/
+#define __ENABLE_UDS_STACK__ _YES_
+#/*
+__ENABLE_UDS_STACK__=_YES_
+#*/
+
+#/*--
 # this:AddWidget("Checkbox", "Enable TCP/IP")
 # this:AddExtraWidget("Hyperlink", "TCPIPConfigure", "Configure")
 # this:SetEvent("clicked", "TCPIPConfigure", function() this:LoadFile("network/tcpip_flags.h") end)
@@ -77,6 +87,10 @@ __ENABLE_SIPC_STACK__=_NO_
 __ENABLE_CANNET_STACK__=_NO_
 #*/
 
+#if __ENABLE_UDS_STACK__ == _YES_
+#include "uds_flags.h"
+#endif
+
 #if __ENABLE_TCPIP_STACK__ == _YES_
 #include "tcpip_flags.h"
 #endif
@@ -90,15 +104,16 @@ __ENABLE_CANNET_STACK__=_NO_
 #endif
 
 
-
 #/* MASTER NETWORK SUBSYSTEM ENABLE */
-#define _ENABLE_NETWORK_ (__ENABLE_TCPIP_STACK__ || __ENABLE_SIPC_STACK__ || __ENABLE_CANNET_STACK__)
+#define _ENABLE_NETWORK_ (__ENABLE_TCPIP_STACK__ || __ENABLE_SIPC_STACK__ || __ENABLE_CANNET_STACK__ || __ENABLE_UDS_STACK__)
 #/*
 ifeq ($(__ENABLE_TCPIP_STACK__), _YES_)
 _ENABLE_NETWORK_=_YES_
 else ifeq ($(__ENABLE_SIPC_STACK__), _YES_)
 _ENABLE_NETWORK_=_YES_
 else ifeq ($(__ENABLE_CANNET_STACK__), _YES_)
+_ENABLE_NETWORK_=_YES_
+else ifeq ($(__ENABLE_UDS_STACK__), _YES_)
 _ENABLE_NETWORK_=_YES_
 endif
 #*/

@@ -63,7 +63,7 @@ this:AddItem("SMPS supplies EXT 1.8V", "PWR_SMPS_1V8_SUPPLIES_EXT")
 this:AddItem("SMPS supplies EXT 2.5V", "PWR_SMPS_2V5_SUPPLIES_EXT")
 this:AddExtraWidget("Label", "LABEL_SUPPLY_SOURCE_EXTRA", "")
 --*/
-#define __CLK_SUPPLY_SOURCE__ PWR_LDO_SUPPLY
+#define __CLK_SUPPLY_SOURCE__ PWR_DIRECT_SMPS_SUPPLY
 
 /*--
 this:AddExtraWidget("Label", "LABEL_OSCILLATORS", "\nOscillators", -1, "bold")
@@ -97,7 +97,7 @@ this:AddItem("Medium High", "LL_RCC_LSEDRIVE_MEDIUMHIGH")
 this:AddItem("High", "LL_RCC_LSEDRIVE_HIGH")
 this:AddExtraWidget("Label", "LABEL_LSE_DRIVE", "")
 --*/
-#define __CLK_LSE_DRIVE_CAPABILITY__ LL_RCC_LSEDRIVE_HIGH
+#define __CLK_LSE_DRIVE_CAPABILITY__ LL_RCC_LSEDRIVE_MEDIUMHIGH
 
 /*--
 this:AddWidget("Combobox", "HSE oscillator")
@@ -126,7 +126,7 @@ this:AddItem("HSE", "LL_RCC_PLLSOURCE_HSE")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_CLK_PLL_SRC", "")
 --*/
-#define __CLK_PLL_SRC__ LL_RCC_PLLSOURCE_HSI
+#define __CLK_PLL_SRC__ LL_RCC_PLLSOURCE_HSE
 
 
 //==============================================================================
@@ -151,14 +151,14 @@ this:AddWidget("Spinbox", 0, 63, "PLL ref_ck divider (M)")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL1_M", "")
 --*/
-#define __CLK_PLL1_M__ 8
+#define __CLK_PLL1_M__ 5
 
 /*--
 this:AddWidget("Spinbox", 4, 512, "PLL multiplier (N)")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL1_N", "")
 --*/
-#define __CLK_PLL1_N__ 60
+#define __CLK_PLL1_N__ 160
 
 /*--
 this:AddWidget("Combobox", "PLL P clock enable")
@@ -176,7 +176,7 @@ for i = 2, 128, 2 do this:AddItem(tostring(i), tostring(i)) end
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL1_P", "")
 --*/
-#define __CLK_PLL1_P__ 1
+#define __CLK_PLL1_P__ 2
 
 /*--
 this:AddWidget("Combobox", "PLL Q clock enable")
@@ -192,7 +192,7 @@ this:AddWidget("Spinbox", 1, 128, "PLL divider Q (pll1_q_ck)")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL1_Q", "")
 --*/
-#define __CLK_PLL1_Q__ 1
+#define __CLK_PLL1_Q__ 4
 
 /*--
 this:AddWidget("Combobox", "PLL R clock enable")
@@ -201,14 +201,14 @@ this:AddItem("Yes", "_YES_")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL1_R_ON", "")
 --*/
-#define __CLK_PLL1_R_ENABLE__ _NO_
+#define __CLK_PLL1_R_ENABLE__ _YES_
 
 /*--
 this:AddWidget("Spinbox", 1, 128, "PLL divider R (pll1_r_ck)")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL1_R", "")
 --*/
-#define __CLK_PLL1_R__ 1
+#define __CLK_PLL1_R__ 2
 
 
 //==============================================================================
@@ -240,7 +240,7 @@ this:AddWidget("Spinbox", 4, 512, "PLL multiplier (N)")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL2_N", "")
 --*/
-#define __CLK_PLL2_N__ 60
+#define __CLK_PLL2_N__ 32
 
 /*--
 this:AddWidget("Combobox", "PLL P clock enable")
@@ -272,7 +272,7 @@ this:AddWidget("Spinbox", 1, 128, "PLL divider Q (pll2_q_ck)")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL2_Q", "")
 --*/
-#define __CLK_PLL2_Q__ 1
+#define __CLK_PLL2_Q__ 2
 
 /*--
 this:AddWidget("Combobox", "PLL R clock enable")
@@ -281,14 +281,14 @@ this:AddItem("Yes", "_YES_")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL2_R_ON", "")
 --*/
-#define __CLK_PLL2_R_ENABLE__ _NO_
+#define __CLK_PLL2_R_ENABLE__ _YES_
 
 /*--
 this:AddWidget("Spinbox", 1, 128, "PLL divider R (pll2_r_ck)")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL2_R", "")
 --*/
-#define __CLK_PLL2_R__ 1
+#define __CLK_PLL2_R__ 2
 
 
 //==============================================================================
@@ -313,14 +313,14 @@ this:AddWidget("Spinbox", 0, 63, "PLL ref_ck divider (M)")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL3_M", "")
 --*/
-#define __CLK_PLL3_M__ 8
+#define __CLK_PLL3_M__ 25
 
 /*--
 this:AddWidget("Spinbox", 4, 512, "PLL multiplier (N)")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL3_N", "")
 --*/
-#define __CLK_PLL3_N__ 60
+#define __CLK_PLL3_N__ 48
 
 /*--
 this:AddWidget("Combobox", "PLL P clock enable")
@@ -329,7 +329,7 @@ this:AddItem("Yes", "_YES_")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL3_P_ON", "")
 --*/
-#define __CLK_PLL3_P_ENABLE__ _YES_
+#define __CLK_PLL3_P_ENABLE__ _NO_
 
 /*--
 this:AddWidget("Spinbox", 1, 128, "PLL divider P (pll3_p_ck)")
@@ -468,7 +468,7 @@ this:AddItem("ahb_ck / 16", "LL_RCC_APB4_DIV_16")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_APB4CLK_DIV", "")
 --*/
-#define __CLK_APB4_DIV__ LL_RCC_APB4_DIV_4
+#define __CLK_APB4_DIV__ LL_RCC_APB4_DIV_2
 
 //==============================================================================
 // Peripheral clock configuration
@@ -536,7 +536,7 @@ this:AddItem("LSE", "LL_RCC_LPUART1_CLKSOURCE_LSE")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_CLK_SRC_LPUART1", "")
 --*/
-#define __CLK_SRC_LPUART1__ LL_RCC_LPUART1_CLKSOURCE_PCLK4
+#define __CLK_SRC_LPUART1__ LL_RCC_LPUART1_CLKSOURCE_PLL3Q
 
 /*--
 this:AddWidget("Combobox", "I2C1..3 clock source")
@@ -607,7 +607,7 @@ this:AddItem("HSE", "LL_RCC_CLKP_CLKSOURCE_HSE")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_CLK_SRC_CLKP", "")
 --*/
-#define __CLK_SRC_CLKP__ LL_RCC_CLKP_CLKSOURCE_HSI
+#define __CLK_SRC_CLKP__ LL_RCC_CLKP_CLKSOURCE_HSE
 
 /*--
 this:AddWidget("Combobox", "SPDIF clock source")
@@ -700,7 +700,7 @@ this:AddItem("PLL2R", "LL_RCC_SDMMC_CLKSOURCE_PLL2R")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_CLK_SRC_SDMMC", "")
 --*/
-#define __CLK_SRC_SDMMC__ LL_RCC_SDMMC_CLKSOURCE_PLL1Q
+#define __CLK_SRC_SDMMC__ LL_RCC_SDMMC_CLKSOURCE_PLL2R
 
 /*--
 this:AddWidget("Combobox", "RNG clock source")
@@ -722,7 +722,7 @@ this:AddItem("HSI48", "LL_RCC_USB_CLKSOURCE_HSI48")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_CLK_SRC_USB", "")
 --*/
-#define __CLK_SRC_USB__ LL_RCC_USB_CLKSOURCE_PLL1Q
+#define __CLK_SRC_USB__ LL_RCC_USB_CLKSOURCE_PLL3Q
 
 /*--
 this:AddWidget("Combobox", "CEC clock source")
@@ -804,7 +804,7 @@ this:AddItem("CLKP", "LL_RCC_SPI123_CLKSOURCE_CLKP")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_CLK_SRC_SPI123", "")
 --*/
-#define __CLK_SRC_SPI123__ LL_RCC_SPI123_CLKSOURCE_PLL1Q
+#define __CLK_SRC_SPI123__ LL_RCC_SPI123_CLKSOURCE_CLKP
 
 /*--
 this:AddWidget("Combobox", "SPI4..5 clock source")
@@ -817,7 +817,7 @@ this:AddItem("HSE", "LL_RCC_SPI45_CLKSOURCE_HSE")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_CLK_SRC_SPI45", "")
 --*/
-#define __CLK_SRC_SPI45__ LL_RCC_SPI45_CLKSOURCE_PCLK2
+#define __CLK_SRC_SPI45__ LL_RCC_SPI45_CLKSOURCE_HSE
 
 /*--
 this:AddWidget("Combobox", "SPI6 clock source")
@@ -841,7 +841,7 @@ this:AddItem("PLL2Q", "LL_RCC_FDCAN_CLKSOURCE_PLL2Q")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_CLK_SRC_FDCAN", "")
 --*/
-#define __CLK_SRC_FDCAN__ LL_RCC_FDCAN_CLKSOURCE_HSE
+#define __CLK_SRC_FDCAN__ LL_RCC_FDCAN_CLKSOURCE_PLL2Q
 
 /*--
 this:AddWidget("Combobox", "SWP clock source")
@@ -860,7 +860,7 @@ this:AddItem("CLKP", "LL_RCC_ADC_CLKSOURCE_CLKP")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_CLK_SRC_ADC", "")
 --*/
-#define __CLK_SRC_ADC__ LL_RCC_ADC_CLKSOURCE_PLL2P
+#define __CLK_SRC_ADC__ LL_RCC_ADC_CLKSOURCE_CLKP
 
 //==============================================================================
 // Calculated values
