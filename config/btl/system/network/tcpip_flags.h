@@ -781,7 +781,7 @@ this:SetToolTip("LWIP_NETIF_LOOPBACK==1: Support sending packets with a destinat
 #define __NETWORK_LWIP_NETIF_LOOPBACK__ 0
 /*--
 this:AddWidget("Spinbox", 1, 1024, "LWIP_LOOPBACK_MAX_PBUFS")
-this:SetToolTip("LWIP_LOOPBACK_MAX_PBUFS: Maximum number of pbufs\non queue for loopback sending for each netif (0 = disabled).")
+this:SetToolTip("LWIP_LOOPBACK_MAX_PBUFS: Maximum number of pbufs\non queue for loopback sending for each netif.")
 --*/
 #define __NETWORK_LWIP_LOOPBACK_MAX_PBUFS__ 32
 
@@ -969,35 +969,35 @@ this:AddItem("Disable (0)", "0")
 this:AddItem("Enable (1)", "1")
 this:SetToolTip("CHECKSUM_GEN_IP==1: Generate checksums in software for outgoing IP packets.")
 --*/
-#define __NETWORK_CHECKSUM_GEN_IP__ 0
+#define __NETWORK_CHECKSUM_GEN_IP__ 1
 /*--
 this:AddWidget("Combobox", "CHECKSUM_GEN_UDP")
 this:AddItem("Disable (0)", "0")
 this:AddItem("Enable (1)", "1")
 this:SetToolTip("CHECKSUM_GEN_UDP==1: Generate checksums in software for outgoing UDP packets.")
 --*/
-#define __NETWORK_CHECKSUM_GEN_UDP__ 0
+#define __NETWORK_CHECKSUM_GEN_UDP__ 1
 /*--
 this:AddWidget("Combobox", "CHECKSUM_GEN_TCP")
 this:AddItem("Disable (0)", "0")
 this:AddItem("Enable (1)", "1")
 this:SetToolTip("CHECKSUM_GEN_TCP==1: Generate checksums in software for outgoing TCP packets.")
 --*/
-#define __NETWORK_CHECKSUM_GEN_TCP__ 0
+#define __NETWORK_CHECKSUM_GEN_TCP__ 1
 /*--
 this:AddWidget("Combobox", "CHECKSUM_GEN_ICMP")
 this:AddItem("Disable (0)", "0")
 this:AddItem("Enable (1)", "1")
 this:SetToolTip("CHECKSUM_GEN_ICMP==1: Generate checksums in software for outgoing ICMP packets.")
 --*/
-#define __NETWORK_CHECKSUM_GEN_ICMP__ 0
+#define __NETWORK_CHECKSUM_GEN_ICMP__ 1
 /*--
 this:AddWidget("Combobox", "CHECKSUM_GEN_ICMP6")
 this:AddItem("Disable (0)", "0")
 this:AddItem("Enable (1)", "1")
 this:SetToolTip("CHECKSUM_GEN_ICMP6==1: Generate checksums in software for outgoing ICMP6 packets.")
 --*/
-#define __NETWORK_CHECKSUM_GEN_ICMP6__ 0
+#define __NETWORK_CHECKSUM_GEN_ICMP6__ 1
 /*--
 this:AddWidget("Combobox", "CHECKSUM_CHECK_IP")
 this:AddItem("Disable (0)", "0")

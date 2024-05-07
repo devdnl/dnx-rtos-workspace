@@ -247,6 +247,9 @@ static void initialize_additional_drivers(void)
         } else {
                 perror("eth");
         }
+
+        ifadd("unix", NET_FAMILY__UNIX, NULL);
+        ifup("unix", NULL, 0);
 }
 
 //==============================================================================

@@ -26,6 +26,7 @@
 
 *//*==========================================================================*/
 
+// clang-format off
 /**
 \defgroup dnx-net-h <dnx/net.h>
 
@@ -205,9 +206,9 @@ int_main(client, STACK_DEPTH_LOW, int argc, char *argv[])
         return EXIT_SUCCESS;
 }
 @endcode
-
 */
 /**@{*/
+// clang-format on
 
 #ifndef _LIBC_NET_H_
 #define _LIBC_NET_H_
@@ -232,28 +233,30 @@ extern "C" {
   INET NETWORK FAMILY
 ------------------------------------------------------------------------------*/
 /** Macro creates IPv4 address for INET family network. */
-#define NET_INET_IPv4(a, b, c, d)               (((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF)))
+#define NET_INET_IPv4(a, b, c, d)                                    \
+        (((((u32_t)a) & 0xFF) << 24) | ((((u32_t)b) & 0xFF) << 16) | \
+                ((((u32_t)c) & 0xFF) << 8) | ((((u32_t)d) & 0xFF)))
 
 /** Macro creates ANY address for INET family network. */
-#define NET_INET_IPv4_ANY                       NET_INET_IPv4(0,0,0,0)
+#define NET_INET_IPv4_ANY NET_INET_IPv4(0, 0, 0, 0)
 
 /** Macro creates LOOPBACK address for INET family network. */
-#define NET_INET_IPv4_LOOPBACK                  NET_INET_IPv4(127,0,0,1)
+#define NET_INET_IPv4_LOOPBACK NET_INET_IPv4(127, 0, 0, 1)
 
 /** Macro creates BROADCAST address for INET family network. */
-#define NET_INET_IPv4_BROADCAST                 NET_INET_IPv4(255,255,255,255)
+#define NET_INET_IPv4_BROADCAST NET_INET_IPv4(255, 255, 255, 255)
 
 /** Macro gets part <i>a</i> of INET family network address. */
-#define NET_INET_IPv4_a(ip)                     ((uint8_t)((ip >> 24) & 0xFF))
+#define NET_INET_IPv4_a(ip) ((uint8_t)((ip >> 24) & 0xFF))
 
 /** Macro gets part <i>b</i> of INET family network address. */
-#define NET_INET_IPv4_b(ip)                     ((uint8_t)((ip >> 16) & 0xFF))
+#define NET_INET_IPv4_b(ip) ((uint8_t)((ip >> 16) & 0xFF))
 
 /** Macro gets part <i>c</i> of INET family network address. */
-#define NET_INET_IPv4_c(ip)                     ((uint8_t)((ip >> 8)  & 0xFF))
+#define NET_INET_IPv4_c(ip) ((uint8_t)((ip >> 8) & 0xFF))
 
 /** Macro gets part <i>d</i> of INET family network address. */
-#define NET_INET_IPv4_d(ip)                     ((uint8_t)((ip >> 0)  & 0xFF))
+#define NET_INET_IPv4_d(ip) ((uint8_t)((ip >> 0) & 0xFF))
 
 /*------------------------------------------------------------------------------
   SIPC NETWORK FAMILY
@@ -262,10 +265,10 @@ extern "C" {
 /*------------------------------------------------------------------------------
   CANNET NETWORK FAMILY
 ------------------------------------------------------------------------------*/
-#define NET_CANNET_MAX_PORT             7
-#define NET_CANNET_CAN_ID_MASK          0x10003FFF
-#define NET_CANNET_ADDR_BROADCAST       0x3FFF
-#define NET_CANNET_ADDR_ANY             0x0000
+#define NET_CANNET_MAX_PORT       7
+#define NET_CANNET_CAN_ID_MASK    0x10003FFF
+#define NET_CANNET_ADDR_BROADCAST 0x3FFF
+#define NET_CANNET_ADDR_ANY       0x0000
 
 /*==============================================================================
   Exported object types
@@ -277,42 +280,45 @@ typedef struct _libc_socket SOCKET;
 ------------------------------------------------------------------------------*/
 /** Network family. */
 typedef enum {
-        NET_FAMILY__INET,                       //!< Internet network.
-        NET_FAMILY__SIPC,                       //!< Serial Inter-Processor Communication
-        NET_FAMILY__CANNET,                     //!< CAN network Communication
+        NET_FAMILY__INET,                   //!< Internet network.
+        NET_FAMILY__SIPC,                   //!< Serial Inter-Processor Communication
+        NET_FAMILY__CANNET,                 //!< CAN network Communication
+        NET_FAMILY__UNIX,                   //!< Unix Domain Socket Communication
+        NET_FAMILY__UDS = NET_FAMILY__UNIX, //!< Unix Domain Socket Communication
         _NET_FAMILY__COUNT
 } NET_family_t;
 
 /** Protocol selection. Not all protocols are available for all family networks. */
 typedef enum {
-        NET_PROTOCOL__DATAGRAM,                         //!< DATAGRAM type protocol
-        NET_PROTOCOL__STREAM,                           //!< STREAM type protocol
-        NET_PROTOCOL__UDP = NET_PROTOCOL__DATAGRAM,     //!< UDP protocol.
-        NET_PROTOCOL__TCP = NET_PROTOCOL__STREAM,       //!< TCP protocol.
-        _NET_PROTOCOL__COUNT,                           //!< number of protocols
+        NET_PROTOCOL__DATAGRAM,                     //!< DATAGRAM type protocol
+        NET_PROTOCOL__STREAM,                       //!< STREAM type protocol
+        NET_PROTOCOL__UDP = NET_PROTOCOL__DATAGRAM, //!< UDP protocol.
+        NET_PROTOCOL__TCP = NET_PROTOCOL__STREAM,   //!< TCP protocol.
+        _NET_PROTOCOL__COUNT,                       //!< number of protocols
 } NET_protocol_t;
 
 /** Control flags. */
 typedef enum {
-        NET_FLAGS__NONE      = 0,               //!< Flags not set.
-        NET_FLAGS__NOCOPY    = (1 << 0),        //!< Buffer is not internally copy.
-        NET_FLAGS__COPY      = (1 << 1),        //!< Buffer is internally copy.
-        NET_FLAGS__MORE      = (1 << 2),        //!< More transfers.
-        NET_FLAGS__REWIND    = (1 << 3),        //!< Read stream index is rewind.
-        NET_FLAGS__FREEBUF   = (1 << 4),        //!< Skip unread bytes after read and free buffer.
+        NET_FLAGS__NONE    = 0,        //!< Flags not set.
+        NET_FLAGS__NOCOPY  = (1 << 0), //!< Buffer is not internally copy.
+        NET_FLAGS__COPY    = (1 << 1), //!< Buffer is internally copy.
+        NET_FLAGS__MORE    = (1 << 2), //!< More transfers.
+        NET_FLAGS__REWIND  = (1 << 3), //!< Read stream index is rewind.
+        NET_FLAGS__FREEBUF = (1 << 4), //!< Skip unread bytes after read and free buffer.
 } NET_flags_t;
 
 /** Socket shutdown direction. */
 typedef enum {
-        NET_SHUT__RD   = (1 << 0),              //!< Shutdown read direction.
-        NET_SHUT__WR   = (1 << 1),              //!< Shutdown write direction.
-        NET_SHUT__RDWR = (NET_SHUT__RD | NET_SHUT__WR)  //!< Shutdown both directions.
+        NET_SHUT__RD   = (1 << 0),                     //!< Shutdown read direction.
+        NET_SHUT__WR   = (1 << 1),                     //!< Shutdown write direction.
+        NET_SHUT__RDWR = (NET_SHUT__RD | NET_SHUT__WR) //!< Shutdown both directions.
 } NET_shut_t;
 
 /** Generic socket address. This type accept all network family addresses. */
 typedef void NET_generic_sockaddr_t;
 
-/** Generic interface configuration. This type accept all network family configurations. */
+/** Generic interface configuration. This type accept all network family configurations.
+ */
 typedef void NET_generic_config_t;
 
 /** Generic network status. This type accept all network family statuses. */
@@ -326,46 +332,46 @@ typedef uint32_t NET_INET_IPv4_t;
 
 /** INET socket address. This type contains IPv4 address and port. */
 typedef struct {
-        NET_INET_IPv4_t addr;                   /*!< IPv4 address.*/
-        u16_t           port;                   /*!< Port.*/
+        NET_INET_IPv4_t addr; /*!< IPv4 address.*/
+        u16_t           port; /*!< Port.*/
 } NET_INET_sockaddr_t;
 
 /** INET network state. */
 typedef enum {
-        NET_INET_STATE__NOT_CONFIGURED,         //!< Network not configured.
-        NET_INET_STATE__STATIC_IP,              //!< Static IP configuration.
-        NET_INET_STATE__DHCP_CONFIGURING,       //!< DHCP address is configuring.
-        NET_INET_STATE__DHCP_CONFIGURED,        //!< DHCP address configured.
-        NET_INET_STATE__LINK_DISCONNECTED       //!< Network interface not connected.
+        NET_INET_STATE__NOT_CONFIGURED,   //!< Network not configured.
+        NET_INET_STATE__STATIC_IP,        //!< Static IP configuration.
+        NET_INET_STATE__DHCP_CONFIGURING, //!< DHCP address is configuring.
+        NET_INET_STATE__DHCP_CONFIGURED,  //!< DHCP address configured.
+        NET_INET_STATE__LINK_DISCONNECTED //!< Network interface not connected.
 } NET_INET_state_t;
 
 /** INET configuration mode. */
 typedef enum {
-        NET_INET_MODE__STATIC,                  //!< Configure static IP.
-        NET_INET_MODE__DHCP_START,              //!< Start DHCP client.
-        NET_INET_MODE__DHCP_INFORM,             //!< Inform DHCP server.
-        NET_INET_MODE__DHCP_RENEW,              //!< Renew DHCP connection.
+        NET_INET_MODE__STATIC,      //!< Configure static IP.
+        NET_INET_MODE__DHCP_START,  //!< Start DHCP client.
+        NET_INET_MODE__DHCP_INFORM, //!< Inform DHCP server.
+        NET_INET_MODE__DHCP_RENEW,  //!< Renew DHCP connection.
 } NET_INET_mode_t;
 
 /** INET configuration. */
 typedef struct {
-        NET_INET_mode_t mode;                   /*!< Configuration mode.*/
-        NET_INET_IPv4_t address;                /*!< Address if static mode selected.*/
-        NET_INET_IPv4_t mask;                   /*!< Network mask if static mode selected.*/
-        NET_INET_IPv4_t gateway;                /*!< Gateway address if static mode selected.*/
+        NET_INET_mode_t mode;    /*!< Configuration mode.*/
+        NET_INET_IPv4_t address; /*!< Address if static mode selected.*/
+        NET_INET_IPv4_t mask;    /*!< Network mask if static mode selected.*/
+        NET_INET_IPv4_t gateway; /*!< Gateway address if static mode selected.*/
 } NET_INET_config_t;
 
 /** INET status. */
 typedef struct {
-        NET_INET_state_t state;                 /*!< Connection state.*/
-        NET_INET_IPv4_t  address;               /*!< Connection address.*/
-        NET_INET_IPv4_t  mask;                  /*!< Connection network mask.*/
-        NET_INET_IPv4_t  gateway;               /*!< Connection gateway.*/
-        u8_t             hw_addr[6];            /*!< MAC address.*/
-        u64_t            tx_bytes;              /*!< Number of transmitted bytes.*/
-        u64_t            rx_bytes;              /*!< Number of received bytes.*/
-        u64_t            tx_packets;            /*!< Number of transmitted packets.*/
-        u64_t            rx_packets;            /*!< Number of received packets.*/
+        NET_INET_state_t state;      /*!< Connection state.*/
+        NET_INET_IPv4_t  address;    /*!< Connection address.*/
+        NET_INET_IPv4_t  mask;       /*!< Connection network mask.*/
+        NET_INET_IPv4_t  gateway;    /*!< Connection gateway.*/
+        u8_t             hw_addr[6]; /*!< MAC address.*/
+        u64_t            tx_bytes;   /*!< Number of transmitted bytes.*/
+        u64_t            rx_bytes;   /*!< Number of received bytes.*/
+        u64_t            tx_packets; /*!< Number of transmitted packets.*/
+        u64_t            rx_packets; /*!< Number of received packets.*/
 } NET_INET_status_t;
 
 /*------------------------------------------------------------------------------
@@ -373,61 +379,88 @@ typedef struct {
 ------------------------------------------------------------------------------*/
 /** SIPC network state. */
 typedef enum {
-        NET_SIPC_STATE__DOWN,                   //!< Network not configured.
-        NET_SIPC_STATE__UP,                     //!< Network configured.
+        NET_SIPC_STATE__DOWN, //!< Network not configured.
+        NET_SIPC_STATE__UP,   //!< Network configured.
 } NET_SIPC_state_t;
 
 /** SIPC configuration. */
 typedef struct {
-        u16_t MTU;                              //!< Maximal Transfer Unit
+        u16_t MTU; //!< Maximal Transfer Unit
 } NET_SIPC_config_t;
 
 /** SIPC status. */
 typedef struct {
-        NET_SIPC_state_t state;                 /*!< Connection state.*/
-        u16_t            MTU;                   /*!< Transfer size. */
-        u64_t            tx_bytes;              /*!< Number of transmitted bytes.*/
-        u64_t            rx_bytes;              /*!< Number of received bytes.*/
-        u64_t            tx_packets;            /*!< Number of transmitted packets.*/
-        u64_t            rx_packets;            /*!< Number of received packets.*/
+        NET_SIPC_state_t state;      /*!< Connection state.*/
+        u16_t            MTU;        /*!< Transfer size. */
+        u64_t            tx_bytes;   /*!< Number of transmitted bytes.*/
+        u64_t            rx_bytes;   /*!< Number of received bytes.*/
+        u64_t            tx_packets; /*!< Number of transmitted packets.*/
+        u64_t            rx_packets; /*!< Number of received packets.*/
 } NET_SIPC_status_t;
 
 /** SIPC socket address. */
 typedef struct {
-        u8_t             port;                   /*!< Port.*/
+        u8_t port; /*!< Port.*/
 } NET_SIPC_sockaddr_t;
-
 
 /*------------------------------------------------------------------------------
   CANNET NETWORK FAMILY
 ------------------------------------------------------------------------------*/
 /** CANNET network state. */
 typedef enum {
-        NET_CANNET_STATE__DOWN,                 //!< Network not configured.
-        NET_CANNET_STATE__UP,                   //!< Network configured.
+        NET_CANNET_STATE__DOWN, //!< Network not configured.
+        NET_CANNET_STATE__UP,   //!< Network configured.
 } NET_CANNET_state_t;
 
 /** CANNET configuration. */
 typedef struct {
-        u16_t             addr;                 //!< device address.
+        u16_t addr; //!< device address.
 } NET_CANNET_config_t;
 
 /** CANNET status. */
 typedef struct {
-        NET_CANNET_state_t state;               /*!< Connection state.*/
-        u16_t              addr;                /*!< Address.*/
-        u16_t              MTU;                 /*!< Transfer size. */
-        u64_t              tx_bytes;            /*!< Number of transmitted bytes.*/
-        u64_t              rx_bytes;            /*!< Number of received bytes.*/
-        u64_t              tx_packets;          /*!< Number of transmitted packets.*/
-        u64_t              rx_packets;          /*!< Number of received packets.*/
+        NET_CANNET_state_t state;      /*!< Connection state.*/
+        u16_t              addr;       /*!< Address.*/
+        u16_t              MTU;        /*!< Transfer size. */
+        u64_t              tx_bytes;   /*!< Number of transmitted bytes.*/
+        u64_t              rx_bytes;   /*!< Number of received bytes.*/
+        u64_t              tx_packets; /*!< Number of transmitted packets.*/
+        u64_t              rx_packets; /*!< Number of received packets.*/
 } NET_CANNET_status_t;
 
 /** SIPC socket address. */
 typedef struct {
-        u16_t addr;                             /*!< Address.*/
-        u8_t  port;                             /*!< Port.*/
+        u16_t addr; /*!< Address.*/
+        u8_t  port; /*!< Port.*/
 } NET_CANNET_sockaddr_t;
+
+/*------------------------------------------------------------------------------
+  UDS NETWORK FAMILY
+------------------------------------------------------------------------------*/
+/** UDS network state. */
+typedef enum {
+        NETM_UDS_STATE__DOWN, //!< Network not configured.
+        NETM_UDS_STATE__UP,   //!< Network configured.
+} NETM_UDS_state_t;
+
+/** UDS configuration. */
+typedef struct {
+        u32_t stub;
+} NETM_UDS_config_t;
+
+/** UDS status. */
+typedef struct {
+        NETM_UDS_state_t state;      /*!< Connection state.*/
+        u64_t            tx_bytes;   /*!< Number of transmitted bytes.*/
+        u64_t            rx_bytes;   /*!< Number of received bytes.*/
+        u64_t            tx_packets; /*!< Number of transmitted packets.*/
+        u64_t            rx_packets; /*!< Number of received packets.*/
+} NETM_UDS_status_t;
+
+/** UDS socket address. */
+typedef struct {
+        char path[64];
+} NETM_UDS_sockaddr_t;
 
 /*==============================================================================
   Exported objects
@@ -495,7 +528,7 @@ static inline int ifrm(const char *netname)
 static inline int iflist(char *netname[], size_t netname_len)
 {
         size_t count;
-        int err = _libc_syscall(_LIBC_SYS_NETIFLIST, netname, &netname_len, &count);
+        int    err = _libc_syscall(_LIBC_SYS_NETIFLIST, netname, &netname_len, &count);
         return err ? -1 : (int)count;
 }
 
@@ -512,7 +545,8 @@ static inline int iflist(char *netname[], size_t netname_len)
  * @see ifdown(), ifstatus()
  */
 //==============================================================================
-static inline int ifup(const char *netname, const NET_generic_config_t *config, size_t config_size)
+static inline int ifup(const char *netname, const NET_generic_config_t *config,
+        size_t config_size)
 {
         int err = _libc_syscall(_LIBC_SYS_NETIFUP, netname, config, &config_size);
         return err ? -1 : 0;
@@ -550,9 +584,11 @@ static inline int ifdown(const char *netname)
  * @see ifup(), ifdown()
  */
 //==============================================================================
-static inline int ifstatus(const char *netname, NET_family_t *family, NET_generic_status_t *status, size_t status_size)
+static inline int ifstatus(const char *netname, NET_family_t *family,
+        NET_generic_status_t *status, size_t status_size)
 {
-        int err = _libc_syscall(_LIBC_SYS_NETIFSTATUS, netname, family, status, &status_size);
+        int err = _libc_syscall(_LIBC_SYS_NETIFSTATUS, netname, family, status,
+                &status_size);
         return err ? -1 : 0;
 }
 
@@ -651,7 +687,8 @@ extern int socket_close(SOCKET *socket);
  *         appropriately.
  */
 //==============================================================================
-extern int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr, size_t sockaddr_size);
+extern int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr,
+        size_t sockaddr_size);
 
 //==============================================================================
 /**
@@ -666,7 +703,8 @@ extern int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr, s
  * @see socket_disconnect()
  */
 //==============================================================================
-extern int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr, size_t sockaddr_size);
+extern int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr,
+        size_t sockaddr_size);
 
 //==============================================================================
 /**
@@ -769,12 +807,8 @@ static inline int socket_read(SOCKET *socket, void *buf, size_t len)
  * @see socket_connect(), socket_accept(), socket_recv(), socket_read()
  */
 //==============================================================================
-extern int socket_recvfrom(SOCKET                 *socket,
-                           void                   *buf,
-                           size_t                  len,
-                           NET_flags_t             flags,
-                           NET_generic_sockaddr_t *from_sockaddr,
-                           size_t                  from_sockaddr_size);
+extern int socket_recvfrom(SOCKET *socket, void *buf, size_t len, NET_flags_t flags,
+        NET_generic_sockaddr_t *from_sockaddr, size_t from_sockaddr_size);
 
 //==============================================================================
 /**
@@ -835,12 +869,8 @@ static inline int socket_write(SOCKET *socket, const void *buf, size_t len)
  * @see socket_connect(), socket_send(), socket_write()
  */
 //==============================================================================
-extern int socket_sendto(SOCKET                       *socket,
-                         const void                   *buf,
-                         size_t                        len,
-                         NET_flags_t                   flags,
-                         const NET_generic_sockaddr_t *to_sockaddr,
-                         size_t                        to_sockaddr_size);
+extern int socket_sendto(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags,
+        const NET_generic_sockaddr_t *to_sockaddr, size_t to_sockaddr_size);
 
 //==============================================================================
 /**
@@ -900,7 +930,8 @@ extern int socket_set_send_timeout(SOCKET *socket, uint32_t timeout);
  * @see socket_connect(), socket_bind()
  */
 //==============================================================================
-extern int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr, size_t addr_size);
+extern int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr,
+        size_t addr_size);
 
 //==============================================================================
 /**
@@ -914,12 +945,11 @@ extern int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr, size
  *         appropriately.
  */
 //==============================================================================
-static inline int get_host_by_name(const char             *netname,
-                                   const char             *name,
-                                   NET_generic_sockaddr_t *sock_addr,
-                                   size_t                  sock_addr_size)
+static inline int get_host_by_name(const char *netname, const char *name,
+        NET_generic_sockaddr_t *sock_addr, size_t sock_addr_size)
 {
-        int err = _libc_syscall(_LIBC_SYS_NETGETHOSTBYNAME, netname, name, sock_addr, &sock_addr_size);
+        int err = _libc_syscall(_LIBC_SYS_NETGETHOSTBYNAME, netname, name, sock_addr,
+                &sock_addr_size);
         return err ? -1 : 0;
 }
 
@@ -938,7 +968,7 @@ static inline int get_host_by_name(const char             *netname,
 static inline uint16_t hton_u16(NET_family_t family, uint16_t value)
 {
         uint16_t out;
-        int err = _libc_syscall(_LIBC_SYS_NETHTON16, &family, &value, &out);
+        int      err = _libc_syscall(_LIBC_SYS_NETHTON16, &family, &value, &out);
         return err ? value : out;
 }
 
@@ -957,7 +987,7 @@ static inline uint16_t hton_u16(NET_family_t family, uint16_t value)
 static inline uint32_t hton_u32(NET_family_t family, uint32_t value)
 {
         uint32_t out;
-        int err = _libc_syscall(_LIBC_SYS_NETHTON32, &family, &value, &out);
+        int      err = _libc_syscall(_LIBC_SYS_NETHTON32, &family, &value, &out);
         return err ? value : out;
 }
 
@@ -976,7 +1006,7 @@ static inline uint32_t hton_u32(NET_family_t family, uint32_t value)
 static inline uint64_t hton_u64(NET_family_t family, uint64_t value)
 {
         uint64_t out;
-        int err = _libc_syscall(_LIBC_SYS_NETHTON64, &family, &value, &out);
+        int      err = _libc_syscall(_LIBC_SYS_NETHTON64, &family, &value, &out);
         return err ? value : out;
 }
 

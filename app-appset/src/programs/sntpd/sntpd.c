@@ -330,7 +330,7 @@ static int get_SNTP_host_IP(bool once, int argc, char *argv[])
                                        argv[global->current_host_arg],
                                        &global->server, sizeof(global->server)))) {
 
-                fprintf(stderr, "[%d] %s: no host\n",
+                fprintf(stderr, "[sntpd %d] %s: no host\n",
                         clock() / CLOCKS_PER_SEC,
                         argv[global->current_host_arg]);
 

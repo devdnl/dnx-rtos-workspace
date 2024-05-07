@@ -275,7 +275,7 @@ static int configure_ethernet(void)
 
         const char *conf_if_path = conf_parser__get_value(global->conf, "interface.path");
 
-        ETH_config_t conf = {0};
+        ETHIF_config_t conf = {0};
 
         if (sscanf(conf_mac, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", &conf.MAC[0], &conf.MAC[1],
                     &conf.MAC[2], &conf.MAC[3], &conf.MAC[4],
@@ -286,15 +286,15 @@ static int configure_ethernet(void)
         }
 
         conf.auto_negotiation = isstreq(conf_autoneg, "true") ? true : false;
-        conf.speed = isstreq(conf_speed, "100M") ? ETH_SPEED__100Mbps : ETH_SPEED__10Mbps;
-        conf.duplex = isstreq(conf_duplex, "full") ? ETH_DUPLEX__FULL : ETH_DUPLEX__HALF;
+        conf.speed = isstreq(conf_speed, "100M") ? ETHIF_SPEED__100Mbps : ETHIF_SPEED__10Mbps;
+        conf.duplex = isstreq(conf_duplex, "full") ? ETHIF_DUPLEX__FULL : ETHIF_DUPLEX__HALF;
 
         int fd = open(conf_if_path, O_RDWR);
         if (fd >= 0) {
-                int err = ioctl(fd, IOCTL_ETH__CONFIGURE, &conf);
+                int err = ioctl(fd, IOCTL_ETHIF__CONFIGURE, &conf);
 
                 if (not err) {
-                        err = ioctl(fd, IOCTL_ETH__START);
+                        err = ioctl(fd, IOCTL_ETHIF__START);
                 }
 
                 if (not err) {
