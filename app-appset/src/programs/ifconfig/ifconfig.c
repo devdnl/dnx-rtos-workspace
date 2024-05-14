@@ -329,6 +329,8 @@ static void CANNET_print_status(void)
 //==============================================================================
 static void UDS_up(const char *netname, const char *options)
 {
+        UNUSED_ARG1(options);
+
         if (ifup(netname, NULL, 0) != 0) {
                 perror(netname);
         }

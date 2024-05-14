@@ -1,6 +1,7 @@
 # Makefile for GNU make
 
 CSRC_LIB   += libc/source/alloc.c
+CSRC_LIB   += libc/source/appset.c
 CSRC_LIB   += libc/source/concurrent.c
 CSRC_LIB   += libc/source/conv.c
 CSRC_LIB   += libc/source/ctime_r.c

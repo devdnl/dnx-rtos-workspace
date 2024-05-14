@@ -246,9 +246,6 @@ static void initialize_additional_drivers(void)
         } else {
                 perror("eth");
         }
-
-        ifadd("unix", NET_FAMILY__UNIX, NULL);
-        ifup("unix", NULL, 0);
 }
 
 //==============================================================================
@@ -369,8 +366,11 @@ static void print_system_log_messages(void)
  * @brief Function start DHCP client to get network address.
  */
 //==============================================================================
-static void start_DHCP_client(void)
+static void initialize_network(void)
 {
+        ifadd("unix", NET_FAMILY__UNIX, NULL);
+        ifup("unix", NULL, 0);
+
 #if _ENABLE_NETWORK_
         /*
          * 1. The DHCP configuration should be prepared to get network address.
@@ -510,7 +510,7 @@ int main(int argc, char *argv[])
         print_system_log_messages();
 
         // 8. Start DHCP client (optional)
-        start_DHCP_client();
+        initialize_network();
 
         // 9. Start user programs
         start_user_programs();
