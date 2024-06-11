@@ -142,8 +142,10 @@ static void initialize_basic_drivers(void)
         driver_init("UART", __CPU_UART_TERM__, 0,
                 "/dev/ttyS0"); // UART1 will be used as TTY I/O
 
-        static const TTY_config_t TTY_config = {.input_file = "/dev/ttyS0",
-                .output_file                                = "/dev/ttyS0"};
+        static const TTY_config_t TTY_config = {
+                .input_file  = "/dev/ttyS0",
+                .output_file = "/dev/ttyS0",
+        };
         driver_init2("TTY", 0, 0, "/dev/tty0", &TTY_config); // first user terminal
 
         /*

@@ -52,9 +52,9 @@
 # this:AddExtraWidget("Hyperlink", "UDSConfigure", "Configure")
 # this:SetEvent("clicked", "UDSConfigure", function() this:LoadFile("network/uds_flags.h") end)
 #--*/
-#define __ENABLE_UDS_STACK__ _YES_
+#define __ENABLE_UDS_STACK__ _NO_
 #/*
-__ENABLE_UDS_STACK__=_YES_
+__ENABLE_UDS_STACK__=_NO_
 #*/
 
 #/*--
