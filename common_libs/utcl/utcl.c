@@ -384,7 +384,6 @@ static int tcl_cmd_unproc(struct tcl *tcl, tcl_value_t *args, void *arg)
                         if (cmd->constname == false) {
                                 tcl_free((tcl_value_t*)cmd->name);
                         }
-                        free(cmd->arg);
                         free(cmd);
 
                         break;
@@ -1408,7 +1407,6 @@ int tcl_register(struct tcl *tcl, const char *name, tcl_cmd_fn_t fn, int arity,
                         if (cmd->constname == false) {
                                 tcl_free((tcl_value_t*)cmd->name);
                         }
-                        free(cmd->arg);
                         free(cmd);
 
                         break;
@@ -1539,7 +1537,6 @@ void tcl_destroy(struct tcl *tcl)
                 if (cmd->constname == false) {
                         tcl_free((tcl_value_t*)cmd->name);
                 }
-                free(cmd->arg);
                 free(cmd);
         }
         tcl_free(tcl->result);
