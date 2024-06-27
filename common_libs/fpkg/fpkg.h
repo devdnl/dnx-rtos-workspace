@@ -82,7 +82,7 @@ extern fpkg_dir_t  *fpkg__dirclose(fpkg_dir_t *dir);
 extern int          fpkg__readdir(fpkg_dir_t *dir, fpkg_dirent_t *entry);
 extern fpkg_file_t *fpkg__fopen(fpkg_t *fpkg, const char *filename);
 extern int          fpkg__fseek(fpkg_file_t *file, int32_t seek, fpkg_seek_mode_t mode);
-extern size_t       fpkg__fread(fpkg_file_t *file, uint8_t *dst, uint32_t count);
+extern size_t       fpkg__fread(fpkg_file_t *file, void *dst, uint32_t count);
 extern int          fpkg__stat(fpkg_t *fpkg, const char *filename, fpkg_stat_t *stat);
 extern int          fpkg__fstat(fpkg_file_t *file, fpkg_stat_t *stat);
 extern fpkg_file_t *fpkg__fclose(fpkg_file_t *file);

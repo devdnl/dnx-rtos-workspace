@@ -1,0 +1,13 @@
+qspi_flash_erase 0x90000000 [get_file_size "/app-appset-nor.bin"]
+qspi_flash_write "/app-appset-nor.bin" 0x90000000
+
+qspi_flash_erase 0x90800000 [get_file_size "/app-romfs-nor.bin"]
+qspi_flash_write "/app-romfs-nor.bin" 0x90800000
+
+flash_erase 0x08040000 262144
+flash_write "/app-system.bin" 0x08040000
+flash_write "/app-appset.bin" 0x08070000
+
+extract "/manifest" "/sd/manifest"
+
+puts "DONE"

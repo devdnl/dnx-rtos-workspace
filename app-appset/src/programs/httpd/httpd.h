@@ -71,12 +71,13 @@ extern "C" {
 #define DEBUG(...)
 #endif
 
-#define VERBOSE(...) printf("httpd: " __VA_ARGS__)
+#define VERBOSE(...)                printf("httpd: " __VA_ARGS__)
 
 #define HTTPD_MULTIPART_BUFFER_SIZE 4096
 #define HTTPD_DEFAULT_PAGE          "update"
 #define HTTPD_PAGE_NOT_FOUND        "page-not-found"
 
+// clang-format off
 #define HTTPD_PAGE_MAP                                                                 \
         {                                                                              \
                 .url                      = "updating",                                \
@@ -87,25 +88,24 @@ extern "C" {
                 .multipart_on_data        = httpd_multipart_on_data__updating,         \
                 .multipart_on_part_end    = httpd_multipart_on_part_end__updating,     \
         },                                                                             \
-                {                                                                      \
-                        .url                      = "update",                          \
-                        .multipart_content_dispo  = NULL,                              \
-                        .file_id                  = httpd_file_id__update,             \
-                        .multipart_id             = httpd_multipart__none,             \
-                        .http_on_message_complete = httpd_on_message_complete__update, \
-                        .multipart_on_data        = NULL,                              \
-                        .multipart_on_part_end    = NULL,                              \
-                },                                                                     \
-                {                                                                      \
-                        .url                     = "page-not-found",                   \
-                        .multipart_content_dispo = NULL,                               \
-                        .file_id                 = httpd_file_id__page_not_found,      \
-                        .multipart_id            = httpd_multipart__none,              \
-                        .http_on_message_complete                                      \
-                        = httpd_on_message_complete__page_not_found,                   \
-                        .multipart_on_data     = NULL,                                 \
-                        .multipart_on_part_end = NULL,                                 \
-                },
+        {                                                                              \
+                .url                      = "update",                                  \
+                .multipart_content_dispo  = NULL,                                      \
+                .file_id                  = httpd_file_id__update,                     \
+                .multipart_id             = httpd_multipart__none,                     \
+                .http_on_message_complete = httpd_on_message_complete__update,         \
+                .multipart_on_data        = NULL,                                      \
+                .multipart_on_part_end    = NULL,                                      \
+        },                                                                             \
+        {                                                                              \
+                .url                      = "page-not-found",                          \
+                .multipart_content_dispo  = NULL,                                      \
+                .file_id                  = httpd_file_id__page_not_found,             \
+                .multipart_id             = httpd_multipart__none,                     \
+                .http_on_message_complete = httpd_on_message_complete__page_not_found, \
+                .multipart_on_data        = NULL,                                      \
+                .multipart_on_part_end    = NULL,                                      \
+        },
 
 /*==============================================================================
   Exported object types
@@ -119,13 +119,16 @@ typedef enum {
 
 typedef enum {
         httpd_multipart__none = 0,
-        httpd_multipart__firmware
+        httpd_multipart__firmware,
 } httpd_multipart_id_t;
 
 typedef enum {
         content_type__none = 0,
         content_type__multipart_form_data,
+        content_type__post_method,
 } httpd_content_type_t;
+
+typedef void (*httpd_post_method_cb_t)(http_parser *, const char *data, size_t size);
 
 typedef struct {
         struct http_request {
@@ -140,12 +143,13 @@ typedef struct {
                         size_t field_chunk;
                         size_t value_chunk;
                         size_t content_length;
-                        size_t body_chunk;
+                        size_t body_data_length;
                         char  *field;
                         char  *url;
                         char  *get_ref;
                         char  *content_type;
                         char  *multipart_boundary;
+                        char  *body_data;
                 } header;
         } http_request;
 
@@ -173,6 +177,8 @@ GLOBAL_VARIABLES_TYPE(struct httpd_globals);
 
 extern const char HTTPD_CONTENT_TYPE_OK_TEXT_HTML[];
 extern const char HTTPD_CONTENT_TYPE_NOT_FOUND_TEXT_HTML[];
+extern const char HTTPD_COMMON_HTML_BEGIN[];
+extern const char HTTPD_COMMON_HTML_END[];
 
 /*==============================================================================
   Exported functions

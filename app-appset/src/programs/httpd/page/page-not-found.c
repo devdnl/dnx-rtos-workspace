@@ -1,11 +1,11 @@
-/*=========================================================================*//**
+/*==============================================================================
 @file    page-not-found.c
 
 @author  Daniel Zorychta
 
 @brief   Page not found.
 
-@note    Copyright (C) 2023 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2024 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 // #pragma GCC optimize("O1")
 
@@ -50,16 +50,7 @@
 ==============================================================================*/
 // clang-format off
 static const char HTML[] =
-"<!DOCTYPE html>"
-"<html>"
-        "<title>dnx RTOS Web Page</title>"
-        "<body>"
-                "<h1><center>Firmware Updater</center></h1>"
-        "<center>"
-                "<h2>Page not found</h2>"
-        "</center>"
-        "</body>"
-"</html>";
+"<h1><center>Page not found</center></h1>";
 // clang-format on
 
 /*==============================================================================
@@ -87,10 +78,16 @@ int httpd_on_message_complete__page_not_found(http_parser *parser)
 
         DEBUG("%s\n", __func__);
 
-        socket_write(self->http_request.socket, HTTPD_CONTENT_TYPE_NOT_FOUND_TEXT_HTML,
-                strlen(HTTPD_CONTENT_TYPE_NOT_FOUND_TEXT_HTML));
+        socket_write(self->http_request.socket, HTTPD_CONTENT_TYPE_OK_TEXT_HTML,
+                strlen(HTTPD_CONTENT_TYPE_OK_TEXT_HTML));
+
+        socket_write(self->http_request.socket, HTTPD_COMMON_HTML_BEGIN,
+                strlen(HTTPD_COMMON_HTML_BEGIN));
 
         socket_write(self->http_request.socket, HTML, sizeof(HTML));
+
+        socket_write(self->http_request.socket, HTTPD_COMMON_HTML_END,
+                strlen(HTTPD_COMMON_HTML_END));
 
         return 0;
 }

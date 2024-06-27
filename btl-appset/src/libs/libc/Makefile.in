@@ -3,6 +3,7 @@
 COMMON_LIBS_LIBC_ROOT = ../../../common_libs
 
 CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/alloc.c
+CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/appset.c
 CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/concurrent.c
 CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/conv.c
 CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/ctime_r.c

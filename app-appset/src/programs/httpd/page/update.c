@@ -1,11 +1,11 @@
-/*=========================================================================*//**
+/*==============================================================================
 @file    upload.c
 
 @author  Daniel Zorychta
 
 @brief   upload page.
 
-@note    Copyright (C) 2023 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2024 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 // #pragma GCC optimize("O1")
 
@@ -32,6 +32,7 @@
   Include files
 ==============================================================================*/
 #include "../httpd.h"
+#include <sys/ioctl.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -48,23 +49,6 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-// clang-format off
-static const char HTML[] =
-"<!DOCTYPE html>"
-"<html>"
-        "<title>dnx RTOS Web Page</title>"
-        "<body>"
-        "<h1><center>Firmware Updater</center></h1>"
-        "<center>"
-                "<form method=\"POST\" action=\"/updating\" enctype=\"multipart/form-data\">"
-                "Select file to upload:"
-                "<input type=\"file\" name=\"firmware\" accept=\".bin, .gz\">"
-                "<input type=\"submit\" value=\"Upload\" name=\"upload\">"
-                "</form>"
-        "</center>"
-        "</body>"
-"</html>";
-// clang-format on
 
 /*==============================================================================
   Exported object definitions
@@ -94,7 +78,30 @@ int httpd_on_message_complete__update(http_parser *parser)
         socket_write(self->http_request.socket, HTTPD_CONTENT_TYPE_OK_TEXT_HTML,
                 strlen(HTTPD_CONTENT_TYPE_OK_TEXT_HTML));
 
-        socket_write(self->http_request.socket, HTML, sizeof(HTML));
+        socket_write(self->http_request.socket, HTTPD_COMMON_HTML_BEGIN,
+                strlen(HTTPD_COMMON_HTML_BEGIN));
+
+        httpd_sockprintf(self,
+                "<meta http-equiv=\"refresh\" content=\"%lu; URL=ustawienia\">", 20);
+
+        httpd_sockprintf(self, "<h2>Update</h2>");
+        httpd_sockprintf(self, "<table>");
+        httpd_sockprintf(self,
+                "<form method=\"POST\" action=\"updating\" "
+                "enctype=\"multipart/form-data\">");
+
+        httpd_sockprintf(self, "<b>Select update file </b>");
+        httpd_sockprintf(self,
+                "<input type=\"file\" name=\"firmware\" accept=\".fpkg, .gz\">");
+
+        httpd_sockprintf(self,
+                "<input type=\"submit\" value=\"Update\" name=\"upload\">");
+
+        httpd_sockprintf(self, "</form>");
+        httpd_sockprintf(self, "</table>");
+
+        socket_write(self->http_request.socket, HTTPD_COMMON_HTML_END,
+                strlen(HTTPD_COMMON_HTML_END));
 
         return 0;
 }

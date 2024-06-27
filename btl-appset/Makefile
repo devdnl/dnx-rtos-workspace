@@ -91,6 +91,7 @@ CXXFLAGS = -c \
            -Wall \
            -Wextra \
            -Wparentheses \
+           -Wno-nonnull-compare  \
            -Werror=parentheses \
            -Werror=type-limits \
            -Werror=return-type \
@@ -133,8 +134,6 @@ AS_EXT  = s
 TARGET_DIR_NAME = build
 TARGET_PATH     = $(TARGET_DIR_NAME)/output
 GEN_PROG_DIR    = $(TARGET_DIR_NAME)/program
-ROMFS_IMG       = $(TARGET_PATH)/appset-romfs.bin 
-RES_ROMFS       = "res/romfs"
 
 # defines object folder name
 OBJ_DIR_NAME    = obj
@@ -212,7 +211,6 @@ OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
 
 # list of sources to compile
 -include $(GEN_PROG_DIR)/Makefile   # file is created in the addapps script
--include $(ROMFS_DIR)/Makefile.in   # file is created in the romfsmap script
 
 # defines objects localizations
 _HDRLOC_PROGRAMS = $(foreach file, $(HDRLOC_PROGRAMS),$(APP_PRG_LOC)/$(file))
@@ -338,12 +336,6 @@ hex :
 
 	@$(ECHO) 'Creating objects size list...'
 	@$(SIZE) -B -t --common $(TARGET_PATH)/$(PROJECT).a > $(TARGET_PATH)/$(PROJECT).size
-	
-	@if [[ $(__ROMFS_ADDRESS__) != 0 ]]; then \
-		$(ECHO) 'Creating ROMFS hex image...';\
-		$(SREC_CAT) $(ROMFS_IMG) -binary -offset $(__ROMFS_ADDRESS__) -output $(TARGET_PATH)/appset-romfs.hex -Intel;\
-		$(SREC_CAT) $(TARGET_PATH)/appset-romfs.hex -Intel $(TARGET_PATH)/$(PROJECT).hex -Intel -o $(TARGET_PATH)/$(PROJECT).hex -Intel;\
-	fi
 
 ####################################################################################################
 # show compile status
@@ -370,16 +362,10 @@ generate :
 	@$(ECHO) "Adding user's programs and libraries to the project..."
 	@$(SHELL) $(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR) "*"
 
-	@$(ECHO) "Creating ROMFS image..."
-	@$(MKFPKG) $(RES_ROMFS) $(ROMFS_IMG)
-
 	@$(ECHO) "Obtaining git hash..."
 	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" > build/defs.h
 	@$(ECHO) "#define BRANCH_NAME \"$(shell git symbolic-ref --short HEAD 2>/dev/null)"\" >> build/defs.h
-	
-	@$(ECHO) "#define ROMFS_ADDRESS $(__ROMFS_ADDRESS__)" >> build/defs.h
-	@$(ECHO) -ne "#define ROMFS_SIZE " >> build/defs.h
-	@$(SIZEOF) $(ROMFS_IMG) >> build/defs.h
+	@$(ECHO) "#define BUILD_TIME \"$(shell date)\"" >> build/defs.h
 
 ####################################################################################################
 # Start all generators

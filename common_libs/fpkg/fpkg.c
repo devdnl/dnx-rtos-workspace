@@ -528,11 +528,13 @@ int fpkg__fseek(fpkg_file_t *file, int32_t seek, fpkg_seek_mode_t mode)
  * @return Number of read bytes.
  */
 //==============================================================================
-size_t fpkg__fread(fpkg_file_t *file, uint8_t *dst, uint32_t count)
+size_t fpkg__fread(fpkg_file_t *file, void *dst, uint32_t count)
 {
         if (not file or not file->self or not dst or not count) {
                 return 0;
         }
+
+        uint8_t *buf = dst;
 
         size_t n = 0;
 
@@ -541,11 +543,11 @@ size_t fpkg__fread(fpkg_file_t *file, uint8_t *dst, uint32_t count)
         }
 
         size_t len = min((file->size - file->seek), count);
-        n          = fread(dst, 1, len, file->self->file);
+        n          = fread(buf, 1, len, file->self->file);
         file->seek += n;
 
         if (n > 0 and is_encrypted(file->self)) {
-                xcrypt(dst, len, &file->current_seed);
+                xcrypt(buf, len, &file->current_seed);
         }
 
         return n;

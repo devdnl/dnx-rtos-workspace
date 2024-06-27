@@ -1,11 +1,11 @@
-/*=========================================================================*//**
+/*==============================================================================
 @file    upload.c
 
 @author  Daniel Zorychta
 
 @brief   Firmware updating page.
 
-@note    Copyright (C) 2023 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2024 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,20 +24,21 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
-// #pragma GCC optimize("O1")
+// #pragma GCC optimize("Og")
 
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <sys/mount.h>
 #include "../httpd.h"
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define PATH_UPDATE_FILE_PART  "/mmc/vendor/fw_app.bin.part"
-#define PATH_UPDATE_FILE_FINAL "/mmc/vendor/fw_app.bin"
+#define PATH_UPDATE_FILE_PART  "/sd/vendor/fw_app.bin.part"
+#define PATH_UPDATE_FILE_FINAL "/sd/vendor/fw_app.bin"
 
 /*==============================================================================
   Local types, enums definitions
@@ -51,23 +52,6 @@ static int reboot_for_update(void *arg);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-// clang-format off
-static const char HTML[] =
-"<!DOCTYPE html>"
-"<html>"
-        "<title>dnx RTOS Web Page</title>"
-        "<head>"
-                "<meta http-equiv=\"refresh\" content=\"20; URL=index.html\">"
-        "</head>"
-        "<body>"
-                "<h1><center>Firmware Updater</center></h1>"
-        "<center>"
-                "Update file was successfully uploaded to the device. "
-                "The device will start update automatically. Please wait..."
-        "</center>"
-        "</body>"
-"</html>";
-// clang-format on
 
 /*==============================================================================
   Exported object definitions
@@ -148,7 +132,19 @@ int httpd_on_message_complete__updating(http_parser *parser)
         socket_write(self->http_request.socket, HTTPD_CONTENT_TYPE_OK_TEXT_HTML,
                 strlen(HTTPD_CONTENT_TYPE_OK_TEXT_HTML));
 
-        socket_write(self->http_request.socket, HTML, sizeof(HTML));
+        socket_write(self->http_request.socket, HTTPD_COMMON_HTML_BEGIN,
+                strlen(HTTPD_COMMON_HTML_BEGIN));
+
+        httpd_sockprintf(self,
+                "<meta http-equiv=\"refresh\" content=\"20; URL=ustawienia\">");
+
+        httpd_sockprintf(self,
+                "<h3>Aktualizacja oprogramowania</h3>"
+                "<h4>Pobrano plik aktualizacyjny. Aktualizacja rozpocznie się "
+                "automatycznie.</h4><h4>Proszę czekać...</h4>");
+
+        socket_write(self->http_request.socket, HTTPD_COMMON_HTML_END,
+                strlen(HTTPD_COMMON_HTML_END));
 
         return 0;
 }
@@ -166,6 +162,8 @@ static int reboot_for_update(void *arg)
 {
         UNUSED_ARG1(arg);
         sleep(2);
+        sync();
+        umount("/sd");
         system_reboot();
         return 0;
 }
