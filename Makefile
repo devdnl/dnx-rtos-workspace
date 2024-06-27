@@ -52,6 +52,7 @@ OBJDUMP    = $(TOOLCHAIN)objdump
 SIZE       = $(TOOLCHAIN)size
 CONFIGTOOL = ./tools/configtool.sh
 FLASH_CPU  = ./tools/flash.sh
+MKFPKG     = $(PYTHON3) ./system/tools/mkfpkg.py
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -61,6 +62,61 @@ EMPTY =
 
 # defines this makefile name
 THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
+
+# define macro used to build system according to application name
+define make_system
+	$(eval $@_APP_NAME = $(1))
+	$(REMOVE) system/build/ioctl
+	$(MAKE) -C system -s -j 1 -fMakefile clean all CONFIG_DIR=../config/${$@_APP_NAME}
+	$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/${$@_APP_NAME}.hex
+	$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/${$@_APP_NAME}.elf
+	$(COPY) system/build/output/dnx.bin $(TARGET_DIR_NAME)/${$@_APP_NAME}.bin
+	$(COPY) system/build/ioctl $(TARGET_DIR_NAME)
+	$(REMOVE) system/build/ioctl
+endef
+
+# define macro used to build appset according to name
+define make_appset
+	$(eval $@_APP_NAME = $(1))
+	$(MAKE) -C ${$@_APP_NAME} -s -j 1 -fMakefile all
+	$(COPY) ${$@_APP_NAME}/build/output/appset.hex $(TARGET_DIR_NAME)/${$@_APP_NAME}.hex
+	$(COPY) ${$@_APP_NAME}/build/output/appset.elf $(TARGET_DIR_NAME)/${$@_APP_NAME}.elf
+	$(COPY) ${$@_APP_NAME}/build/output/appset.bin $(TARGET_DIR_NAME)/${$@_APP_NAME}.bin
+endef
+
+# define macro used to create ROMFS
+define make_romfs
+	$(eval $@_ROMFS_NAME = $(1))
+	$(eval $@_ROMFS_OFFSET = $(2))
+	$(ECHO) "Creating ROMFS (${$@_ROMFS_NAME}) image..."
+	$(MKFPKG) ${$@_ROMFS_NAME} $(TARGET_DIR_NAME)/${$@_ROMFS_NAME}.bin
+	$(SREC_CAT) $(TARGET_DIR_NAME)/${$@_ROMFS_NAME}.bin -binary -offset ${$@_ROMFS_OFFSET} -output $(TARGET_DIR_NAME)/${$@_ROMFS_NAME}.hex -Intel
+endef
+
+# define macro to clean appset
+define clean_appset
+	$(eval $@_APP_NAME = $(1))
+	$(ECHO) -n "Cleaning ${$@_APP_NAME} files: "
+	$(MAKE) -C ${$@_APP_NAME} -s -j 1 -fMakefile clean
+endef
+
+# define macro install
+define install_hex
+	$(eval $@_HEX_FILE = $(1))
+	$(FLASH_CPU) ../$(TARGET_DIR_NAME)/${$@_HEX_FILE}
+endef
+
+# define macro used to configure system
+define config_system
+	$(eval $@_APP_NAME = $(1))
+	$(CONFIGTOOL) ../../config/${$@_APP_NAME}/config.h
+endef
+
+# define macro used to configure appset
+define config_appset
+	$(eval $@_APP_NAME = $(1))
+	$(CONFIGTOOL) ../../${$@_APP_NAME}/config/config.h
+endef
 
 ####################################################################################################
 # targets
@@ -105,21 +161,20 @@ all : _build_prepare btl app
 
 .PHONY : clean
 clean :
-	@$(ECHO) -n "Cleaning system files: "
-	@$(MAKE) -C system -s -j 1 -fMakefile clean
-
-	@$(ECHO) -n "Cleaning app-appset files: "
-	@$(MAKE) -C app-appset -s -j 1 -fMakefile clean
-
-	@$(ECHO) -n "Cleaning btl-appset files: "
-	@if [ -d btl-appset ]; then $(MAKE) -C btl-appset -s -j 1 -fMakefile clean; else $(ECHO) "No bootloader project."; fi
-
+	@$(call clean_appset, system)
+	@$(call clean_appset, app-appset)
+	@$(call clean_appset, btl-appset)
 	@$(REMOVE) -r $(TARGET_DIR_NAME)
 
 
 .PHONY : app
-app : _build_prepare app-system app-appset
-	@$(SREC_CAT) $(TARGET_DIR_NAME)/app-system.hex -Intel $(TARGET_DIR_NAME)/app-appset.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_app.hex -Intel
+app : _build_prepare app-system app-appset app-romfs
+	@$(SREC_CAT) $(TARGET_DIR_NAME)/app-system.hex -Intel $(TARGET_DIR_NAME)/app-appset.hex -Intel $(TARGET_DIR_NAME)/app-romfs.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_app.hex -Intel
+	@$(MKDIR) $(TARGET_DIR_NAME)/app-dist
+	@$(COPY) config/btl-manifest $(TARGET_DIR_NAME)/app-dist/manifest
+	@$(COPY) $(TARGET_DIR_NAME)/app-system.bin $(TARGET_DIR_NAME)/app-dist/app-system.bin
+	@$(COPY) $(TARGET_DIR_NAME)/app-appset.bin $(TARGET_DIR_NAME)/app-dist/app-appset.bin
+	@$(MKFPKG) $(TARGET_DIR_NAME)/app-dist $(TARGET_DIR_NAME)/$(PROJECT).fpkg
 
 
 .PHONY : btl
@@ -130,74 +185,62 @@ btl : _build_prepare btl-system btl-appset
 
 .PHONY : app-system
 app-system : _build_prepare
-	@$(REMOVE) system/build/ioctl
-	@$(MAKE) -C system -s -j 1 -fMakefile clean all CONFIG_DIR=../config/app/system
-	@$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/app-system.hex
-	@$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/app-system.elf
-	@$(COPY) system/build/output/dnx.bin $(TARGET_DIR_NAME)/app-system.bin
-	@$(COPY) system/build/ioctl $(TARGET_DIR_NAME)
-	@$(REMOVE) system/build/ioctl
-
+	@$(call make_system, app-system)
 
 .PHONY : app-appset
 app-appset : _build_prepare
-	@$(MAKE) -C app-appset -s -j 1 -fMakefile all
-	@$(COPY) app-appset/build/output/appset.hex $(TARGET_DIR_NAME)/app-appset.hex
-	@$(COPY) app-appset/build/output/appset.elf $(TARGET_DIR_NAME)/app-appset.elf
-	@$(COPY) app-appset/build/output/appset.bin $(TARGET_DIR_NAME)/app-appset.bin
+	@$(call make_appset, app-appset)
 
+.PHONY : app-romfs
+app-romfs : _build_prepare
+	@$(call make_romfs, app-romfs, 0x08070000)
 
 .PHONY : clean-app-appset
 clean-app-appset : _build_prepare
-	@$(MAKE) -C app-appset -s -j 1 -fMakefile clean
+	@$(call clean_appset, app-appset)
 
 
 .PHONY : btl-system
 btl-system : _build_prepare
-	@$(REMOVE) system/build/ioctl
-	@$(MAKE) -C system -s -j 1 -fMakefile clean all CONFIG_DIR=../config/btl/system
-	@$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/btl-system.hex
-	@$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/btl-system.elf
-	@$(COPY) system/build/output/dnx.bin $(TARGET_DIR_NAME)/btl-system.bin
-	@$(COPY) system/build/ioctl $(TARGET_DIR_NAME)
-	@$(REMOVE) system/build/ioctl
-
+	@$(call make_system, btl-system)
 
 .PHONY : btl-appset
 btl-appset : _build_prepare
-	@$(MAKE) -C btl-appset -s -j 1 -fMakefile all
-	@$(COPY) btl-appset/build/output/appset.hex $(TARGET_DIR_NAME)/btl-appset.hex
-	@$(COPY) btl-appset/build/output/appset.elf $(TARGET_DIR_NAME)/btl-appset.elf
-	@$(COPY) btl-appset/build/output/appset.bin $(TARGET_DIR_NAME)/btl-appset.bin
+	@$(call make_appset, btl-appset)
 
 .PHONY : clean-btl-appset
 clean-btl-appset : _build_prepare
-	@$(MAKE) -C btl-appset -s -j 1 -fMakefile clean
+	@$(call clean_appset, btl-appset)
 
 
 .PHONY : install
 install :
-	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/$(PROJECT)_btl_app.hex
+	@$(call install_hex, $(PROJECT)_btl_app.hex)
 
 
 .PHONY : install-app
 install-app :
-	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/$(PROJECT)_app.hex
+	@$(call install_hex, $(PROJECT)_app.hex)
 
 
 .PHONY : install-btl
 install-btl :
-	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/$(PROJECT)_btl.hex
+	@$(call install_hex, $(PROJECT)_btl.hex)
 
 
 .PHONY : install-app-system
 install-app-system :
-	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/app-system.hex
+	@$(call install_hex, app-system.hex)
 
 
 .PHONY : install-app-appset
 install-app-appset :
-	@$(FLASH_CPU) ../$(TARGET_DIR_NAME)/app-appset.hex
+	@$(call install_hex, app-appset.hex)
+
+
+.PHONY : install-app-romfs
+install-app-romfs :
+	@$(call install_hex, app-romfs.hex)
 
 
 .PHONY : config
@@ -207,22 +250,22 @@ config :
 
 .PHONY : config-app-system
 config-app-system :
-	@$(CONFIGTOOL) ../../config/app/system/config.h
+	@$(call config_system, app-system)
 
 
 .PHONY : config-app-appset
 config-app-appset :
-	@$(CONFIGTOOL) ../../app-appset/config/config.h
+	@$(call config_appset, app-appset)
 
 
 .PHONY : config-btl-system
 config-btl-system :
-	@$(CONFIGTOOL) ../../config/btl/system/config.h
+	@$(call config_system, btl-system)
 
 
 .PHONY : config-btl-appset
 config-btl-appset :
-	@$(CONFIGTOOL) ../../btl-appset/config/config.h
+	@$(call config_appset, btl-appset)
 
 
 .PHONY : appset-rungens

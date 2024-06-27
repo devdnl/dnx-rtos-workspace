@@ -709,6 +709,18 @@ static inline void cache_flush(void)
         _libc_syscall(_LIBC_SYS_CACHEFLUSH);
 }
 
+//==============================================================================
+/**
+ * @brief  Register new appset(s).
+ *
+ * @param  appset_array         appset vectors array
+ * @param  appset_count         number of vectors
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+extern int register_appset(const void **appset_array, size_t appset_count);
+
 /**@}*/
 
 #ifdef __cplusplus

@@ -125,6 +125,24 @@ public:
                 return conf_parser__set_value(this->parser, key, value);
         }
 
+        int set_value_vf(const char *key, const char *value_fmt, ...)
+        {
+                va_list args;
+                va_start(args, value_fmt);
+                int err = conf_parser__set_value_vfv(this->parser, key, value_fmt, args);
+                va_end(args);
+                return err;
+        }
+
+        int set_value_parse(const char *key_value_fmt, ...)
+        {
+                va_list args;
+                va_start(args, key_value_fmt);
+                int err = conf_parser__set_value_vparse(this->parser, key_value_fmt, args);
+                va_end(args);
+                return err;
+        }
+
         int set_file_value(const char *path, const char *key, const char *value)
         {
                 return conf_parser__set_file_value(path, key, value);

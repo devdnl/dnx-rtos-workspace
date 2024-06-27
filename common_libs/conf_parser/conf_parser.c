@@ -84,7 +84,6 @@ static void        clear_conf(conf_parser_t *this);
  * @brief  Create new pareser instance.
  *
  * @param  path         file to parse (can be NULL)
- * @param  status       operation stats (can be NULL)
  *
  * @return Parser object.
  */
@@ -536,6 +535,101 @@ int conf_parser__set_value(conf_parser_t *this, const char *key, const char *val
         }
 
         return conf_parser_status__success;
+}
+
+//==============================================================================
+/**
+ * @brief  Set selected value. If value exists then is updated, otherwise new one
+ *         is created. Value is formatted according to value_fmt.
+ *
+ * @param  this         parser instance
+ * @param  key          key
+ * @param  value_fmt    value format
+ * @param  args         value format arguments
+ *
+ * @return One of conf_parser_status_t.
+ */
+//==============================================================================
+int conf_parser__set_value_vfv(conf_parser_t *this, const char *key, const char *value_fmt, va_list args)
+{
+        char value[LINE_LEN];
+        vsnprintf(value, sizeof(value), value_fmt, args);
+        return conf_parser__set_value(this, key, value);
+}
+
+//==============================================================================
+/**
+ * @brief  Set selected value. If value exists then is updated, otherwise new one
+ *         is created. Value is formatted according to value_fmt.
+ *
+ * @param  this         parser instance
+ * @param  key          key
+ * @param  value_fmt    value format
+ * @param  ...          value format arguments
+ *
+ * @return One of conf_parser_status_t.
+ */
+//==============================================================================
+int conf_parser__set_value_vf(conf_parser_t *this, const char *key, const char *value_fmt, ...)
+{
+        va_list args;
+        va_start(args, value_fmt);
+        int err = conf_parser__set_value_vfv(this, key, value_fmt, args);
+        va_end(args);
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Set selected value. If value exists then is updated, otherwise new one
+ *         is created. Key and value are formatted according to key_value_fmt and
+ *         args. That pair is then parsed.
+ *
+ * @param  this                 parser instance
+ * @param  key_value_fmt        key value format (key = value)
+ * @param  args                 value format arguments
+ *
+ * @return One of conf_parser_status_t.
+ */
+//==============================================================================
+int conf_parser__set_value_vparse(conf_parser_t *this, const char *key_value_fmt, va_list args)
+{
+        char line[LINE_LEN];
+        vsnprintf(line, sizeof(line), key_value_fmt, args);
+
+        struct conf_parser parser = {0};
+        int err = interpret_line(&parser, line, &parser.pair);
+        if (err == interpret_pair) {
+                err = conf_parser__set_value(this, parser.pair->data, &parser.pair->data[parser.pair->value_offset]);
+        } else {
+                err = interpret_syntax_error;
+        }
+
+        clear_conf(&parser);
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Set selected value. If value exists then is updated, otherwise new one
+ *         is created. Key and value are formatted according to key_value_fmt and
+ *         args. That pair is then parsed.
+ *
+ * @param  this                 parser instance
+ * @param  key_value_fmt        key value format (key = value)
+ * @param  ...                  value format arguments
+ *
+ * @return One of conf_parser_status_t.
+ */
+//==============================================================================
+int conf_parser__set_value_parse(conf_parser_t *this, const char *key_value_fmt, ...)
+{
+        va_list args;
+        va_start(args, key_value_fmt);
+        int err = conf_parser__set_value_vparse(this, key_value_fmt, args);
+        va_end(args);
+        return err;
 }
 
 //==============================================================================

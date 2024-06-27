@@ -86,10 +86,14 @@ static void create_base_file_system_structure(void)
          * 2. Create basic folders. This folders can be used to store device
          *    files or to mount next file systems e.g. SD Card etc.
          */
-        mkdir("/dev", 0666);    // this folder store devices drivers
-        mkdir("/tmp", 0666);    // this folder store temporary files
-        mkdir("/run", 0666);    // this folder store runtime files
-        mkdir("/mnt", 0666);    // this folder store SD card content
+        mkdir("/dev", 0666); // this folder store devices drivers
+        mkdir("/tmp", 0666); // this folder store temporary files
+        mkdir("/run", 0666); // this folder store runtime files
+        mkdir("/mnt", 0666); // this folder store SD card content
+        mkdir("/proc", 0666); // this folder store SD card content
+        mkdir("/etc", 0666);  // this folder store SD card content
+
+        mount("procfs", "", "/proc", "");
 
         /*
          * NOTE: Number and naming of folders depends on user needs. There can
@@ -131,21 +135,22 @@ static void initialize_basic_drivers(void)
         /*
          * 2. Next part of drivers that can be initialized at this early stage.
          */
-        driver_init("AFM", 0, 0, NULL);                 // alternative function configuration
-        driver_init("CLK", 0, 0, "/dev/clk");           // system clock configuration
-        driver_init("DMA", 0, 0, NULL);                 // DMA configuration
+        driver_init("AFM", 0, 0, NULL);       // alternative function configuration
+        driver_init("CLK", 0, 0, "/dev/clk"); // system clock configuration
+        driver_init("DMA", 0, 0, NULL);       // DMA configuration
 
         /*
          * NOTE: make sure that UART1 is used as terminal output!
          *       Some BSPs use UART2 as default terminal output.
          */
-        driver_init("UART", __CPU_UART_TERM__, 0, "/dev/ttyS0");        // UART1 will be used as TTY I/O
+        driver_init("UART", __CPU_UART_TERM__, 0,
+                "/dev/ttyS0"); // UART1 will be used as TTY I/O
 
         static const TTY_config_t TTY_config = {
-                .input_file   = "/dev/ttyS0",
-                .output_file  = "/dev/ttyS0"
+                .input_file  = "/dev/ttyS0",
+                .output_file = "/dev/ttyS0",
         };
-        driver_init2("TTY", 0, 0, "/dev/tty0", &TTY_config);     // first user terminal
+        driver_init2("TTY", 0, 0, "/dev/tty0", &TTY_config); // first user terminal
 
         /*
          * NOTE: Drivers that are initialized in this stage can be reduced or
@@ -196,7 +201,7 @@ static void show_kernel_panic_message(void)
                 printf("  PID  : %u (%.*s)\n", info.pid, 256, info.name);
                 printf("  TID  : %u\n", info.tid);
                 printf("  SPACE: %s\n", info.kernelspace ? "kernel" : "user");
-                printf(VT100_RESET_ATTRIBUTES"\n");
+                printf(VT100_RESET_ATTRIBUTES "\n");
 
                 sleep(3);
         }
@@ -233,114 +238,67 @@ static void initialize_additional_drivers(void)
 
         fd = open("/dev/eth", O_RDWR);
         if (fd >= 0) {
-                ETH_config_t conf = {
-                        .MAC = {0xC2, 0x70, 0x50, 0xFF, 0xFF, 0x78},
+                ETHIF_config_t conf = {
+                        .MAC              = {0xC2, 0x70, 0x50, 0xFF, 0xFF, 0x78},
                         .auto_negotiation = true,
-                        .speed = ETH_SPEED__100Mbps,
-                        .duplex = ETH_DUPLEX__FULL,
+                        .speed            = ETHIF_SPEED__100Mbps,
+                        .duplex           = ETHIF_DUPLEX__FULL,
                 };
 
-                ioctl(fd, IOCTL_ETH__CONFIGURE, &conf);
-                ioctl(fd, IOCTL_ETH__START);
+                ioctl(fd, IOCTL_ETHIF__CONFIGURE, &conf);
+                ioctl(fd, IOCTL_ETHIF__START);
 
                 close(fd);
         } else {
                 perror("eth");
         }
-
-        ifadd("unix", NET_FAMILY__UNIX, NULL);
-        ifup("unix", NULL, 0);
 }
 
 //==============================================================================
 /**
- * @brief Mount ROMFS file system.
+ * @brief Mount file systems.
  */
 //==============================================================================
-static void mount_ROMFS(void)
-{
-        driver_init2("MEMBLOCK", 0, 0, "/dev/romfs", &(MEMBLOCK_config_t) {
-                .memory_address = ROMFS_ADDRESS,
-                .block_size     = ROMFS_SIZE,
-                .access         = O_RDONLY,
-        });
-
-        mount("romfs", "/dev/romfs", "/mnt", "validate");
-}
-
-//==============================================================================
-/**
- * @brief Mount SD card connected to SPI bus.
- */
-//==============================================================================
-static void mount_SD_card(void)
+static void mount_file_systems(void)
 {
         /*
-         * 1. SD Card is connected to the microcontroller by using SPI interface.
-         *    In this case (stm32f1xx) SD card is connected to the SPI1. In this
-         *    case the SPI driver should be initialized.
-         *    The /dev/spi_sda is the SPI interface path that is used by SD card
-         *    driver as data source.
+         * SD card
          */
-        driver_init("SPI", 0, 0, "/dev/spi_sda");
+        driver_init("SDMMC", 0, 0, "/dev/sd0");
 
-        /*
-         * 2. SPI interface should be configured to meet SD card requirements.
-         *    In this case SPI interface is opened and configured.
-         */
-        FILE *f = fopen("/dev/spi_sda", "r+");
-        if (f) {
-                static const SPI_config_t cfg = {
-                        .flush_byte  = 0xFF,
-                        .clk_divider = SPI_CLK_DIV__8,
-                        .mode        = SPI_MODE__0,
-                        .msb_first   = true,
-                        .CS_port_idx = IOCTL_GPIO_PORT_IDX__NULL,      // port name configured in GPIO driver
-                        .CS_pin_idx  = IOCTL_GPIO_PIN_IDX__NULL        // pin name configured in GPIO driver
-                };
+        driver_init2("PART", 0, 0, "/dev/sd0p1",
+                &(const PART_config_t) {.path = "/dev/sd0"});
 
-                // configuration setup
-                ioctl(fileno(f), IOCTL_SPI__SET_CONFIGURATION, &cfg);
-                fclose(f);
+        scope (int fd = open("/dev/sd0p1", O_RDWR), fd > 0, close(fd)) {
+                ioctl(fd, IOCTL_PART__READ_MBR);
         }
 
-        /*
-         * 3. Initialization of SD card driver - SDSPI. This module handle SD card
-         *    by using SPI interface.
-         */
-        driver_init("SDSPI", 0, 0, "/dev/sda");
-
-        driver_init("PART", 0, 0, "/dev/sda1"); // partition 1
-        driver_init("PART", 0, 1, "/dev/sda2"); // partition 2
+        mkdir("/sd", 0666);
+        mount("fatfs", "/dev/sd0p1", "/sd", "");
 
         /*
-         * 4. SD Card initialization and MBR read. After this operation SD card
-         *    is ready to use and driver know how many partitions is on the card.
+         * ROMFS at address 0x08070000
          */
-        f = fopen("/dev/sda", "r+");
-        if (f) {
-                static const SDSPI_config_t cfg = {
-                         .filepath = "/dev/spi_sda",    // SPI interface connected to SD card
-                         .timeout  = 1000
-                };
+        const u32_t        romfs_address   = 0x08070000;
+        const u32_t       *romfs_ptr       = cast(typeof(romfs_ptr), romfs_address);
+        static const char *romfs_signature = "FPKG\n";
 
-                ioctl(fileno(f), IOCTL_SDSPI__CONFIGURE, &cfg);
-                ioctl(fileno(f), IOCTL_STORAGE__INITIALIZE);
-                fclose(f);
+        if (memcmp(romfs_ptr, romfs_signature, strlen(romfs_signature)) == 0) {
+
+                const u32_t romfs_size_offset_words = 16; // romfs header size
+                u32_t       romfs_size = *(romfs_ptr + romfs_size_offset_words);
+
+                if (romfs_size != UINT32_MAX) {
+                        driver_init2("MEMBLOCK", 0, 0, "/dev/romfs",
+                                &(MEMBLOCK_config_t) {
+                                        .memory_address = romfs_address,
+                                        .block_size     = romfs_size,
+                                        .access         = O_RDONLY,
+                                });
+
+                        mount("romfs", "/dev/romfs", "/etc", "validate");
+                }
         }
-
-        f = fopen("/dev/sda1", "r+");
-        if (f) {
-                ioctl(fileno(f), IOCTL_STORAGE__READ_MBR);
-                fclose(f);
-        }
-
-        /*
-         * 5. Partition mount. The partition contains e.g. FAT32 file system.
-         *    The file system will be mounted in the /mnt folder created in the
-         *    previous stage. The EXT2,3,4 can be used alternatively (ext4fs).
-         */
-        mount("fatfs", "/dev/sda1", "/mnt", "");
 }
 
 //==============================================================================
@@ -371,9 +329,12 @@ static void print_system_log_messages(void)
  * @brief Function start DHCP client to get network address.
  */
 //==============================================================================
-static void start_DHCP_client(void)
+static void initialize_network(void)
 {
-        #if _ENABLE_NETWORK_
+        ifadd("unix", NET_FAMILY__UNIX, NULL);
+        ifup("unix", NULL, 0);
+
+#if _ENABLE_NETWORK_
         /*
          * 1. The DHCP configuration should be prepared to get network address.
          *    The static IP configuration can be used as well.
@@ -388,7 +349,7 @@ static void start_DHCP_client(void)
                 .mode    = NET_INET_MODE__DHCP_START,
                 .address = NET_INET_IPv4_ANY,
                 .mask    = NET_INET_IPv4_ANY,
-                .gateway = NET_INET_IPv4_ANY
+                .gateway = NET_INET_IPv4_ANY,
         };
 
         /*
@@ -398,7 +359,7 @@ static void start_DHCP_client(void)
         if (ifup("inet", &cfg_dhcp, sizeof(cfg_dhcp)) != 0) {
                 perror("ifup");
         }
-        #endif
+#endif
 }
 
 //==============================================================================
@@ -413,62 +374,51 @@ static void start_user_programs(void)
          *    key. Terminal is connected to the tty0.
          */
         static const process_attr_t attr0 = {
-               .cwd        = "/",
-               .fd_stderr  = -1,
-               .fd_stdin   = -1,
-               .fd_stdout  = -1,
-               .detached   = true,
-               .p_stderr   = "/dev/tty0",
-               .p_stdin    = "/dev/tty0",
-               .p_stdout   = "/dev/tty0"
+                .cwd       = "/",
+                .fd_stderr = -1,
+                .fd_stdin  = -1,
+                .fd_stdout = -1,
+                .detached  = true,
+                .p_stderr  = "/dev/tty0",
+                .p_stdin   = "/dev/tty0",
+                .p_stdout  = "/dev/tty0",
         };
 
         process_create("dsh", &attr0);
-
 
         /*
          * 2. Start second terminal emulator that can be accessed by clicking F2
          *    key. Terminal is connected to the tty1.
          */
         static const process_attr_t attr1 = {
-               .cwd        = "/",
-               .fd_stderr  = -1,
-               .fd_stdin   = -1,
-               .fd_stdout  = -1,
-               .detached   = true,
-               .p_stderr   = "/dev/tty1",
-               .p_stdin    = "/dev/tty1",
-               .p_stdout   = "/dev/tty1"
+                .cwd       = "/",
+                .fd_stderr = -1,
+                .fd_stdin  = -1,
+                .fd_stdout = -1,
+                .detached  = true,
+                .p_stderr  = "/dev/tty1",
+                .p_stdin   = "/dev/tty1",
+                .p_stdout  = "/dev/tty1",
         };
 
         process_create("dsh", &attr1);
-
 
         /*
          * 3. Start user application that can be accessed by clicking F3
          *    key. Application is connected to the tty2.
          */
         static const process_attr_t attr2 = {
-               .cwd        = "/",
-               .fd_stderr  = -1,
-               .fd_stdin   = -1,
-               .fd_stdout  = -1,
-               .detached   = true,
-               .p_stderr   = "/dev/tty2",
-               .p_stdin    = "/dev/tty2",
-               .p_stdout   = "/dev/tty2"
+                .cwd       = "/",
+                .fd_stderr = -1,
+                .fd_stdin  = -1,
+                .fd_stdout = -1,
+                .detached  = true,
+                .p_stderr  = "/dev/tty2",
+                .p_stdin   = "/dev/tty2",
+                .p_stdout  = "/dev/tty2",
         };
 
         process_create("netmgr --daemon /conf/netmgr.conf", &attr2);
-
-        process_create("user-program-name", &attr2);
-
-        /*
-         * NOTE: User should decide which application should be started. In most
-         *       cases only one terminal emulator is needed. In some cases,
-         *       terminal emulator does not need to be run. It depends on
-         *       user-specific project.
-         */
 }
 
 //==============================================================================
@@ -490,39 +440,19 @@ int main(int argc, char *argv[])
          *       should be preserved, because this order allows all drivers to
          *       be initialized correctly because of hierarchy.
          */
-
-        // 1. Mount base file system and create first folders.
         create_base_file_system_structure();
-
-        // 2. Initialize basic drivers.
         initialize_basic_drivers();
-
-        // 3. Create first output stream.
         open_output_stream();
-
-        // 4. Show kernel panic message if occurred.
         show_kernel_panic_message();
-
-        // 5. Initialize additional drivers
         initialize_additional_drivers();
-
-        // 6. Initialize and mount additional file systems
-        mount_ROMFS();
-        mount_SD_card();
-
-        // 7. Print system log messages
+        mount_file_systems();
         print_system_log_messages();
-
-        // 8. Start DHCP client (optional)
-        start_DHCP_client();
-
-        // 9. Start user programs
+        initialize_network();
         start_user_programs();
 
-        // 10. If needed, the initd can continue work. It can be used as daemon.
+        // If needed, the initd can continue work. It can be used as daemon.
         // while (true) {...}
-
-        // 11. Or can be closed if not needed anymore.
+        // Or can be closed if not needed anymore.
         return EXIT_SUCCESS;
 }
 

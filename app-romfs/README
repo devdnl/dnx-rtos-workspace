@@ -1,0 +1,23 @@
+File system can be mounted by using MEMBLOCK driver mapped to the memory region
+that contains ROMFS file system.
+
+    const u32_t        romfs_address   = 0x08070000; // example address - use valid one
+    const u32_t       *romfs_ptr       = cast(typeof(romfs_ptr), romfs_address);
+    static const char *romfs_signature = "FPKG\n";
+
+    if (memcmp(romfs_ptr, romfs_signature, strlen(romfs_signature)) == 0) {
+
+            const u32_t romfs_size_offset_words = 16; // romfs header size
+            u32_t       romfs_size = *(romfs_ptr + romfs_size_offset_words);
+
+            if (romfs_size != UINT32_MAX) {
+                    driver_init2("MEMBLOCK", 0, 0, "/dev/romfs",
+                            &(MEMBLOCK_config_t) {
+                                    .memory_address = romfs_address,
+                                    .block_size     = romfs_size,
+                                    .access         = O_RDONLY,
+                            });
+
+                    mount("romfs", "/dev/romfs", "/mnt", "validate");
+            }
+    }

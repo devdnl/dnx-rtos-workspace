@@ -1,54 +1,61 @@
 /*==============================================================================
-File    bootloader.c
+@file    bootloader.c
 
-Author  Daniel Zorychta
+@author  Daniel Zorychta
 
-Brief   Bootloader application example.
+@brief   Boot loader.
 
-        Copyright (C) 2023 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2024 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-        This program is free software; you can redistribute it and/or modify
-        it under the terms of the GNU General Public License as published by
-        the Free Software Foundation and modified by the dnx RTOS exception.
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-        NOTE: The modification  to the GPL is  included to allow you to
-              distribute a combined work that includes dnx RTOS without
-              being obliged to provide the source  code for proprietary
-              components outside of the dnx RTOS.
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
 
-        The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-        but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
-        MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-        GNU General Public License for more details.
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
 
-        Full license text is available on the following file: doc/license.txt.
+         Full license text is available on the following file: doc/license.txt.
+
 
 ==============================================================================*/
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/misc.h>
-#include <dnx/net.h>
-#include <dnx/os.h>
-#include <dnx/thread.h>
-#include <dnx/vt100.h>
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ioctl.h>
+#include <errno.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <dnx/misc.h>
+#include <dnx/os.h>
+#include <dnx/thread.h>
+#include <dnx/net.h>
+#include <dnx/vt100.h>
 #include <unistd.h>
+#include <fpkg/fpkg.h>
+#include <utcl/utcl.h>
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define BOOTLOADER_VERSION "1.0"
-#define APP_BASE_ADDRESS   0x08010000
-#define PATH_UPDATE_FILE   "/sd/vendor/app.img"
-#define PATH_NVM_APP       "/dev/app"
+#define BOOTLOADER_VERSION    "1.0"
+#define APP_BASE_ADDRESS      0x08040000
+#define QSPI_BASE_ADDRESS     0x90000000
+#define PATH_VENDOR           "/sd/vendor"
+#define PATH_UPDATE_FILE      PATH_VENDOR"/project.fpkg"
+#define PATH_APP_FLASH        "/dev/app-flash"
+#define PATH_APP_QSPI         "/dev/app-qspi"
+#define FPKG_SECTION_MANIFEST "/manifest"
 
 /*==============================================================================
   Local types, enums definitions
@@ -63,12 +70,102 @@ Brief   Bootloader application example.
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
         char str[80];
-        u8_t buf[65536];
+        u8_t buf[4096];
+};
 
-        struct {
-                u32_t total;
-                u32_t current;
-        } progress;
+static const QSPI_command_t qspi_dread = {
+        .instruction_mode      = QSPI_MODE__SINGLE,
+        .address_mode          = QSPI_MODE__DOUBLE,
+        .alternate_byte_mode   = QSPI_MODE__NONE,
+        .data_mode             = QSPI_MODE__DOUBLE,
+        .address_size          = QSPI_SIZE__24_BITS,
+        .alternate_bytes_size  = QSPI_SIZE__8_BITS,
+        .instruction           = 0xBB,
+        .address               = 0,
+        .alternate_bytes       = 0,
+        .dummy_cycles          = 4,
+        .data_size             = 0,
+        .data                  = NULL,
+        .instruction_only_once = false,
+        .ddr                   = false,
+        .ddr_hold_cycle        = QSPI_DDR_HOLD_CYCLE__ANALOG_DELAY,
+        .direction             = QSPI_DIRECTION__READ,
+};
+
+static const QSPI_command_t qspi_pp = {
+        .instruction_mode      = QSPI_MODE__SINGLE,
+        .address_mode          = QSPI_MODE__SINGLE,
+        .alternate_byte_mode   = QSPI_MODE__NONE,
+        .data_mode             = QSPI_MODE__SINGLE,
+        .address_size          = QSPI_SIZE__24_BITS,
+        .alternate_bytes_size  = QSPI_SIZE__8_BITS,
+        .instruction           = 0x02,
+        .address               = 0,
+        .alternate_bytes       = 0,
+        .dummy_cycles          = 0,
+        .data_size             = 0,
+        .data                  = NULL,
+        .instruction_only_once = false,
+        .ddr                   = false,
+        .ddr_hold_cycle        = QSPI_DDR_HOLD_CYCLE__ANALOG_DELAY,
+        .direction             = QSPI_DIRECTION__WRITE,
+};
+
+static const QSPI_command_t qspi_wren = {
+        .instruction_mode      = QSPI_MODE__SINGLE,
+        .address_mode          = QSPI_MODE__NONE,
+        .alternate_byte_mode   = QSPI_MODE__NONE,
+        .data_mode             = QSPI_MODE__NONE,
+        .address_size          = QSPI_SIZE__8_BITS,
+        .alternate_bytes_size  = QSPI_SIZE__8_BITS,
+        .instruction           = 0x06,
+        .address               = 0,
+        .alternate_bytes       = 0,
+        .dummy_cycles          = 0,
+        .data_size             = 0,
+        .data                  = NULL,
+        .instruction_only_once = false,
+        .ddr                   = false,
+        .ddr_hold_cycle        = QSPI_DDR_HOLD_CYCLE__ANALOG_DELAY,
+        .direction             = QSPI_DIRECTION__WRITE,
+};
+
+static const QSPI_command_t qspi_rdsr = {
+        .instruction_mode      = QSPI_MODE__SINGLE,
+        .address_mode          = QSPI_MODE__NONE,
+        .alternate_byte_mode   = QSPI_MODE__NONE,
+        .data_mode             = QSPI_MODE__SINGLE,
+        .address_size          = QSPI_SIZE__8_BITS,
+        .alternate_bytes_size  = QSPI_SIZE__8_BITS,
+        .instruction           = 0x05,
+        .address               = 0,
+        .alternate_bytes       = 0,
+        .dummy_cycles          = 0,
+        .data_size             = 0,
+        .data                  = NULL,
+        .instruction_only_once = false,
+        .ddr                   = false,
+        .ddr_hold_cycle        = QSPI_DDR_HOLD_CYCLE__ANALOG_DELAY,
+        .direction             = QSPI_DIRECTION__READ,
+};
+
+static const QSPI_command_t qspi_se4k = {
+        .instruction_mode      = QSPI_MODE__SINGLE,
+        .address_mode          = QSPI_MODE__SINGLE,
+        .alternate_byte_mode   = QSPI_MODE__NONE,
+        .data_mode             = QSPI_MODE__NONE,
+        .address_size          = QSPI_SIZE__24_BITS,
+        .alternate_bytes_size  = QSPI_SIZE__8_BITS,
+        .instruction           = 0x20,
+        .address               = 0,
+        .alternate_bytes       = 0,
+        .dummy_cycles          = 0,
+        .data_size             = 0,
+        .data                  = NULL,
+        .instruction_only_once = false,
+        .ddr                   = false,
+        .ddr_hold_cycle        = QSPI_DDR_HOLD_CYCLE__HALF_CLK_DELAY,
+        .direction             = QSPI_DIRECTION__WRITE,
 };
 
 /*==============================================================================
@@ -86,10 +183,29 @@ PROGRAM_PARAMS(bootloader, STACK_DEPTH_MEDIUM);
 //==============================================================================
 static void create_base_file_system_structure(void)
 {
+        /*
+         * 1. Mount base file system as root.
+         */
         mount("ramfs", "", "/", "");
-        mkdir("/dev", 0666);
-        mkdir("/sd", 0666);
-        mkdir("/sd/vendor", 0666);
+
+        /*
+         * 2. Create basic folders. This folders can be used to store device
+         *    files or to mount next file systems e.g. SD Card etc.
+         */
+        mkdir("/dev", 0666);  // this folder store devices drivers
+        mkdir("/tmp", 0666);  // this folder store temporary files
+        mkdir("/run", 0666);  // this folder store runtime files
+        mkdir("/mnt", 0666);  // this folder store SD card content
+        mkdir("/proc", 0666); // this folder store SD card content
+        mkdir("/etc", 0666);  // this folder store SD card content
+
+        /*
+         * NOTE: Number and naming of folders depends on user needs. There can
+         *       be mounted additional file systems that does not requires
+         *       drivers to work (e.g. procfs, devfs, etc). Remember that this
+         *       stage does not give access to drivers because drivers will be
+         *       initialized in the next runlevel.
+         */
 }
 
 //==============================================================================
@@ -100,6 +216,13 @@ static void create_base_file_system_structure(void)
 //==============================================================================
 static void initialize_basic_drivers(void)
 {
+        /*
+         * 1. Initialize GPIO drivers. Number of GPIO drivers depends on microcontroller
+         *    pinout. If microcontroller has only 2 GPIO ports then only those
+         *    two should be initialized. Not all GPIOs should have file representation.
+         *    If file is not needed (because port is not used from application)
+         *    then node is not necessary (use NULL or empty string as file name).
+         */
         driver_init("GPIO", 0, 0, "/dev/gpio");
         driver_init("GPIO", 1, 0, NULL);
         driver_init("GPIO", 2, 0, NULL);
@@ -108,33 +231,53 @@ static void initialize_basic_drivers(void)
         driver_init("GPIO", 5, 0, NULL);
         driver_init("GPIO", 6, 0, NULL);
         driver_init("GPIO", 7, 0, NULL);
-        driver_init("AFM", 0, 0, NULL);
-        driver_init("CLK", 0, 0, "/dev/clk");
-        driver_init("DMA", 0, 0, NULL);
-        driver_init("UART", __CPU_UART_TERM__, 0, "/dev/ttyS0");
-        driver_init("ZERO", 0, 0, "/dev/zero");
-        driver_init("ZERO", 1, 0, "/dev/null");
 
-        driver_init2("TTY", 0, 0, "/dev/tty0",
-                &(const TTY_config_t) {
-                        .input_file  = "/dev/ttyS0",
-                        .output_file = "/dev/ttyS0",
+        /*
+         * 2. Next part of drivers that can be initialized at this early stage.
+         */
+        driver_init("AFM", 0, 0, NULL);       // alternative function configuration
+        driver_init("CLK", 0, 0, "/dev/clk"); // system clock configuration
+        driver_init("DMA", 0, 0, NULL);       // DMA configuration
+
+        /*
+         * NOTE: make sure that UART1 is used as terminal output!
+         *       Some BSPs use UART2 as default terminal output.
+         */
+        driver_init2("UART", __CPU_UART_TERM__, 0, "/dev/ttyS0",
+                &(UART_config_t) {
+                        .mode      = UART_MODE__NORMAL,
+                        .parity    = UART_PARITY__OFF,
+                        .stop_bits = UART_STOP_BIT__1,
+                        .tx_enable = true,
+                        .rx_enable = true,
+                        .baud      = 460800,
+                        .features  = 0,
                 });
 
+        static const TTY_config_t TTY_config = {
+                .input_file  = "/dev/ttyS0",
+                .output_file = "/dev/ttyS0",
+        };
+        driver_init2("TTY", 0, 0, "/dev/tty0", &TTY_config); // first user terminal
+}
+
+//==============================================================================
+/**
+ * @brief Function open output stream. Stream is should be opened as soon as
+ *        possible to present user system messages.
+ */
+//==============================================================================
+static void open_output_stream(void)
+{
+        /*
+         * 1. Open standard output and standard error streams to see system
+         *    messages. Device that can be used as output stream was initialized
+         *    in the previous stage (tty0 connected to UART2).
+         */
         stdout = fopen("/dev/tty0", "r+");
         stderr = stdout;
 
         printf("Bootloader version %s\n", BOOTLOADER_VERSION);
-
-        driver_init2("NVM", 0, 0, PATH_NVM_APP,
-                &(const NVM_config_t) {
-                        .start_sector      = 6,
-                        .number_of_sectors = 18,
-                });
-
-        driver_init("TTY", 0, 1, "/dev/tty1");
-
-        driver_init("SDMMC", 0, 0, "/dev/sd");
 }
 
 //==============================================================================
@@ -144,10 +287,16 @@ static void initialize_basic_drivers(void)
 //==============================================================================
 static void show_kernel_panic_message(void)
 {
+        /*
+         * 1. Show kernel panic message if occurred in the last cycle.
+         *    Kernel panic message is redirected to the standard output.
+         *    Implementation hold kernel panic message by 3 seconds.
+         */
         kernel_panic_info_t info;
         if (get_kernel_panic_info(&info)) {
+
                 printf(VT100_FONT_COLOR_RED);
-                printf("*** %s ***\n", info.kernel_panic ? "KERNEL PANIC" : "APP CRASH");
+                printf("*** %s ***\n", info.kernel_panic ? "KERNEL PANIC" : "APP CRACH");
                 printf("  Cause: %s (%d)\n", info.cause_str, info.cause);
                 printf("  PID  : %u (%.*s)\n", info.pid, 256, info.name);
                 printf("  TID  : %u\n", info.tid);
@@ -160,188 +309,552 @@ static void show_kernel_panic_message(void)
 
 //==============================================================================
 /**
- * @brief Mount additional file systems.
+ * @brief Function initialize additional drivers.
+ */
+//==============================================================================
+static void initialize_additional_drivers(void)
+{
+        driver_init("TTY", 0, 1, "/dev/tty1");
+        driver_init("TTY", 0, 2, "/dev/tty2");
+        driver_init("RTC", 0, 0, "/dev/rtc");
+
+        driver_init2("QSPI", 0, 0, PATH_APP_QSPI,
+                &(const QSPI_config_t) {
+                        .clock_prescaller                = 2,
+                        .sample_shifting                 = QSPI_SAMPLE_SHIFTING__NONE,
+                        .flash_size_bits                 = 24,
+                        .chip_select_high_time           = 5,
+                        .clock_mode                      = QSPI_CLOCK_MODE__0,
+                        .dual_flash                      = false,
+                        .page_size                       = 256,
+                        .write_in_progress_mask          = 0x01,
+                        .write_in_progress_match         = 0x00,
+                        .write_in_progress_register_size = QSPI_SIZE__8_BITS,
+                        .read_command                    = &qspi_dread,
+                        .page_program_command            = &qspi_pp,
+                        .write_enable_command            = &qspi_wren,
+                        .read_status_register_command    = &qspi_rdsr,
+                });
+
+        driver_init2("NVM", 0, 0, PATH_APP_FLASH,
+                &(const NVM_config_t) {
+                        .start_sector      = 6,
+                        .number_of_sectors = 2,
+                });
+}
+
+//==============================================================================
+/**
+ * @brief Mount ROMFS file system.
  */
 //==============================================================================
 static void mount_file_systems(void)
 {
-        if (mount("flatfs", "/dev/sd", "/sd", "") != 0) {
-                perror("/dev/sd");
-        }
-}
-
-//==============================================================================
-/**
- * @brief  Calculate total progress.
- */
-//==============================================================================
-static void calculate_progress(void)
-{
-        global->progress.total   = 0;
-        global->progress.current = 0;
-
         /*
-         * Erase size
+         * SD card
          */
-        int app_nvm = open(PATH_NVM_APP, O_RDONLY);
-        if (app_nvm != -1) {
-                size_t sector_count;
-                ioctl(app_nvm, IOCTL_NVM__GET_SECTOR_COUNT, &sector_count);
+        driver_init("SDMMC", 0, 0, "/dev/sd0");
 
-                for (size_t i = 0; i < sector_count; i++) {
-                        NVM_sector_size_t sector_size;
-                        sector_size.sector = i;
-                        ioctl(app_nvm, IOCTL_NVM__GET_SECTOR_SIZE, &sector_size);
-                        global->progress.total += sector_size.size;
-                }
+        driver_init2("PART", 0, 0, "/dev/sd0p1",
+                &(const PART_config_t) {.path = "/dev/sd0"});
 
-                close(app_nvm);
+        scope (int fd = open("/dev/sd0p1", O_RDWR), fd > 0, close(fd)) {
+                ioctl(fd, IOCTL_PART__READ_MBR);
         }
 
+        mkdir("/sd", 0666);
+        mount("fatfs", "/dev/sd0p1", "/sd", "");
+}
+
+//==============================================================================
+/**
+ * @brief Function print system log messages.
+ */
+//==============================================================================
+static void print_system_log_messages(void)
+{
         /*
-         * Programming size
+         * 1. This function prints all system log messages that were stored
+         *    at system startup. It can be used in debug purposes. It can be
+         *    also disabled if not needed. Function run in thread.
          */
-        struct stat update_stat;
-        if (stat(PATH_UPDATE_FILE, &update_stat) == 0) {
-                global->progress.total += update_stat.st_size;
-        }
-}
+        struct timeval t = {0, 0};
 
-//==============================================================================
-/**
- * @brief  Update progress.
- *
- * @param  size         update size
- */
-//==============================================================================
-static void update_progress(size_t size)
-{
-        global->progress.current += size;
-}
-
-//==============================================================================
-/**
- * @brief  Check if update file is valid.
- *
- * @return On success true is returned, otherwise false.
- */
-//==============================================================================
-static bool is_update_file_valid(void)
-{
-        bool valid = stat(PATH_UPDATE_FILE, &(struct stat) {}) == 0;
-
-        return valid;
-}
-
-//==============================================================================
-/**
- * @brief  Erase application sectors.
- *
- * @return On success true is returned, otherwise false.
- */
-//==============================================================================
-static bool erase_application(void)
-{
-        bool success = false;
-
-        scope (int fd = open(PATH_NVM_APP, O_RDWR), fd != -1, close(fd)) {
-
-                size_t num_of_sectors = 0;
-
-                errno = 0;
-                if (ioctl(fd, IOCTL_NVM__GET_SECTOR_COUNT, &num_of_sectors) != 0) {
-                        perror("Get number of sectors");
+        while (true) {
+                if (syslog_read(global->str, sizeof(global->str), &t, &t)) {
+                        printf("[%lld.%06lu] %s\n", t.tv_sec, t.tv_usec, global->str);
+                } else {
                         break;
                 }
+        }
+}
 
-                success = true;
+//==============================================================================
+/**
+ * @brief  Extract selected file from FPKG package.
+ *
+ * @param  fpkg         fpkg instance
+ * @param  file_src     file source path
+ * @param  file_dst     file destination path
+ *
+ * @return On success 0 is returned.
+ */
+//==============================================================================
+static int fpkg_extract(fpkg_t *fpkg, const char *file_src, const char *file_dest)
+{
+        int err = ENOENT;
 
-                for (size_t i = 0; i < num_of_sectors; i++) {
-                        printf("Erasing sector %lu of %lu...\n", i + 1, num_of_sectors);
-                        msleep(50);
+        fpkg_stat_t stat;
+        if (fpkg__stat(fpkg, file_src, &stat) != 0) {
+                stat.size = 0;
+        }
+
+        fpkg_file_t *fsrc  = fpkg__fopen(fpkg, file_src);
+        FILE        *fdest = fopen(file_dest, "w");
+
+        size_t size = 0;
+
+        while (fsrc and fdest) {
+                size_t n = fpkg__fread(fsrc, global->buf, sizeof(global->buf));
+                if (n > 0) {
+                        errno = 0;
+                        if (fwrite(global->buf, n, 1, fdest) != 1) {
+                                err = errno;
+                                break;
+                        } else {
+                                size += n;
+                        }
+                } else {
+                        if (stat.size == size) {
+                                printf("Extracting '%s' -> '%s' %u%% (%lu bytes).\n",
+                                        file_src, file_dest, (size * 100) / stat.size,
+                                        size);
+                                err = 0;
+
+                        } else {
+                                printf("Extracting '%s' -> '%s' error.\n", file_src,
+                                        file_dest);
+                                err = EIO;
+                        }
+                        break;
+                }
+        }
+
+        fpkg__fclose(fsrc);
+        fclose(fdest);
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Erase QSPI flash memory.
+ *
+ * @param  tcl          TCL instance
+ * @param  args         argument list
+ * @param  ctx          user context
+ *
+ * @return One of F* values.
+ */
+//==============================================================================
+static int tcl_qspi_flash_erase(struct tcl *tcl, tcl_value_t *args, void *ctx)
+{
+        UNUSED_ARG1(ctx);
+
+        tcl_value_t *tcl_addr = tcl_list_at(args, 1);
+        tcl_value_t *tcl_size = tcl_list_at(args, 2);
+
+        uint32_t address = strtoul(tcl_addr, NULL, 0);
+        uint32_t size    = strtoul(tcl_size, NULL, 0);
+
+        if (address >= QSPI_BASE_ADDRESS) {
+                address -= QSPI_BASE_ADDRESS;
+        } else {
+                address = 0;
+        }
+
+        tcl_free(tcl_addr);
+        tcl_free(tcl_size);
+
+        int err = ENOENT;
+
+        scope (FILE *nor = fopen(PATH_APP_QSPI, "r+"), nor, fclose(nor)) {
+
+                const size_t sector_size      = 4096;
+                const size_t sectors_to_erase = CEILING(size, sector_size);
+
+                for (size_t n = 0; n < sectors_to_erase; n++) {
+
+                        printf("QSPI flash: erasing %d%%\n",
+                                (n * 100) / sectors_to_erase);
 
                         errno = 0;
-                        if (ioctl(fd, IOCTL_NVM__SECTOR_ERASE, &i) != 0) {
-                                perror("Sector erase error");
-                                success = false;
+                        err   = ioctl(fileno(nor), IOCTL_QSPI__COMMAND, &qspi_wren);
+                        if (err) {
+                                err = errno;
                                 break;
                         }
 
-                        errno                         = 0;
-                        NVM_sector_size_t sector_size = {.sector = i};
-                        if (ioctl(fd, IOCTL_NVM__GET_SECTOR_SIZE, &sector_size) != 0) {
-                                perror("Sector size error");
-                                success = false;
+                        QSPI_command_t erase = qspi_se4k;
+                        erase.address        = (sector_size * n) + address;
+
+                        errno = 0;
+                        err   = ioctl(fileno(nor), IOCTL_QSPI__COMMAND, &erase);
+                        if (err) {
+                                err = errno;
                                 break;
                         }
 
-                        update_progress(sector_size.size);
+                        errno = 0;
+                        err = ioctl(fileno(nor), IOCTL_QSPI__WAIT_FOR_MEMORY_TO_BE_READY);
+                        if (err) {
+                                err = errno;
+                                break;
+                        }
+                }
+
+                if (not err) {
+                        printf("QSPI flash: erasing 100%%\n");
+                } else {
+                        printf("QSPI flash: erase error.\n");
                 }
         }
 
-        return success;
+        char r_str[8];
+        snprintf(r_str, sizeof(r_str), "%d", err);
+        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
 }
 
 //==============================================================================
 /**
- * @brief  Flash application.
+ * @brief  Write QSPI flash memory.
  *
- * @return On success true is returned, otherwise false.
+ * @param  tcl          TCL instance
+ * @param  args         argument list
+ * @param  ctx          user context
+ *
+ * @return One of F* values.
  */
 //==============================================================================
-static bool flash_aplication(void)
+static int tcl_qspi_flash_write(struct tcl *tcl, tcl_value_t *args, void *ctx)
 {
-        FILE    *update       = NULL;
-        FILE    *app          = NULL;
-        uint32_t flashed_size = 0;
+        fpkg_t *fpkg = ctx;
 
-        update = fopen(PATH_UPDATE_FILE, "r");
-        if (not update) {
-                printf("Unable to open update app file.\n");
-                goto cleanup;
+        tcl_value_t *file_path = tcl_list_at(args, 1);
+        tcl_value_t *tcl_addr  = tcl_list_at(args, 2);
+
+        uint32_t address = strtoul(tcl_addr, NULL, 0);
+
+        if (address >= QSPI_BASE_ADDRESS) {
+                address -= QSPI_BASE_ADDRESS;
+        } else {
+                address = 0;
         }
 
-        struct stat update_stat = {0};
-        if (fstat(fileno(update), &update_stat) != 0) {
-                printf("Unable to get update app file stats.\n");
-                goto cleanup;
-        }
+        int err = ENOENT;
 
-        app = fopen(PATH_NVM_APP, "r+");
-        if (not app) {
-                printf("Unable to open NVM app file.\n");
-                goto cleanup;
-        }
+        fpkg_file_t *img = fpkg__fopen(fpkg, file_path);
+        FILE        *nor = fopen(PATH_APP_QSPI, "r+");
 
-        while (app and update) {
-                printf("Flashing: %u%%\n", flashed_size * 100 / update_stat.st_size);
+        while (img and nor) {
 
-                int n = fread(global->buf, 1, min(32768, sizeof(global->buf)), update);
-                if (n == 0) {
-                        break;
-
-                } else if (n < 0) {
-                        printf("Programming error.\n");
+                fpkg_stat_t stat;
+                err = fpkg__fstat(img, &stat);
+                if (err) {
                         break;
                 }
 
-                errno = 0;
-                int m = fwrite(global->buf, 1, n, app);
-                if (m != n) {
-                        perror("Flashing error");
+                err = fpkg__fseek(img, 0, fpkg_seek_mode__set);
+                if (err) {
                         break;
                 }
 
-                update_progress(n);
+                fseek(nor, address, SEEK_SET);
 
-                flashed_size += n;
+                size_t size = 0;
+
+                while (true) {
+                        u8_t   buf[256];
+                        size_t n = fpkg__fread(img, buf, sizeof(buf));
+                        if (n > 0) {
+                                if (fwrite(buf, 1, n, nor) == n) {
+                                        size += n;
+                                        printf("QSPI flash: programming %s... %u%% (%lu "
+                                               "bytes).\n",
+                                                file_path, (size * 100) / stat.size,
+                                                size);
+                                } else {
+                                        puts("QSPI flash: write error.");
+                                        break;
+                                }
+
+                        } else if (n == 0) {
+                                puts("QSPI flash: done.");
+                                break;
+
+                        } else {
+                                puts("QSPI flash: error.");
+                                break;
+                        }
+                }
+
+                break;
         }
 
-cleanup:
-        fclose(app);
-        fclose(update);
+        fpkg__fclose(img);
+        fclose(nor);
 
-        return flashed_size == update_stat.st_size;
+        tcl_free(file_path);
+        tcl_free(tcl_addr);
+
+        char r_str[8];
+        snprintf(r_str, sizeof(r_str), "%d", err);
+        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+}
+
+//==============================================================================
+/**
+ * @brief  Erase flash memory.
+ *
+ * @param  tcl          TCL instance
+ * @param  args         argument list
+ * @param  ctx          user context
+ *
+ * @return One of F* values.
+ */
+//==============================================================================
+static int tcl_flash_erase(struct tcl *tcl, tcl_value_t *args, void *ctx)
+{
+        UNUSED_ARG1(ctx);
+
+        tcl_value_t *tcl_addr = tcl_list_at(args, 1);
+        tcl_value_t *tcl_size = tcl_list_at(args, 2);
+
+        uint32_t address = strtoul(tcl_addr, NULL, 0);
+        uint32_t size    = strtoul(tcl_size, NULL, 0);
+
+        if (address >= APP_BASE_ADDRESS) {
+                address -= APP_BASE_ADDRESS;
+        } else {
+                address = 0;
+        }
+
+        tcl_free(tcl_addr);
+        tcl_free(tcl_size);
+
+        int err = ENOENT;
+
+        scope (FILE *nor = fopen(PATH_APP_FLASH, "r+"), nor, fclose(nor)) {
+
+                const size_t sector_size      = 128 * 1024;
+                const size_t sectors_to_erase = CEILING(size, sector_size);
+
+                for (size_t n = address / sector_size; n < sectors_to_erase; n++) {
+
+                        printf("Flash: erasing %d%%\n", (n * 100) / sectors_to_erase);
+
+                        errno = 0;
+                        err   = ioctl(fileno(nor), IOCTL_NVM__SECTOR_ERASE,
+                                  &(const size_t) {n});
+                        if (err) {
+                                err = errno;
+                                break;
+                        }
+                }
+
+                if (not err) {
+                        printf("Flash: erasing 100%%\n");
+                } else {
+                        printf("Flash: erase error.\n");
+                }
+        }
+
+        char r_str[8];
+        snprintf(r_str, sizeof(r_str), "%d", err);
+        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+}
+
+//==============================================================================
+/**
+ * @brief  Write flash memory.
+ *
+ * @param  tcl          TCL instance
+ * @param  args         argument list
+ * @param  ctx          user context
+ *
+ * @return One of F* values.
+ */
+//==============================================================================
+static int tcl_flash_write(struct tcl *tcl, tcl_value_t *args, void *ctx)
+{
+        fpkg_t *fpkg = ctx;
+
+        tcl_value_t *file_path = tcl_list_at(args, 1);
+        tcl_value_t *tcl_addr  = tcl_list_at(args, 2);
+
+        uint32_t address = strtoul(tcl_addr, NULL, 0);
+
+        if (address >= APP_BASE_ADDRESS) {
+                address -= APP_BASE_ADDRESS;
+        } else {
+                address = 0;
+        }
+
+        int err = ENOENT;
+
+        fpkg_file_t *img = fpkg__fopen(fpkg, file_path);
+        FILE        *nor = fopen(PATH_APP_FLASH, "r+");
+
+        while (img and nor) {
+
+                fpkg_stat_t stat;
+                err = fpkg__fstat(img, &stat);
+                if (err) {
+                        break;
+                }
+
+                err = fpkg__fseek(img, 0, fpkg_seek_mode__set);
+                if (err) {
+                        break;
+                }
+
+                fseek(nor, address, SEEK_SET);
+
+                size_t size = 0;
+
+                while (true) {
+                        u8_t   buf[256];
+                        size_t n = fpkg__fread(img, buf, sizeof(buf));
+                        if (n > 0) {
+                                if (fwrite(buf, 1, n, nor) == n) {
+                                        size += n;
+                                        printf("Flash: programming %s... %u%% (%lu "
+                                               "bytes).\n",
+                                                file_path, (size * 100) / stat.size,
+                                                size);
+                                } else {
+                                        puts("Flash: write error.");
+                                        break;
+                                }
+
+                        } else if (n == 0) {
+                                puts("Flash: done.");
+                                break;
+
+                        } else {
+                                puts("Flash: error.");
+                                break;
+                        }
+                }
+
+                break;
+        }
+
+        fpkg__fclose(img);
+        fclose(nor);
+
+        tcl_free(file_path);
+        tcl_free(tcl_addr);
+
+        char r_str[8];
+        snprintf(r_str, sizeof(r_str), "%d", err);
+        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+}
+
+//==============================================================================
+/**
+ * @brief  Get file size from FPKG.
+ *
+ * @param  tcl          TCL instance
+ * @param  args         argument list
+ * @param  ctx          user context
+ *
+ * @return One of F* values.
+ */
+//==============================================================================
+static int tcl_get_file_size(struct tcl *tcl, tcl_value_t *args, void *ctx)
+{
+        fpkg_t *fpkg = ctx;
+
+        tcl_value_t *file_path = tcl_list_at(args, 1);
+
+        fpkg_stat_t stat;
+        if (fpkg__stat(fpkg, file_path, &stat) != 0) {
+                stat.size = 0;
+        }
+
+        tcl_free(file_path);
+
+        char r_str[8];
+        snprintf(r_str, sizeof(r_str), "%lu", stat.size);
+        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+}
+
+//==============================================================================
+/**
+ * @brief  Extract file from FPKG.
+ *
+ * @param  tcl          TCL instance
+ * @param  args         argument list
+ * @param  ctx          user context
+ *
+ * @return One of F* values.
+ */
+//==============================================================================
+static int tcl_extract(struct tcl *tcl, tcl_value_t *args, void *ctx)
+{
+        fpkg_t *fpkg = ctx;
+
+        tcl_value_t *file_src  = tcl_list_at(args, 1);
+        tcl_value_t *file_dest = tcl_list_at(args, 2);
+
+        int err = ENOENT;
+
+        fpkg_stat_t stat;
+        if (fpkg__stat(fpkg, file_src, &stat) != 0) {
+                stat.size = 0;
+        }
+
+        fpkg_file_t *fsrc  = fpkg__fopen(fpkg, file_src);
+        FILE        *fdest = fopen(file_dest, "w");
+
+        size_t size = 0;
+
+        while (fsrc and fdest) {
+                size_t n = fpkg__fread(fsrc, global->buf, sizeof(global->buf));
+                if (n > 0) {
+                        errno = 0;
+                        if (fwrite(global->buf, n, 1, fdest) != 1) {
+                                err = errno;
+                                break;
+                        } else {
+                                size += n;
+                        }
+                } else {
+                        if (stat.size == size) {
+                                printf("Extracting '%s' -> '%s' %u%% (%lu bytes).\n",
+                                        file_src, file_dest, (size * 100) / stat.size,
+                                        size);
+                                err = 0;
+
+                        } else {
+                                printf("Extracting '%s' -> '%s' error.\n", file_src,
+                                        file_dest);
+                                err = EIO;
+                        }
+                        break;
+                }
+        }
+
+        fpkg__fclose(fsrc);
+        fclose(fdest);
+
+        tcl_free(file_src);
+        tcl_free(file_dest);
+
+        char r_str[8];
+        snprintf(r_str, sizeof(r_str), "%d", err);
+        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
 }
 
 //==============================================================================
@@ -379,40 +892,46 @@ int main(int argc, char *argv[])
 
         create_base_file_system_structure();
         initialize_basic_drivers();
+        open_output_stream();
         show_kernel_panic_message();
+        initialize_additional_drivers();
         mount_file_systems();
+        print_system_log_messages();
 
-        if (is_update_file_valid()) {
+        struct tcl   tcl;
+        fpkg_t      *fpkg     = fpkg__open(PATH_UPDATE_FILE, true);
+        fpkg_file_t *manifest = fpkg__fopen(fpkg, FPKG_SECTION_MANIFEST);
 
-                calculate_progress();
+        if (fpkg and manifest and (tcl_init(&tcl) == FNORMAL)) {
 
-                bool general_success = false;
+                tcl_register_const(&tcl, "qspi_flash_erase", tcl_qspi_flash_erase, 3,
+                        fpkg);
 
-                for (int try = 0; try < 3; try++) {
+                tcl_register_const(&tcl, "qspi_flash_write", tcl_qspi_flash_write, 3,
+                        fpkg);
 
-                        printf("Update try %d...\n", try + 1);
+                tcl_register_const(&tcl, "flash_erase", tcl_flash_erase, 3, fpkg);
 
-                        if (not erase_application()) {
-                                continue;
-                        }
+                tcl_register_const(&tcl, "flash_write", tcl_flash_write, 3, fpkg);
 
-                        if (not flash_aplication()) {
-                                continue;
-                        }
+                tcl_register_const(&tcl, "get_file_size", tcl_get_file_size, 2, fpkg);
 
-                        general_success = true;
+                tcl_register_const(&tcl, "extract", tcl_extract, 3, fpkg);
 
-                        break;
-                }
+                fpkg_extract(fpkg, FPKG_SECTION_MANIFEST, PATH_VENDOR"/manifest.tmp");
+                tcl_loadfile(&tcl, PATH_VENDOR"/manifest.tmp");
+                remove(PATH_VENDOR"/manifest.tmp");
 
-                if (general_success) {
-                        printf("Update finished successfully.\n");
-                } else {
-                        printf("Update failed\n");
-                }
+                tcl_destroy(&tcl);
+
+                rename(PATH_UPDATE_FILE, PATH_UPDATE_FILE ".bak");
         }
 
-        remove(PATH_UPDATE_FILE);
+        fpkg__fclose(manifest);
+        fpkg__close(fpkg);
+
+        sync();
+        umount("/sd");
 
         start_application();
 

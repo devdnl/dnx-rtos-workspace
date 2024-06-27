@@ -892,7 +892,80 @@ static inline long atol(const char *str)
  * @see atoi(), atol(), atof(), strtod(), strtof()
  */
 //==============================================================================
-static inline i32_t strtol(const char *nptr, char **endptr, int base)
+static inline long strtol(const char *nptr, char **endptr, int base)
+{
+        extern char *_libc_strtoi(const char *string, int base, i32_t *value);
+
+        i32_t result;
+        char *end = _libc_strtoi(nptr, base, &result);
+        if (endptr)
+                *endptr = end;
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief Function converts string to 32-bit unsigned integer value.
+ *
+ * The strtoul() function converts the initial part of the string in <i>nptr</i>
+ * to a 32-bit value according to the given <i>base</i>, which must be
+ * between 2 and 16 inclusive, or be the special value 0.
+ *
+ * The string may begin with an arbitrary amount of white space (as
+ * determined by isspace()) followed by a single optional '+' or '-'
+ * sign. If base is zero or 16, the number will be read in base 16; otherwise,
+ * a zero base is taken as 10 (decimal) unless the next character is '0', in
+ * which case it is taken as 8 (octal).<p>
+ *
+ * If <i>endptr</i> is not @ref NULL, strtol()stores the address of the first
+ * invalid character in <i>*endptr</i>.  If there were no digits at all,
+ * strtol() stores the original value of <i>nptr</i> in <i>*endptr</i> (and
+ * returns 0).  In particular, if <i>*nptr</i> is not '\0' but <i>**endptr</i>
+ * is '\0' on return, the entire string is valid.
+ *
+ * @param nptr          string to convert
+ * @param endptr        points to first not converted character
+ * @param base          calculation base
+ *
+ * @return The strtol() function returns the result of the conversion, unless
+ * the value would underflow or overflow.
+ *
+ * @b Example
+ * @code
+        const char *end;
+        const char *str;
+        i32_t       val;
+
+        // convert string to decimal value
+        str = "123";
+        val = strtoul(str, &end, 10);
+
+        // convert string to hex value
+        str = "1FF";
+        val = strtoul(str, &end, 16);
+
+        // convert string to octal
+        str = "77"
+        val = strtoul(str, &end, 8);
+
+        // convert string automatically
+        str = "0x45";
+        val = strtoul(str, &end, 0);
+
+        str = "056";
+        val = strtoul(str, &end, 0);
+
+        str = "123";
+        val = strtuol(str, &end, 0);
+
+        str = "0b1110";
+        val = strtoul(str, &end, 0);
+   @endcode
+ *
+ * @see atoi(), atol(), atof(), strtod(), strtof()
+ */
+//==============================================================================
+static inline unsigned long strtoul(const char *nptr, char **endptr, int base)
 {
         extern char *_libc_strtoi(const char *string, int base, i32_t *value);
 

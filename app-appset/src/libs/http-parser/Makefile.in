@@ -1,5 +1,7 @@
 # Makefile for GNU make
 
-CSRC_LIB   += http-parser/http_parser.c
+COMMON_LIBS_HTTP_PARSER_ROOT = ../../../common_libs
+
+CSRC_LIB   += $(COMMON_LIBS_HTTP_PARSER_ROOT)/http-parser/http_parser.c
 CXXSRC_LIB += 
-HDRLOC_LIB += http-parser
+HDRLOC_LIB += $(COMMON_LIBS_HTTP_PARSER_ROOT)/http-parser
