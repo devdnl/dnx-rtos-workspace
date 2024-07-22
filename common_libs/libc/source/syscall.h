@@ -197,6 +197,7 @@ typedef enum {
         _LIBC_SYS_REBOOTTOADDR,           // int errno (const void *addr)
         _LIBC_SYS_LOWPOWERMODE,           // int errno (const int *mode)
         _LIBC_SYS_REGISTERAPPSET,         // int errno (const void **appset_array, const size_t *array_size)
+        _LIBC_SYS_MEMREGIONINFO,          // int errno (size_t idx, _mm_region_info_t *region_info)
 } _libc_syscall_t;
 
 /*==============================================================================

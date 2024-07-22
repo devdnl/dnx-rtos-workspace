@@ -77,16 +77,16 @@ extern int conf_parser__set_value(
         conf_parser_t *parser, const char *key, const char *value);
 
 extern int conf_parser__set_value_vfv(
-        conf_parser_t *this, const char *key, const char *value_fmt, va_list args);
+        conf_parser_t *parser, const char *key, const char *value_fmt, va_list args);
 
 extern int conf_parser__set_value_vf(
-        conf_parser_t *this, const char *key, const char *value_fmt, ...);
+        conf_parser_t *parser, const char *key, const char *value_fmt, ...);
 
 extern int conf_parser__set_value_vparse(
-        conf_parser_t *this, const char *key_value_fmt, va_list args);
+        conf_parser_t *parser, const char *key_value_fmt, va_list args);
 
 extern int conf_parser__set_value_parse(
-        conf_parser_t *this, const char *key_value_fmt, ...);
+        conf_parser_t *parser, const char *key_value_fmt, ...);
 
 extern int conf_parser__set_file_value(
         const char *path, const char *key, const char *value);

@@ -55,6 +55,9 @@ extern "C" {
 #define _COMMIT_HASH ""
 #endif
 
+#define MEM_FLAG__DMA    (1 << 0)
+#define MEM_FLAG__CACHE  (1 << 1)
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
@@ -78,6 +81,22 @@ typedef struct {
         int32_t  shared_memory_usage;      /*!< The amount of memory used by shared buffers.*/
         int32_t  cached_memory_usage;      /*!< The amount of memory used by disc caches.*/
 } memstat_t;
+
+/**
+ * @brief Memory region information
+ *
+ * The type contains memory region information.
+ *
+ * @see get_memory_region_info()
+ */
+typedef struct {
+        const char *name_ref;
+        u32_t       flags;
+        u32_t       address;
+        u32_t       size;
+        u32_t       heap_size;
+        u32_t       heap_usage;
+} mem_region_info_t;
 
 /** average CPU load */
 typedef struct {
@@ -166,6 +185,55 @@ typedef struct {
 static inline int get_memory_usage_details(memstat_t *stat)
 {
         int err = _libc_syscall(_LIBC_SYS_GETMEMDETAILS, stat);
+        return err ? -1 : 0;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns memory region information.
+ *
+ * The function get_memory_region_info() return memory region information indexed
+ * by <i>idx</i>. The result is stored in pointed by <i>info</i> variable.
+ *
+ * @param idx           region index
+ * @param info          region information
+ *
+ * @exception | @ref ENOENT
+ *
+ * @return Return @b 0 on success. On error, @b -1 value
+ * is returned, and @b errno is set appropriately.
+ *
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+
+        // ...
+
+        size_t idx = 0;
+        mem_region_info_t info;
+        while (get_memory_region_info(idx++, &info) == 0) {
+                printf("Region name  : %s\n"
+                       "Flags        : %08Xh\n"
+                       "Address      : %08Xh\n"
+                       "Size         : %lu bytes\n"
+                       "Heap size    : %lu bytes\n"
+                       "Heap usage   : %lu bytes\n",
+                       info.name_ref,
+                       info.flags,
+                       info.address,
+                       info.size,
+                       info.heap_size,
+                       info.heap_usage);
+        }
+
+        // ...
+
+   @endcode
+ */
+//==============================================================================
+static inline int get_memory_region_info(size_t idx, mem_region_info_t *info)
+{
+        int err = _libc_syscall(_LIBC_SYS_MEMREGIONINFO, idx, info);
         return err ? -1 : 0;
 }
 
