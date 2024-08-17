@@ -14,6 +14,7 @@ extern "C" {
 #endif
 
 /*************************** HEADER FILES ***************************/
+#include <stdio.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -35,6 +36,8 @@ typedef struct {
 void md5_init(MD5_CTX *ctx);
 void md5_update(MD5_CTX *ctx, const BYTE data[], size_t len);
 void md5_final(MD5_CTX *ctx, BYTE hash[]);
+int  md5_file(size_t (*read)(void *buf, size_t len, size_t n, void *file),
+              void *file, BYTE *buffer, size_t buffer_len, size_t max_file_size, BYTE hash[]);
 
 #ifdef __cplusplus
 }

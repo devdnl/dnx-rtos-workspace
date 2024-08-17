@@ -113,6 +113,24 @@ int main(int argc, char *argv[])
                                get_driver_name(module),
                                modmem[module]);
                 }
+
+                printf("\nDetailed region information:\n");
+                printf("N - no heap, C - cacheable, D - DMA\n");
+                printf("Flags   Address       Size  Heap-size Heap-usage Name\n");
+
+                size_t idx = 0;
+                mem_region_info_t info;
+                while (get_memory_region_info(idx++, &info) == 0) {
+                        printf("  %c%c%c %08Xh %10lu %10lu %10lu \"%s\"\n",
+                               info.flags & MEM_FLAG__NOHEAP ? 'N' : '-',
+                               info.flags & MEM_FLAG__CACHE ? 'C' : '-',
+                               info.flags & MEM_FLAG__DMA ? 'D' : '-',
+                               info.address,
+                               info.size,
+                               info.heap_size,
+                               info.heap_usage,
+                               info.name_ref);
+                }
         }
 
         free(modmem);

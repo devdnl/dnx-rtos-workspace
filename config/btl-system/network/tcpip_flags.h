@@ -606,12 +606,12 @@ this:SetToolTip("TCP_WND: The size of a TCP window (n * TCP_MSS).")
 --*/
 #define __NETWORK_TCP_WND__ 3
 /*--
-this:AddWidget("Spinbox", 0, 50, "TCP_MAXRTX")
+this:AddWidget("Spinbox", 1, 50, "TCP_MAXRTX")
 this:SetToolTip("TCP_MAXRTX: Maximum number of retransmissions of data segments.")
 --*/
 #define __NETWORK_TCP_MAXRTX__ 12
 /*--
-this:AddWidget("Spinbox", 0, 50, "TCP_SYNMAXRTX")
+this:AddWidget("Spinbox", 1, 50, "TCP_SYNMAXRTX")
 this:SetToolTip("TCP_SYNMAXRTX: Maximum number of retransmissions of SYN segments.")
 --*/
 #define __NETWORK_TCP_SYNMAXRTX__ 6
@@ -781,7 +781,7 @@ this:SetToolTip("LWIP_NETIF_LOOPBACK==1: Support sending packets with a destinat
 #define __NETWORK_LWIP_NETIF_LOOPBACK__ 0
 /*--
 this:AddWidget("Spinbox", 1, 1024, "LWIP_LOOPBACK_MAX_PBUFS")
-this:SetToolTip("LWIP_LOOPBACK_MAX_PBUFS: Maximum number of pbufs\non queue for loopback sending for each netif.")
+this:SetToolTip("LWIP_LOOPBACK_MAX_PBUFS: Maximum number of pbufs\non queue for loopback sending for each netif (0 = disabled).")
 --*/
 #define __NETWORK_LWIP_LOOPBACK_MAX_PBUFS__ 32
 

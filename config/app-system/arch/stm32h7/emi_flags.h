@@ -76,7 +76,7 @@ this:AddExtraWidget("Void", "Void_BANK4")
 //------------------------------------------------------------------------------
 /*--
 this:AddExtraWidget("Label", "LABEL_BANK5", "\nBank 5, 6 (SDRAM)", -1, "bold")
-this:AddExtraWidget("Void", "Void_BANK5_6")
+this:AddExtraWidget("Label", "Void_BANK5_6", "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t", -1, "bold")
 ++*/
 /*--
 this:AddWidget("Combobox", "Read pipe delay")
@@ -199,14 +199,10 @@ this:AddWidget("Spinbox", 1, 16, "Row to column delay (tRCD)")
 #define __EMI_SDRAM_1_TRCD__ 2
 
 /*--
-this:AddWidget("Spinbox", 1, 2048, "Heap regions")
+this:AddWidget("Editline", true, "Memory regions")
+this:SetToolTip("Edit memory regions: [HEAP|NOHEAP]=<NAME>:<ADDRESS>:<SIZE>,... Example: HEAP=SDRAM:0xC0000000:8388608")
 --*/
-#define __EMI_SDRAM_1_HEAP_REGIONS__ 1
-
-/*--
-this:AddWidget("Spinbox", 1, 65536, "Heap region size [KiB]")
---*/
-#define __EMI_SDRAM_1_HEAP_REGION_SIZE__ 8192
+#define __EMI_SDRAM_1_REGIONS__ "HEAP=SDRAM:0xC0000000:8388608"
 
 //------------------------------------------------------------------------------
 /*--
@@ -259,14 +255,10 @@ this:AddWidget("Spinbox", 1, 16, "Row to column delay (tRCD)")
 #define __EMI_SDRAM_2_TRCD__ 2
 
 /*--
-this:AddWidget("Spinbox", 1, 2048, "Heap regions")
+this:AddWidget("Editline", true, "Memory regions")
+this:SetToolTip("Edit memory regions: [HEAP|NOHEAP]=<NAME>:<ADDRESS>:<SIZE>,... Example: HEAP=SDRAM:0xC0000000:8388608")
 --*/
-#define __EMI_SDRAM_2_HEAP_REGIONS__ 32
-
-/*--
-this:AddWidget("Spinbox", 1, 65536, "Heap region size [KiB]")
---*/
-#define __EMI_SDRAM_2_HEAP_REGION_SIZE__ 512
+#define __EMI_SDRAM_2_REGIONS__ "HEAP=SDRAM:0xD0000000:8388608"
 
 
 //------------------------------------------------------------------------------
@@ -284,8 +276,7 @@ this.SDRAMEn = function(self, SDRAM)
     this:Enable(en, "__EMI_SDRAM_"..SDRAM.."_NR__")
     this:Enable(en, "__EMI_SDRAM_"..SDRAM.."_NC__")
     this:Enable(en, "__EMI_SDRAM_"..SDRAM.."_TRCD__")
-    this:Enable(en, "__EMI_SDRAM_"..SDRAM.."_HEAP_REGIONS__")
-    this:Enable(en, "__EMI_SDRAM_"..SDRAM.."_HEAP_REGION_SIZE__")
+    this:Enable(en, "__EMI_SDRAM_"..SDRAM.."_REGIONS__")
 end
 
 this:SDRAMEn(1)

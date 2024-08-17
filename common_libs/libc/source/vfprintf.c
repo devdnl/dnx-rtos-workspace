@@ -83,13 +83,18 @@ int vfprintf(FILE *file, const char *format, va_list arg)
         u32_t size = vsnprintf(NULL, 0, format, carg) + 1;
         va_end(carg);
 
-        char *str = calloc(1, size);
-        if (str) {
-                n = vsnprintf(str, size, format, arg);
+        if (size < BUFSIZ) {
+                char str[BUFSIZ];
+                n = vsnprintf(str, sizeof(str), format, arg);
                 fwrite(str, sizeof(char), n, file);
-                int err = errno;
-                free(str);
-                errno = err;
+
+        } else {
+                char *str = malloc(size);
+                if (str) {
+                        n = vsnprintf(str, size, format, arg);
+                        fwrite(str, sizeof(char), n, file);
+                        free(str);
+                }
         }
 
         return n;

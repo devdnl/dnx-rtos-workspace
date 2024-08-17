@@ -187,3 +187,29 @@ void md5_final(MD5_CTX *ctx, BYTE hash[])
 		hash[i + 12] = (ctx->state[3] >> (i * 8)) & 0x000000ff;
 	}
 }
+
+int md5_file(size_t (*read)(void *buf, size_t len, size_t n, void *file), void *file,
+             BYTE *buffer, size_t buffer_len, size_t max_file_size, BYTE hash[])
+{
+        int r = 0;
+
+        MD5_CTX ctx;
+        md5_init(&ctx);
+
+        while (max_file_size > 0) {
+                size_t l = (max_file_size < buffer_len) ? max_file_size : buffer_len;
+                size_t n = read(buffer, 1, l, file);
+                if (n > 0) {
+                        md5_update(&ctx, buffer, n);
+                        r += n;
+                        max_file_size -= n;
+                } else {
+                        break;
+                }
+        }
+
+        md5_final(&ctx, hash);
+
+        return r;
+}
+

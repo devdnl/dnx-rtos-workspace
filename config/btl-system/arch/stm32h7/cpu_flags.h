@@ -288,6 +288,33 @@ __CUSTOM_LD_SCRIPT__=_NO_
 __CUSTOM_LD_SCRIPT_FILE__="custom_script.ld"
 #*/
 
+#/*--
+# this:AddWidget("Editline", false, "Preffered application RAM")
+# this:SetToolTip('Default: "SDRAM", "PSRAM", "SRAM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "DTCM"')
+#--*/
+#define __CPU_PREFFERED_APP_RAM__ "SDRAM", "PSRAM", "SRAM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "DTCM"
+#/*
+__CPU_PREFFERED_APP_RAM__="SDRAM", "PSRAM", "SRAM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "DTCM"
+#*/
+
+#/*--
+# this:AddWidget("Editline", false, "Preffered file systems RAM")
+# this:SetToolTip('Default: "SDRAM", "PSRAM", "SRAM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "DTCM"')
+#--*/
+#define __CPU_PREFFERED_FS_RAM__ "SDRAM", "PSRAM", "SRAM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "DTCM"
+#/*
+__CPU_PREFFERED_FS_RAM__="SDRAM", "PSRAM", "SRAM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "DTCM"
+#*/
+
+#/*--
+# this:AddWidget("Editline", false, "Preffered fast access RAM")
+# this:SetToolTip('Default: "DTCM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "SDRAM", "PSRAM", "SRAM"')
+#--*/
+#define __CPU_PREFFERED_FAST_RAM__ "DTCM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "SDRAM", "PSRAM", "SRAM"
+#/*
+__CPU_PREFFERED_FAST_RAM__="DTCM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "SDRAM", "PSRAM", "SRAM"
+#*/
+
 #//-----------------------------------------------------------------------------
 #// mandatory flags, not configurable
 #//-----------------------------------------------------------------------------
