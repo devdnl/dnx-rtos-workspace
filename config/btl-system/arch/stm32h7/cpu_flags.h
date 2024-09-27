@@ -50,14 +50,14 @@
 #/*-- Flag is set in __CPU_NAME__ event
 # this:AddWidget("Value")
 #--*/
-#define __CPU_SERIES__ _STM32H747xx
+#define __CPU_SERIES__ _STM32H753xx
 
 #/*-- Flag is set in __CPU_NAME__ event
 # this:AddWidget("Value")
 #--*/
-#define __LD_SCRIPT__ STM32H747xIxx
+#define __LD_SCRIPT__ STM32H753xIxx
 #/*
-__LD_SCRIPT__=STM32H747xIxx
+__LD_SCRIPT__=STM32H753xIxx
 #*/
 
 #/*--
@@ -205,9 +205,9 @@ __LD_SCRIPT__=STM32H747xIxx
 #    end
 # )
 #--*/
-#define __CPU_NAME__ STM32H747XIxx
+#define __CPU_NAME__ STM32H753ZIxx
 #/*
-__CPU_NAME__=STM32H747XIxx
+__CPU_NAME__=STM32H753ZIxx
 #*/
 
 #/*
@@ -262,7 +262,7 @@ __CPU_NAME__=STM32H747XIxx
 # this:AddItem("Disable", "_NO_")
 # this:SetToolTip("This option can introduce cache coherency issues!")
 #--*/
-#define __CPU_DCACHE_ENABLE__ _YES_
+#define __CPU_DCACHE_ENABLE__ _NO_
 
 #/*--
 # this:AddWidget("Editline", false, "Interrupt vector position")

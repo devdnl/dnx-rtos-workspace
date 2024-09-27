@@ -114,6 +114,8 @@ int main(int argc, char *argv[])
                 }
 
                 global->shared->reload_conf = true;
+                global->shared->conf_path   = conf_file;
+                global->shared->ready       = true;
 
                 handle_interface(conf_file);
 
@@ -163,20 +165,22 @@ static void handle_interface(const char *config_file)
                 char hwaddr[32];
                 u8_t n = 0;
                 for (size_t i = 0; i < 6; i++) {
-                        n += snprintf(hwaddr + n, sizeof(hwaddr) - n,
-                                "%02X:", rand() & 0xFF);
+                        n += snprintf(hwaddr + n, sizeof(hwaddr) - n, "%02X:", rand() & 0xFF);
                 }
                 hwaddr[n - 1] = '\0';
 
-                conf_parser__set_value(global->conf, "interface.path", "/dev/eth");
-                conf_parser__set_value(global->conf, "interface.hwaddr", hwaddr);
-                conf_parser__set_value(global->conf, "interface.autonegotiation", "true");
-                conf_parser__set_value(global->conf, "interface.speed", "100M");
-                conf_parser__set_value(global->conf, "interface.duplex", "full");
-                conf_parser__set_value(global->conf, "IP.mode", "DHCP");
-                conf_parser__set_value(global->conf, "IP.address", "0.0.0.0");
-                conf_parser__set_value(global->conf, "IP.netmask", "0.0.0.0");
-                conf_parser__set_value(global->conf, "IP.gateway", "0.0.0.0");
+                conf_parser__set_value(global->conf, NETMGR_CONF_KEY__INTERFACE_PATH, "/dev/eth");
+                conf_parser__set_value(global->conf, NETMGR_CONF_KEY__INTERFACE_HWADDR, hwaddr);
+                conf_parser__set_value(global->conf, NETMGR_CONF_KEY__INTERFACE_AUTONEGOTIATION,
+                        NETMGR_CONF_KEY__INTERFACE_AUTONEGOTIATION_ENABLE);
+                conf_parser__set_value(global->conf, NETMGR_CONF_KEY__INTERFACE_SPEED,
+                        NETMGR_CONF_KEY__INTERFACE_SPEED_100M);
+                conf_parser__set_value(global->conf, NETMGR_CONF_KEY__INTERFACE_DUPLEX,
+                        NETMGR_CONF_KEY__INTERFACE_DUPLEX_FULL);
+                conf_parser__set_value(global->conf, NETMGR_CONF_KEY__IP_MODE, NETMGR_CONF_KEY__IP_MODE_DHCP);
+                conf_parser__set_value(global->conf, NETMGR_CONF_KEY__IP_ADDRESS, "0.0.0.0");
+                conf_parser__set_value(global->conf, NETMGR_CONF_KEY__IP_NETMASK, "0.0.0.0");
+                conf_parser__set_value(global->conf, NETMGR_CONF_KEY__IP_GATEWAY, "0.0.0.0");
 
                 conf_parser__set_file_path(global->conf, config_file);
                 conf_parser__save(global->conf);
@@ -223,20 +227,14 @@ static void handle_interface(const char *config_file)
                         case NET_INET_STATE__DHCP_CONFIGURED:
                                 if (last_state != status.state) {
                                         debug("estabilished IP connection.\n");
-                                        debug("Address: %u.%u.%u.%u\n",
-                                                NET_INET_IPv4_a(status.address),
-                                                NET_INET_IPv4_b(status.address),
-                                                NET_INET_IPv4_c(status.address),
+                                        debug("Address: %u.%u.%u.%u\n", NET_INET_IPv4_a(status.address),
+                                                NET_INET_IPv4_b(status.address), NET_INET_IPv4_c(status.address),
                                                 NET_INET_IPv4_d(status.address));
-                                        debug("Mask   : %u.%u.%u.%u\n",
-                                                NET_INET_IPv4_a(status.mask),
-                                                NET_INET_IPv4_b(status.mask),
-                                                NET_INET_IPv4_c(status.mask),
+                                        debug("Mask   : %u.%u.%u.%u\n", NET_INET_IPv4_a(status.mask),
+                                                NET_INET_IPv4_b(status.mask), NET_INET_IPv4_c(status.mask),
                                                 NET_INET_IPv4_d(status.mask));
-                                        debug("Gateway: %u.%u.%u.%u\n",
-                                                NET_INET_IPv4_a(status.gateway),
-                                                NET_INET_IPv4_b(status.gateway),
-                                                NET_INET_IPv4_c(status.gateway),
+                                        debug("Gateway: %u.%u.%u.%u\n", NET_INET_IPv4_a(status.gateway),
+                                                NET_INET_IPv4_b(status.gateway), NET_INET_IPv4_c(status.gateway),
                                                 NET_INET_IPv4_d(status.gateway));
                                 }
                                 break;
@@ -263,31 +261,31 @@ static void handle_interface(const char *config_file)
 //==============================================================================
 static int configure_ethernet(void)
 {
-        const char *conf_mac = conf_parser__get_value(global->conf, "interface.hwaddr");
+        const char *conf_mac = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__INTERFACE_HWADDR);
 
-        const char *conf_autoneg = conf_parser__get_value(global->conf,
-                "interface.autonegotiation");
+        const char *conf_autoneg = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__INTERFACE_AUTONEGOTIATION);
 
-        const char *conf_speed = conf_parser__get_value(global->conf, "interface.speed");
+        const char *conf_speed = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__INTERFACE_SPEED);
 
-        const char *conf_duplex = conf_parser__get_value(global->conf,
-                "interface.duplex");
+        const char *conf_duplex = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__INTERFACE_DUPLEX);
 
-        const char *conf_if_path = conf_parser__get_value(global->conf, "interface.path");
+        const char *conf_if_path = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__INTERFACE_PATH);
 
         ETHIF_config_t conf = {0};
 
-        if (sscanf(conf_mac, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", &conf.MAC[0], &conf.MAC[1],
-                    &conf.MAC[2], &conf.MAC[3], &conf.MAC[4],
-                    &conf.MAC[5]) != ARRAY_SIZE(conf.MAC)) {
+        if (sscanf(conf_mac, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", &conf.MAC[0], &conf.MAC[1], &conf.MAC[2], &conf.MAC[3],
+                    &conf.MAC[4], &conf.MAC[5]) != ARRAY_SIZE(conf.MAC)) {
 
                 debug("%s: invalid MAC address: '%s'\n", conf_if_path, conf_mac);
+
                 return -1;
         }
 
-        conf.auto_negotiation = isstreq(conf_autoneg, "true") ? true : false;
-        conf.speed = isstreq(conf_speed, "100M") ? ETHIF_SPEED__100Mbps : ETHIF_SPEED__10Mbps;
-        conf.duplex = isstreq(conf_duplex, "full") ? ETHIF_DUPLEX__FULL : ETHIF_DUPLEX__HALF;
+        conf.auto_negotiation = conf_parser__is_value_true(conf_autoneg);
+        conf.speed            = isstreq(conf_speed, NETMGR_CONF_KEY__INTERFACE_SPEED_100M) ? ETHIF_SPEED__100Mbps
+                                                                                           : ETHIF_SPEED__10Mbps;
+        conf.duplex           = isstreq(conf_duplex, NETMGR_CONF_KEY__INTERFACE_DUPLEX_FULL) ? ETHIF_DUPLEX__FULL
+                                                                                             : ETHIF_DUPLEX__HALF;
 
         int fd = open(conf_if_path, O_RDWR);
         if (fd >= 0) {
@@ -319,35 +317,35 @@ static int configure_ethernet(void)
 //==============================================================================
 static void ifup_by_config(void)
 {
-        const char *conf_ip_address = conf_parser__get_value(global->conf, "IP.address");
-        const char *conf_ip_gateway = conf_parser__get_value(global->conf, "IP.gateway");
-        const char *conf_ip_netmask = conf_parser__get_value(global->conf, "IP.netmask");
-        const char *conf_ip_mode    = conf_parser__get_value(global->conf, "IP.mode");
+        const char *conf_ip_address = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__IP_ADDRESS);
+        const char *conf_ip_gateway = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__IP_GATEWAY);
+        const char *conf_ip_netmask = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__IP_NETMASK);
+        const char *conf_ip_mode    = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__IP_MODE);
 
         bool dhcp_enable = true;
-        if (isstreq(conf_ip_mode, "DHCP")) {
+        if (isstreq(conf_ip_mode, NETMGR_CONF_KEY__IP_MODE_DHCP)) {
                 dhcp_enable = true;
-        } else if (isstreq(conf_ip_mode, "static")) {
+        } else if (isstreq(conf_ip_mode, NETMGR_CONF_KEY__IP_MODE_STATIC)) {
                 dhcp_enable = false;
         } else {
                 debug("unknown mode value: '%s', used DHCP\n", conf_ip_mode);
         }
 
         u8_t ip_address[4];
-        if (sscanf(conf_ip_address, "%hhu.%hhu.%hhu.%hhu", &ip_address[0], &ip_address[1],
-                    &ip_address[2], &ip_address[3]) != ARRAY_SIZE(ip_address)) {
+        if (sscanf(conf_ip_address, "%hhu.%hhu.%hhu.%hhu", &ip_address[0], &ip_address[1], &ip_address[2],
+                    &ip_address[3]) != ARRAY_SIZE(ip_address)) {
                 debug("invalid ip address: '%s', used DHCP\n", conf_ip_address);
         }
 
         u8_t ip_gateway[4];
-        if (sscanf(conf_ip_gateway, "%hhu.%hhu.%hhu.%hhu", &ip_gateway[0], &ip_gateway[1],
-                    &ip_gateway[2], &ip_gateway[3]) != ARRAY_SIZE(ip_gateway)) {
+        if (sscanf(conf_ip_gateway, "%hhu.%hhu.%hhu.%hhu", &ip_gateway[0], &ip_gateway[1], &ip_gateway[2],
+                    &ip_gateway[3]) != ARRAY_SIZE(ip_gateway)) {
                 debug("invalid ip address: '%s', used DHCP\n", conf_ip_gateway);
         }
 
         u8_t ip_netmask[4];
-        if (sscanf(conf_ip_netmask, "%hhu.%hhu.%hhu.%hhu", &ip_netmask[0], &ip_netmask[1],
-                    &ip_netmask[2], &ip_netmask[3]) != ARRAY_SIZE(ip_netmask)) {
+        if (sscanf(conf_ip_netmask, "%hhu.%hhu.%hhu.%hhu", &ip_netmask[0], &ip_netmask[1], &ip_netmask[2],
+                    &ip_netmask[3]) != ARRAY_SIZE(ip_netmask)) {
                 debug("invalid ip address: '%s', used DHCP\n", conf_ip_netmask);
         }
 
@@ -363,12 +361,9 @@ static void ifup_by_config(void)
         } else {
                 debug("applying static configuration...\n");
                 netcfg.mode    = NET_INET_MODE__STATIC;
-                netcfg.address = NET_INET_IPv4(ip_address[0], ip_address[1],
-                        ip_address[2], ip_address[3]);
-                netcfg.mask = NET_INET_IPv4(ip_netmask[0], ip_netmask[1], ip_netmask[2],
-                        ip_netmask[3]);
-                netcfg.gateway = NET_INET_IPv4(ip_gateway[0], ip_gateway[1],
-                        ip_gateway[2], ip_gateway[3]);
+                netcfg.address = NET_INET_IPv4(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
+                netcfg.mask    = NET_INET_IPv4(ip_netmask[0], ip_netmask[1], ip_netmask[2], ip_netmask[3]);
+                netcfg.gateway = NET_INET_IPv4(ip_gateway[0], ip_gateway[1], ip_gateway[2], ip_gateway[3]);
         }
 
         if (ifup("inet", &netcfg, sizeof(netcfg)) != 0) {

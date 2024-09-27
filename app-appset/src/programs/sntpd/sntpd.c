@@ -330,8 +330,8 @@ static int get_SNTP_host_IP(bool once, int argc, char *argv[])
                                        argv[global->current_host_arg],
                                        &global->server, sizeof(global->server)))) {
 
-                fprintf(stderr, "[sntpd %d] %s: no host\n",
-                        clock() / CLOCKS_PER_SEC,
+                fprintf(stderr, "[sntpd %lu] %s: no host\n",
+                        cast(u32_t, clock() / CLOCKS_PER_SEC),
                         argv[global->current_host_arg]);
 
                 select_next_host(argc);
@@ -435,14 +435,20 @@ static void set_timezone(int argc, char *argv[])
                                         errno = 0;
                                         n = socket_read(socket, buf, buf_len - 1);
                                         if (n <= 0) {
-                                                perror("Response");
+                                                fprintf(stderr, "[sntpd %lu] tz response: %s\n",
+                                                        cast(u32_t, clock() / CLOCKS_PER_SEC),
+                                                        strerror(errno));
                                         }
                                 } else {
-                                        perror("Request");
+                                        fprintf(stderr, "[sntpd %lu] tz request: %s\n",
+                                                cast(u32_t, clock() / CLOCKS_PER_SEC),
+                                                strerror(errno));
                                 }
 
                         } else {
-                                perror("Timezone");
+                                fprintf(stderr, "[sntpd %lu] tz connect: %s\n",
+                                        cast(u32_t, clock() / CLOCKS_PER_SEC),
+                                        strerror(errno));
                         }
 
                         bool dst = strstr(buf, "\"dst\":true");

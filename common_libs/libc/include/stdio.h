@@ -236,6 +236,14 @@ extern "C" {
         static int __main(int argc, char *argv[]);\
         _PROGMAN_CXX const size_t __builtin_app_##_name_##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
         _PROGMAN_CXX const size_t __builtin_app_##_name_##_ss__ = stack_depth;\
+        _PROGMAN_CXX const char *const *const __builtin_app_##_name_##_pref_ram__ = NULL;\
+        _PROGMAN_CXX int __builtin_app_##_name_##_main(int argc, char *argv[]) {return __main(argc, argv);}
+
+#define PROGRAM_PARAMS_EXTENDED(_name_, stack_depth, preffered_app_ram)\
+        static int __main(int argc, char *argv[]);\
+        _PROGMAN_CXX const size_t __builtin_app_##_name_##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
+        _PROGMAN_CXX const size_t __builtin_app_##_name_##_ss__ = stack_depth;\
+        _PROGMAN_CXX const char *const *const __builtin_app_##_name_##_pref_ram__ = preffered_app_ram;\
         _PROGMAN_CXX int __builtin_app_##_name_##_main(int argc, char *argv[]) {return __main(argc, argv);}
 
 #define stdin  (((_libc_app_ctx_t*)(_libc_appctx_get()))->_stdin)
