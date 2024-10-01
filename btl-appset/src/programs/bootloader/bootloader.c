@@ -56,6 +56,7 @@
 #define PATH_APP_FLASH        "/dev/app-flash"
 #define PATH_APP_QSPI         "/dev/app-qspi"
 #define FPKG_SECTION_MANIFEST "/manifest"
+#define SECTOR_SIZE           128 * 1024
 
 /*==============================================================================
   Local types, enums definitions
@@ -296,7 +297,7 @@ static void show_kernel_panic_message(void)
         if (get_kernel_panic_info(&info)) {
 
                 printf(VT100_FONT_COLOR_RED);
-                printf("*** %s ***\n", info.kernel_panic ? "KERNEL PANIC" : "APP CRACH");
+                printf("*** %s ***\n", info.kernel_panic ? "KERNEL PANIC" : "APP CRASH");
                 printf("  Cause: %s (%d)\n", info.cause_str, info.cause);
                 printf("  PID  : %u (%.*s)\n", info.pid, 256, info.name);
                 printf("  TID  : %u\n", info.tid);
@@ -393,9 +394,9 @@ static void print_system_log_messages(void)
 /**
  * @brief  Extract selected file from FPKG package.
  *
- * @param  fpkg         fpkg instance
+ * @param  fpkg         FPKG instance
  * @param  file_src     file source path
- * @param  file_dst     file destination path
+ * @param  file_dest    file destination path
  *
  * @return On success 0 is returned.
  */
@@ -646,12 +647,14 @@ static int tcl_flash_erase(struct tcl *tcl, tcl_value_t *args, void *ctx)
 
         scope (FILE *nor = fopen(PATH_APP_FLASH, "r+"), nor, fclose(nor)) {
 
-                const size_t sector_size      = 128 * 1024;
+                const size_t sector_size      = SECTOR_SIZE;
                 const size_t sectors_to_erase = CEILING(size, sector_size);
+                const size_t first_sector     = address / sector_size;
+                const size_t last_sector      = first_sector + sectors_to_erase;
 
-                for (size_t n = address / sector_size; n < sectors_to_erase; n++) {
+                for (size_t n = first_sector; n <= last_sector; n++) {
 
-                        printf("Flash: erasing %d%%\n", (n * 100) / sectors_to_erase);
+                        printf("Flash: erasing %d%%\n", ((n - first_sector) * 100) / sectors_to_erase);
 
                         errno = 0;
                         err   = ioctl(fileno(nor), IOCTL_NVM__SECTOR_ERASE,
@@ -864,13 +867,17 @@ static int tcl_extract(struct tcl *tcl, tcl_value_t *args, void *ctx)
 //==============================================================================
 static void start_application(void)
 {
-        printf("Starting application...\n");
+        printf("Starting application at address %08lxh...\n", APP_BASE_ADDRESS);
         msleep(250);
 
         uint32_t *vect_table = cast(uint32_t *, APP_BASE_ADDRESS);
 
         if (vect_table[1] == 0xFFFFFFFF) {
                 printf("No application in flash memory!\n");
+                while (true) {
+                        // action here
+                        sleep(1);
+                }
         }
 
         system_reboot_to_address(vect_table[1]);
@@ -924,6 +931,7 @@ int main(int argc, char *argv[])
 
                 tcl_destroy(&tcl);
 
+                remove(PATH_UPDATE_FILE ".bak");
                 rename(PATH_UPDATE_FILE, PATH_UPDATE_FILE ".bak");
         }
 
