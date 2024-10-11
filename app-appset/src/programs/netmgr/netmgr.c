@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
         if (isstreq(option, "--daemon")) {
 
                 if (not conf_file) {
-                        debug("not config file path!\n", option);
+                        debug("no config file path given!\n", option);
                         return EXIT_FAILURE;
                 }
 
