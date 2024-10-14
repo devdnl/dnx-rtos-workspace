@@ -1,0 +1,47 @@
+---
+BasedOnStyle: WebKit
+AccessModifierOffset: -8
+AlignConsecutiveAssignments:
+  Enabled: true
+AlignConsecutiveBitFields:
+  Enabled: true
+AlignConsecutiveDeclarations:
+  Enabled: true
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: false
+AlignTrailingComments:
+  Kind: Always
+AlignEscapedNewlines: Left
+AllowAllArgumentsOnNextLine: false
+AllowAllConstructorInitializersOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+BreakBeforeBinaryOperators: None
+BitFieldColonSpacing: Before
+PenaltyBreakAssignment: 1000
+InsertNewlineAtEOF: true
+ColumnLimit: 90
+ConstructorInitializerIndentWidth: 8
+ContinuationIndentWidth: 8
+Cpp11BracedListStyle: true
+ForEachMacros:
+  - foreach
+  - GLOBAL_VARIABLES_SECTION
+  - foreach_temp_name_to_id
+  - llist_foreach
+  - llist_foreach_reverse
+  - mutex_scope
+  - scope
+  - ATOMIC
+  - foreach_process
+  - foreach_resource
+IndentWidth: 8
+InsertBraces: true
+ObjCBlockIndentWidth: 8
+PointerAlignment: Right
+SpaceInEmptyBlock: false
+SortIncludes: Never

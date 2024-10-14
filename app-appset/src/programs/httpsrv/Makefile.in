@@ -1,0 +1,6 @@
+# Makefile for GNU make
+
+CSRC_PROGRAMS   += httpsrv/httpsrv.c
+CSRC_PROGRAMS   += httpsrv/interpreter.c
+CXXSRC_PROGRAMS += 
+HDRLOC_PROGRAMS += 
