@@ -1053,11 +1053,30 @@ static int serve(void *arg)
 //==============================================================================
 int main(int argc, char *argv[])
 {
+        bool wait_for_network = false;
+
         for (int i = 1; i < argc; i++) {
                 if (isstreq(argv[i], "-v")) {
                         global->verbose = true;
                 } else if (isstreq(argv[i], "-c")) {
 //                        chdir(argv[i+1]);
+                } else if (isstreq(argv[i], "--wait-for-network")) {
+                        wait_for_network = true;
+                }
+        }
+
+        while (wait_for_network) {
+                sleep(1);
+
+                NET_family_t      family;
+                NET_INET_status_t status;
+                if (ifstatus("inet", &family, &status, sizeof(status)) == 0) {
+
+                        if ((status.state == NET_INET_STATE__DHCP_CONFIGURED) or
+                                (status.state == NET_INET_STATE__STATIC_IP)) {
+
+                                break;
+                        }
                 }
         }
 

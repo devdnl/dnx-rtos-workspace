@@ -365,7 +365,7 @@ generate :
 	@$(ECHO) "Obtaining git hash..."
 	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" > build/defs.h
 	@$(ECHO) "#define BRANCH_NAME \"$(shell git symbolic-ref --short HEAD 2>/dev/null)"\" >> build/defs.h
-	@$(ECHO) "#define BUILD_TIME \"$(shell date)\"" >> build/defs.h
+	@$(ECHO) "#define BUILD_TIME \"$(shell date '+%F, %T')\"" >> build/defs.h
 
 ####################################################################################################
 # Start all generators

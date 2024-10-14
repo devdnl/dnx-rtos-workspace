@@ -439,28 +439,28 @@ typedef struct {
 ------------------------------------------------------------------------------*/
 /** UDS network state. */
 typedef enum {
-        NETM_UDS_STATE__DOWN, //!< Network not configured.
-        NETM_UDS_STATE__UP,   //!< Network configured.
-} NETM_UDS_state_t;
+        NET_UDS_STATE__DOWN, //!< Network not configured.
+        NET_UDS_STATE__UP,   //!< Network configured.
+} NET_UDS_state_t;
 
 /** UDS configuration. */
 typedef struct {
         u32_t stub;
-} NETM_UDS_config_t;
+} NET_UDS_config_t;
 
 /** UDS status. */
 typedef struct {
-        NETM_UDS_state_t state;      /*!< Connection state.*/
-        u64_t            tx_bytes;   /*!< Number of transmitted bytes.*/
-        u64_t            rx_bytes;   /*!< Number of received bytes.*/
-        u64_t            tx_packets; /*!< Number of transmitted packets.*/
-        u64_t            rx_packets; /*!< Number of received packets.*/
-} NETM_UDS_status_t;
+        NET_UDS_state_t state;      /*!< Connection state.*/
+        u64_t           tx_bytes;   /*!< Number of transmitted bytes.*/
+        u64_t           rx_bytes;   /*!< Number of received bytes.*/
+        u64_t           tx_packets; /*!< Number of transmitted packets.*/
+        u64_t           rx_packets; /*!< Number of received packets.*/
+} NET_UDS_status_t;
 
 /** UDS socket address. */
 typedef struct {
         char path[64];
-} NETM_UDS_sockaddr_t;
+} NET_UDS_sockaddr_t;
 
 /*==============================================================================
   Exported objects

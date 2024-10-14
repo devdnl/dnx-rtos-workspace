@@ -73,6 +73,22 @@ typedef enum {
         bs_err_exist,
 } bs_err_t;
 
+typedef enum {
+        bs_type__bool,
+        bs_type__int8_t,
+        bs_type__uint8_t,
+        bs_type__int16_t,
+        bs_type__uint16_t,
+        bs_type__int32_t,
+        bs_type__uint32_t,
+        bs_type__int64_t,
+        bs_type__uint64_t,
+        bs_type__float,
+        bs_type__double,
+        bs_type__string,
+        bs_type__blob,
+} bs_type_t;
+
 /*==============================================================================
   Exported objects
 ==============================================================================*/
@@ -97,6 +113,8 @@ extern double      bs_get_double(bs_rd_t *self, const char *key, double df, int 
 extern bool        bs_get_bool(bs_rd_t *self, const char *key, bool df, int *err);
 extern const char *bs_get_str(bs_rd_t *self, const char *key, const char *df, int *err);
 extern const void *bs_get_blob(bs_rd_t *self, const char *key, size_t *len, int *err);
+extern int         bs_get_next(bs_rd_t *self, uint8_t **next, const char **key,
+        const void **value, bs_type_t *type);
 
 /*
  * Write methods.

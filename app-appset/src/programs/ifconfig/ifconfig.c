@@ -60,7 +60,7 @@ GLOBAL_VARIABLES_SECTION {
                 NET_INET_status_t   inet;
                 NET_SIPC_status_t   sipc;
                 NET_CANNET_status_t cannet;
-                NETM_UDS_status_t   uds;
+                NET_UDS_status_t    uds;
         } status;
 };
 
