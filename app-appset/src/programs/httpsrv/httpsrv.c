@@ -26,7 +26,7 @@
 
 ==============================================================================*/
 
-#pragma GCC optimize("Og")
+//#pragma GCC optimize("Og")
 
 /*==============================================================================
   Include files
@@ -46,7 +46,8 @@
 ==============================================================================*/
 static int  handle_http(void *arg);
 static void strtolower(char *string);
-static int  send_file(httpsrv_thread_t *self, const char *content_type, const char *path);
+static int  send_file(httpsrv_thread_t *self, const char *content_type, u32_t cache_time,
+         const char *path);
 static int  socket_receive_stream(SOCKET *socket, void *buf, size_t len);
 static int  parser_on_url(http_parser *parser, const char *at, size_t length);
 static int  parser_header_field(http_parser *parser, const char *at, size_t length);
@@ -221,12 +222,14 @@ cleanup:
  *
  * @param  self         thread instance
  * @param  content_type content type and status
+ * @param  cach_time    browser cache time in seconds, 0 for disable
  * @param  path         file path
  *
  * @return Number of send bytes, or -1 on error.
  */
 //==============================================================================
-static int send_file(httpsrv_thread_t *self, const char *content_type, const char *path)
+static int send_file(httpsrv_thread_t *self, const char *content_type, u32_t cache_time,
+        const char *path)
 {
         int fd = open(path, O_RDONLY);
         if (fd == -1) {
@@ -236,12 +239,28 @@ static int send_file(httpsrv_thread_t *self, const char *content_type, const cha
 
         int sent = 0;
 
+        if (cache_time > 0) {
+                char   cache_control[64];
+                size_t cache_control_len = snprintf(cache_control, sizeof(cache_control),
+                        "Cache-Control: max-age=%lu\r\n", cache_time);
+
+                errno = 0;
+                if (socket_send(self->http_request.socket, cache_control,
+                            cache_control_len,
+                            NET_FLAGS__MORE) == cast(int, cache_control_len)) {
+                        sent += cache_control_len;
+                } else {
+                        VERBOSE("cache-control write error: %s\n", strerror(errno));
+                        sent = -1;
+                }
+        }
+
         size_t content_type_len = strlen(content_type);
         if (content_type_len) {
                 errno = 0;
-                if (socket_write(self->http_request.socket, content_type,
-                            content_type_len) == cast(int, content_type_len)) {
-                        sent = content_type_len;
+                if (socket_send(self->http_request.socket, content_type, content_type_len,
+                            NET_FLAGS__MORE) == cast(int, content_type_len)) {
+                        sent += content_type_len;
                 } else {
                         VERBOSE("file '%s' content type write error: %s\n",
                                 strerror(errno));
@@ -261,9 +280,14 @@ static int send_file(httpsrv_thread_t *self, const char *content_type, const cha
                         break;
 
                 } else {
+                        u32_t flags = 0;
+                        if (n == sizeof(self->http_request.buf)) {
+                                flags = NET_FLAGS__MORE;
+                        }
+
                         errno = 0;
-                        int m = socket_write(self->http_request.socket,
-                                self->http_request.buf, n);
+                        int m = socket_send(self->http_request.socket,
+                                self->http_request.buf, n, flags);
                         if (m != n) {
                                 VERBOSE("file '%s' socket write error: %s\n", path,
                                         strerror(errno));
@@ -957,42 +981,46 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
         }
 
         if (isstreq(url, HTTPSRV_PAGE_NOT_FOUND)) {
-                socket_write(http->socket, HTTP_STATUS_404_NOT_FOUND,
-                        strlen(HTTP_STATUS_404_NOT_FOUND));
+                socket_send(http->socket, HTTP_STATUS_404_NOT_FOUND,
+                        strlen(HTTP_STATUS_404_NOT_FOUND), NET_FLAGS__MORE);
 
         } else {
-                socket_write(http->socket, HTTP_STATUS_200_OK,
-                        strlen(HTTP_STATUS_200_OK));
+                socket_send(http->socket, HTTP_STATUS_200_OK, strlen(HTTP_STATUS_200_OK),
+                        NET_FLAGS__MORE);
         }
 
         const char *ext = strrchr(url, '.');
         if (isstreq(ext, ".html")) {
-                socket_write(http->socket, HTTP_CONTENT_TYPE_TEXT_HTML,
-                        strlen(HTTP_CONTENT_TYPE_TEXT_HTML));
+                socket_send(http->socket, HTTP_CONTENT_TYPE_TEXT_HTML,
+                        strlen(HTTP_CONTENT_TYPE_TEXT_HTML), NET_FLAGS__MORE);
 
         } else if (isstreq(ext, ".png")) {
-                if (send_file(self, HTTP_CONTENT_TYPE_IMAGE_PNG, file_path) >= 0) {
+                if (send_file(self, HTTP_CONTENT_TYPE_IMAGE_PNG,
+                            HTTPSRV_CACHE_TIME_FOR_PNG, file_path) >= 0) {
                         return 0;
                 } else {
                         return 1;
                 }
 
         } else if (isstreq(ext, ".jpg") or isstreq(ext, ".jpeg")) {
-                if (send_file(self, HTTP_CONTENT_TYPE_IMAGE_JPEG, file_path) >= 0) {
+                if (send_file(self, HTTP_CONTENT_TYPE_IMAGE_JPEG,
+                            HTTPSRV_CACHE_TIME_FOR_JPEG, file_path) >= 0) {
                         return 0;
                 } else {
                         return 1;
                 }
 
         } else if (isstreq(ext, ".css")) {
-                if (send_file(self, HTTP_CONTENT_TYPE_TEXT_CSS, file_path) >= 0) {
+                if (send_file(self, HTTP_CONTENT_TYPE_TEXT_CSS,
+                            HTTPSRV_CACHE_TIME_FOR_CSS, file_path) >= 0) {
                         return 0;
                 } else {
                         return 1;
                 }
 
         } else if (isstreq(ext, ".ico")) {
-                if (send_file(self, HTTP_CONTENT_TYPE_IMAGE_ICO, file_path) >= 0) {
+                if (send_file(self, HTTP_CONTENT_TYPE_IMAGE_ICO,
+                            HTTPSRV_CACHE_TIME_FOR_ICO, file_path) >= 0) {
                         return 0;
                 } else {
                         return 1;
@@ -1000,15 +1028,16 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
 
         } else if (isstreq(ext, HTTPSRV_SCRIPT_EXTENSION)) {
 
-                socket_write(http->socket, HTTP_CONTENT_TYPE_TEXT_HTML,
-                        strlen(HTTP_CONTENT_TYPE_TEXT_HTML));
+                socket_send(http->socket, HTTP_CONTENT_TYPE_TEXT_HTML,
+                        strlen(HTTP_CONTENT_TYPE_TEXT_HTML), NET_FLAGS__MORE);
 
                 if (httpsrv_interpreter_dofile(self, file_path) != 0) {
                         VERBOSE("script execute error:\n");
                         VERBOSE("%s\n", inter->script.code_buf);
 
                         const char *msg = "<font color='red'><b>SCRIPT ERROR</b></font>";
-                        socket_write(self->http_request.socket, msg, strlen(msg));
+                        socket_send(self->http_request.socket, msg, strlen(msg),
+                                NET_FLAGS__MORE);
 
                         return 1;
                 } else {
@@ -1016,7 +1045,7 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
                 }
 
         } else {
-                if (send_file(self, HTTP_CONTENT_TYPE_TEXT_TEXT, file_path) >= 0) {
+                if (send_file(self, HTTP_CONTENT_TYPE_TEXT_TEXT, 0, file_path) >= 0) {
                         return 0;
                 } else {
                         return 1;
@@ -1083,8 +1112,9 @@ static int execute_extract_script(httpsrv_thread_t *self, char c)
 
                 if (inter->script.code_len >= sizeof(inter->script.code_buf)) {
                         errno = 0;
-                        int n = socket_write(self->http_request.socket,
-                                inter->script.code_buf, inter->script.code_len);
+                        int n = socket_send(self->http_request.socket,
+                                inter->script.code_buf, inter->script.code_len,
+                                NET_FLAGS__MORE);
 
                         if (n != cast(int, inter->script.code_len)) {
                                 int err = errno;
@@ -1117,8 +1147,9 @@ static int execute_extract_script(httpsrv_thread_t *self, char c)
 
                 if (inter->script.code_len) {
                         errno = 0;
-                        int n = socket_write(self->http_request.socket,
-                                inter->script.code_buf, inter->script.code_len);
+                        int n = socket_send(self->http_request.socket,
+                                inter->script.code_buf, inter->script.code_len,
+                                NET_FLAGS__MORE);
 
                         if (n != cast(int, inter->script.code_len)) {
                                 int err = errno;
@@ -1146,7 +1177,8 @@ static int execute_extract_script(httpsrv_thread_t *self, char c)
                                 VERBOSE("%s\n", inter->script.code_buf);
 
                                 const char *msg = "<font color='red'><b>ERROR</b></font>";
-                                socket_write(self->http_request.socket, msg, strlen(msg));
+                                socket_send(self->http_request.socket, msg, strlen(msg),
+                                        NET_FLAGS__MORE);
                         }
 
                         inter->script.code_len = 0;

@@ -26,7 +26,7 @@
 
 ==============================================================================*/
 
-#pragma GCC optimize("Og")
+//#pragma GCC optimize("Og")
 
 /*==============================================================================
   Include files
@@ -106,6 +106,9 @@ int httpsrv_interpreter_init(httpsrv_thread_t *self)
 
         lua_pushlightuserdata(L, self);
         lua_setglobal(L, "_self");
+
+        lua_pushstring(L, HTTPSRV_ROOT_DIR);
+        lua_setglobal(L, "root_dir");
 
         luaL_openlibs(L);
 
@@ -290,7 +293,8 @@ static int luafn_echo(lua_State *L)
                 lua_pop(L, 1);
         }
 
-        socket_write(self->http_request.socket, self->interpreter.output.buf, len);
+        socket_send(self->http_request.socket, self->interpreter.output.buf, len,
+                NET_FLAGS__COPY | NET_FLAGS__MORE);
 
         return 0;
 }
@@ -381,7 +385,6 @@ static int luafn_ipc_request(lua_State *L)
                 }
 
                 const char *key = lua_tostring(L, -1);
-
 
                 if (lua_isinteger(L, -2)) {
                         bs_set_int32_t(&bs_wr, key, lua_tointeger(L, -2));

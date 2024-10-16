@@ -73,6 +73,10 @@ extern "C" {
 #define HTTPSRV_INTERPRETER_OUTPUT_BUFFER_SIZE 1024
 #define HTTPSRV_HTTP_PARSER_BUFFER_SIZE        8192
 #define HTTPSRV_PORT                           8080
+#define HTTPSRV_CACHE_TIME_FOR_JPEG            300
+#define HTTPSRV_CACHE_TIME_FOR_PNG             300
+#define HTTPSRV_CACHE_TIME_FOR_ICO             300
+#define HTTPSRV_CACHE_TIME_FOR_CSS             5
 #define HTTPSRV_DEFAULT_PAGE                   "index.html"
 #define HTTPSRV_PAGE_NOT_FOUND                 "404.html"
 #define HTTPSRV_ROOT_DIR                       "/mmc/srv2"
