@@ -26,7 +26,7 @@
 
 ==============================================================================*/
 
-//#pragma GCC optimize("Og")
+// #pragma GCC optimize("Og")
 
 /*==============================================================================
   Include files
@@ -208,24 +208,22 @@ static void parse_params_to_lua_table(httpsrv_thread_t *self, const char *params
         while (params and (*params != '\0')) {
                 const char *key_begin = params;
                 const char *key_end   = strchr(key_begin, '=');
-                size_t key_len = cast(uintptr_t, key_end) - cast(uintptr_t, key_begin) +
-                        1;
+                size_t      key_len   = cast(uintptr_t, key_end) - cast(uintptr_t, key_begin) + 1;
 
                 const char *val_begin = key_end + 1;
                 const char *val_end   = strchr(val_begin, '&');
                 if (not val_end) {
                         val_end = val_begin + strlen(val_begin);
                 }
-                size_t val_len = cast(uintptr_t, val_end) - cast(uintptr_t, val_begin) +
-                        1;
+                size_t val_len = cast(uintptr_t, val_end) - cast(uintptr_t, val_begin) + 1;
 
-                strlcpy(self->interpreter.output.buf, val_begin,
-                        min(val_len, sizeof(self->interpreter.output.buf)));
-                lua_pushstring(L, self->interpreter.output.buf);
+                strlcpy(self->interpreter.tmp_buf, val_begin,
+                        min(val_len, sizeof(self->interpreter.tmp_buf)));
+                lua_pushstring(L, self->interpreter.tmp_buf);
 
-                strlcpy(self->interpreter.output.buf, key_begin,
-                        min(key_len, sizeof(self->interpreter.output.buf)));
-                lua_setfield(L, -2, self->interpreter.output.buf);
+                strlcpy(self->interpreter.tmp_buf, key_begin,
+                        min(key_len, sizeof(self->interpreter.tmp_buf)));
+                lua_setfield(L, -2, self->interpreter.tmp_buf);
 
                 if (*val_end == '&') {
                         params = val_end + 1;
@@ -285,16 +283,12 @@ static int luafn_echo(lua_State *L)
                 size_t      l;
                 const char *s = luaL_tolstring(L, i, &l);
 
-                strncpy(&self->interpreter.output.buf[len], s,
-                        min(sizeof(self->interpreter.output.buf) - len, l));
+                httpsrv_send(self, s, l, false);
 
                 len += l;
 
                 lua_pop(L, 1);
         }
-
-        socket_send(self->http_request.socket, self->interpreter.output.buf, len,
-                NET_FLAGS__COPY | NET_FLAGS__MORE);
 
         return 0;
 }
@@ -343,7 +337,7 @@ static int luafn_request_data(lua_State *L)
                 parse_params_to_lua_table(self, self->http_request.header.get_ref);
 
         } else if (self->http_request.parser.method == HTTP_POST) {
-                parse_params_to_lua_table(self, self->http_request.header.body_data);
+                parse_params_to_lua_table(self, self->http_request.header.body_data.value);
         }
 
         return 1;
@@ -369,8 +363,8 @@ static int luafn_ipc_request(lua_State *L)
          * Compose request. Lua table -> bs
          */
         bs_wr_t bs_wr;
-        bs_write_chunk(&bs_wr, cast(u8_t *, self->interpreter.output.buf),
-                sizeof(self->interpreter.output.buf));
+        bs_write_chunk(&bs_wr, cast(u8_t *, self->interpreter.tmp_buf),
+                sizeof(self->interpreter.tmp_buf));
 
         lua_pushvalue(L, -1);
 
@@ -434,8 +428,8 @@ static int luafn_ipc_request(lua_State *L)
         NET_UDS_sockaddr_t server_addr;
         strlcpy(server_addr.path, address, sizeof(server_addr.path));
         errno = 0;
-        if (socket_sendto(socket, self->interpreter.output.buf, chunk_len, 0,
-                    &server_addr, sizeof(server_addr)) != chunk_len) {
+        if (socket_sendto(socket, self->interpreter.tmp_buf, chunk_len, 0, &server_addr,
+                    sizeof(server_addr)) != chunk_len) {
                 lua_pushnumber(L, errno);
                 lua_pushnil(L);
                 socket_close(socket);
@@ -443,9 +437,8 @@ static int luafn_ipc_request(lua_State *L)
         }
 
         errno = 0;
-        int n = socket_recvfrom(socket, self->interpreter.output.buf,
-                sizeof(self->interpreter.output.buf), 0, &server_addr,
-                sizeof(server_addr));
+        int n = socket_recvfrom(socket, self->interpreter.tmp_buf, sizeof(self->interpreter.tmp_buf), 0,
+                &server_addr, sizeof(server_addr));
         if (n <= 0) {
                 lua_pushnumber(L, errno);
                 lua_pushnil(L);
@@ -462,7 +455,7 @@ static int luafn_ipc_request(lua_State *L)
         lua_newtable(L);
 
         bs_rd_t bs_rd;
-        bs_read_chunk(&bs_rd, cast(uint8_t *, self->interpreter.output.buf), n);
+        bs_read_chunk(&bs_rd, cast(uint8_t *, self->interpreter.tmp_buf), n);
 
         uint8_t    *next = NULL;
         const char *key;

@@ -66,23 +66,25 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define HTTPSRV_DEBUG_ON                       0
-#define HTTPSRV_MULTIPART_BUFFER_SIZE          (256 * 1024)
-#define HTTPSRV_INTERPRETER_FETCH_BUFFER_SIZE  4096
-#define HTTPSRV_INTERPRETER_CODE_BUFFER_SIZE   8192
-#define HTTPSRV_INTERPRETER_OUTPUT_BUFFER_SIZE 1024
-#define HTTPSRV_HTTP_PARSER_BUFFER_SIZE        8192
-#define HTTPSRV_PORT                           8080
-#define HTTPSRV_CACHE_TIME_FOR_JPEG            300
-#define HTTPSRV_CACHE_TIME_FOR_PNG             300
-#define HTTPSRV_CACHE_TIME_FOR_ICO             300
-#define HTTPSRV_CACHE_TIME_FOR_CSS             5
-#define HTTPSRV_DEFAULT_PAGE                   "index.html"
-#define HTTPSRV_PAGE_NOT_FOUND                 "404.html"
-#define HTTPSRV_ROOT_DIR                       "/mmc/srv2"
-#define HTTPSRV_UPLOAD_DIR                     "/mmc/srv2/upload"
-#define HTTPSRV_SCRIPT_BEGIN_TOKEN             "<?lua"
-#define HTTPSRV_SCRIPT_EXTENSION               ".lua"
+#define HTTPSRV_DEBUG_ON                      0
+#define HTTPSRV_MULTIPART_BUFFER_SIZE         (256 * 1024)
+#define HTTPSRV_INTERPRETER_FETCH_BUFFER_SIZE 8192
+#define HTTPSRV_INTERPRETER_CODE_BUFFER_SIZE  8192
+#define HTTPSRV_INTERPRETER_TMP_BUFFER_SIZE   1024
+#define HTTPSRV_OUTPUT_BUFFER_SIZE            (4*1500)
+#define HTTPSRV_HTTP_PARSER_BUFFER_SIZE       2048
+#define HTTPSRV_ALLOC_SIZE                    1024
+#define HTTPSRV_PORT                          80
+#define HTTPSRV_CACHE_TIME_FOR_JPEG           300
+#define HTTPSRV_CACHE_TIME_FOR_PNG            300
+#define HTTPSRV_CACHE_TIME_FOR_ICO            300
+#define HTTPSRV_CACHE_TIME_FOR_CSS            300
+#define HTTPSRV_DEFAULT_PAGE                  "information.html"
+#define HTTPSRV_PAGE_NOT_FOUND                "404.html"
+#define HTTPSRV_ROOT_DIR                      "/mmc/srv"
+#define HTTPSRV_UPLOAD_DIR                    "/mmc/srv/upload"
+#define HTTPSRV_SCRIPT_BEGIN_TOKEN            "<?lua"
+#define HTTPSRV_SCRIPT_EXTENSION              ".lua"
 
 #undef global
 #define global cast(struct httpsrv_globals *, _getglobal)
@@ -103,6 +105,19 @@ typedef enum {
 } httpsrv_content_type_t;
 
 typedef struct {
+        char  *value;
+        size_t value_length;
+        size_t alloc_length;
+} httpsrv_chunk_t;
+
+typedef struct {
+        SOCKET *socket;
+
+        struct {
+                char   buf[HTTPSRV_OUTPUT_BUFFER_SIZE];
+                size_t len;
+        } output;
+
         struct interpreter {
                 struct {
                         char   buf[HTTPSRV_INTERPRETER_FETCH_BUFFER_SIZE];
@@ -123,49 +138,53 @@ typedef struct {
 
                         bool   script_section;
                         size_t code_len;
-                        char   code_buf[HTTPSRV_INTERPRETER_FETCH_BUFFER_SIZE];
+                        char   code_buf[HTTPSRV_INTERPRETER_CODE_BUFFER_SIZE];
                 } script;
 
-                struct {
-                        char buf[HTTPSRV_INTERPRETER_OUTPUT_BUFFER_SIZE];
-                } output;
+                char tmp_buf[HTTPSRV_INTERPRETER_TMP_BUFFER_SIZE];
 
                 void *object;
+                void *context;
         } interpreter;
 
         struct http_request {
-                SOCKET                *socket;
                 char                   buf[HTTPSRV_HTTP_PARSER_BUFFER_SIZE];
                 http_parser            parser;
                 bool                   message_complete;
                 httpsrv_content_type_t content_type;
 
                 struct {
-                        size_t field_chunk;
-                        size_t value_chunk;
-                        size_t content_length;
-                        size_t body_data_length;
-                        char  *field;
-                        char  *url;
-                        char  *get_ref;
-                        char  *content_type;
-                        char  *multipart_boundary;
-                        char  *body_data;
+                        size_t field_chunk_num;
+                        size_t value_chunk_num;
+
+                        httpsrv_chunk_t field;
+                        httpsrv_chunk_t content_type;
+                        httpsrv_chunk_t body_data;
+
+                        char *url;
+                        char *get_ref;
+                        char *multipart_boundary;
                 } header;
         } http_request;
 
         struct multipart {
                 multipartparser parser;
-                char           *buf;
-                char           *path;
-                size_t          buf_seek;
-                size_t          write_count;
-                size_t          header_field_chunk;
-                size_t          header_value_chunk;
-                char           *header_field;
-                char           *content_disposition;
-                char           *content_type;
-                clock_t         tref;
+
+                size_t field_chunk_num;
+                size_t value_chunk_num;
+
+                httpsrv_chunk_t field;
+                httpsrv_chunk_t content_disposition;
+                httpsrv_chunk_t content_type;
+
+                struct {
+                        char  *buf;
+                        char  *path;
+                        size_t buf_seek;
+                        size_t write_count;
+                } data;
+
+                clock_t tref;
         } multipart;
 } httpsrv_thread_t;
 
@@ -187,6 +206,7 @@ extern int  httpsrv_interpreter_init(httpsrv_thread_t *self);
 extern void httpsrv_interpreter_deinit(httpsrv_thread_t *self);
 extern int  httpsrv_interpreter_dostring(httpsrv_thread_t *self, const char *string);
 extern int  httpsrv_interpreter_dofile(httpsrv_thread_t *self, const char *file);
+extern int  httpsrv_send(httpsrv_thread_t *self, const void *buf, size_t len, bool flush);
 
 /*==============================================================================
   Exported inline functions

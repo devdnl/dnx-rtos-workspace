@@ -26,7 +26,7 @@
 
 ==============================================================================*/
 
-//#pragma GCC optimize("Og")
+// #pragma GCC optimize("Og")
 
 /*==============================================================================
   Include files
@@ -46,9 +46,9 @@
 ==============================================================================*/
 static int  handle_http(void *arg);
 static void strtolower(char *string);
-static int  send_file(httpsrv_thread_t *self, const char *content_type, u32_t cache_time,
-         const char *path);
-static int  socket_receive_stream(SOCKET *socket, void *buf, size_t len);
+static int  send_file(httpsrv_thread_t *self, const char *content_type, u32_t cache_time, const char *path);
+static void chunk_free(httpsrv_chunk_t *chunk);
+static int  chunk_add(httpsrv_chunk_t *chunk, const char *str, size_t length, bool to_lower);
 static int  parser_on_url(http_parser *parser, const char *at, size_t length);
 static int  parser_header_field(http_parser *parser, const char *at, size_t length);
 static int  parser_header_value(http_parser *parser, const char *at, size_t length);
@@ -61,8 +61,7 @@ static int  multipart_on_part_end(multipartparser *);
 static int  multipart_on_data(multipartparser *, const char *data, size_t size);
 static int  multipart_on_header_value(multipartparser *, const char *data, size_t size);
 static int  multipart_on_header_field(multipartparser *, const char *data, size_t size);
-static int  multipart_write_file(httpsrv_thread_t *self, const char *path,
-         const char *data, size_t size);
+static int  multipart_write_file(httpsrv_thread_t *self, const char *path, const char *data, size_t size);
 static int  multipart_flush_file(httpsrv_thread_t *self, const char *path);
 static int  execute_file(httpsrv_thread_t *self, const char *url);
 static int  execute_extract_script(httpsrv_thread_t *self, char c);
@@ -98,7 +97,7 @@ static const multipartparser_callbacks multipart_cbs = {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(httpsrv, STACK_DEPTH_MEDIUM);
+PROGRAM_PARAMS(httpsrv, STACK_DEPTH_LARGE);
 
 static const char *SCRIPT_BEGIN_TOKEN = HTTPSRV_SCRIPT_BEGIN_TOKEN;
 
@@ -205,7 +204,7 @@ int main(int argc, char *argv[])
                         continue;
                 }
 
-                http_thread->http_request.socket = new_socket;
+                http_thread->socket = new_socket;
 
                 handle_http(http_thread);
         }
@@ -214,6 +213,53 @@ cleanup:
         socket_close(socket);
 
         return exit_code;
+}
+
+//==============================================================================
+/**
+ * @brief  Send data to network with buffering.
+ *
+ * @param  self         thread context
+ * @param  buf          buffer
+ * @param  len          buffer length
+ * @param  flush        flush buffer
+ *
+ * @return On success number of send/written bytes, otherwise negative value.
+ */
+//==============================================================================
+int httpsrv_send(httpsrv_thread_t *self, const void *buf, size_t len, bool flush)
+{
+        size_t written = 0;
+
+        while (buf and (len > 0)) {
+                size_t left = sizeof(self->output.buf) - self->output.len;
+                size_t n    = min(left, len);
+
+                memcpy(&self->output.buf[self->output.len], buf, n);
+
+                buf += n;
+                len -= n;
+                self->output.len += n;
+                written += n;
+
+                if (self->output.len >= ARRAY_SIZE(self->output.buf)) {
+                        errno = 0;
+                        if (socket_write(self->socket, self->output.buf, self->output.len) <= 0) {
+                                return -errno;
+                        }
+                        self->output.len = 0;
+                }
+        }
+
+        if (flush and (self->output.len > 0)) {
+                errno = 0;
+                if (socket_write(self->socket, self->output.buf, self->output.len) <= 0) {
+                        return -errno;
+                }
+                self->output.len = 0;
+        }
+
+        return written;
 }
 
 //==============================================================================
@@ -228,8 +274,7 @@ cleanup:
  * @return Number of send bytes, or -1 on error.
  */
 //==============================================================================
-static int send_file(httpsrv_thread_t *self, const char *content_type, u32_t cache_time,
-        const char *path)
+static int send_file(httpsrv_thread_t *self, const char *content_type, u32_t cache_time, const char *path)
 {
         int fd = open(path, O_RDONLY);
         if (fd == -1) {
@@ -245,9 +290,8 @@ static int send_file(httpsrv_thread_t *self, const char *content_type, u32_t cac
                         "Cache-Control: max-age=%lu\r\n", cache_time);
 
                 errno = 0;
-                if (socket_send(self->http_request.socket, cache_control,
-                            cache_control_len,
-                            NET_FLAGS__MORE) == cast(int, cache_control_len)) {
+                if (httpsrv_send(self, cache_control, cache_control_len, false) ==
+                        cast(int, cache_control_len)) {
                         sent += cache_control_len;
                 } else {
                         VERBOSE("cache-control write error: %s\n", strerror(errno));
@@ -258,12 +302,11 @@ static int send_file(httpsrv_thread_t *self, const char *content_type, u32_t cac
         size_t content_type_len = strlen(content_type);
         if (content_type_len) {
                 errno = 0;
-                if (socket_send(self->http_request.socket, content_type, content_type_len,
-                            NET_FLAGS__MORE) == cast(int, content_type_len)) {
+                if (httpsrv_send(self, content_type, content_type_len, false) ==
+                        cast(int, content_type_len)) {
                         sent += content_type_len;
                 } else {
-                        VERBOSE("file '%s' content type write error: %s\n",
-                                strerror(errno));
+                        VERBOSE("file '%s' content type write error: %s\n", strerror(errno));
                         sent = -1;
                 }
         }
@@ -280,17 +323,10 @@ static int send_file(httpsrv_thread_t *self, const char *content_type, u32_t cac
                         break;
 
                 } else {
-                        u32_t flags = 0;
-                        if (n == sizeof(self->http_request.buf)) {
-                                flags = NET_FLAGS__MORE;
-                        }
-
                         errno = 0;
-                        int m = socket_send(self->http_request.socket,
-                                self->http_request.buf, n, flags);
+                        int m = httpsrv_send(self, self->http_request.buf, n, false);
                         if (m != n) {
-                                VERBOSE("file '%s' socket write error: %s\n", path,
-                                        strerror(errno));
+                                VERBOSE("file '%s' socket write error: %s\n", path, strerror(errno));
                                 break;
                         } else {
                                 sent += n;
@@ -332,105 +368,55 @@ static int handle_http(void *arg)
         httpsrv_thread_t *self = arg;
 
         http_parser_init(&self->http_request.parser, HTTP_REQUEST);
-        self->http_request.parser.data        = self;
-        self->http_request.message_complete   = false;
-        self->http_request.header.field_chunk = 0;
-        self->http_request.header.value_chunk = 0;
+        self->http_request.parser.data      = self;
+        self->http_request.message_complete = false;
 
         if (httpsrv_interpreter_init(self) != 0) {
                 VERBOSE("cannot initialize interpreter!\n");
         }
 
         int len = 0;
-        while ((len = socket_receive_stream(self->http_request.socket,
-                        self->http_request.buf, sizeof(self->http_request.buf))) > 0) {
+        while ((len = socket_read(self->socket, self->http_request.buf, sizeof(self->http_request.buf))) >
+                0) {
 
-                http_parser_execute(&self->http_request.parser, &parser_settings,
-                        self->http_request.buf, len);
+                http_parser_execute(&self->http_request.parser, &parser_settings, self->http_request.buf,
+                        len);
 
                 if (self->http_request.message_complete) {
                         break;
                 }
         }
 
-        free(self->http_request.header.field);
-        self->http_request.header.field = NULL;
+        chunk_free(&self->http_request.header.field);
+
+        chunk_free(&self->http_request.header.content_type);
+
+        chunk_free(&self->http_request.header.body_data);
+
+        chunk_free(&self->multipart.field);
+
+        chunk_free(&self->multipart.content_disposition);
+
+        chunk_free(&self->multipart.content_type);
 
         free(self->http_request.header.url);
         self->http_request.header.url = NULL;
 
-        free(self->http_request.header.content_type);
-        self->http_request.header.content_type = NULL;
-
         free(self->http_request.header.multipart_boundary);
         self->http_request.header.multipart_boundary = NULL;
 
-        free(self->http_request.header.body_data);
-        self->http_request.header.body_data = NULL;
+        free(self->multipart.data.buf);
+        self->multipart.data.buf = NULL;
 
-        free(self->multipart.header_field);
-        self->multipart.header_field = NULL;
-
-        free(self->multipart.content_disposition);
-        self->multipart.content_disposition = NULL;
-
-        free(self->multipart.content_type);
-        self->multipart.content_type = NULL;
-
-        free(self->multipart.buf);
-        self->multipart.buf = NULL;
-
-        free(self->multipart.path);
-        self->multipart.path = NULL;
+        free(self->multipart.data.path);
+        self->multipart.data.path = NULL;
 
         httpsrv_interpreter_deinit(self);
 
-        socket_close(self->http_request.socket);
+        socket_close(self->socket);
         free(self);
 
         return 0;
-}
-
-//==============================================================================
-/**
- * @brief  Try to receive and fill to full input buffer.
- *
- * @param  socket       socket
- * @param  buf          destination buffer
- * @param  len          buffer length
- *
- * @return Number of received bytes, -1 on error.
- */
-//==============================================================================
-static int socket_receive_stream(SOCKET *socket, void *buf, size_t len)
-{
-        socket_set_recv_timeout(socket, 500);
-
-        int recved = 0;
-
-        while (len) {
-                errno = 0;
-                int n = socket_recv(socket, buf, len, 0);
-                if (n > 0) {
-                        buf += n;
-                        len -= n;
-                        recved += n;
-
-                        socket_set_recv_timeout(socket, 1);
-
-                } else if (n < 0) {
-
-                        if (not((errno == ETIME) and (recved > 0))) {
-                                recved = n;
-                        }
-
-                        break;
-                } else {
-                        break;
-                }
-        }
-
-        return recved;
 }
 
 //==============================================================================
@@ -471,6 +457,59 @@ static int parser_on_url(http_parser *parser, const char *at, size_t length)
 
 //==============================================================================
 /**
+ * @brief  Free chunk.
+ *
+ * @param  value        value chunk
+ */
+//==============================================================================
+static void chunk_free(httpsrv_chunk_t *chunk)
+{
+        free(chunk->value);
+        chunk->value        = NULL;
+        chunk->alloc_length = 0;
+        chunk->value_length = 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Add string to chunk
+ *
+ * @param  chunk        chunk
+ * @param  str          string to add
+ * @param  length       string length
+ * @param  to_lower     to lower case
+ *
+ * @return On success 0 is returned.
+ */
+//==============================================================================
+static int chunk_add(httpsrv_chunk_t *chunk, const char *str, size_t length, bool to_lower)
+{
+        if (chunk->alloc_length < (chunk->value_length + length + 1)) {
+                size_t new_size = max(chunk->value_length + length + 1,
+                        chunk->alloc_length + HTTPSRV_ALLOC_SIZE);
+
+                chunk->value = realloc(chunk->value, new_size);
+                if (not chunk->value) {
+                        return ENOMEM;
+                }
+
+                chunk->alloc_length = new_size;
+        }
+
+        memcpy(&chunk->value[chunk->value_length], str, length);
+        chunk->value[chunk->value_length + length] = '\0';
+
+        if (to_lower) {
+                strtolower(&chunk->value[chunk->value_length]);
+        }
+
+        chunk->value_length += length;
+
+        return 0;
+}
+
+//==============================================================================
+/**
  * @brief  Callback called when header filed is parsed in HTTP request.
  *
  * @param  parser       http parser
@@ -488,19 +527,14 @@ static int parser_header_field(http_parser *parser, const char *at, size_t lengt
 
         struct http_request *http = &self->http_request;
 
-        http->header.value_chunk = 0;
-
-        if (http->header.field_chunk == 0) {
-                free(http->header.field);
-                http->header.field = strndup(at, length);
-                http->header.field_chunk++;
-        } else {
-                size_t new_size    = strsize(http->header.field) + length;
-                http->header.field = realloc(http->header.field, new_size);
-                strlcat(http->header.field, at, new_size);
+        if (http->header.field_chunk_num == 0) {
+                chunk_free(&http->header.field);
         }
 
-        strtolower(http->header.field);
+        chunk_add(&http->header.field, at, length, true);
+
+        http->header.value_chunk_num = 0;
+        http->header.field_chunk_num++;
 
         return 0;
 }
@@ -524,27 +558,22 @@ static int parser_header_value(http_parser *parser, const char *at, size_t lengt
 
         struct http_request *http = &self->http_request;
 
-        http->header.field_chunk = 0;
-
         /*
          * INFO: in general headers are case insensitive, except
          *       boundary=xxxx in multipart/form-data.
          *       In other cases please use httpsrv_strtolower().
          */
 
-        if (isstreq(http->header.field, "content-type")) {
-                if (http->header.value_chunk == 0) {
-                        free(http->header.content_type);
-                        http->header.content_type = strndup(at, length);
-                        http->header.value_chunk++;
-
-                } else {
-                        size_t new_size = strsize(http->header.content_type) + length;
-                        http->header.content_type = realloc(http->header.content_type,
-                                new_size);
-                        strlcat(http->header.content_type, at, new_size);
+        if (isstreq(http->header.field.value, "content-type")) {
+                if (http->header.value_chunk_num == 0) {
+                        chunk_free(&http->header.content_type);
                 }
+
+                chunk_add(&http->header.content_type, at, length, true);
         }
+
+        http->header.field_chunk_num = 0;
+        http->header.value_chunk_num++;
 
         return 0;
 }
@@ -571,16 +600,15 @@ static int parser_on_headers_complete(http_parser *parser)
         const char  *boundary_hdr     = "multipart/form-data; boundary=";
         const size_t boundary_hdr_len = strlen(boundary_hdr);
 
-        if (isstreqn(http->header.content_type, boundary_hdr, boundary_hdr_len)) {
+        if (isstreqn(http->header.content_type.value, boundary_hdr, boundary_hdr_len)) {
 
                 http->content_type = content_type__multipart_form_data;
 
-                http->header.multipart_boundary = strdup(
-                        http->header.content_type + boundary_hdr_len);
+                http->header.multipart_boundary = strdup(http->header.content_type.value + boundary_hdr_len);
 
                 DEBUG("multipart boundary=%s\n", http->header.multipart_boundary);
 
-                multipart->buf = malloc(HTTPSRV_MULTIPART_BUFFER_SIZE);
+                multipart->data.buf = malloc(HTTPSRV_MULTIPART_BUFFER_SIZE);
 
                 multipartparser_init(&multipart->parser, http->header.multipart_boundary);
                 multipart->parser.data = self;
@@ -619,22 +647,7 @@ static int parser_on_body(http_parser *parser, const char *at, size_t length)
                 multipartparser_execute(&multipart->parser, &multipart_cbs, at, length);
 
         } else if (parser->method == HTTP_POST) {
-
-                self->http_request.header.body_data = realloc(
-                        self->http_request.header.body_data,
-                        self->http_request.header.body_data_length + length + 1);
-
-                if (self->http_request.header.body_data) {
-
-                        memcpy(&self->http_request.header.body_data
-                                        [self->http_request.header.body_data_length],
-                                at, length);
-
-                        self->http_request.header.body_data_length += length;
-
-                        self->http_request.header.body_data
-                                [self->http_request.header.body_data_length] = '\0';
-                }
+                chunk_add(&self->http_request.header.body_data, at, length, false);
         }
 
         return err;
@@ -667,10 +680,12 @@ static int parser_on_message_complete(http_parser *parser)
                 }
         }
 
+        httpsrv_send(self, NULL, 0, true);
+
         http->message_complete = true;
 
-        free(self->multipart.buf);
-        self->multipart.buf = NULL;
+        free(self->multipart.data.buf);
+        self->multipart.data.buf = NULL;
 
         return 0;
 }
@@ -690,22 +705,21 @@ static int multipart_flush_file(httpsrv_thread_t *self, const char *path)
 
         DEBUG("%s: %lu bytes to '%s'\n", __func__, multipart->buf_seek, path);
 
-        int n = multipart->buf_seek;
+        int n = multipart->data.buf_seek;
 
-        if (multipart->buf_seek > 0) {
-                int oflag = O_WRONLY |
-                        ((multipart->write_count == 0) ? (O_CREAT | O_TRUNC) : O_APPEND);
-                errno  = 0;
-                int fd = open(path, oflag);
+        if (multipart->data.buf_seek > 0) {
+                int oflag = O_WRONLY | ((multipart->data.write_count == 0) ? (O_CREAT | O_TRUNC) : O_APPEND);
+                errno     = 0;
+                int fd    = open(path, oflag);
                 if (fd != -1) {
-                        write(fd, multipart->buf, multipart->buf_seek);
+                        write(fd, multipart->data.buf, multipart->data.buf_seek);
                         close(fd);
                 } else {
                         VERBOSE("%s: %s\n", path, strerror(errno));
                 }
 
-                multipart->buf_seek = 0;
-                multipart->write_count++;
+                multipart->data.buf_seek = 0;
+                multipart->data.write_count++;
         }
 
         return n;
@@ -722,28 +736,26 @@ static int multipart_flush_file(httpsrv_thread_t *self, const char *path)
  * @return Number of written bytes is returned, otherwise -1.
  */
 //==============================================================================
-static int multipart_write_file(httpsrv_thread_t *self, const char *path,
-        const char *data, size_t size)
+static int multipart_write_file(httpsrv_thread_t *self, const char *path, const char *data, size_t size)
 {
         struct multipart *multipart = &self->multipart;
 
-        if (not multipart->buf) {
+        if (not multipart->data.buf) {
                 VERBOSE("no multipart buffer allocated!\n");
                 return -1;
         }
 
         while (size) {
-                size_t buf_available = HTTPSRV_MULTIPART_BUFFER_SIZE -
-                        multipart->buf_seek;
-                size_t len = min(buf_available, size);
+                size_t buf_available = HTTPSRV_MULTIPART_BUFFER_SIZE - multipart->data.buf_seek;
+                size_t len           = min(buf_available, size);
 
-                memcpy(multipart->buf + multipart->buf_seek, data, len);
+                memcpy(multipart->data.buf + multipart->data.buf_seek, data, len);
 
                 size -= len;
                 data += len;
-                multipart->buf_seek += len;
+                multipart->data.buf_seek += len;
 
-                if (multipart->buf_seek >= HTTPSRV_MULTIPART_BUFFER_SIZE) {
+                if (multipart->data.buf_seek >= HTTPSRV_MULTIPART_BUFFER_SIZE) {
                         multipart_flush_file(self, path);
                 }
         }
@@ -768,9 +780,9 @@ static int multipart_on_part_begin(multipartparser *parser)
 
         struct multipart *multipart = &self->multipart;
 
-        multipart->buf_seek    = 0;
-        multipart->write_count = 0;
-        multipart->tref        = get_uptime_ms();
+        multipart->data.buf_seek    = 0;
+        multipart->data.write_count = 0;
+        multipart->tref             = get_uptime_ms();
 
         return 0;
 }
@@ -794,7 +806,7 @@ static int multipart_on_data(multipartparser *parser, const char *data, size_t s
 
         DEBUG("%s: %lu bytes long\n", __func__, size);
 
-        multipart_write_file(self, multipart->path, data, size);
+        multipart_write_file(self, multipart->data.path, data, size);
 
         return 0;
 }
@@ -816,7 +828,7 @@ static int multipart_on_part_end(multipartparser *parser)
 
         DEBUG("%s: %llu ms\n", __func__, get_uptime_ms() - multipart->tref);
 
-        multipart_flush_file(self, multipart->path);
+        multipart_flush_file(self, multipart->data.path);
 
         return 0;
 }
@@ -832,8 +844,7 @@ static int multipart_on_part_end(multipartparser *parser)
  * @return On success 0.
  */
 //==============================================================================
-static int multipart_on_header_field(multipartparser *parser, const char *data,
-        size_t size)
+static int multipart_on_header_field(multipartparser *parser, const char *data, size_t size)
 {
         httpsrv_thread_t *self = parser->data;
 
@@ -841,19 +852,14 @@ static int multipart_on_header_field(multipartparser *parser, const char *data,
 
         struct multipart *multipart = &self->multipart;
 
-        multipart->header_value_chunk = 0;
-
-        if (multipart->header_field_chunk == 0) {
-                free(multipart->header_field);
-                multipart->header_field = strndup(data, size);
-                multipart->header_field_chunk++;
-        } else {
-                size_t new_size         = strsize(multipart->header_field) + size;
-                multipart->header_field = realloc(multipart->header_field, new_size);
-                strlcat(multipart->header_field, data, new_size);
+        if (multipart->field_chunk_num == 0) {
+                chunk_free(&multipart->field);
         }
 
-        strtolower(multipart->header_field);
+        chunk_add(&multipart->field, data, size, true);
+
+        multipart->value_chunk_num = 0;
+        multipart->field_chunk_num++;
 
         return 0;
 }
@@ -869,8 +875,7 @@ static int multipart_on_header_field(multipartparser *parser, const char *data,
  * @return On success 0.
  */
 //==============================================================================
-static int multipart_on_header_value(multipartparser *parser, const char *data,
-        size_t size)
+static int multipart_on_header_value(multipartparser *parser, const char *data, size_t size)
 {
         httpsrv_thread_t *self = parser->data;
 
@@ -878,37 +883,28 @@ static int multipart_on_header_value(multipartparser *parser, const char *data,
 
         struct multipart *multipart = &self->multipart;
 
-        multipart->header_field_chunk = 0;
+        httpsrv_chunk_t *chunk    = NULL;
+        bool             to_lower = false;
 
-        if (isstreq(multipart->header_field, "content-disposition")) {
-                if (multipart->header_value_chunk == 0) {
-                        free(multipart->content_disposition);
-                        multipart->content_disposition = strndup(data, size);
-                        multipart->header_value_chunk++;
+        if (isstreq(multipart->field.value, "content-disposition")) {
+                chunk    = &multipart->content_disposition;
+                to_lower = true;
 
-                } else {
-                        size_t new_size = strsize(multipart->content_disposition) + size;
-                        multipart->content_disposition = realloc(
-                                multipart->content_disposition, new_size);
-                        strlcat(multipart->content_disposition, data, new_size);
-                }
-
-                strtolower(multipart->content_disposition);
-
-        } else if (isstreq(multipart->header_field, "content-type")) {
-                if (multipart->header_value_chunk == 0) {
-                        free(multipart->content_type);
-                        multipart->content_type = strndup(data, size);
-                        multipart->header_value_chunk++;
-                } else {
-                        size_t new_size         = strsize(multipart->content_type) + size;
-                        multipart->content_type = realloc(multipart->content_type,
-                                new_size);
-                        strlcat(multipart->content_type, data, new_size);
-                }
-
-                strtolower(multipart->content_type);
+        } else if (isstreq(multipart->field.value, "content-type")) {
+                chunk    = &multipart->content_type;
+                to_lower = true;
         }
+
+        if (chunk) {
+                if (multipart->value_chunk_num == 0) {
+                        chunk_free(chunk);
+                }
+
+                chunk_add(chunk, data, size, to_lower);
+        }
+
+        multipart->field_chunk_num = 0;
+        multipart->value_chunk_num++;
 
         return 0;
 }
@@ -931,22 +927,20 @@ static int multipart_on_headers_complete(multipartparser *parser)
         struct multipart *multipart = &self->multipart;
 
         const char *name_token = "name=";
-        char       *name_start = strstr(multipart->content_disposition, name_token);
+        char       *name_start = strstr(multipart->content_disposition.value, name_token);
         if (name_start) {
                 name_start += strlen(name_token);
                 char  colon    = *name_start++;
                 char *name_end = strchr(name_start, colon);
                 if (name_end) {
-                        size_t name_len = cast(uintptr_t, name_end) -
-                                cast(uintptr_t, name_start);
+                        size_t name_len = cast(uintptr_t, name_end) - cast(uintptr_t, name_start);
 
                         char path[128];
-                        snprintf(path, sizeof(path), "%s/%.*s", HTTPSRV_UPLOAD_DIR,
-                                name_len, name_start);
+                        snprintf(path, sizeof(path), "%s/%.*s", HTTPSRV_UPLOAD_DIR, name_len, name_start);
 
-                        free(multipart->path);
+                        free(multipart->data.path);
 
-                        multipart->path = strdup(path);
+                        multipart->data.path = strdup(path);
                 }
         }
 
@@ -967,60 +961,54 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
 {
         DEBUG("%s\n", __func__);
 
-        struct http_request *http  = &self->http_request;
-        struct interpreter  *inter = &self->interpreter;
+        struct interpreter *inter = &self->interpreter;
 
         char file_path[128];
         snprintf(file_path, sizeof(file_path), "%s/%s", HTTPSRV_ROOT_DIR, url);
 
-        errno      = 0;
-        FILE *page = fopen(file_path, "r");
-        if (not page) {
+        errno = 0;
+        if (stat(file_path, &(struct stat) {}) != 0) {
                 VERBOSE("no such '%s' file!\n", url);
                 return errno;
         }
 
         if (isstreq(url, HTTPSRV_PAGE_NOT_FOUND)) {
-                socket_send(http->socket, HTTP_STATUS_404_NOT_FOUND,
-                        strlen(HTTP_STATUS_404_NOT_FOUND), NET_FLAGS__MORE);
+                httpsrv_send(self, HTTP_STATUS_404_NOT_FOUND, strlen(HTTP_STATUS_404_NOT_FOUND), false);
 
         } else {
-                socket_send(http->socket, HTTP_STATUS_200_OK, strlen(HTTP_STATUS_200_OK),
-                        NET_FLAGS__MORE);
+                httpsrv_send(self, HTTP_STATUS_200_OK, strlen(HTTP_STATUS_200_OK), false);
         }
 
         const char *ext = strrchr(url, '.');
         if (isstreq(ext, ".html")) {
-                socket_send(http->socket, HTTP_CONTENT_TYPE_TEXT_HTML,
-                        strlen(HTTP_CONTENT_TYPE_TEXT_HTML), NET_FLAGS__MORE);
+                httpsrv_send(self, HTTP_CONTENT_TYPE_TEXT_HTML, strlen(HTTP_CONTENT_TYPE_TEXT_HTML), false);
 
         } else if (isstreq(ext, ".png")) {
-                if (send_file(self, HTTP_CONTENT_TYPE_IMAGE_PNG,
-                            HTTPSRV_CACHE_TIME_FOR_PNG, file_path) >= 0) {
+                if (send_file(self, HTTP_CONTENT_TYPE_IMAGE_PNG, HTTPSRV_CACHE_TIME_FOR_PNG, file_path) >=
+                        0) {
                         return 0;
                 } else {
                         return 1;
                 }
 
         } else if (isstreq(ext, ".jpg") or isstreq(ext, ".jpeg")) {
-                if (send_file(self, HTTP_CONTENT_TYPE_IMAGE_JPEG,
-                            HTTPSRV_CACHE_TIME_FOR_JPEG, file_path) >= 0) {
+                if (send_file(self, HTTP_CONTENT_TYPE_IMAGE_JPEG, HTTPSRV_CACHE_TIME_FOR_JPEG, file_path) >=
+                        0) {
                         return 0;
                 } else {
                         return 1;
                 }
 
         } else if (isstreq(ext, ".css")) {
-                if (send_file(self, HTTP_CONTENT_TYPE_TEXT_CSS,
-                            HTTPSRV_CACHE_TIME_FOR_CSS, file_path) >= 0) {
+                if (send_file(self, HTTP_CONTENT_TYPE_TEXT_CSS, HTTPSRV_CACHE_TIME_FOR_CSS, file_path) >= 0) {
                         return 0;
                 } else {
                         return 1;
                 }
 
         } else if (isstreq(ext, ".ico")) {
-                if (send_file(self, HTTP_CONTENT_TYPE_IMAGE_ICO,
-                            HTTPSRV_CACHE_TIME_FOR_ICO, file_path) >= 0) {
+                if (send_file(self, HTTP_CONTENT_TYPE_IMAGE_ICO, HTTPSRV_CACHE_TIME_FOR_ICO, file_path) >=
+                        0) {
                         return 0;
                 } else {
                         return 1;
@@ -1028,16 +1016,14 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
 
         } else if (isstreq(ext, HTTPSRV_SCRIPT_EXTENSION)) {
 
-                socket_send(http->socket, HTTP_CONTENT_TYPE_TEXT_HTML,
-                        strlen(HTTP_CONTENT_TYPE_TEXT_HTML), NET_FLAGS__MORE);
+                httpsrv_send(self, HTTP_CONTENT_TYPE_TEXT_HTML, strlen(HTTP_CONTENT_TYPE_TEXT_HTML), false);
 
                 if (httpsrv_interpreter_dofile(self, file_path) != 0) {
                         VERBOSE("script execute error:\n");
                         VERBOSE("%s\n", inter->script.code_buf);
 
                         const char *msg = "<font color='red'><b>SCRIPT ERROR</b></font>";
-                        socket_send(self->http_request.socket, msg, strlen(msg),
-                                NET_FLAGS__MORE);
+                        socket_send(self->socket, msg, strlen(msg), NET_FLAGS__MORE);
 
                         return 1;
                 } else {
@@ -1052,6 +1038,13 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
                 }
         }
 
+        errno      = 0;
+        FILE *page = fopen(file_path, "r");
+        if (not page) {
+                VERBOSE("no such '%s' file!\n", url);
+                return errno;
+        }
+
         inter->script.begin_token.len = 0;
         inter->script.begin_token.ptr = 0;
         inter->script.code_len        = 0;
@@ -1063,8 +1056,8 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
                 if (inter->fetch_buf.pos == inter->fetch_buf.len) {
                         inter->fetch_buf.pos = 0;
 
-                        inter->fetch_buf.len = fread(inter->fetch_buf.buf, 1,
-                                sizeof(inter->fetch_buf.buf), page);
+                        inter->fetch_buf.len = fread(inter->fetch_buf.buf, 1, sizeof(inter->fetch_buf.buf),
+                                page);
 
                         if (inter->fetch_buf.len == 0) {
                                 execute_flush_buffers(self);
@@ -1098,23 +1091,19 @@ static int execute_extract_script(httpsrv_thread_t *self, char c)
         struct interpreter *inter = &self->interpreter;
 
         if (not inter->script.script_section) {
-                if (inter->script.begin_token.len ==
-                        sizeof(inter->script.begin_token.buf)) {
+                if (inter->script.begin_token.len == sizeof(inter->script.begin_token.buf)) {
 
                         size_t first_char_idx = inter->script.begin_token.ptr;
 
-                        inter->script.code_buf
-                                [inter->script.code_len++] = inter->script.begin_token
-                                                                     .buf[first_char_idx];
+                        inter->script.code_buf[inter->script.code_len++] = inter->script.begin_token
+                                                                                   .buf[first_char_idx];
 
                         inter->script.begin_token.len--;
                 }
 
                 if (inter->script.code_len >= sizeof(inter->script.code_buf)) {
                         errno = 0;
-                        int n = socket_send(self->http_request.socket,
-                                inter->script.code_buf, inter->script.code_len,
-                                NET_FLAGS__MORE);
+                        int n = httpsrv_send(self, inter->script.code_buf, inter->script.code_len, false);
 
                         if (n != cast(int, inter->script.code_len)) {
                                 int err = errno;
@@ -1126,8 +1115,7 @@ static int execute_extract_script(httpsrv_thread_t *self, char c)
                 }
 
                 inter->script.begin_token.buf[inter->script.begin_token.ptr] = c;
-                if (++inter->script.begin_token.ptr >=
-                        sizeof(inter->script.begin_token.buf)) {
+                if (++inter->script.begin_token.ptr >= sizeof(inter->script.begin_token.buf)) {
                         inter->script.begin_token.ptr = 0;
                 }
                 inter->script.begin_token.len++;
@@ -1135,8 +1123,7 @@ static int execute_extract_script(httpsrv_thread_t *self, char c)
                 size_t token_start_idx = inter->script.begin_token.ptr;
 
                 for (size_t i = 0; i < sizeof(inter->script.begin_token.buf); i++) {
-                        if (inter->script.begin_token.buf[token_start_idx] !=
-                                SCRIPT_BEGIN_TOKEN[i]) {
+                        if (inter->script.begin_token.buf[token_start_idx] != SCRIPT_BEGIN_TOKEN[i]) {
                                 return 0;
                         }
 
@@ -1147,9 +1134,7 @@ static int execute_extract_script(httpsrv_thread_t *self, char c)
 
                 if (inter->script.code_len) {
                         errno = 0;
-                        int n = socket_send(self->http_request.socket,
-                                inter->script.code_buf, inter->script.code_len,
-                                NET_FLAGS__MORE);
+                        int n = httpsrv_send(self, inter->script.code_buf, inter->script.code_len, false);
 
                         if (n != cast(int, inter->script.code_len)) {
                                 int err = errno;
@@ -1160,8 +1145,7 @@ static int execute_extract_script(httpsrv_thread_t *self, char c)
 
                 inter->script.code_len = 0;
 
-                memset(inter->script.begin_token.buf, 0,
-                        sizeof(inter->script.begin_token.buf));
+                memset(inter->script.begin_token.buf, 0, sizeof(inter->script.begin_token.buf));
 
                 inter->script.begin_token.ptr = 0;
                 inter->script.begin_token.len = 0;
@@ -1177,8 +1161,7 @@ static int execute_extract_script(httpsrv_thread_t *self, char c)
                                 VERBOSE("%s\n", inter->script.code_buf);
 
                                 const char *msg = "<font color='red'><b>ERROR</b></font>";
-                                socket_send(self->http_request.socket, msg, strlen(msg),
-                                        NET_FLAGS__MORE);
+                                httpsrv_send(self, msg, strlen(msg), false);
                         }
 
                         inter->script.code_len = 0;
@@ -1188,14 +1171,13 @@ static int execute_extract_script(httpsrv_thread_t *self, char c)
 
                 } else {
                         if (inter->script.end_token.last != 0) {
-                                if (inter->script.code_len <
-                                        sizeof(inter->script.code_buf) - 1) {
+                                if (inter->script.code_len < sizeof(inter->script.code_buf) - 1) {
 
-                                        inter->script.code_buf[inter->script.code_len++] =
-                                                inter->script.end_token.last;
+                                        inter->script.code_buf[inter->script.code_len++] = inter->script
+                                                                                                   .end_token
+                                                                                                   .last;
 
-                                        inter->script
-                                                .code_buf[inter->script.code_len] = '\0';
+                                        inter->script.code_buf[inter->script.code_len] = '\0';
                                 } else {
                                         VERBOSE("script too long!\n");
                                 }
@@ -1227,8 +1209,7 @@ static void execute_flush_buffers(httpsrv_thread_t *self)
 
         if (inter->script.code_len) {
                 errno = 0;
-                int n = socket_write(self->http_request.socket, inter->script.code_buf,
-                        inter->script.code_len);
+                int n = httpsrv_send(self, inter->script.code_buf, inter->script.code_len, false);
 
                 if (n != cast(int, inter->script.code_len)) {
                         VERBOSE("%s(1): %s\n", __func__, strerror(errno));
@@ -1242,8 +1223,7 @@ static void execute_flush_buffers(httpsrv_thread_t *self)
 
                 for (size_t i = 0; i < inter->script.begin_token.len; i++) {
 
-                        inter->script.code_buf[i] = inter->script.begin_token
-                                                            .buf[token_start_idx];
+                        inter->script.code_buf[i] = inter->script.begin_token.buf[token_start_idx];
 
                         if (++token_start_idx >= sizeof(inter->script.begin_token.buf)) {
                                 token_start_idx = 0;
@@ -1251,8 +1231,7 @@ static void execute_flush_buffers(httpsrv_thread_t *self)
                 }
 
                 errno = 0;
-                int n = socket_write(self->http_request.socket, inter->script.code_buf,
-                        inter->script.code_len);
+                int n = httpsrv_send(self, inter->script.code_buf, inter->script.code_len, false);
 
                 if (n != cast(int, inter->script.code_len)) {
                         VERBOSE("%s(2): %s\n", __func__, strerror(errno));
