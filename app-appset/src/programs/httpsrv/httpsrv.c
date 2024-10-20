@@ -1065,10 +1065,8 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
                         }
                 }
 
-                while (inter->fetch_buf.pos < inter->fetch_buf.len) {
-                        char c = inter->fetch_buf.buf[inter->fetch_buf.pos++];
-                        run    = execute_extract_script(self, c) == 0;
-                }
+                char c = inter->fetch_buf.buf[inter->fetch_buf.pos++];
+                run    = execute_extract_script(self, c) == 0;
         }
 
         fclose(page);
@@ -1189,7 +1187,7 @@ static int execute_extract_script(httpsrv_thread_t *self, char c)
                 }
         }
 
-        return true;
+        return 0;
 }
 
 //==============================================================================
