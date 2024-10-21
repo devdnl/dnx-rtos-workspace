@@ -1,11 +1,11 @@
-/*=========================================================================*//**
-@file    timechg.c
+/*==============================================================================
+@file    dstd.c
 
 @author  Daniel Zorychta
 
-@brief   Set CET or CEST.
+@brief   Day light saving time deamon.
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2024 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /*==============================================================================
   Include files
@@ -42,6 +42,8 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define TIMEZONE_SUMMER TIMEZONE_CEST
+#define TIMEZONE_WINTER TIMEZONE_CET
 
 /*==============================================================================
   Local types, enums definitions
@@ -55,16 +57,16 @@
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
-        time_t    current_time_unix;
-        int       current_year;
-        time_t    beginning_of_summer_time;
-        time_t    end_of_summer_time;
+        time_t current_time_unix;
+        int    current_year;
+        time_t beginning_of_summer_time;
+        time_t end_of_summer_time;
 };
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(timechg, STACK_DEPTH_LOW);
+PROGRAM_PARAMS(dstd, STACK_DEPTH_LOW);
 
 /*==============================================================================
   Function definitions
@@ -124,8 +126,8 @@ static void calculate_end_of_daylight_saving_time(void)
 //==============================================================================
 static bool is_summer_time(void)
 {
-        return (  global->current_time_unix >= global->beginning_of_summer_time
-               && global->current_time_unix <= global->end_of_summer_time);
+        return (global->current_time_unix >= global->beginning_of_summer_time &&
+                global->current_time_unix <= global->end_of_summer_time);
 }
 
 //==============================================================================
@@ -157,12 +159,12 @@ int main(int argc, char *argv[])
                         struct timezone tz;
 
                         if (is_summer_time()) {
-                                tz.tz_minuteswest = TIMEZONE_CEST / 60;
-                                tz.tz_dsttime = 1;
+                                tz.tz_minuteswest = TIMEZONE_SUMMER / 60;
+                                tz.tz_dsttime     = 1;
 
                         } else {
-                                tz.tz_minuteswest = TIMEZONE_CET / 60;
-                                tz.tz_dsttime = 1;
+                                tz.tz_minuteswest = TIMEZONE_WINTER / 60;
+                                tz.tz_dsttime     = 1;
                         }
 
                         settimeofday(NULL, &tz);

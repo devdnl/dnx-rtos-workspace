@@ -363,8 +363,7 @@ static int luafn_ipc_request(lua_State *L)
          * Compose request. Lua table -> bs
          */
         bs_wr_t bs_wr;
-        bs_write_chunk(&bs_wr, cast(u8_t *, self->interpreter.tmp_buf),
-                sizeof(self->interpreter.tmp_buf));
+        bs_write_chunk(&bs_wr, cast(u8_t *, self->interpreter.tmp_buf), sizeof(self->interpreter.tmp_buf));
 
         lua_pushvalue(L, -1);
 

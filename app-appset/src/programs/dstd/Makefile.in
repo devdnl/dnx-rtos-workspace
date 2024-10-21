@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += timechg/timechg.c
+CSRC_PROGRAMS   += dstd/dstd.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 
