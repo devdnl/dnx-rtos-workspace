@@ -52,6 +52,7 @@ static int  luafn_echo(lua_State *L);
 static int  luafn_request_method(lua_State *L);
 static int  luafn_request_data(lua_State *L);
 static int  luafn_ipc_request(lua_State *L);
+static int  luafn_send_file(lua_State *L);
 
 /*==============================================================================
   Local object definitions
@@ -64,6 +65,7 @@ static const struct luaL_Reg basic_lib[] = {
 static const luaL_Reg request_lib[] = {
         {"method", luafn_request_method},
         {"data", luafn_request_data},
+        {"send_file", luafn_send_file},
         {NULL, NULL},
 };
 
@@ -75,6 +77,16 @@ static const luaL_Reg ipc_lib[] = {
 static const luaL_Reg http_libs[] = {
         {"request", open_lib_request},
         {"ipc", open_lib_ipc},
+        {NULL, NULL},
+};
+
+static const luaL_Reg lua_libs[] = {
+        {LUA_GNAME, luaopen_base},
+        {LUA_TABLIBNAME, luaopen_table},
+        {LUA_IOLIBNAME, luaopen_io},
+        {LUA_OSLIBNAME, luaopen_os},
+        {LUA_STRLIBNAME, luaopen_string},
+        {LUA_MATHLIBNAME, luaopen_math},
         {NULL, NULL},
 };
 
@@ -110,7 +122,10 @@ int httpsrv_interpreter_init(httpsrv_thread_t *self)
         lua_pushstring(L, HTTPSRV_ROOT_DIR);
         lua_setglobal(L, "root_dir");
 
-        luaL_openlibs(L);
+        for (const luaL_Reg *lib = lua_libs; lib->func; lib++) {
+                luaL_requiref(L, lib->name, lib->func, true);
+                lua_pop(L, 1);
+        }
 
         lua_getglobal(L, "_G");
         luaL_setfuncs(L, basic_lib, 0);
@@ -339,6 +354,29 @@ static int luafn_request_data(lua_State *L)
         } else if (self->http_request.parser.method == HTTP_POST) {
                 parse_params_to_lua_table(self, self->http_request.header.body_data.value);
         }
+
+        return 1;
+}
+
+//==============================================================================
+/**
+ * @brief  Send file.
+ *         integer:number_of_sent_bytes send_file(string:path)
+ *
+ * @param  L            Lua state
+ *
+ * @return Number of results.
+ */
+//==============================================================================
+static int luafn_send_file(lua_State *L)
+{
+        httpsrv_thread_t *self = get_http_thread_self(L);
+
+        const char *path = luaL_checkstring(L, 1);
+
+        int n = httpsrv_send_file(self, NULL, 0, path);
+
+        lua_pushinteger(L, n);
 
         return 1;
 }

@@ -46,7 +46,6 @@
 ==============================================================================*/
 static int  handle_http(void *arg);
 static void strtolower(char *string);
-static int  send_file(httpsrv_thread_t *self, const char *content_type, u32_t cache_time, const char *path);
 static void chunk_free(httpsrv_chunk_t *chunk);
 static int  chunk_add(httpsrv_chunk_t *chunk, const char *str, size_t length, bool to_lower);
 static int  parser_on_url(http_parser *parser, const char *at, size_t length);
@@ -274,7 +273,7 @@ int httpsrv_send(httpsrv_thread_t *self, const void *buf, size_t len, bool flush
  * @return Number of send bytes, or -1 on error.
  */
 //==============================================================================
-static int send_file(httpsrv_thread_t *self, const char *content_type, u32_t cache_time, const char *path)
+int httpsrv_send_file(httpsrv_thread_t *self, const char *content_type, u32_t cache_time, const char *path)
 {
         int fd = open(path, O_RDONLY);
         if (fd == -1) {
@@ -299,15 +298,17 @@ static int send_file(httpsrv_thread_t *self, const char *content_type, u32_t cac
                 }
         }
 
-        size_t content_type_len = strlen(content_type);
-        if (content_type_len) {
-                errno = 0;
-                if (httpsrv_send(self, content_type, content_type_len, false) ==
-                        cast(int, content_type_len)) {
-                        sent += content_type_len;
-                } else {
-                        VERBOSE("file '%s' content type write error: %s\n", strerror(errno));
-                        sent = -1;
+        if (content_type) {
+                size_t content_type_len = strlen(content_type);
+                if (content_type_len) {
+                        errno = 0;
+                        if (httpsrv_send(self, content_type, content_type_len, false) ==
+                                cast(int, content_type_len)) {
+                                sent += content_type_len;
+                        } else {
+                                VERBOSE("file '%s' content type write error: %s\n", strerror(errno));
+                                sent = -1;
+                        }
                 }
         }
 
@@ -984,31 +985,32 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
                 httpsrv_send(self, HTTP_CONTENT_TYPE_TEXT_HTML, strlen(HTTP_CONTENT_TYPE_TEXT_HTML), false);
 
         } else if (isstreq(ext, ".png")) {
-                if (send_file(self, HTTP_CONTENT_TYPE_IMAGE_PNG, HTTPSRV_CACHE_TIME_FOR_PNG, file_path) >=
-                        0) {
+                if (httpsrv_send_file(self, HTTP_CONTENT_TYPE_IMAGE_PNG, HTTPSRV_CACHE_TIME_FOR_PNG,
+                            file_path) >= 0) {
                         return 0;
                 } else {
                         return 1;
                 }
 
         } else if (isstreq(ext, ".jpg") or isstreq(ext, ".jpeg")) {
-                if (send_file(self, HTTP_CONTENT_TYPE_IMAGE_JPEG, HTTPSRV_CACHE_TIME_FOR_JPEG, file_path) >=
-                        0) {
+                if (httpsrv_send_file(self, HTTP_CONTENT_TYPE_IMAGE_JPEG, HTTPSRV_CACHE_TIME_FOR_JPEG,
+                            file_path) >= 0) {
                         return 0;
                 } else {
                         return 1;
                 }
 
         } else if (isstreq(ext, ".css")) {
-                if (send_file(self, HTTP_CONTENT_TYPE_TEXT_CSS, HTTPSRV_CACHE_TIME_FOR_CSS, file_path) >= 0) {
+                if (httpsrv_send_file(self, HTTP_CONTENT_TYPE_TEXT_CSS, HTTPSRV_CACHE_TIME_FOR_CSS,
+                            file_path) >= 0) {
                         return 0;
                 } else {
                         return 1;
                 }
 
         } else if (isstreq(ext, ".ico")) {
-                if (send_file(self, HTTP_CONTENT_TYPE_IMAGE_ICO, HTTPSRV_CACHE_TIME_FOR_ICO, file_path) >=
-                        0) {
+                if (httpsrv_send_file(self, HTTP_CONTENT_TYPE_IMAGE_ICO, HTTPSRV_CACHE_TIME_FOR_ICO,
+                            file_path) >= 0) {
                         return 0;
                 } else {
                         return 1;
@@ -1031,7 +1033,7 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
                 }
 
         } else {
-                if (send_file(self, HTTP_CONTENT_TYPE_TEXT_TEXT, 0, file_path) >= 0) {
+                if (httpsrv_send_file(self, HTTP_CONTENT_TYPE_TEXT_TEXT, 0, file_path) >= 0) {
                         return 0;
                 } else {
                         return 1;

@@ -38,6 +38,7 @@ Detailed Doxygen description.
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "httpsrv_config.h"
 #include <ctype.h>
 #include <dirent.h>
 #include <dnx/misc.h>
@@ -66,26 +67,6 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define HTTPSRV_DEBUG_ON                      0
-#define HTTPSRV_MULTIPART_BUFFER_SIZE         (256 * 1024)
-#define HTTPSRV_INTERPRETER_FETCH_BUFFER_SIZE 8192
-#define HTTPSRV_INTERPRETER_CODE_BUFFER_SIZE  8192
-#define HTTPSRV_INTERPRETER_TMP_BUFFER_SIZE   1024
-#define HTTPSRV_OUTPUT_BUFFER_SIZE            (4*1500)
-#define HTTPSRV_HTTP_PARSER_BUFFER_SIZE       2048
-#define HTTPSRV_ALLOC_SIZE                    1024
-#define HTTPSRV_PORT                          80
-#define HTTPSRV_CACHE_TIME_FOR_JPEG           300
-#define HTTPSRV_CACHE_TIME_FOR_PNG            300
-#define HTTPSRV_CACHE_TIME_FOR_ICO            300
-#define HTTPSRV_CACHE_TIME_FOR_CSS            300
-#define HTTPSRV_DEFAULT_PAGE                  "index.html"
-#define HTTPSRV_PAGE_NOT_FOUND                "404.html"
-#define HTTPSRV_ROOT_DIR                      "/mmc/srv"
-#define HTTPSRV_UPLOAD_DIR                    "/mmc/srv/upload"
-#define HTTPSRV_SCRIPT_BEGIN_TOKEN            "<?lua"
-#define HTTPSRV_SCRIPT_EXTENSION              ".lua"
-
 #undef global
 #define global cast(struct httpsrv_globals *, _getglobal)
 
@@ -207,6 +188,8 @@ extern void httpsrv_interpreter_deinit(httpsrv_thread_t *self);
 extern int  httpsrv_interpreter_dostring(httpsrv_thread_t *self, const char *string);
 extern int  httpsrv_interpreter_dofile(httpsrv_thread_t *self, const char *file);
 extern int  httpsrv_send(httpsrv_thread_t *self, const void *buf, size_t len, bool flush);
+extern int  httpsrv_send_file(httpsrv_thread_t *self, const char *content_type, u32_t cache_time,
+         const char *path);
 
 /*==============================================================================
   Exported inline functions
