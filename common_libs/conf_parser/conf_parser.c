@@ -16,6 +16,7 @@ Brief   Configuration parser.
 
 #include <ctype.h>
 #include <dnx/misc.h>
+#include <dnx/thread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,9 +38,10 @@ typedef struct pair {
 } pair_t;
 
 struct conf_parser {
-        pair_t *pair;
-        char   *file_path;
-        char   *current_section;
+        mutex_t *mutex;
+        pair_t  *pair;
+        char    *file_path;
+        char    *current_section;
 };
 
 enum {
@@ -95,6 +97,12 @@ conf_parser_t *conf_parser__new(const char *path)
                 return NULL;
         }
 
+        this->mutex = mutex_new(MUTEX_TYPE_RECURSIVE);
+        if (not this->mutex) {
+                conf_parser__delete(this);
+                return NULL;
+        }
+
         if (not path) {
                 return this;
         }
@@ -126,8 +134,12 @@ conf_parser_t *conf_parser__new(const char *path)
 conf_parser_t *conf_parser__delete(conf_parser_t *this)
 {
         if (this) {
-                clear_conf(this);
-                free(this->file_path);
+                if (mutex_lock(this->mutex, MAX_DELAY_MS)) {
+                        clear_conf(this);
+                        free(this->file_path);
+                        mutex_unlock(this->mutex);
+                }
+
                 free(this);
         }
 
@@ -150,14 +162,20 @@ int conf_parser__load_file(conf_parser_t *this, const char *path)
                 return conf_parser_status__arg_error;
         }
 
+        if (not mutex_lock(this->mutex, MAX_DELAY_MS)) {
+                return conf_parser_status__mutex_error;
+        }
+
         free(this->file_path);
         this->file_path = strdup(path);
         if (not this->file_path) {
+                mutex_unlock(this->mutex);
                 return conf_parser_status__no_memory;
         }
 
         FILE *fp = fopen(path, "r");
         if (not fp) {
+                mutex_unlock(this->mutex);
                 return conf_parser_status__file_error;
         }
 
@@ -194,6 +212,8 @@ int conf_parser__load_file(conf_parser_t *this, const char *path)
 
         fclose(fp);
 
+        mutex_unlock(this->mutex);
+
         return n;
 }
 
@@ -212,6 +232,10 @@ int conf_parser__load_buffer(conf_parser_t *this, const char *buf, size_t bufsz)
 {
         if (not this and not buf and not bufsz) {
                 return conf_parser_status__arg_error;
+        }
+
+        if (not mutex_lock(this->mutex, MAX_DELAY_MS)) {
+                return conf_parser_status__mutex_error;
         }
 
         clear_conf(this);
@@ -259,6 +283,8 @@ int conf_parser__load_buffer(conf_parser_t *this, const char *buf, size_t bufsz)
                 }
         }
 
+        mutex_unlock(this->mutex);
+
         return n;
 }
 
@@ -278,17 +304,27 @@ int conf_parser__set_file_path(conf_parser_t *this, const char *path)
                 return conf_parser_status__arg_error;
         }
 
+        if (not mutex_lock(this->mutex, MAX_DELAY_MS)) {
+                return conf_parser_status__mutex_error;
+        }
+
         char *old_path = this->file_path;
+
+        int err = conf_parser_status__success;
 
         this->file_path = strdup(path);
         if (not this->file_path) {
                 this->file_path = old_path;
-                return conf_parser_status__no_memory;
+                err             = conf_parser_status__no_memory;
 
         } else {
                 free(old_path);
-                return conf_parser_status__success;
+                err = conf_parser_status__success;
         }
+
+        mutex_unlock(this->mutex);
+
+        return err;
 }
 
 //==============================================================================
@@ -307,8 +343,13 @@ int conf_parser__save_file(conf_parser_t *this, const char *path)
                 return conf_parser_status__arg_error;
         }
 
+        if (not mutex_lock(this->mutex, MAX_DELAY_MS)) {
+                return conf_parser_status__mutex_error;
+        }
+
         FILE *fp = fopen(path, "w");
         if (not fp) {
+                mutex_unlock(this->mutex);
                 return conf_parser_status__file_error;
         }
 
@@ -324,13 +365,10 @@ int conf_parser__save_file(conf_parser_t *this, const char *path)
 
                 size_t section_len = pair_get_section_length(pair);
                 if (section_len > 0) {
-                        if ((last_section == NULL) or
-                                (strlen(last_section) != section_len) or
-                                not isstreqn(last_section, pair_get_key(pair),
-                                        section_len)) {
+                        if ((last_section == NULL) or (strlen(last_section) != section_len) or
+                                not isstreqn(last_section, pair_get_key(pair), section_len)) {
 
-                                fprintf(fp, "%s[%.*s]\n", next_line ? "\n" : "",
-                                        section_len, key);
+                                fprintf(fp, "%s[%.*s]\n", next_line ? "\n" : "", section_len, key);
 
                                 free(last_section);
                                 last_section = strndup(key, section_len);
@@ -352,6 +390,8 @@ int conf_parser__save_file(conf_parser_t *this, const char *path)
 
         fclose(fp);
 
+        mutex_unlock(this->mutex);
+
         return err;
 }
 
@@ -370,11 +410,19 @@ int conf_parser__save(conf_parser_t *this)
                 return conf_parser_status__arg_error;
         }
 
-        if (this->file_path) {
-                return conf_parser__save_file(this, this->file_path);
-        } else {
-                return conf_parser_status__success;
+        if (not mutex_lock(this->mutex, MAX_DELAY_MS)) {
+                return conf_parser_status__mutex_error;
         }
+
+        int err = conf_parser_status__success;
+
+        if (this->file_path) {
+                err = conf_parser__save_file(this, this->file_path);
+        }
+
+        mutex_unlock(this->mutex);
+
+        return err;
 }
 
 //==============================================================================
@@ -392,17 +440,26 @@ int conf_parser__reload(conf_parser_t *this)
                 return conf_parser_status__arg_error;
         }
 
+        if (not mutex_lock(this->mutex, MAX_DELAY_MS)) {
+                return conf_parser_status__mutex_error;
+        }
+
         if (not this->file_path) {
+                mutex_unlock(this->mutex);
                 return conf_parser_status__success;
         }
 
         char *path = strdup(this->file_path);
         if (not path) {
+                mutex_unlock(this->mutex);
                 return conf_parser_status__no_memory;
         }
 
         int err = conf_parser__load_file(this, path);
         free(path);
+
+        mutex_unlock(this->mutex);
+
         return err;
 }
 
@@ -425,9 +482,14 @@ int conf_parser__save_buffer(conf_parser_t *this, char *buf, size_t bufsz)
 
         size_t n = 0;
 
-        for (pair_t *pair = this->pair; pair; pair = pair->next) {
-                n += snprintf(&buf[n], bufsz - n, "%s = %s\n", pair_get_key(pair),
-                        pair_get_value(pair));
+        if (mutex_lock(this->mutex, MAX_DELAY_MS)) {
+
+                for (pair_t *pair = this->pair; pair; pair = pair->next) {
+                        n += snprintf(&buf[n], bufsz - n, "%s = %s\n", pair_get_key(pair),
+                                pair_get_value(pair));
+                }
+
+                mutex_unlock(this->mutex);
         }
 
         return n;
@@ -449,13 +511,21 @@ const char *conf_parser__get_value(conf_parser_t *this, const char *key)
                 return NULL;
         }
 
-        for (pair_t *pair = this->pair; pair; pair = pair->next) {
-                if (strcmp(pair_get_key(pair), key) == 0) {
-                        return pair_get_value(pair);
+        const char *value = NULL;
+
+        if (mutex_lock(this->mutex, MAX_DELAY_MS)) {
+
+                for (pair_t *pair = this->pair; pair; pair = pair->next) {
+                        if (strcmp(pair_get_key(pair), key) == 0) {
+                                value = pair_get_value(pair);
+                                break;
+                        }
                 }
+
+                mutex_unlock(this->mutex);
         }
 
-        return NULL;
+        return value;
 }
 
 //==============================================================================
@@ -505,6 +575,10 @@ int conf_parser__set_value(conf_parser_t *this, const char *key, const char *val
                 return conf_parser_status__arg_error;
         }
 
+        if (not mutex_lock(this->mutex, MAX_DELAY_MS)) {
+                return conf_parser_status__mutex_error;
+        }
+
         pair_t *pair_prev = NULL;
 
         for (pair_t *pair = this->pair; pair; pair = pair->next) {
@@ -520,6 +594,7 @@ int conf_parser__set_value(conf_parser_t *this, const char *key, const char *val
                         p->next = pair->next;
                         free(pair);
 
+                        mutex_unlock(this->mutex);
                         return conf_parser_status__success;
                 }
 
@@ -533,6 +608,8 @@ int conf_parser__set_value(conf_parser_t *this, const char *key, const char *val
         } else {
                 this->pair = new_pair;
         }
+
+        mutex_unlock(this->mutex);
 
         return conf_parser_status__success;
 }
@@ -598,9 +675,10 @@ int conf_parser__set_value_vparse(conf_parser_t *this, const char *key_value_fmt
         vsnprintf(line, sizeof(line), key_value_fmt, args);
 
         struct conf_parser parser = {0};
-        int err = interpret_line(&parser, line, &parser.pair);
+        int                err    = interpret_line(&parser, line, &parser.pair);
         if (err == interpret_pair) {
-                err = conf_parser__set_value(this, parser.pair->data, &parser.pair->data[parser.pair->value_offset]);
+                err = conf_parser__set_value(this, parser.pair->data,
+                        &parser.pair->data[parser.pair->value_offset]);
         } else {
                 err = interpret_syntax_error;
         }
@@ -687,24 +765,32 @@ int conf_parser__set_file_value(const char *path, const char *key, const char *v
  * @return One of conf_parser_status_t.
  */
 //==============================================================================
-int conf_parser__get_pair(conf_parser_t *this, size_t i, const char **key,
-        const char **value)
+int conf_parser__get_pair(conf_parser_t *this, size_t i, const char **key, const char **value)
 {
         if (not this or not key or not value) {
                 return conf_parser_status__arg_error;
         }
 
-        size_t n = 0;
+        if (not mutex_lock(this->mutex, MAX_DELAY_MS)) {
+                return conf_parser_status__mutex_error;
+        }
+
+        size_t n   = 0;
+        int    err = conf_parser_status__no_entry;
 
         for (pair_t *pair = this->pair; pair; pair = pair->next, n++) {
                 if (n == i) {
                         *key   = pair_get_key(pair);
                         *value = pair_get_value(pair);
-                        return conf_parser_status__success;
+
+                        err = conf_parser_status__success;
+                        break;
                 }
         }
 
-        return conf_parser_status__no_entry;
+        mutex_unlock(this->mutex);
+
+        return err;
 }
 
 //==============================================================================
@@ -720,8 +806,8 @@ int conf_parser__get_pair(conf_parser_t *this, size_t i, const char **key,
 //==============================================================================
 bool conf_parser__is_value_true(const char *value)
 {
-        static const char *truths[] = {"yes", "true", "1", "set", "on", "active", "high",
-                "positive", "enable"};
+        static const char *truths[] = {"yes", "true", "1", "set", "on", "active", "high", "positive",
+                "enable"};
 
         if (value) {
                 for (size_t i = 0; i < ARRAY_SIZE(truths); i++) {
@@ -804,8 +890,7 @@ static int interpret_line(conf_parser_t *this, char *line, pair_t **pair)
 
                 char section_key[LINE_LEN];
                 if (this->current_section) {
-                        snprintf(section_key, sizeof(section_key), "%s.%s",
-                                this->current_section, key);
+                        snprintf(section_key, sizeof(section_key), "%s.%s", this->current_section, key);
                 } else {
                         strlcpy(section_key, key, sizeof(section_key));
                 }

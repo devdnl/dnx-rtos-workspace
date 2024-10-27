@@ -46,6 +46,7 @@ typedef enum {
         conf_parser_status__file_error   = -3,
         conf_parser_status__arg_error    = -4,
         conf_parser_status__no_entry     = -5,
+        conf_parser_status__mutex_error  = -6,
 } conf_parser_status_t;
 
 /*==============================================================================
@@ -73,26 +74,20 @@ extern const char *conf_parser__get_value(conf_parser_t *parser, const char *key
 
 extern char *conf_parser__get_file_value(const char *path, const char *key);
 
-extern int conf_parser__set_value(
-        conf_parser_t *parser, const char *key, const char *value);
+extern int conf_parser__set_value(conf_parser_t *parser, const char *key, const char *value);
 
-extern int conf_parser__set_value_vfv(
-        conf_parser_t *parser, const char *key, const char *value_fmt, va_list args);
+extern int conf_parser__set_value_vfv(conf_parser_t *parser, const char *key, const char *value_fmt,
+        va_list args);
 
-extern int conf_parser__set_value_vf(
-        conf_parser_t *parser, const char *key, const char *value_fmt, ...);
+extern int conf_parser__set_value_vf(conf_parser_t *parser, const char *key, const char *value_fmt, ...);
 
-extern int conf_parser__set_value_vparse(
-        conf_parser_t *parser, const char *key_value_fmt, va_list args);
+extern int conf_parser__set_value_vparse(conf_parser_t *parser, const char *key_value_fmt, va_list args);
 
-extern int conf_parser__set_value_parse(
-        conf_parser_t *parser, const char *key_value_fmt, ...);
+extern int conf_parser__set_value_parse(conf_parser_t *parser, const char *key_value_fmt, ...);
 
-extern int conf_parser__set_file_value(
-        const char *path, const char *key, const char *value);
+extern int conf_parser__set_file_value(const char *path, const char *key, const char *value);
 
-extern int conf_parser__get_pair(
-        conf_parser_t *parser, size_t i, const char **key, const char **val);
+extern int conf_parser__get_pair(conf_parser_t *parser, size_t i, const char **key, const char **val);
 
 extern bool conf_parser__is_value_true(const char *value);
 

@@ -90,7 +90,7 @@ static int tcl_cmd_sleep(struct tcl *tcl, tcl_value_t *args, void *arg)
         tcl_value_t *time = tcl_list_at(args, 1);
         msleep((u32_t)(tcl_float(time) * 1000));
         tcl_free(time);
-        return FNORMAL;
+        return TCL_FNORMAL;
 }
 
 //==============================================================================
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
                                 strncpy(global->cmd, argv[2], sizeof(global->cmd));
                                 strncat(global->cmd, "\n", sizeof(global->cmd));
 
-                                if (tcl_eval(&global->tcl, global->cmd, strlen(global->cmd)) != FNORMAL) {
+                                if (tcl_eval(&global->tcl, global->cmd, strlen(global->cmd)) != TCL_FNORMAL) {
 
                                         if (!global->tcl.exit) {
                                                 printf("Error: %s", global->cmd);
@@ -199,8 +199,8 @@ int main(int argc, char *argv[])
 
                         } while (global->cmd[0] == '\033');
 
-                        if (  tcl_eval(&global->tcl, global->cmd, strlen(global->cmd)) != FNORMAL
-                           || tcl_eval(&global->tcl, "\n", strlen("\n")) != FNORMAL) {
+                        if (  tcl_eval(&global->tcl, global->cmd, strlen(global->cmd)) != TCL_FNORMAL
+                           || tcl_eval(&global->tcl, "\n", strlen("\n")) != TCL_FNORMAL) {
 
                                 if (!global->tcl.exit) {
                                         printf("Error: %s", global->cmd);

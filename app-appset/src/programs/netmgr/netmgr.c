@@ -161,13 +161,11 @@ static void handle_interface(const char *config_file)
                 }
 
                 srand(get_uptime_ms());
-                srand(time(NULL));
-                char hwaddr[32];
-                u8_t n = 0;
-                for (size_t i = 0; i < 6; i++) {
-                        n += snprintf(hwaddr + n, sizeof(hwaddr) - n, "%02X:", rand() & 0xFF);
+                char hwaddr[32] = "50:67:21";
+                u8_t n          = strlen(hwaddr);
+                for (size_t i = 0; i < 3; i++) {
+                        n += snprintf(hwaddr + n, sizeof(hwaddr) - n, ":%02X", rand() & 0xFF);
                 }
-                hwaddr[n - 1] = '\0';
 
                 conf_parser__set_value(global->conf, NETMGR_CONF_KEY__INTERFACE_PATH, "/dev/eth");
                 conf_parser__set_value(global->conf, NETMGR_CONF_KEY__INTERFACE_HWADDR, hwaddr);
@@ -228,13 +226,15 @@ static void handle_interface(const char *config_file)
                                 if (last_state != status.state) {
                                         debug("estabilished IP connection.\n");
                                         debug("Address: %u.%u.%u.%u\n", NET_INET_IPv4_a(status.address),
-                                                NET_INET_IPv4_b(status.address), NET_INET_IPv4_c(status.address),
+                                                NET_INET_IPv4_b(status.address),
+                                                NET_INET_IPv4_c(status.address),
                                                 NET_INET_IPv4_d(status.address));
                                         debug("Mask   : %u.%u.%u.%u\n", NET_INET_IPv4_a(status.mask),
                                                 NET_INET_IPv4_b(status.mask), NET_INET_IPv4_c(status.mask),
                                                 NET_INET_IPv4_d(status.mask));
                                         debug("Gateway: %u.%u.%u.%u\n", NET_INET_IPv4_a(status.gateway),
-                                                NET_INET_IPv4_b(status.gateway), NET_INET_IPv4_c(status.gateway),
+                                                NET_INET_IPv4_b(status.gateway),
+                                                NET_INET_IPv4_c(status.gateway),
                                                 NET_INET_IPv4_d(status.gateway));
                                 }
                                 break;
@@ -263,7 +263,8 @@ static int configure_ethernet(void)
 {
         const char *conf_mac = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__INTERFACE_HWADDR);
 
-        const char *conf_autoneg = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__INTERFACE_AUTONEGOTIATION);
+        const char *conf_autoneg = conf_parser__get_value(global->conf,
+                NETMGR_CONF_KEY__INTERFACE_AUTONEGOTIATION);
 
         const char *conf_speed = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__INTERFACE_SPEED);
 
@@ -273,8 +274,8 @@ static int configure_ethernet(void)
 
         ETHIF_config_t conf = {0};
 
-        if (sscanf(conf_mac, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", &conf.MAC[0], &conf.MAC[1], &conf.MAC[2], &conf.MAC[3],
-                    &conf.MAC[4], &conf.MAC[5]) != ARRAY_SIZE(conf.MAC)) {
+        if (sscanf(conf_mac, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", &conf.MAC[0], &conf.MAC[1], &conf.MAC[2],
+                    &conf.MAC[3], &conf.MAC[4], &conf.MAC[5]) != ARRAY_SIZE(conf.MAC)) {
 
                 debug("%s: invalid MAC address: '%s'\n", conf_if_path, conf_mac);
 
@@ -282,10 +283,10 @@ static int configure_ethernet(void)
         }
 
         conf.auto_negotiation = conf_parser__is_value_true(conf_autoneg);
-        conf.speed            = isstreq(conf_speed, NETMGR_CONF_KEY__INTERFACE_SPEED_100M) ? ETHIF_SPEED__100Mbps
-                                                                                           : ETHIF_SPEED__10Mbps;
-        conf.duplex           = isstreq(conf_duplex, NETMGR_CONF_KEY__INTERFACE_DUPLEX_FULL) ? ETHIF_DUPLEX__FULL
-                                                                                             : ETHIF_DUPLEX__HALF;
+        conf.speed  = isstreq(conf_speed, NETMGR_CONF_KEY__INTERFACE_SPEED_100M) ? ETHIF_SPEED__100Mbps
+                                                                                 : ETHIF_SPEED__10Mbps;
+        conf.duplex = isstreq(conf_duplex, NETMGR_CONF_KEY__INTERFACE_DUPLEX_FULL) ? ETHIF_DUPLEX__FULL
+                                                                                   : ETHIF_DUPLEX__HALF;
 
         int fd = open(conf_if_path, O_RDWR);
         if (fd >= 0) {

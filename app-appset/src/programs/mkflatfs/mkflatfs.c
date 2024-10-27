@@ -354,8 +354,8 @@ static int format(u64_t disc_size, u32_t max_file_size, bool fast_format)
                         blk->bitmap_address_secondary = address_of_secondary_bmp;
                         blk->first_file_node_address  = address_of_primary_bmp + 1;
                         blk->total_files              = total_files;
-                        blk->crc                      = calc_blk_crc(blk);
                         blk->version                  = VERSION;
+                        blk->crc                      = calc_blk_crc(blk);
 
                         err = block_write(address_of_fs_block, blk, 1);
                 }
