@@ -70,8 +70,8 @@ extern "C" {
 #undef global
 #define global cast(struct httpsrv_globals *, _getglobal)
 
-#if DEBUG_ON
-#define DEBUG(...) printf("httplua: " __VA_ARGS__)
+#if HTTPSRV_DEBUG_ON
+#define DEBUG(...) printf("httpsrv: " __VA_ARGS__)
 #else
 #define DEBUG(...)
 #endif

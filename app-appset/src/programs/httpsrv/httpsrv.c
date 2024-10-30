@@ -112,6 +112,8 @@ static const char *HTTP_CONTENT_TYPE_IMAGE_PNG = "Content-Type: image/png\r\n\r\
 
 static const char *HTTP_CONTENT_TYPE_IMAGE_JPEG = "Content-Type: image/jpeg\r\n\r\n";
 
+static const char *HTTP_CONTENT_TYPE_IMAGE_PPM = "Content-Type: image/ppm\r\n\r\n";
+
 static const char *HTTP_CONTENT_TYPE_IMAGE_ICO = "Content-Type: image/x-icon\r\n\r\n";
 
 static const char *HTTP_CONTENT_TYPE_TEXT_TEXT = "Content-Type: text/text\r\n\r\n";
@@ -570,7 +572,7 @@ static int parser_header_value(http_parser *parser, const char *at, size_t lengt
                         chunk_free(&http->header.content_type);
                 }
 
-                chunk_add(&http->header.content_type, at, length, true);
+                chunk_add(&http->header.content_type, at, length, false);
         }
 
         http->header.field_chunk_num = 0;
@@ -704,7 +706,7 @@ static int multipart_flush_file(httpsrv_thread_t *self, const char *path)
 {
         struct multipart *multipart = &self->multipart;
 
-        DEBUG("%s: %lu bytes to '%s'\n", __func__, multipart->buf_seek, path);
+        DEBUG("%s: %lu bytes to '%s'\n", __func__, multipart->data.buf_seek, path);
 
         int n = multipart->data.buf_seek;
 
@@ -994,6 +996,14 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
 
         } else if (isstreq(ext, ".jpg") or isstreq(ext, ".jpeg")) {
                 if (httpsrv_send_file(self, HTTP_CONTENT_TYPE_IMAGE_JPEG, HTTPSRV_CACHE_TIME_FOR_JPEG,
+                            file_path) >= 0) {
+                        return 0;
+                } else {
+                        return 1;
+                }
+
+        } else if (isstreq(ext, ".ppm")) {
+                if (httpsrv_send_file(self, HTTP_CONTENT_TYPE_IMAGE_PPM, HTTPSRV_CACHE_TIME_FOR_JPEG,
                             file_path) >= 0) {
                         return 0;
                 } else {
