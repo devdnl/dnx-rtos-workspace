@@ -416,6 +416,8 @@ static int handle_http(void *arg)
 
         httpsrv_interpreter_deinit(self);
 
+        socket_disconnect(self->socket);
+
         socket_close(self->socket);
         free(self);
 
