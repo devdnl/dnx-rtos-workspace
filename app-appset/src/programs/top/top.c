@@ -154,20 +154,20 @@ int main(int argc, char *argv[])
                                         global->pstat.CPU_load % 10);
                         }
 
-                        const char *fmtbegin = global->show_threads ? VT100_FONT_BOLD : "";
+                        const char *fmtbegin    = global->show_threads ? VT100_FONT_BOLD : "";
+                        const char *stack_color = "";
 
-                        const char *fmt_stack_color         = "";
-                        uint        stack_max_usage_percent = global->pstat.stack_max_usage * 100 /
+                        uint stack_max_usage_percent = global->pstat.stack_max_usage * 100 /
                                 global->pstat.stack_size;
                         if (stack_max_usage_percent >= 85) {
-                                fmt_stack_color = VT100_FONT_COLOR_RED;
+                                stack_color = VT100_FONT_COLOR_RED;
                         } else if (stack_max_usage_percent >= 75) {
-                                fmt_stack_color = VT100_FONT_COLOR_YELLOW;
+                                stack_color = VT100_FONT_COLOR_YELLOW;
                         }
 
                         printf("%s%3d %2d %7u %5d %s%4d%s %s %5u %2d %3d %s" VT100_RESET_ATTRIBUTES "\n",
                                 fmtbegin, global->pstat.pid, global->pstat.priority,
-                                (uint)global->pstat.memory_usage, global->pstat.stack_size, fmt_stack_color,
+                                (uint)global->pstat.memory_usage, global->pstat.stack_size, stack_color,
                                 stack_max_usage_percent, VT100_RESET_ATTRIBUTES, cpu_load_str,
                                 global->pstat.syscalls_per_sec, global->pstat.threads_count,
                                 global->pstat.dir_count + global->pstat.files_count +
@@ -180,9 +180,18 @@ int main(int argc, char *argv[])
 
                                         thread_stat_t stat;
                                         if (thread_stat(global->pstat.pid, tid, &stat) == 0) {
-                                                printf("%     %2d         %5d %4d  %2d.%d %5u %2d\n",
-                                                        stat.priority, stat.stack_size,
-                                                        stat.stack_max_usage * 100 / stat.stack_size,
+
+                                                stack_max_usage_percent = stat.stack_max_usage * 100 /
+                                                        stat.stack_size;
+                                                if (stack_max_usage_percent >= 85) {
+                                                        stack_color = VT100_FONT_COLOR_RED;
+                                                } else if (stack_max_usage_percent >= 75) {
+                                                        stack_color = VT100_FONT_COLOR_YELLOW;
+                                                }
+
+                                                printf("    %2d         %5d %s%4d%s  %2d.%d %5u %2d\n",
+                                                        stat.priority, stat.stack_size, stack_color,
+                                                        stack_max_usage_percent, VT100_RESET_ATTRIBUTES,
                                                         stat.CPU_load / 10, stat.CPU_load % 10,
                                                         stat.syscalls_per_sec, stat.tid);
                                         }

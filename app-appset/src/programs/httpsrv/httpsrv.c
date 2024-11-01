@@ -374,10 +374,6 @@ static int handle_http(void *arg)
         self->http_request.parser.data      = self;
         self->http_request.message_complete = false;
 
-        if (httpsrv_interpreter_init(self) != 0) {
-                VERBOSE("cannot initialize interpreter!\n");
-        }
-
         int len = 0;
         while ((len = socket_read(self->socket, self->http_request.buf, sizeof(self->http_request.buf))) >
                 0) {
@@ -414,7 +410,9 @@ static int handle_http(void *arg)
         free(self->multipart.data.path);
         self->multipart.data.path = NULL;
 
-        httpsrv_interpreter_deinit(self);
+        if (self->interpreter.object) {
+                httpsrv_interpreter_deinit(self);
+        }
 
         socket_disconnect(self->socket);
 
@@ -1030,6 +1028,10 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
 
         } else if (isstreq(ext, HTTPSRV_SCRIPT_EXTENSION)) {
 
+                if (httpsrv_interpreter_init(self) != 0) {
+                        VERBOSE("cannot initialize interpreter!\n");
+                }
+
                 httpsrv_send(self, HTTP_CONTENT_TYPE_TEXT_HTML, strlen(HTTP_CONTENT_TYPE_TEXT_HTML), false);
 
                 if (httpsrv_interpreter_dofile(self, file_path) != 0) {
@@ -1050,6 +1052,10 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
                 } else {
                         return 1;
                 }
+        }
+
+        if (httpsrv_interpreter_init(self) != 0) {
+                VERBOSE("cannot initialize interpreter!\n");
         }
 
         errno      = 0;
