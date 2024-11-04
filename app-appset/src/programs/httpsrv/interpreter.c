@@ -122,6 +122,9 @@ int httpsrv_interpreter_init(httpsrv_thread_t *self)
         lua_pushstring(L, HTTPSRV_ROOT_DIR);
         lua_setglobal(L, "root_dir");
 
+        lua_pushstring(L, HTTPSRV_UPLOAD_DIR);
+        lua_setglobal(L, "upload_dir");
+
         for (const luaL_Reg *lib = lua_libs; lib->func; lib++) {
                 luaL_requiref(L, lib->name, lib->func, true);
                 lua_pop(L, 1);

@@ -183,6 +183,7 @@ int main(int argc, char *argv[])
 
                                                 stack_max_usage_percent = stat.stack_max_usage * 100 /
                                                         stat.stack_size;
+                                                stack_color = "";
                                                 if (stack_max_usage_percent >= 85) {
                                                         stack_color = VT100_FONT_COLOR_RED;
                                                 } else if (stack_max_usage_percent >= 75) {

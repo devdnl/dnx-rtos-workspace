@@ -523,7 +523,7 @@ static int tcl_qspi_flash_erase(struct tcl *tcl, tcl_value_t *args, void *ctx)
 
         char r_str[8];
         snprintf(r_str, sizeof(r_str), "%d", err);
-        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+        return tcl_result(tcl, TCL_FNORMAL, tcl_alloc(r_str, strlen(r_str)));
 }
 
 //==============================================================================
@@ -610,7 +610,7 @@ static int tcl_qspi_flash_write(struct tcl *tcl, tcl_value_t *args, void *ctx)
 
         char r_str[8];
         snprintf(r_str, sizeof(r_str), "%d", err);
-        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+        return tcl_result(tcl, TCL_FNORMAL, tcl_alloc(r_str, strlen(r_str)));
 }
 
 //==============================================================================
@@ -674,7 +674,7 @@ static int tcl_flash_erase(struct tcl *tcl, tcl_value_t *args, void *ctx)
 
         char r_str[8];
         snprintf(r_str, sizeof(r_str), "%d", err);
-        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+        return tcl_result(tcl, TCL_FNORMAL, tcl_alloc(r_str, strlen(r_str)));
 }
 
 //==============================================================================
@@ -761,7 +761,7 @@ static int tcl_flash_write(struct tcl *tcl, tcl_value_t *args, void *ctx)
 
         char r_str[8];
         snprintf(r_str, sizeof(r_str), "%d", err);
-        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+        return tcl_result(tcl, TCL_FNORMAL, tcl_alloc(r_str, strlen(r_str)));
 }
 
 //==============================================================================
@@ -790,7 +790,7 @@ static int tcl_get_file_size(struct tcl *tcl, tcl_value_t *args, void *ctx)
 
         char r_str[8];
         snprintf(r_str, sizeof(r_str), "%lu", stat.size);
-        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+        return tcl_result(tcl, TCL_FNORMAL, tcl_alloc(r_str, strlen(r_str)));
 }
 
 //==============================================================================
@@ -857,7 +857,7 @@ static int tcl_extract(struct tcl *tcl, tcl_value_t *args, void *ctx)
 
         char r_str[8];
         snprintf(r_str, sizeof(r_str), "%d", err);
-        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+        return tcl_result(tcl, TCL_FNORMAL, tcl_alloc(r_str, strlen(r_str)));
 }
 
 //==============================================================================
@@ -909,7 +909,7 @@ int main(int argc, char *argv[])
         fpkg_t      *fpkg     = fpkg__open(PATH_UPDATE_FILE, true);
         fpkg_file_t *manifest = fpkg__fopen(fpkg, FPKG_SECTION_MANIFEST);
 
-        if (fpkg and manifest and (tcl_init(&tcl) == FNORMAL)) {
+        if (fpkg and manifest and (tcl_init(&tcl) == TCL_FNORMAL)) {
 
                 tcl_register_const(&tcl, "qspi_flash_erase", tcl_qspi_flash_erase, 3,
                         fpkg);
