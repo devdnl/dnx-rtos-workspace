@@ -782,13 +782,13 @@ static inline void cache_flush(void)
 /**
  * @brief  Register new appset(s).
  *
- * @param  appset_array         appset vectors array
- * @param  appset_count         number of vectors
+ * @param  appset_address_array appset address array
+ * @param  appset_count         number of addresses
  *
  * @return One of errno value.
  */
 //==============================================================================
-extern int register_appset(const void **appset_array, size_t appset_count);
+extern int register_appset(const void **appset_address_array, size_t appset_count);
 
 /**@}*/
 

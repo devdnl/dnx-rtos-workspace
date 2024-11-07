@@ -170,8 +170,7 @@ clean :
 .PHONY : app
 app : _build_prepare app-system app-appset app-romfs
 	@$(SREC_CAT) $(TARGET_DIR_NAME)/app-system.hex -Intel $(TARGET_DIR_NAME)/app-appset.hex -Intel $(TARGET_DIR_NAME)/app-romfs.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_app.hex -Intel
-	@$(MKDIR) $(TARGET_DIR_NAME)/app-dist
-	@$(COPY) config/btl-manifest $(TARGET_DIR_NAME)/app-dist/manifest
+	@$(COPY) -R ./app-dist $(TARGET_DIR_NAME)/app-dist
 	@$(COPY) $(TARGET_DIR_NAME)/app-system.bin $(TARGET_DIR_NAME)/app-dist/app-system.bin
 	@$(COPY) $(TARGET_DIR_NAME)/app-appset.bin $(TARGET_DIR_NAME)/app-dist/app-appset.bin
 	@$(MKFPKG) $(TARGET_DIR_NAME)/app-dist $(TARGET_DIR_NAME)/$(PROJECT).fpkg
