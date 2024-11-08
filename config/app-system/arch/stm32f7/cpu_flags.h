@@ -287,6 +287,46 @@ __CPU_PREFFERED_FS_RAM__="SDRAM", "PSRAM", "SRAM", "SRAM1", "SRAM2", "DTCM"
 __CPU_PREFFERED_FAST_RAM__="DTCM", "DTCM", "SRAM1", "SRAM2"
 #*/
 
+#/*--
+# this:AddWidget("Combobox", "Executable SDRAM (C0000000h-DFFFFFFFh)")
+# this:AddItem("No", "_NO_")
+# this:AddItem("Yes", "_YES_")
+#--*/
+#define __CPU_SDRAM_EXECUTABLE__ _NO_
+#/*
+__CPU_SDRAM_EXECUTABLE__=_NO_
+#*/
+
+#/*--
+# this:AddWidget("Combobox", "Cacheable SDRAM (C0000000h-DFFFFFFFh)")
+# this:AddItem("No", "_NO_")
+# this:AddItem("Yes", "_YES_")
+#--*/
+#define __CPU_SDRAM_CACHEABLE__ _NO_
+#/*
+__CPU_SDRAM_CACHEABLE__=_NO_
+#*/
+
+#/*--
+# this:AddWidget("Combobox", "Shareable SDRAM (C0000000h-DFFFFFFFh)")
+# this:AddItem("No", "_NO_")
+# this:AddItem("Yes", "_YES_")
+#--*/
+#define __CPU_SDRAM_SHAREABLE__ _NO_
+#/*
+__CPU_SDRAM_SHAREABLE__=_NO_
+#*/
+
+#/*--
+# this:AddWidget("Combobox", "Bufferable SDRAM (C0000000h-DFFFFFFFh)")
+# this:AddItem("No", "_NO_")
+# this:AddItem("Yes", "_YES_")
+#--*/
+#define __CPU_SDRAM_BUFFERABLE__ _NO_
+#/*
+__CPU_SDRAM_BUFFERABLE__=_NO_
+#*/
+
 #//-----------------------------------------------------------------------------
 #// mandatory flags, not configurable
 #//-----------------------------------------------------------------------------

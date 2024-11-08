@@ -1,11 +1,11 @@
 /*==============================================================================
-File     strndup.c
+@file    addappset.c
 
-Author   Daniel Zorychta
+@author  Daniel Zorychta
 
-Brief    String duplication.
+@brief   Add appset to system register.
 
-         Copyright (C) 2022 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2024 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -29,7 +29,11 @@ Brief    String duplication.
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <dnx/misc.h>
+#include <dnx/os.h>
 
 /*==============================================================================
   Local macros
@@ -46,10 +50,13 @@ Brief    String duplication.
 /*==============================================================================
   Local objects
 ==============================================================================*/
+GLOBAL_VARIABLES_SECTION {
+};
 
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+PROGRAM_PARAMS(addappset, STACK_DEPTH_LOW);
 
 /*==============================================================================
   External objects
@@ -61,30 +68,33 @@ Brief    String duplication.
 
 //==============================================================================
 /**
- * @brief The strndup() function is used to duplicate a string of size n.
+ * Main program function.
  *
- * This function returns a pointer to a null-terminated byte string, which is
- * a duplicate of the string pointed to by s. The memory obtained is done
- * dynamically using malloc and hence it can be freed using free().
+ * Note: Please adjust stack size according to programs needs.
  *
- * @param s             string
- * @param n             string size
- *
- * @return It returns a pointer to the duplicated string s.
+ * @param argc      argument count
+ * @param argv      arguments
  */
 //==============================================================================
-char *strndup(const char *s, size_t n)
+int main(int argc, char *argv[])
 {
-        extern size_t _libc_strlcpy(char *dst, const char *src, size_t size);
-        extern void *_libc_malloc(size_t size);
+        if (argc < 2) {
+                printf("Usage: %s <appset-address-1> [appset-address-2] [...]\n", argv[0]);
+                return EXIT_FAILURE;
 
-        n += 1;
-        char *dup = _libc_malloc(n);
-        if (dup) {
-                _libc_strlcpy(dup, s, n);
+        } else  {
+                for (int i = 1; i < argc; i++) {
+                        const void *appset[] = {cast(void *, strtoul(argv[i], NULL, 0))};
+
+                        if (register_appset(appset, ARRAY_SIZE(appset)) == 0) {
+                                printf("Appset @ %p successfully added.\n", appset[0]);
+                        } else {
+                                printf("Unable to add appset @ %p.\n", appset[0]);
+                        }
+                }
+
+                return EXIT_SUCCESS;
         }
-
-        return dup;
 }
 
 /*==============================================================================
