@@ -122,6 +122,20 @@ extern "C" {
  */
 #define IOCTL_VFS__IS_NON_BLOCKING_WR_MODE      0xF0008
 
+/**
+ * @brief Request enable non-strict read mode.
+ *
+ * @see   ioctl()
+ */
+#define IOCTL_VFS__NON_STRICT_RD_MODE      0xF0009
+
+/**
+ * @brief Request return non-strict read mode status.
+ *
+ * @see   ioctl()
+ */
+#define IOCTL_VFS__IS_NON_STRICT_RD_MODE   0xF000A
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/

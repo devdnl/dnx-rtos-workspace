@@ -113,24 +113,6 @@ this:SetToolTip("This function enables time management (RTC).")
 #define __OS_ENABLE_TIMEMAN__ _YES_
 
 /*--
-this:AddWidget("Checkbox", "printf() family functions")
-this:SetToolTip("If this function is selected then printf() family function can be used by the application.")
---*/
-#define __OS_PRINTF_ENABLE__ _YES_
-
-/*--
-this:AddWidget("Checkbox", "printf() float support (%f flag)")
-this:SetToolTip("If this function is selected then printf() support float to string conversion.")
---*/
-#define __OS_PRINTF_FLOAT_ENABLE__ _YES_
-
-/*--
-this:AddWidget("Checkbox", "scanf() family functions")
-this:SetToolTip("If this function is selected then scanf() family function can be used by the application.")
---*/
-#define __OS_SCANF_ENABLE__ _YES_
-
-/*--
 this:AddWidget("Checkbox", "mkdir() function")
 this:SetToolTip("This option enables mkdir() function.")
 --*/
