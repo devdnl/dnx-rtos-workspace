@@ -509,7 +509,7 @@ int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key,
         if (cast(uintptr_t, item) < cast(uintptr_t, self->chunk) + self->chunk_len) {
 
                 *type  = item->type;
-                *key   = &item->key_data[0];
+                *key   = cast(char *, &item->key_data[0]);
                 *value = &item->key_data[item->key_len];
                 *next  = cast(uint8_t *, item) + sizeof(*item) + item->key_len +
                                 item->data_len;
