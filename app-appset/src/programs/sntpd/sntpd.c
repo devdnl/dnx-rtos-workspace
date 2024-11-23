@@ -44,7 +44,7 @@
   Local symbolic constants/macros
 ==============================================================================*/
 /** Timeoffset feature */
-#define TIMEZONE_RECEIVE_ENABLE     1
+#define TIMEZONE_RECEIVE_ENABLE     0
 
 /** SNTP server port */
 #define SNTP_PORT                   123
