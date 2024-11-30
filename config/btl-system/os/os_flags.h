@@ -197,9 +197,9 @@ this:SetToolTip("If this option is enabled then system is able to run scripts wi
 #define __OS_SYSTEM_SHEBANG_ENABLE__ _NO_
 
 /*--
-this:AddExtraWidget("Void", "VoidOption") -- uncomment if number of upper widgets is odd
-this:AddExtraWidget("Label", "LabelSizes", "\nMemory parameters", -1, "bold")
-this:AddExtraWidget("Void", "VoidSizes")
+--this:AddExtraWidget("Void", "VoidOption") -- uncomment if number of upper widgets is odd
+--this:AddExtraWidget("Label", "LabelSizes", "\nMemory parameters", -1, "bold")
+--this:AddExtraWidget("Void", "VoidSizes")
 ++*/
 /*--
 this:AddWidget("Spinbox", 8, 1024, "Length of stream buffer [bytes]")
