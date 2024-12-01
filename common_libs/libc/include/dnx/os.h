@@ -1,11 +1,11 @@
-/*=========================================================================*//**
+/*==============================================================================
 @file    os.h
 
 @author  Daniel Zorychta
 
 @brief   dnx system main header
 
-@note    Copyright (C) 2012, 2013  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2024  Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /**
 \defgroup dnx-os-h <dnx/os.h>
@@ -55,9 +55,13 @@ extern "C" {
 #define _COMMIT_HASH ""
 #endif
 
-#define MEM_FLAG__DMA    (1 << 0)
-#define MEM_FLAG__CACHE  (1 << 1)
-#define MEM_FLAG__NOHEAP (1 << 2)
+#define MEM_FLAG__DMA                   (1 << 0)
+#define MEM_FLAG__CACHE                 (1 << 1)
+#define MEM_FLAG__NOHEAP                (1 << 2)
+
+#define KERNEL_PANIC_FLAG__KERNEL_SPACE (1 << 0)
+#define KERNEL_PANIC_FLAG__KERNEL_PANIC (1 << 1)
+#define KERNEL_PANIC_FLAG__PANIC_LOOP   (1 << 2)
 
 /*==============================================================================
   Exported types, enums definitions
@@ -101,10 +105,10 @@ typedef struct {
 
 /** average CPU load */
 typedef struct {
-        u32_t avg1sec;                  //!< average CPU load within 1 second (1% = 10)
-        u32_t avg1min;                  //!< average CPU load within 1 minute (1% = 10)
-        u32_t avg5min;                  //!< average CPU load within 5 minutes (1% = 10)
-        u32_t avg15min;                 //!< average CPU load within 15 minutes (1% = 10)
+        u32_t avg1sec;  //!< average CPU load within 1 second (1% = 10)
+        u32_t avg1min;  //!< average CPU load within 1 minute (1% = 10)
+        u32_t avg5min;  //!< average CPU load within 5 minutes (1% = 10)
+        u32_t avg15min; //!< average CPU load within 15 minutes (1% = 10)
 } avg_CPU_load_t;
 
 /**
@@ -115,14 +119,13 @@ typedef struct {
  * @see get_kernel_panic_info()
  */
 typedef struct {
-        const char *cause_str;       /* cause string       */
-        const char *name;            /* process name       */
-        int         cause;           /* kernel panic cause */
-        pid_t       pid;             /* process ID         */
-        tid_t       tid;             /* thread ID          */
-        bool        kernelspace;     /* kernel space       */
-        bool        kernel_panic;    /* kernel panic       */
-        bool        sycall;          /* syscall            */
+        const char *cause_str;
+        char        name[64];
+        u32_t       flags;
+        int         cause;
+        pid_t       pid;
+        tid_t       tid;
+        u8_t        syscall;
 } kernel_panic_info_t;
 
 /*==============================================================================
@@ -304,7 +307,7 @@ static inline int get_driver_memory_usage(uint module_number, int32_t *usage)
 static inline clock_t get_uptime_ms(void)
 {
         clock_t uptime = 0;
-        int err = _libc_syscall(_LIBC_SYS_GETUPTIMEMS, &uptime);
+        int     err    = _libc_syscall(_LIBC_SYS_GETUPTIMEMS, &uptime);
         return err ? (clock_t)(-1LL) : uptime;
 }
 
@@ -369,7 +372,7 @@ static inline int get_average_CPU_load(avg_CPU_load_t *avg_CPU_load)
 static inline const char *get_platform_name(void)
 {
         const char *name = NULL;
-        int err = _libc_syscall(_LIBC_SYS_GETPLATFORMNAME, &name);
+        int         err  = _libc_syscall(_LIBC_SYS_GETPLATFORMNAME, &name);
         return err ? "" : name;
 }
 
@@ -397,7 +400,7 @@ static inline const char *get_platform_name(void)
 static inline const char *get_OS_name(void)
 {
         const char *buf = NULL;
-        int err = _libc_syscall(_LIBC_SYS_GETOSNAME, &buf);
+        int         err = _libc_syscall(_LIBC_SYS_GETOSNAME, &buf);
         return err ? "" : buf;
 }
 
@@ -425,7 +428,7 @@ static inline const char *get_OS_name(void)
 static inline const char *get_OS_version(void)
 {
         const char *buf = NULL;
-        int err = _libc_syscall(_LIBC_SYS_GETOSVER, &buf);
+        int         err = _libc_syscall(_LIBC_SYS_GETOSVER, &buf);
         return err ? "" : buf;
 }
 
@@ -453,7 +456,7 @@ static inline const char *get_OS_version(void)
 static inline const char *get_OS_commithash(void)
 {
         const char *buf = NULL;
-        int err = _libc_syscall(_LIBC_SYS_GETOSCOMMITHASH, &buf);
+        int         err = _libc_syscall(_LIBC_SYS_GETOSCOMMITHASH, &buf);
         return err ? "" : buf;
 }
 
@@ -481,7 +484,7 @@ static inline const char *get_OS_commithash(void)
 static inline const char *get_kernel_name(void)
 {
         const char *buf = NULL;
-        int err = _libc_syscall(_LIBC_SYS_GETKERNELNAME, &buf);
+        int         err = _libc_syscall(_LIBC_SYS_GETKERNELNAME, &buf);
         return err ? "" : buf;
 }
 
@@ -509,7 +512,7 @@ static inline const char *get_kernel_name(void)
 static inline const char *get_kernel_version(void)
 {
         const char *buf = NULL;
-        int err = _libc_syscall(_LIBC_SYS_GETKERNELVER, &buf);
+        int         err = _libc_syscall(_LIBC_SYS_GETKERNELVER, &buf);
         return err ? "" : buf;
 }
 
@@ -688,10 +691,11 @@ static inline void system_shutdown(void)
    @endcode
  */
 //==============================================================================
-static inline size_t syslog_read(char *str, size_t len, const struct timeval *from_time, struct timeval *curr_time)
+static inline size_t syslog_read(char *str, size_t len, const struct timeval *from_time,
+        struct timeval *curr_time)
 {
-        size_t n = 0;
-        int err = _libc_syscall(_LIBC_SYS_SYSLOGREAD, str, &len, from_time, curr_time, &n);
+        size_t n   = 0;
+        int    err = _libc_syscall(_LIBC_SYS_SYSLOGREAD, str, &len, from_time, curr_time, &n);
         return err ? 0 : n;
 }
 

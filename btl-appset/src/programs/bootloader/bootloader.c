@@ -297,11 +297,17 @@ static void show_kernel_panic_message(void)
         if (get_kernel_panic_info(&info)) {
 
                 printf(VT100_FONT_COLOR_RED);
-                printf("*** %s ***\n", info.kernel_panic ? "KERNEL PANIC" : "APP CRASH");
-                printf("  Cause: %s (%d)\n", info.cause_str, info.cause);
-                printf("  PID  : %u (%.*s)\n", info.pid, 256, info.name);
-                printf("  TID  : %u\n", info.tid);
-                printf("  SPACE: %s\n", info.kernelspace ? "kernel" : "user");
+                printf("*** %s ***\n",
+                        info.flags & KERNEL_PANIC_FLAG__KERNEL_PANIC ? "KERNEL PANIC" : "APP CRASH");
+                printf("  Cause  : %s (%d)\n", info.cause_str, info.cause);
+                printf("  PID    : %u (%.*s)\n", info.pid, sizeof(info.name), info.name);
+                printf("  TID    : %u\n", info.tid);
+                printf("  SPACE  : %s\n", info.flags & KERNEL_PANIC_FLAG__KERNEL_SPACE ? "kernel" : "user");
+                printf("  SYSCALL: %u\n", info.syscall);
+                printf("  FLAGS  : %s%s%s\n",
+                        ((info.flags & KERNEL_PANIC_FLAG__KERNEL_SPACE) ? "KS:1 " : "KS:0 "),
+                        ((info.flags & KERNEL_PANIC_FLAG__KERNEL_PANIC) ? "KP:1 " : "KP:0 "),
+                        ((info.flags & KERNEL_PANIC_FLAG__PANIC_LOOP) ? "PL:1 " : "PL:0 "));
                 printf(VT100_RESET_ATTRIBUTES "\n");
 
                 sleep(3);
