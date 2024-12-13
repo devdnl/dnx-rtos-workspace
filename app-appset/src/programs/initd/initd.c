@@ -285,7 +285,7 @@ static void mount_file_systems(void)
         /*
          * ROMFS at address 0x08070000
          */
-        const u32_t        romfs_address   = 0x08070000;
+        const u32_t        romfs_address   = 0x100C0000;
         const u32_t       *romfs_ptr       = cast(typeof(romfs_ptr), romfs_address);
         static const char *romfs_signature = "FPKG\n";
 

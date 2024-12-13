@@ -81,6 +81,7 @@ __PROJECT_TOOLCHAIN__=arm-none-eabi-
 #define stm32f4 0x8dd787b6
 #define stm32f7 0x3cb2ba7c
 #define stm32h7 0x56A5cde6
+#define rpcm0   0x60b36426
 #/*--
 # this:AddWidget("Combobox", "CPU architecture")
 # this:AddItem("STMicroelectronics STM32F1", "stm32f1")
@@ -88,17 +89,18 @@ __PROJECT_TOOLCHAIN__=arm-none-eabi-
 # this:AddItem("STMicroelectronics STM32F4", "stm32f4")
 # this:AddItem("STMicroelectronics STM32F7", "stm32f7")
 # this:AddItem("STMicroelectronics STM32H7", "stm32h7")
+# this:AddItem("Raspberry Pi Pico M0+", "rpcm0")
 #--*/
-#define __CPU_ARCH__ stm32f1
+#define __CPU_ARCH__ rpcm0
 #/*
-__CPU_ARCH__=stm32f1
+__CPU_ARCH__=rpcm0
 #*/
 
 #/*--
 # this:AddWidget("Spinbox", 0, 16, "Terminal UART")
 # this:SetToolTip("This value set UART terminal. This is UART major number.")
 #--*/
-#define __CPU_UART_TERM__ 2
+#define __CPU_UART_TERM__ 0
 
 
 #/*--
@@ -109,19 +111,19 @@ __CPU_ARCH__=stm32f1
 # this:AddWidget("Editline", false, "Appset address")
 # this:SetToolTip("Start address of application section.")
 #--*/
-#define __PROJ_APPSET_TABLE_ADDRESS__ 0x08010000
+#define __PROJ_APPSET_TABLE_ADDRESS__ 0x10100000
 
 #/*--
 # this:AddWidget("Editline", false, "Appset size")
 # this:SetToolTip("Size of application section.")
 #--*/
-#define __PROJ_APPSET_TABLE_SIZE__ 448k
+#define __PROJ_APPSET_TABLE_SIZE__ 1024k
 
 #/*--
 #this:AddWidget("Editline", false, "dnx RTOS section address")
 #this:SetToolTip("dnx RTOS section start address.")
 #--*/
-#define __LIBC_DNX_RTOS_ADDRESS__ 0x08000000
+#define __LIBC_DNX_RTOS_ADDRESS__ 0x10000100
 
 #if (__CPU_ARCH__ == stm32f1)
 #define ARCH_stm32f1
@@ -175,6 +177,17 @@ CPUCONFIG_AFLAGS=-mcpu=cortex-m7 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -f
 CPUCONFIG_CFLAGS=-mcpu=cortex-m7 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM7
 CPUCONFIG_CXXFLAGS=-mcpu=cortex-m7 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM7
 CPUCONFIG_LDFLAGS=-mcpu=cortex-m7 -mthumb -mthumb-interwork -nostartfiles
+CPUCONFIG_LDFLAGS += -T./build/program/layout.ld
+endif
+#*/
+#elif (__CPU_ARCH__ == rpcm0)
+#define ARCH_rpcm0
+#/*
+ifeq ($(__CPU_ARCH__), rpcm0)
+CPUCONFIG_AFLAGS=-mcpu=cortex-m0plus -mthumb -ffast-math -fno-math-errno -mthumb-interwork
+CPUCONFIG_CFLAGS=-mcpu=cortex-m0plus -mthumb -ffast-math -fno-math-errno -mthumb-interwork
+CPUCONFIG_CXXFLAGS=-mcpu=cortex-m0plus -mthumb -ffast-math -fno-math-errno -mthumb-interwork
+CPUCONFIG_LDFLAGS=-mcpu=cortex-m0plus -mthumb -mthumb-interwork -nostartfiles
 CPUCONFIG_LDFLAGS += -T./build/program/layout.ld
 endif
 #*/

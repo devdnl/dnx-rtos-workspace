@@ -192,7 +192,7 @@ app-appset : _build_prepare
 
 .PHONY : app-romfs
 app-romfs : _build_prepare
-	@$(call make_romfs, app-romfs, 0x08070000)
+	@$(call make_romfs, app-romfs, 0x100C0000)
 
 .PHONY : clean-app-appset
 clean-app-appset : _build_prepare
