@@ -1,4 +1,4 @@
-/*=========================================================================*//**
+/*==============================================================================
 @file    initd.c
 
 @author  Daniel Zorychta
@@ -24,7 +24,7 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /*==============================================================================
   Include files
@@ -78,6 +78,19 @@ PROGRAM_PARAMS(initd, STACK_DEPTH_LOW);
 static void create_base_file_system_structure(void)
 {
         /*
+         * NOTE: Number and naming of folders depends on user needs. There can
+         *       be mounted additional file systems that does not requires
+         *       drivers to work (e.g. procfs, devfs, etc). Remember that this
+         *       stage does not give access to drivers because drivers will be
+         *       initialized in the next runlevel.
+         *
+         *       Mounting file system is not necessary if user just want to use
+         *       basic drivers without using files. In this case drivers can
+         *       be initialized by using special path:
+         *       "dev://<DRIVER-NAME>:<major>:<minor>"
+         */
+
+        /*
          * 1. Mount base file system as root.
          */
         mount("ramfs", "", "/", "");
@@ -94,14 +107,6 @@ static void create_base_file_system_structure(void)
         mkdir("/etc", 0666);  // this folder store SD card content
 
         mount("procfs", "", "/proc", "");
-
-        /*
-         * NOTE: Number and naming of folders depends on user needs. There can
-         *       be mounted additional file systems that does not requires
-         *       drivers to work (e.g. procfs, devfs, etc). Remember that this
-         *       stage does not give access to drivers because drivers will be
-         *       initialized in the next runlevel.
-         */
 }
 
 //==============================================================================
@@ -112,6 +117,17 @@ static void create_base_file_system_structure(void)
 //==============================================================================
 static void initialize_basic_drivers(void)
 {
+        /*
+         * NOTE: Drivers that are initialized in this stage can be reduced or
+         *       added because this depends on user needs. There are drivers
+         *       that cannot be initialized in this runlevel because are using
+         *       access to basic drivers e.g. SDSPI (SD Card over SPI).
+         *       The configuration of drivers can be done by using project
+         *       configuration -- Configtool, or by editing configuration files
+         *       directly. Some drivers need additional runtime configuration.
+         *       In this case see driver's help.
+         */
+
         /*
          * 1. Initialize GPIO drivers. Number of GPIO drivers depends on microcontroller
          *    pinout. If microcontroller has only 2 GPIO ports then only those
@@ -151,16 +167,6 @@ static void initialize_basic_drivers(void)
                 .output_file = "/dev/ttyS0",
         };
         driver_init2("TTY", 0, 0, "/dev/tty0", &TTY_config); // first user terminal
-
-        /*
-         * NOTE: Drivers that are initialized in this stage can be reduced or
-         *       added because this depends on user needs. There are drivers
-         *       that cannot be initialized in this runlevel because are using
-         *       access to basic drivers e.g. SDSPI (SD Card over SPI).
-         *       The configuration of drivers can be done by using project
-         *       configuration -- Configtool. Some drivers need additional
-         *       runtime configuration. In this case see driver help.
-         */
 }
 
 //==============================================================================
@@ -340,32 +346,24 @@ static void initialize_network(void)
         ifadd("unix", NET_FAMILY__UNIX, NULL);
         ifup("unix", NULL, 0);
 
-#if _ENABLE_NETWORK_
         /*
-         * 1. The DHCP configuration should be prepared to get network address.
-         *    The static IP configuration can be used as well.
+         * Internet/local network is configured in netmgr program by using
+         * configuration files. If needed then "inet" configuration can be moved
+         * here without using of netmgr program, example:
+         *
+         * ifadd("inet", NET_FAMILY__INET, "/dev/eth");
+         *
+         * static const NET_INET_config_t cfg_dhcp = {
+         *         .mode    = NET_INET_MODE__DHCP_START,
+         *         .address = NET_INET_IPv4_ANY,
+         *         .mask    = NET_INET_IPv4_ANY,
+         *         .gateway = NET_INET_IPv4_ANY,
+         * };
+         *
+         * if (ifup("inet", &cfg_dhcp, sizeof(cfg_dhcp)) != 0) {
+         *         perror("ifup");
+         * }
          */
-        errno = 0;
-        ifadd("inet", NET_FAMILY__INET, "/dev/eth");
-        perror("Network 'inet' status");
-
-        puts("Starting DHCP client...\n");
-
-        static const NET_INET_config_t cfg_dhcp = {
-                .mode    = NET_INET_MODE__DHCP_START,
-                .address = NET_INET_IPv4_ANY,
-                .mask    = NET_INET_IPv4_ANY,
-                .gateway = NET_INET_IPv4_ANY,
-        };
-
-        /*
-         * 2. Command setup network interface.
-         */
-        errno = 0;
-        if (ifup("inet", &cfg_dhcp, sizeof(cfg_dhcp)) != 0) {
-                perror("ifup");
-        }
-#endif
 }
 
 //==============================================================================
