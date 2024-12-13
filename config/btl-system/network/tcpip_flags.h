@@ -606,12 +606,12 @@ this:SetToolTip("TCP_WND: The size of a TCP window (n * TCP_MSS).")
 --*/
 #define __NETWORK_TCP_WND__ 3
 /*--
-this:AddWidget("Spinbox", 0, 50, "TCP_MAXRTX")
+this:AddWidget("Spinbox", 1, 50, "TCP_MAXRTX")
 this:SetToolTip("TCP_MAXRTX: Maximum number of retransmissions of data segments.")
 --*/
 #define __NETWORK_TCP_MAXRTX__ 12
 /*--
-this:AddWidget("Spinbox", 0, 50, "TCP_SYNMAXRTX")
+this:AddWidget("Spinbox", 1, 50, "TCP_SYNMAXRTX")
 this:SetToolTip("TCP_SYNMAXRTX: Maximum number of retransmissions of SYN segments.")
 --*/
 #define __NETWORK_TCP_SYNMAXRTX__ 6

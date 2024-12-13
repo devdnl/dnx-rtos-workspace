@@ -50,14 +50,14 @@
 #/*-- Flag is set in __CPU_NAME__ event
 # this:AddWidget("Value")
 #--*/
-#define __CPU_SERIES__ _STM32H747xx
+#define __CPU_SERIES__ _STM32H753xx
 
 #/*-- Flag is set in __CPU_NAME__ event
 # this:AddWidget("Value")
 #--*/
-#define __LD_SCRIPT__ STM32H747xIxx
+#define __LD_SCRIPT__ STM32H753xIxx
 #/*
-__LD_SCRIPT__=STM32H747xIxx
+__LD_SCRIPT__=STM32H753xIxx
 #*/
 
 #/*--
@@ -205,9 +205,9 @@ __LD_SCRIPT__=STM32H747xIxx
 #    end
 # )
 #--*/
-#define __CPU_NAME__ STM32H747XIxx
+#define __CPU_NAME__ STM32H753ZIxx
 #/*
-__CPU_NAME__=STM32H747XIxx
+__CPU_NAME__=STM32H753ZIxx
 #*/
 
 #/*
@@ -262,7 +262,7 @@ __CPU_NAME__=STM32H747XIxx
 # this:AddItem("Disable", "_NO_")
 # this:SetToolTip("This option can introduce cache coherency issues!")
 #--*/
-#define __CPU_DCACHE_ENABLE__ _YES_
+#define __CPU_DCACHE_ENABLE__ _NO_
 
 #/*--
 # this:AddWidget("Editline", false, "Interrupt vector position")
@@ -286,6 +286,73 @@ __CUSTOM_LD_SCRIPT__=_NO_
 #define __CUSTOM_LD_SCRIPT_FILE__ "custom_script.ld"
 #/*
 __CUSTOM_LD_SCRIPT_FILE__="custom_script.ld"
+#*/
+
+#/*--
+# this:AddWidget("Editline", false, "Preffered application RAM")
+# this:SetToolTip('Default: "SDRAM", "PSRAM", "SRAM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "DTCM"')
+#--*/
+#define __CPU_PREFFERED_APP_RAM__ "SDRAM", "PSRAM", "SRAM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "DTCM"
+#/*
+__CPU_PREFFERED_APP_RAM__="SDRAM", "PSRAM", "SRAM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "DTCM"
+#*/
+
+#/*--
+# this:AddWidget("Editline", false, "Preffered file systems RAM")
+# this:SetToolTip('Default: "SDRAM", "PSRAM", "SRAM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "DTCM"')
+#--*/
+#define __CPU_PREFFERED_FS_RAM__ "SDRAM", "PSRAM", "SRAM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "DTCM"
+#/*
+__CPU_PREFFERED_FS_RAM__="SDRAM", "PSRAM", "SRAM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "DTCM"
+#*/
+
+#/*--
+# this:AddWidget("Editline", false, "Preffered fast access RAM")
+# this:SetToolTip('Default: "DTCM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "SDRAM", "PSRAM", "SRAM"')
+#--*/
+#define __CPU_PREFFERED_FAST_RAM__ "DTCM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "SDRAM", "PSRAM", "SRAM"
+#/*
+__CPU_PREFFERED_FAST_RAM__="DTCM", "AXISRAM", "SRAM1", "SRAM2", "SRAM3", "SRAM4", "SDRAM", "PSRAM", "SRAM"
+#*/
+
+#/*--
+# this:AddWidget("Combobox", "Executable SDRAM (C0000000h-DFFFFFFFh)")
+# this:AddItem("No", "_NO_")
+# this:AddItem("Yes", "_YES_")
+#--*/
+#define __CPU_SDRAM_EXECUTABLE__ _NO_
+#/*
+__CPU_SDRAM_EXECUTABLE__=_YES_
+#*/
+
+#/*--
+# this:AddWidget("Combobox", "Cacheable SDRAM (C0000000h-DFFFFFFFh)")
+# this:AddItem("No", "_NO_")
+# this:AddItem("Yes", "_YES_")
+#--*/
+#define __CPU_SDRAM_CACHEABLE__ _NO_
+#/*
+__CPU_SDRAM_CACHEABLE__=_NO_
+#*/
+
+#/*--
+# this:AddWidget("Combobox", "Shareable SDRAM (C0000000h-DFFFFFFFh)")
+# this:AddItem("No", "_NO_")
+# this:AddItem("Yes", "_YES_")
+#--*/
+#define __CPU_SDRAM_SHAREABLE__ _NO_
+#/*
+__CPU_SDRAM_SHAREABLE__=_NO_
+#*/
+
+#/*--
+# this:AddWidget("Combobox", "Bufferable SDRAM (C0000000h-DFFFFFFFh)")
+# this:AddItem("No", "_NO_")
+# this:AddItem("Yes", "_YES_")
+#--*/
+#define __CPU_SDRAM_BUFFERABLE__ _NO_
+#/*
+__CPU_SDRAM_BUFFERABLE__=_NO_
 #*/
 
 #//-----------------------------------------------------------------------------

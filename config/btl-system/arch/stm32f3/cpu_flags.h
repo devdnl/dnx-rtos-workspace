@@ -217,6 +217,33 @@ __CUSTOM_LD_SCRIPT__=_NO_
 __CUSTOM_LD_SCRIPT_FILE__="custom_script.ld"
 #*/
 
+#/*--
+# this:AddWidget("Editline", false, "Preffered application RAM")
+# this:SetToolTip('Default: "SDRAM", "PSRAM", "SRAM", "CCM"')
+#--*/
+#define __CPU_PREFFERED_APP_RAM__ "SDRAM", "PSRAM", "SRAM", "CCM"
+#/*
+__CPU_PREFFERED_APP_RAM__="SDRAM", "PSRAM", "SRAM", "CCM"
+#*/
+
+#/*--
+# this:AddWidget("Editline", false, "Preffered file systems RAM")
+# this:SetToolTip('Default: "SDRAM", "PSRAM", "SRAM", "CCM"')
+#--*/
+#define __CPU_PREFFERED_FS_RAM__ "SDRAM", "PSRAM", "SRAM", "CCM"
+#/*
+__CPU_PREFFERED_FS_RAM__="SDRAM", "PSRAM", "SRAM", "CCM"
+#*/
+
+#/*--
+# this:AddWidget("Editline", false, "Preffered fast access RAM")
+# this:SetToolTip('Default: "CCM", "SRAM"')
+#--*/
+#define __CPU_PREFFERED_FAST_RAM__ "CCM", "SRAM"
+#/*
+__CPU_PREFFERED_FAST_RAM__="CCM", "SRAM"
+#*/
+
 #//-----------------------------------------------------------------------------
 #// mandatory flags, not configurable
 #//-----------------------------------------------------------------------------

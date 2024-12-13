@@ -44,9 +44,9 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define KEY_READ_INTERVAL_SEC   (CLOCKS_PER_SEC / 100)
-#define REFRESH_INTERVAL_SEC    (CLOCKS_PER_SEC * 1)
-#define MSG_LINE_POS            VT100_CURSOR_HOME VT100_CURSOR_DOWN(5) VT100_ERASE_LINE_FROM_CUR
+#define KEY_READ_INTERVAL_SEC (CLOCKS_PER_SEC / 100)
+#define REFRESH_INTERVAL_SEC  (CLOCKS_PER_SEC * 1)
+#define MSG_LINE_POS          VT100_CURSOR_HOME VT100_CURSOR_DOWN(5) VT100_ERASE_LINE_FROM_CUR
 
 /*==============================================================================
   Local types, enums definitions
@@ -121,36 +121,28 @@ int main(int argc, char *argv[])
                 avg_CPU_load_t avg = {0, 0, 0, 0};
                 get_average_CPU_load(&avg);
 
-                printf("%s - %ud %u:%02u up, avg. load %%: %d.%d, %d.%d, %d.%d\n",
-                        argv[0], udays, uhrs, umins,
-                        avg.avg1min  / 10, avg.avg1min  % 10,
-                        avg.avg5min  / 10, avg.avg5min  % 10,
+                printf("%s - %ud %u:%02u up, avg. load %%: %d.%d, %d.%d, %d.%d\n", argv[0], udays, uhrs,
+                        umins, avg.avg1min / 10, avg.avg1min % 10, avg.avg5min / 10, avg.avg5min % 10,
                         avg.avg15min / 10, avg.avg15min % 10);
 
                 get_memory_usage_details(&global->mem);
 
-                printf("B Mem: %d total, %d used, %d free\n",
-                        global->mem.memory_size, global->mem.used_memory, global->mem.free_memory);
+                printf("B Mem: %d total, %d used, %d free\n", global->mem.memory_size,
+                        global->mem.used_memory, global->mem.free_memory);
 
-                printf("%d static, %d kernel, %d filesystems\n",
-                        global->mem.static_memory_usage,
-                        global->mem.kernel_memory_usage,
-                        global->mem.filesystems_memory_usage);
+                printf("%d static, %d kernel, %d filesystems\n", global->mem.static_memory_usage,
+                        global->mem.kernel_memory_usage, global->mem.filesystems_memory_usage);
 
-                printf("%d shared, %d cached, %d modules\n",
-                        global->mem.shared_memory_usage,
-                        global->mem.cached_memory_usage,
-                        global->mem.modules_memory_usage);
+                printf("%d shared, %d cached, %d modules\n", global->mem.shared_memory_usage,
+                        global->mem.cached_memory_usage, global->mem.modules_memory_usage);
 
-                printf("%d network, %d programs\n",
-                        global->mem.network_memory_usage,
+                printf("%d network, %d programs\n", global->mem.network_memory_usage,
                         global->mem.programs_memory_usage);
 
                 printf("\n");
 
                 printf(VT100_FONT_COLOR_BLACK VT100_BACK_COLOR_WHITE
-                       "PID PR   MEMBS STSLV %%STU  %%CPU  SCPS TH RES CMD"
-                       VT100_RESET_ATTRIBUTES "\n");
+                        "PID PR   MEMBS STSLV %%STU  %%CPU  SCPS TH RES CMD" VT100_RESET_ATTRIBUTES "\n");
 
                 size_t seek = 0;
                 while (process_stat_seek(seek++, &global->pstat) == 0) {
@@ -158,44 +150,51 @@ int main(int argc, char *argv[])
                         if (global->pstat.threads_count == 0) {
                                 snprintf(cpu_load_str, sizeof(cpu_load_str), "zombie");
                         } else {
-                                snprintf(cpu_load_str, 7, " %2d.%d",
-                                         global->pstat.CPU_load / 10,
-                                         global->pstat.CPU_load % 10);
+                                snprintf(cpu_load_str, 7, " %2d.%d", global->pstat.CPU_load / 10,
+                                        global->pstat.CPU_load % 10);
                         }
 
-                        const char *fmtbegin = global->show_threads ? VT100_FONT_BOLD: "";
+                        const char *fmtbegin    = global->show_threads ? VT100_FONT_BOLD : "";
+                        const char *stack_color = "";
 
-                        printf("%s%3d %2d %7u %5d %4d %s %5u %2d %3d %s"VT100_RESET_ATTRIBUTES"\n",
-                               fmtbegin,
-                               global->pstat.pid,
-                               global->pstat.priority,
-                               (uint)global->pstat.memory_usage,
-                               global->pstat.stack_size,
-                               global->pstat.stack_max_usage * 100 / global->pstat.stack_size,
-                               cpu_load_str,
-                               global->pstat.syscalls_per_sec,
-                               global->pstat.threads_count,
-                               global->pstat.dir_count
-                               + global->pstat.files_count
-                               + global->pstat.mutexes_count
-                               + global->pstat.queue_count
-                               + global->pstat.semaphores_count
-                               + global->pstat.socket_count,
-                               global->pstat.name);
+                        uint stack_max_usage_percent = global->pstat.stack_max_usage * 100 /
+                                global->pstat.stack_size;
+                        if (stack_max_usage_percent >= 85) {
+                                stack_color = VT100_FONT_COLOR_RED;
+                        } else if (stack_max_usage_percent >= 75) {
+                                stack_color = VT100_FONT_COLOR_YELLOW;
+                        }
+
+                        printf("%s%3d %2d %7u %5d %s%4d%s %s %5u %2d %3d %s" VT100_RESET_ATTRIBUTES "\n",
+                                fmtbegin, global->pstat.pid, global->pstat.priority,
+                                (uint)global->pstat.memory_usage, global->pstat.stack_size, stack_color,
+                                stack_max_usage_percent, VT100_RESET_ATTRIBUTES, cpu_load_str,
+                                global->pstat.syscalls_per_sec, global->pstat.threads_count,
+                                global->pstat.dir_count + global->pstat.files_count +
+                                        global->pstat.mutexes_count + global->pstat.queue_count +
+                                        global->pstat.semaphores_count + global->pstat.socket_count,
+                                global->pstat.name);
 
                         if (global->show_threads) {
                                 for (int tid = 0; tid < 32; tid++) {
 
                                         thread_stat_t stat;
                                         if (thread_stat(global->pstat.pid, tid, &stat) == 0) {
-                                                printf("%     %2d         %5d %4d  %2d.%d %5u %2d\n",
-                                                        stat.priority,
-                                                        stat.stack_size,
-                                                        stat.stack_max_usage * 100 / stat.stack_size,
-                                                        stat.CPU_load / 10,
-                                                        stat.CPU_load % 10,
-                                                        stat.syscalls_per_sec,
-                                                        stat.tid);
+
+                                                stack_max_usage_percent = stat.stack_max_usage * 100 /
+                                                        stat.stack_size;
+                                                stack_color = "";
+                                                if (stack_max_usage_percent >= 85) {
+                                                        stack_color = VT100_FONT_COLOR_RED;
+                                                } else if (stack_max_usage_percent >= 75) {
+                                                        stack_color = VT100_FONT_COLOR_YELLOW;
+                                                }
+
+                                                printf("    %2d         %5d %s%4d%s  %2d.%d %5u %2d\n",
+                                                        stat.priority, stat.stack_size, stack_color,
+                                                        stack_max_usage_percent, VT100_RESET_ATTRIBUTES,
+                                                        stat.CPU_load / 10, stat.CPU_load % 10,
+                                                        stat.syscalls_per_sec, stat.tid);
                                         }
                                 }
                         }
@@ -230,7 +229,7 @@ int main(int argc, char *argv[])
 
                         scanf("%u", &global->refresh_inteval_s);
                         global->refresh_inteval_s *= CLOCKS_PER_SEC;
-                        global->refresh_inteval_s  = max(global->refresh_inteval_s, 1000);
+                        global->refresh_inteval_s = max(global->refresh_inteval_s, 1000);
 
                         ioctl(fileno(stdin), IOCTL_TTY__ECHO_OFF);
 

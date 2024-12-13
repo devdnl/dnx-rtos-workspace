@@ -84,22 +84,22 @@ int main(int argc, char *argv[])
         bool loop  = false;
 
         for (int i = 1; i < argc; i++) {
-            if (isstreq(argv[i], "-h") || isstreq(argv[i], "--help")) {
-                    printf("Usage: %s [options]\n\n", argv[0]);
-                    puts("Options:");
-                    puts("  -C, --clear     log clear");
-                    puts("  -h, --help      this help");
-                    puts("  -l,             loop");
-                    return EXIT_FAILURE;
-            }
+                if (isstreq(argv[i], "-h") || isstreq(argv[i], "--help")) {
+                        printf("Usage: %s [options]\n\n", argv[0]);
+                        puts("Options:");
+                        puts("  -C, --clear     log clear");
+                        puts("  -h, --help      this help");
+                        puts("  -l,             loop");
+                        return EXIT_FAILURE;
+                }
 
-            if (isstreq(argv[i], "-C") || isstreq(argv[i], "--help")) {
-                    clear = true;
-            }
+                if (isstreq(argv[i], "-C") || isstreq(argv[i], "--help")) {
+                        clear = true;
+                }
 
-            if (isstreq(argv[i], "-l")) {
-                    loop = true;
-            }
+                if (isstreq(argv[i], "-l")) {
+                        loop = true;
+                }
         }
 
         if (clear) {

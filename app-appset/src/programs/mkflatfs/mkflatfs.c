@@ -41,6 +41,7 @@ Brief   Make flatfs in selected file/device
   Local macros
 ==============================================================================*/
 #define MAGIC_BLOCK_FS    0x54414C46
+#define VERSION           1
 #define BLOCK_SIZE        512
 #define CRC32_INIT        0xFFFFFFFF
 #define MAX_FILE_SIZE_KiB 64
@@ -54,15 +55,16 @@ Brief   Make flatfs in selected file/device
  */
 typedef union {
         struct {
-                u32_t magic; // Block magic number: MAGIC_BLOCK_FS
-                u32_t crc;   // CRC32 calculated starting from field below up to block end
-                u32_t total_volume_blocks;    // Total number of block with FS and bitmaps
-                u32_t file_node_blocks;       // Number of blocks per file
-                u32_t last_file_node_blocks;  // Number of blocks of last file
-                u32_t bitmap_address_primary; // Address of primary bitmap
+                u32_t magic;                    // Block magic number: MAGIC_BLOCK_FS
+                u32_t crc;                      // CRC32 calculated starting from field below up to block end
+                u32_t total_volume_blocks;      // Total number of block with FS and bitmaps
+                u32_t file_node_blocks;         // Number of blocks per file
+                u32_t last_file_node_blocks;    // Number of blocks of last file
+                u32_t bitmap_address_primary;   // Address of primary bitmap
                 u32_t bitmap_address_secondary; // Address of secondary bitmap
                 u32_t first_file_node_address;  // Address of first file entry block
                 u32_t total_files;              // Total number of files
+                u32_t version;                  // FS version
         };
 
         u8_t block[BLOCK_SIZE];
@@ -352,6 +354,7 @@ static int format(u64_t disc_size, u32_t max_file_size, bool fast_format)
                         blk->bitmap_address_secondary = address_of_secondary_bmp;
                         blk->first_file_node_address  = address_of_primary_bmp + 1;
                         blk->total_files              = total_files;
+                        blk->version                  = VERSION;
                         blk->crc                      = calc_blk_crc(blk);
 
                         err = block_write(address_of_fs_block, blk, 1);

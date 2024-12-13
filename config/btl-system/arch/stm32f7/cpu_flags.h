@@ -260,6 +260,73 @@ __CUSTOM_LD_SCRIPT__=_NO_
 __CUSTOM_LD_SCRIPT_FILE__="custom_script.ld"
 #*/
 
+#/*--
+# this:AddWidget("Editline", false, "Preffered application RAM")
+# this:SetToolTip('Default: "SDRAM", "PSRAM", "SRAM", "SRAM1", "SRAM2", "DTCM"')
+#--*/
+#define __CPU_PREFFERED_APP_RAM__ "SDRAM", "PSRAM", "SRAM", "SRAM1", "SRAM2", "DTCM"
+#/*
+__CPU_PREFFERED_APP_RAM__="SDRAM", "PSRAM", "SRAM", "SRAM1", "SRAM2", "DTCM"
+#*/
+
+#/*--
+# this:AddWidget("Editline", false, "Preffered file systems RAM")
+# this:SetToolTip('Default: "SDRAM", "PSRAM", "SRAM", "SRAM1", "SRAM2", "DTCM"')
+#--*/
+#define __CPU_PREFFERED_FS_RAM__ "SDRAM", "PSRAM", "SRAM", "SRAM1", "SRAM2", "DTCM"
+#/*
+__CPU_PREFFERED_FS_RAM__="SDRAM", "PSRAM", "SRAM", "SRAM1", "SRAM2", "DTCM"
+#*/
+
+#/*--
+# this:AddWidget("Editline", false, "Preffered fast access RAM")
+# this:SetToolTip('Default: "DTCM", "SRAM1", "SRAM2"')
+#--*/
+#define __CPU_PREFFERED_FAST_RAM__ "DTCM", "SRAM1", "SRAM2"
+#/*
+__CPU_PREFFERED_FAST_RAM__="DTCM", "DTCM", "SRAM1", "SRAM2"
+#*/
+
+#/*--
+# this:AddWidget("Combobox", "Executable SDRAM (C0000000h-DFFFFFFFh)")
+# this:AddItem("No", "_NO_")
+# this:AddItem("Yes", "_YES_")
+#--*/
+#define __CPU_SDRAM_EXECUTABLE__ _NO_
+#/*
+__CPU_SDRAM_EXECUTABLE__=_NO_
+#*/
+
+#/*--
+# this:AddWidget("Combobox", "Cacheable SDRAM (C0000000h-DFFFFFFFh)")
+# this:AddItem("No", "_NO_")
+# this:AddItem("Yes", "_YES_")
+#--*/
+#define __CPU_SDRAM_CACHEABLE__ _NO_
+#/*
+__CPU_SDRAM_CACHEABLE__=_NO_
+#*/
+
+#/*--
+# this:AddWidget("Combobox", "Shareable SDRAM (C0000000h-DFFFFFFFh)")
+# this:AddItem("No", "_NO_")
+# this:AddItem("Yes", "_YES_")
+#--*/
+#define __CPU_SDRAM_SHAREABLE__ _NO_
+#/*
+__CPU_SDRAM_SHAREABLE__=_NO_
+#*/
+
+#/*--
+# this:AddWidget("Combobox", "Bufferable SDRAM (C0000000h-DFFFFFFFh)")
+# this:AddItem("No", "_NO_")
+# this:AddItem("Yes", "_YES_")
+#--*/
+#define __CPU_SDRAM_BUFFERABLE__ _NO_
+#/*
+__CPU_SDRAM_BUFFERABLE__=_NO_
+#*/
+
 #//-----------------------------------------------------------------------------
 #// mandatory flags, not configurable
 #//-----------------------------------------------------------------------------

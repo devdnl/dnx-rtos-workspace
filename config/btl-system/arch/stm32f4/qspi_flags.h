@@ -74,7 +74,7 @@ this:AddItem("Polling", "_QSPI_MODE_POLLING")
 this:AddItem("IRQ", "_QSPI_MODE_IRQ")
 this:AddItem("DMA", "_QSPI_MODE_DMA")
 --*/
-#define __QSPI_CFG_MODE__ _QSPI_MODE_DMA
+#define __QSPI_CFG_MODE__ _QSPI_MODE_POLLING
 
 #endif /* _QSPI_FLAGS_H_ */
 /*==============================================================================

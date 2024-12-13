@@ -1,11 +1,11 @@
-/*=========================================================================*//**
+/*==============================================================================
 @file    ioctl.h
 
 @author  Daniel Zorychta
 
 @brief   Header contain all device control commands. Depend on existing drivers.
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2024 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /**
 \defgroup sys-ioctl-h <sys/ioctl.h>
@@ -61,7 +61,7 @@ extern "C" {
  *
  * @see   ioctl()
  */
-#define IOCTL_PIPE__CLOSE                       0xF0000
+#define IOCTL_PIPE__CLOSE 0xF0000
 
 /**
  * @brief Request clears \b pipe device.
@@ -70,7 +70,7 @@ extern "C" {
  *
  * @see   ioctl()
  */
-#define IOCTL_PIPE__CLEAR                       0xF0001
+#define IOCTL_PIPE__CLEAR 0xF0001
 
 /**
  * @brief Request set stream to non-blocking read mode.
@@ -79,7 +79,7 @@ extern "C" {
  *
  * @see   ioctl()
  */
-#define IOCTL_VFS__NON_BLOCKING_RD_MODE         0xF0003
+#define IOCTL_VFS__NON_BLOCKING_RD_MODE 0xF0003
 
 /**
  * @brief Request set stream to default read mode.
@@ -88,14 +88,14 @@ extern "C" {
  *
  * @see   ioctl()
  */
-#define IOCTL_VFS__DEFAULT_RD_MODE              0xF0004
+#define IOCTL_VFS__DEFAULT_RD_MODE 0xF0004
 
 /**
  * @brief Request return read mode status.
  *
  * @see   ioctl()
  */
-#define IOCTL_VFS__IS_NON_BLOCKING_RD_MODE      0xF0005
+#define IOCTL_VFS__IS_NON_BLOCKING_RD_MODE 0xF0005
 
 /**
  * @brief Request set stream to non-blocking write mode.
@@ -104,7 +104,7 @@ extern "C" {
  *
  * @see   ioctl()
  */
-#define IOCTL_VFS__NON_BLOCKING_WR_MODE         0xF0006
+#define IOCTL_VFS__NON_BLOCKING_WR_MODE 0xF0006
 
 /**
  * @brief Request set stream to default write mode.
@@ -113,14 +113,28 @@ extern "C" {
  *
  * @see   ioctl()
  */
-#define IOCTL_VFS__DEFAULT_WR_MODE              0xF0007
+#define IOCTL_VFS__DEFAULT_WR_MODE 0xF0007
 
 /**
  * @brief Request return write mode status.
  *
  * @see   ioctl()
  */
-#define IOCTL_VFS__IS_NON_BLOCKING_WR_MODE      0xF0008
+#define IOCTL_VFS__IS_NON_BLOCKING_WR_MODE 0xF0008
+
+/**
+ * @brief Request set stream to non-strict read mode.
+ *
+ * @see   ioctl()
+ */
+#define IOCTL_VFS__NON_STRICT_RD_MODE 0xF0009
+
+/**
+ * @brief Request return read strict mode status.
+ *
+ * @see   ioctl()
+ */
+#define IOCTL_VFS__IS_NON_STRICT_RD_MODE 0xF000A
 
 /*==============================================================================
   Exported object types

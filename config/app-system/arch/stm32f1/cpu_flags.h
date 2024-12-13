@@ -171,6 +171,33 @@ __CUSTOM_LD_SCRIPT__=_NO_
 __CUSTOM_LD_SCRIPT_FILE__="custom_script.ld"
 #*/
 
+#/*--
+# this:AddWidget("Editline", false, "Preffered application RAM")
+# this:SetToolTip('Default: "SRAM"')
+#--*/
+#define __CPU_PREFFERED_APP_RAM__ "SRAM"
+#/*
+__CPU_PREFFERED_APP_RAM__="SRAM"
+#*/
+
+#/*--
+# this:AddWidget("Editline", false, "Preffered file systems RAM")
+# this:SetToolTip('Default: "SRAM"')
+#--*/
+#define __CPU_PREFFERED_FS_RAM__ "SRAM"
+#/*
+__CPU_PREFFERED_FS_RAM__="SRAM"
+#*/
+
+#/*--
+# this:AddWidget("Editline", false, "Preffered fast access RAM")
+# this:SetToolTip('Default: "SRAM"')
+#--*/
+#define __CPU_PREFFERED_FAST_RAM__ "SRAM"
+#/*
+__CPU_PREFFERED_FAST_RAM__="SRAM"
+#*/
+
 #//-----------------------------------------------------------------------------
 #// mandatory flags, not configurable
 #//-----------------------------------------------------------------------------

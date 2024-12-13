@@ -297,11 +297,17 @@ static void show_kernel_panic_message(void)
         if (get_kernel_panic_info(&info)) {
 
                 printf(VT100_FONT_COLOR_RED);
-                printf("*** %s ***\n", info.kernel_panic ? "KERNEL PANIC" : "APP CRASH");
-                printf("  Cause: %s (%d)\n", info.cause_str, info.cause);
-                printf("  PID  : %u (%.*s)\n", info.pid, 256, info.name);
-                printf("  TID  : %u\n", info.tid);
-                printf("  SPACE: %s\n", info.kernelspace ? "kernel" : "user");
+                printf("*** %s ***\n",
+                        info.flags & KERNEL_PANIC_FLAG__KERNEL_PANIC ? "KERNEL PANIC" : "APP CRASH");
+                printf("  Cause  : %s (%d)\n", info.cause_str, info.cause);
+                printf("  PID    : %u (%.*s)\n", info.pid, sizeof(info.name), info.name);
+                printf("  TID    : %u\n", info.tid);
+                printf("  SPACE  : %s\n", info.flags & KERNEL_PANIC_FLAG__KERNEL_SPACE ? "kernel" : "user");
+                printf("  SYSCALL: %u\n", info.syscall);
+                printf("  FLAGS  : %s%s%s\n",
+                        ((info.flags & KERNEL_PANIC_FLAG__KERNEL_SPACE) ? "KS:1 " : "KS:0 "),
+                        ((info.flags & KERNEL_PANIC_FLAG__KERNEL_PANIC) ? "KP:1 " : "KP:0 "),
+                        ((info.flags & KERNEL_PANIC_FLAG__PANIC_LOOP) ? "PL:1 " : "PL:0 "));
                 printf(VT100_RESET_ATTRIBUTES "\n");
 
                 sleep(3);
@@ -523,7 +529,7 @@ static int tcl_qspi_flash_erase(struct tcl *tcl, tcl_value_t *args, void *ctx)
 
         char r_str[8];
         snprintf(r_str, sizeof(r_str), "%d", err);
-        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+        return tcl_result(tcl, TCL_FNORMAL, tcl_alloc(r_str, strlen(r_str)));
 }
 
 //==============================================================================
@@ -610,7 +616,7 @@ static int tcl_qspi_flash_write(struct tcl *tcl, tcl_value_t *args, void *ctx)
 
         char r_str[8];
         snprintf(r_str, sizeof(r_str), "%d", err);
-        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+        return tcl_result(tcl, TCL_FNORMAL, tcl_alloc(r_str, strlen(r_str)));
 }
 
 //==============================================================================
@@ -674,7 +680,7 @@ static int tcl_flash_erase(struct tcl *tcl, tcl_value_t *args, void *ctx)
 
         char r_str[8];
         snprintf(r_str, sizeof(r_str), "%d", err);
-        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+        return tcl_result(tcl, TCL_FNORMAL, tcl_alloc(r_str, strlen(r_str)));
 }
 
 //==============================================================================
@@ -761,7 +767,7 @@ static int tcl_flash_write(struct tcl *tcl, tcl_value_t *args, void *ctx)
 
         char r_str[8];
         snprintf(r_str, sizeof(r_str), "%d", err);
-        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+        return tcl_result(tcl, TCL_FNORMAL, tcl_alloc(r_str, strlen(r_str)));
 }
 
 //==============================================================================
@@ -790,7 +796,7 @@ static int tcl_get_file_size(struct tcl *tcl, tcl_value_t *args, void *ctx)
 
         char r_str[8];
         snprintf(r_str, sizeof(r_str), "%lu", stat.size);
-        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+        return tcl_result(tcl, TCL_FNORMAL, tcl_alloc(r_str, strlen(r_str)));
 }
 
 //==============================================================================
@@ -857,7 +863,7 @@ static int tcl_extract(struct tcl *tcl, tcl_value_t *args, void *ctx)
 
         char r_str[8];
         snprintf(r_str, sizeof(r_str), "%d", err);
-        return tcl_result(tcl, FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+        return tcl_result(tcl, TCL_FNORMAL, tcl_alloc(r_str, strlen(r_str)));
 }
 
 //==============================================================================
@@ -909,7 +915,7 @@ int main(int argc, char *argv[])
         fpkg_t      *fpkg     = fpkg__open(PATH_UPDATE_FILE, true);
         fpkg_file_t *manifest = fpkg__fopen(fpkg, FPKG_SECTION_MANIFEST);
 
-        if (fpkg and manifest and (tcl_init(&tcl) == FNORMAL)) {
+        if (fpkg and manifest and (tcl_init(&tcl) == TCL_FNORMAL)) {
 
                 tcl_register_const(&tcl, "qspi_flash_erase", tcl_qspi_flash_erase, 3,
                         fpkg);

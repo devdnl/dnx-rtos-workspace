@@ -42,6 +42,7 @@ The library contains system types.
 ==============================================================================*/
 #include <stdint.h>
 #include <stddef.h>
+#include <stdalign.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,6 +51,15 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#define char_aligned_t   char alignas(int)
+#define uint_aligned8_t  uint8_t alignas(int)
+#define int_aligned8_t   int8_t alignas(int)
+#define uint_aligned16_t uint16_t alignas(int)
+#define int_aligned16_t  int16_t alignas(int)
+#define uint_aligned32_t uint16_t alignas(uint32_t)
+#define int_aligned32_t  int16_t alignas(uint32_t)
+#define uint_aligned64_t uint16_t alignas(uint64_t)
+#define int_aligned64_t  int16_t alignas(uint64_t)
 
 /*==============================================================================
   Exported object types
@@ -132,16 +142,16 @@ typedef i32_t dev_t;
 #ifndef __TM_STRUCT_DEFINED__
 /** @brief Time representation type. */
 struct tm {
-        int tm_sec;             //!< Seconds after the minute        (0-60*)
-        int tm_min;             //!< Minutes after the hour          (0-59)
-        int tm_hour;            //!< Hours since midnight            (0-23)
-        int tm_mday;            //!< Day of the month                (1-31)
-        int tm_mon;             //!< Months since January            (0-11)
-        int tm_year;            //!< Years since                     (1900)
-        int tm_wday;            //!< Days since Sunday               (0-6)
-        int tm_yday;            //!< Days since January 1            (0-365)
-        int tm_isdst;           //!< Daylight Saving Time flag
-        int tm_isutc;           //!< UTC time flag (dnx RTOS extension)
+        int tm_sec;   //!< Seconds after the minute        (0-60*)
+        int tm_min;   //!< Minutes after the hour          (0-59)
+        int tm_hour;  //!< Hours since midnight            (0-23)
+        int tm_mday;  //!< Day of the month                (1-31)
+        int tm_mon;   //!< Months since January            (0-11)
+        int tm_year;  //!< Years since                     (1900)
+        int tm_wday;  //!< Days since Sunday               (0-6)
+        int tm_yday;  //!< Days since January 1            (0-365)
+        int tm_isdst; //!< Daylight Saving Time flag
+        int tm_isutc; //!< UTC time flag (dnx RTOS extension)
 };
 #define __TM_STRUCT_DEFINED__
 #endif
@@ -166,8 +176,8 @@ typedef u32_t suseconds_t;
 #ifndef __STRUCT_TIMEVAL_DEFINED__
 /** @brief Type representing time value. */
 struct timeval {
-        time_t tv_sec;          /*!< seconds */
-        suseconds_t tv_usec;    /*!< microseconds */
+        time_t      tv_sec;  /*!< seconds */
+        suseconds_t tv_usec; /*!< microseconds */
 };
 #define __STRUCT_TIMEVAL_DEFINED__
 #endif
@@ -181,8 +191,8 @@ struct timeval {
  * @see gettimeofday(), settimeofday()
  */
 struct timezone {
-        int tz_minuteswest;     /*!< minutes west of Greenwitch */
-        int tz_dsttime;         /*!< type of DST correction */
+        int tz_minuteswest; /*!< minutes west of Greenwitch */
+        int tz_dsttime;     /*!< type of DST correction */
 };
 #define __STRUCT_TIMEZONE_DEFINED__
 #endif
@@ -193,7 +203,7 @@ struct timezone {
 /** @brief Structure holding an interval broken down into seconds and nanoseconds. */
 struct timespec {
         time_t tv_sec;
-        long tv_nsec;
+        long   tv_nsec;
 };
 #define __STRUCT_TIMESPEC_DEFINED__
 #endif
@@ -217,10 +227,10 @@ struct mntent {
 #ifndef __STRUCT_DIRENT_DEFINED__
 /** @brief Directory entry. */
 typedef struct dirent {
-        const char *d_name;         //!< File name
-        u64_t       size;           //!< File size in bytes
-        mode_t      mode;           //!< File mode (protection, file type)
-        dev_t       dev;            //!< Device address (if file type is driver)
+        const char *d_name; //!< File name
+        u64_t       size;   //!< File size in bytes
+        mode_t      mode;   //!< File mode (protection, file type)
+        dev_t       dev;    //!< Device address (if file type is driver)
 } dirent_t;
 #define __STRUCT_DIRENT_DEFINED__
 #endif
@@ -229,13 +239,13 @@ typedef struct dirent {
 /** @brief File information. */
 #ifndef __STRUCT_STAT_DEFINED__
 struct stat {
-        u64_t   st_size;        /*!< Total size, in bytes.*/
-        dev_t   st_dev;         /*!< ID of device containing file.*/
-        mode_t  st_mode;        /*!< Protection, file type.*/
-        uid_t   st_uid;         /*!< User ID of owner.*/
-        gid_t   st_gid;         /*!< Group ID of owner.*/
-        time_t  st_ctime;       /*!< Time of creation.*/
-        time_t  st_mtime;       /*!< Time of last modification.*/
+        u64_t  st_size;  /*!< Total size, in bytes.*/
+        dev_t  st_dev;   /*!< ID of device containing file.*/
+        mode_t st_mode;  /*!< Protection, file type.*/
+        uid_t  st_uid;   /*!< User ID of owner.*/
+        gid_t  st_gid;   /*!< Group ID of owner.*/
+        time_t st_ctime; /*!< Time of creation.*/
+        time_t st_mtime; /*!< Time of last modification.*/
 };
 #define __STRUCT_STAT_DEFINED__
 #endif
@@ -243,13 +253,13 @@ struct stat {
 /** file system statistic */
 #ifndef __STRUCT_STATFS_DEFINED__
 struct statfs {
-        u32_t       f_type;     /*!< File system type. @see @ref SYS_FS_TYPE*/
-        u32_t       f_bsize;    /*!< Block size.*/
-        u32_t       f_blocks;   /*!< Total blocks.*/
-        u32_t       f_bfree;    /*!< Free blocks.*/
-        u32_t       f_files;    /*!< Total file nodes in file system.*/
-        u32_t       f_ffree;    /*!< Free file nodes in file system.*/
-        const char *f_fsname;   /*!< File system name.*/
+        u32_t       f_type;   /*!< File system type. @see @ref SYS_FS_TYPE*/
+        u32_t       f_bsize;  /*!< Block size.*/
+        u32_t       f_blocks; /*!< Total blocks.*/
+        u32_t       f_bfree;  /*!< Free blocks.*/
+        u32_t       f_files;  /*!< Total file nodes in file system.*/
+        u32_t       f_ffree;  /*!< Free file nodes in file system.*/
+        const char *f_fsname; /*!< File system name.*/
 };
 #define __STRUCT_STATFS_DEFINED__
 #endif

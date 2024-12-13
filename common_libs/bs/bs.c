@@ -62,22 +62,6 @@ Brief    Binary serialization.
 /*==============================================================================
   Local object types
 ==============================================================================*/
-typedef enum {
-        bs_type__bool,
-        bs_type__int8_t,
-        bs_type__uint8_t,
-        bs_type__int16_t,
-        bs_type__uint16_t,
-        bs_type__int32_t,
-        bs_type__uint32_t,
-        bs_type__int64_t,
-        bs_type__uint64_t,
-        bs_type__float,
-        bs_type__double,
-        bs_type__string,
-        bs_type__blob,
-} bs_type_t;
-
 typedef struct PACKED {
         uint8_t  type;
         uint8_t  key_len;
@@ -490,6 +474,49 @@ const void *bs_get_blob(bs_rd_t *self, const char *key, size_t *len, int *err)
         }
 
         return blob;
+}
+
+//==============================================================================
+/**
+ * @brief  Return next key-value pair.
+ *
+ * @param  self         bs instance
+ * @param  next         next pointer (if points to NULL then from beginning)
+ * @param  key          key name
+ * @param  value        value data
+ * @param  type         value type
+ *
+ * @return On sucecss 0 is returned.
+ */
+//==============================================================================
+int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key,
+        const void **value, bs_type_t *type)
+{
+        if (not self or not key or not value or not type) {
+                return bs_err_invalid_value;
+        }
+
+        if (not self->chunk or not self->chunk_len) {
+                return bs_err_invalid_value;
+        }
+
+        if (*next == NULL) {
+                *next = cast(uint8_t*, self->chunk);
+        }
+
+        item_t *item = cast(typeof(item), *next);
+
+        if (cast(uintptr_t, item) < cast(uintptr_t, self->chunk) + self->chunk_len) {
+
+                *type  = item->type;
+                *key   = cast(char *, &item->key_data[0]);
+                *value = &item->key_data[item->key_len];
+                *next  = cast(uint8_t *, item) + sizeof(*item) + item->key_len +
+                                item->data_len;
+                return 0;
+        }
+
+        return bs_err_value_not_found;
 }
 
 //==============================================================================
