@@ -222,7 +222,7 @@ endif
 #// current CPU family definitions
 #define _PICO_RP2040_ 0x4f58afdf
 #if __CPU_FAMILY__ == _PICO_RP2040_
-#define PICO_RP2040
+#define PICO_RP2040 1
 #else
 #error Wrong CPU family
 #endif

@@ -136,17 +136,17 @@ static void initialize_basic_drivers(void)
          *    then node is not necessary (use NULL or empty string as file name).
          */
         driver_init("GPIO", 0, 0, "/dev/gpio");
-        driver_init("GPIO", 1, 0, NULL);
-        driver_init("GPIO", 2, 0, NULL);
-        driver_init("GPIO", 3, 0, NULL);
-        driver_init("GPIO", 4, 0, NULL);
-        driver_init("GPIO", 5, 0, NULL);
-        driver_init("GPIO", 6, 0, NULL);
-        driver_init("GPIO", 7, 0, NULL);
-        driver_init("GPIO", 8, 0, NULL);
-        driver_init("GPIO", 9, 0, NULL);
-        driver_init("GPIO", 10, 0, NULL);
-        driver_init("GPIO", 11, 0, NULL);
+        //driver_init("GPIO", 1, 0, NULL);
+        //driver_init("GPIO", 2, 0, NULL);
+        //driver_init("GPIO", 3, 0, NULL);
+        //driver_init("GPIO", 4, 0, NULL);
+        //driver_init("GPIO", 5, 0, NULL);
+        //driver_init("GPIO", 6, 0, NULL);
+        //driver_init("GPIO", 7, 0, NULL);
+        //driver_init("GPIO", 8, 0, NULL);
+        //driver_init("GPIO", 9, 0, NULL);
+        //driver_init("GPIO", 10, 0, NULL);
+        //driver_init("GPIO", 11, 0, NULL);
 
         /*
          * 2. Next part of drivers that can be initialized at this early stage.
