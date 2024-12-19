@@ -259,7 +259,7 @@ if this:IsPinInBank("BANK0") then
     this:AddProposals("BANK0", "0")
 end
 --*/
-#define __GPIO_BANK0_PIN_0_NAME__ GP0_NC
+#define __GPIO_BANK0_PIN_0_NAME__ UART0_TX
 _GPIO_PIN_NAME(IOCTL_GPIO_BANK0_IDX, 0, __GPIO_BANK0_PIN_0_NAME__);
 
 /*--
@@ -268,7 +268,7 @@ if this:IsPinInBank("BANK0") then
     this:AddPinStrength("BANK0", "0")
 end
 --*/
-#define __GPIO_BANK0_PIN_0_STRENGTH__ _GPIO_STRENGTH_2mA_SLEW_RATE_SLOW
+#define __GPIO_BANK0_PIN_0_STRENGTH__ _GPIO_STRENGTH_8mA_SLEW_RATE_SLOW
 
 /*--
 if this:IsPinInBank("BANK0") then
@@ -284,7 +284,7 @@ if this:IsPinInBank("BANK0") then
     this:AddPinFunction("BANK0", "0")
 end
 --*/
-#define __GPIO_BANK0_PIN_0_AF__ 5
+#define __GPIO_BANK0_PIN_0_AF__ 2
 
 /*--
 if this:IsPinInBank("BANK0") then
@@ -308,7 +308,7 @@ if this:IsPinInBank("BANK0") then
     this:AddProposals("BANK0", "1")
 end
 --*/
-#define __GPIO_BANK0_PIN_1_NAME__ GP1_NC
+#define __GPIO_BANK0_PIN_1_NAME__ UART0_RX
 _GPIO_PIN_NAME(IOCTL_GPIO_BANK0_IDX, 1, __GPIO_BANK0_PIN_1_NAME__);
 
 /*--
@@ -325,7 +325,7 @@ if this:IsPinInBank("BANK0") then
     this:AddPinMode("BANK0", "1")
 end
 --*/
-#define __GPIO_BANK0_PIN_1_MODE__ _GPIO_MODE_IN
+#define __GPIO_BANK0_PIN_1_MODE__ _GPIO_MODE_IN_PU
 
 /*--
 if this:IsPinInBank("BANK0") then
@@ -333,7 +333,7 @@ if this:IsPinInBank("BANK0") then
     this:AddPinFunction("BANK0", "1")
 end
 --*/
-#define __GPIO_BANK0_PIN_1_AF__ 5
+#define __GPIO_BANK0_PIN_1_AF__ 2
 
 /*--
 if this:IsPinInBank("BANK0") then
@@ -349,7 +349,7 @@ if this:IsPinInBank("BANK0") then
     this:AddPinState("BANK0", "1")
 end
 --*/
-#define __GPIO_BANK0_PIN_1_STATE__ 0
+#define __GPIO_BANK0_PIN_1_STATE__ 1
 
 /*--
 if this:IsPinInBank("BANK0") then
@@ -1484,7 +1484,7 @@ if this:IsPinInBank("BANK0") then
     this:AddProposals("BANK0", "25")
 end
 --*/
-#define __GPIO_BANK0_PIN_25_NAME__ GP25_NC
+#define __GPIO_BANK0_PIN_25_NAME__ LED
 _GPIO_PIN_NAME(IOCTL_GPIO_BANK0_IDX, 25, __GPIO_BANK0_PIN_25_NAME__);
 
 /*--
@@ -1493,7 +1493,7 @@ if this:IsPinInBank("BANK0") then
     this:AddPinStrength("BANK0", "25")
 end
 --*/
-#define __GPIO_BANK0_PIN_25_STRENGTH__ _GPIO_STRENGTH_2mA_SLEW_RATE_SLOW
+#define __GPIO_BANK0_PIN_25_STRENGTH__ _GPIO_STRENGTH_12mA_SLEW_RATE_SLOW
 
 /*--
 if this:IsPinInBank("BANK0") then

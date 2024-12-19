@@ -89,7 +89,7 @@ __PROJECT_TOOLCHAIN__=arm-none-eabi-
 # this:AddItem("STMicroelectronics STM32F4", "stm32f4")
 # this:AddItem("STMicroelectronics STM32F7", "stm32f7")
 # this:AddItem("STMicroelectronics STM32H7", "stm32h7")
-# this:AddItem("Raspberry Pi Pico M0+", "rpcm0")
+# this:AddItem("Raspberry Pi", "rpcm0")
 #--*/
 #define __CPU_ARCH__ rpcm0
 #/*

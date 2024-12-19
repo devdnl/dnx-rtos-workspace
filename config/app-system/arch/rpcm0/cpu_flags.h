@@ -45,7 +45,7 @@
 #/*-- Flag is set in __CPU_NAME__ event
 # this:AddWidget("Value")
 #--*/
-#define __CPU_FAMILY__ _PICO_RP2040_
+#define __CPU_FAMILY__ _RP2040_
 
 #/*-- Flag is set in __CPU_NAME__ event
 # this:AddWidget("Value")
@@ -56,7 +56,7 @@ __LD_SCRIPT__=RPxx40
 #*/
 
 #/*--
-# local CPULIST = {{"RP2040", "_PICO_RP2040_", "RPxx40"}}
+# local CPULIST = {{"RP2040", "_RP2040_", "RPxx40"}}
 #
 # this:AddWidget("Combobox", "Mirocontroller name")
 # for i = 1, #CPULIST do this:AddItem(CPULIST[i][1], CPULIST[i][1]) end
@@ -124,19 +124,19 @@ __CPU_BOOT2_FILE__=boot2_w25q080.c
 # this:AddWidget("Combobox", "RTOS Kernel IRQ priority")
 # uC.AddPriorityItems(this, true)
 #--*/
-#define __CPU_IRQ_RTOS_KERNEL_PRIORITY_VAL__ 15
+#define __CPU_IRQ_RTOS_KERNEL_PRIORITY_VAL__ 3
 
 #/*--
 # this:AddWidget("Combobox", "Max RTOS API call IRQ priority")
 # uC.AddPriorityItems(this, true)
 #--*/
-#define __CPU_IRQ_RTOS_APICALL_PRIORITY_VAL__ 14
+#define __CPU_IRQ_RTOS_APICALL_PRIORITY_VAL__ 2
 
 #/*--
 # this:AddWidget("Combobox", "Default IRQ priority")
 # uC.AddPriorityItems(this, true)
 #--*/
-#define __CPU_DEFAULT_IRQ_PRIORITY__ 14
+#define __CPU_DEFAULT_IRQ_PRIORITY__ 2
 
 #/*--
 # this:AddWidget("Combobox", "Show and clear reset source")
@@ -220,8 +220,8 @@ endif
 #*/
 
 #// current CPU family definitions
-#define _PICO_RP2040_ 0x4f58afdf
-#if __CPU_FAMILY__ == _PICO_RP2040_
+#define _RP2040_ 0x4f58afdf
+#if __CPU_FAMILY__ == _RP2040_
 #define PICO_RP2040 1
 #else
 #error Wrong CPU family

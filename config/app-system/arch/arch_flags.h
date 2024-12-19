@@ -603,8 +603,9 @@
 # if uC.ARCH == "rpcm0" then
 #     uC.AddPriorityItems = function(this, no_default)
 #         this:AddItem("Priority 0 (the highest)", "0")
-#         for i = 1, 14 do this:AddItem("Priority "..i, tostring(i)) end
-#         this:AddItem("Priority 15 (the lowest, safe for kernel API)", "15")
+#         this:AddItem("Priority 1", "1")
+#         this:AddItem("Priority 2", "2")
+#         this:AddItem("Priority 3 (the lowest, safe for kernel API)", "3")
 #         if no_default ~= true then
 #             this:AddItem("Default priority", "__CPU_DEFAULT_IRQ_PRIORITY__")
 #         end
