@@ -50,7 +50,6 @@ if _GPIO_SELECTION_ == nil then
 
     for i = 1, #port do
             local gpio = port[i]
-            print("GPIO", gpio)
             this:AddExtraWidget("Label", "Label_GPIO"..gpio, gpio)
             this:AddExtraWidget("Hyperlink", "HL_GPIO"..gpio, "Configure")
             this:SetEvent("clicked", "HL_GPIO"..gpio, function() Configure(gpio) end)
@@ -962,7 +961,7 @@ if this:IsPinInBank("BANK0") then
     this:AddPinMode("BANK0", "14")
 end
 --*/
-#define __GPIO_BANK0_PIN_14_MODE__ _GPIO_MODE_IN
+#define __GPIO_BANK0_PIN_14_MODE__ _GPIO_MODE_IN_PU
 
 /*--
 if this:IsPinInBank("BANK0") then
@@ -986,7 +985,7 @@ if this:IsPinInBank("BANK0") then
     this:AddPinState("BANK0", "14")
 end
 --*/
-#define __GPIO_BANK0_PIN_14_STATE__ 0
+#define __GPIO_BANK0_PIN_14_STATE__ 1
 
 /*--
 if this:IsPinInBank("BANK0") then

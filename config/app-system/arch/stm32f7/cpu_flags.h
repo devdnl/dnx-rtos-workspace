@@ -239,7 +239,7 @@ __CPU_NAME__=STM32F756ZGxx
 #/*--
 # this:AddWidget("Editline", false, "Interrupt vector position")
 #--*/
-#define __CPU_VTOR_TAB_POSITION__ 0x00000
+#define __CPU_VTOR_TAB_POSITION__ 0x08000000
 
 #/*--
 # this:AddWidget("Combobox", "Custom linker script")

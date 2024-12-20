@@ -708,6 +708,7 @@ include $(CONFIG_DIR)/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "stm32h7/qspi_flags.h"
 #elif (__CPU_ARCH__ == rpcm0)
 #include "rpcm0/cpu_flags.h"
+#include "rpcm0/clk_flags.h"
 #include "rpcm0/gpio_flags.h"
 #include "rpcm0/uart_flags.h"
 #endif

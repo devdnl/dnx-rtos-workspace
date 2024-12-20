@@ -99,10 +99,10 @@ static void create_base_file_system_structure(void)
          * 2. Create basic folders. This folders can be used to store device
          *    files or to mount next file systems e.g. SD Card etc.
          */
-        mkdir("/dev", 0666); // this folder store devices drivers
-        mkdir("/tmp", 0666); // this folder store temporary files
-        mkdir("/run", 0666); // this folder store runtime files
-        mkdir("/mnt", 0666); // this folder store SD card content
+        mkdir("/dev", 0666);  // this folder store devices drivers
+        mkdir("/tmp", 0666);  // this folder store temporary files
+        mkdir("/run", 0666);  // this folder store runtime files
+        mkdir("/mnt", 0666);  // this folder store SD card content
         mkdir("/proc", 0666); // this folder store SD card content
         mkdir("/etc", 0666);  // this folder store SD card content
 
@@ -136,24 +136,40 @@ static void initialize_basic_drivers(void)
          *    then node is not necessary (use NULL or empty string as file name).
          */
         driver_init("GPIO", 0, 0, "/dev/gpio");
-        //driver_init("GPIO", 1, 0, NULL);
-        //driver_init("GPIO", 2, 0, NULL);
-        //driver_init("GPIO", 3, 0, NULL);
-        //driver_init("GPIO", 4, 0, NULL);
-        //driver_init("GPIO", 5, 0, NULL);
-        //driver_init("GPIO", 6, 0, NULL);
-        //driver_init("GPIO", 7, 0, NULL);
-        //driver_init("GPIO", 8, 0, NULL);
-        //driver_init("GPIO", 9, 0, NULL);
-        //driver_init("GPIO", 10, 0, NULL);
-        //driver_init("GPIO", 11, 0, NULL);
+        // driver_init("GPIO", 1, 0, NULL);
+        // driver_init("GPIO", 2, 0, NULL);
+        // driver_init("GPIO", 3, 0, NULL);
+        // driver_init("GPIO", 4, 0, NULL);
+        // driver_init("GPIO", 5, 0, NULL);
+        // driver_init("GPIO", 6, 0, NULL);
+        // driver_init("GPIO", 7, 0, NULL);
+        // driver_init("GPIO", 8, 0, NULL);
+        // driver_init("GPIO", 9, 0, NULL);
+        // driver_init("GPIO", 10, 0, NULL);
+        // driver_init("GPIO", 11, 0, NULL);
 
         /*
          * 2. Next part of drivers that can be initialized at this early stage.
          */
-        driver_init("AFM", 0, 0, NULL);       // alternative function configuration
-        driver_init("CLK", 0, 0, "/dev/clk"); // system clock configuration
-        driver_init("DMA", 0, 0, NULL);       // DMA configuration
+        driver_init("AFM", 0, 0, NULL); // alternative function configuration
+
+        int gpio = open("/dev/gpio", O_RDWR); // TEST
+        if (gpio >= 0) { // TEST
+                GPIO_pin_in_port_state_t pin = {
+                        .pin   = {IOCTL_GPIO_PIN_DECL(GP14_NC)},
+                        .state = -1,
+                };
+
+                ioctl(gpio, IOCTL_GPIO__GET_PIN_IN_PORT_STATE, &pin); // TEST
+
+                if (pin.state != 0) { // TEST
+                        driver_init("CLK", 0, 0, "/dev/clk"); // system clock configuration
+                }
+
+                close(gpio); // TEST
+        } // TEST
+
+        driver_init("DMA", 0, 0, NULL); // DMA configuration
 
         /*
          * NOTE: make sure that UART1 is used as terminal output!
@@ -278,8 +294,7 @@ static void mount_file_systems(void)
          */
         driver_init("SDMMC", 0, 0, "/dev/sd0");
 
-        driver_init2("PART", 0, 0, "/dev/sd0p1",
-                &(const PART_config_t) {.path = "/dev/sd0"});
+        driver_init2("PART", 0, 0, "/dev/sd0p1", &(const PART_config_t) {.path = "/dev/sd0"});
 
         scope (int fd = open("/dev/sd0p1", O_RDWR), fd > 0, close(fd)) {
                 ioctl(fd, IOCTL_PART__READ_MBR);
@@ -298,7 +313,7 @@ static void mount_file_systems(void)
         if (memcmp(romfs_ptr, romfs_signature, strlen(romfs_signature)) == 0) {
 
                 const u32_t romfs_size_offset_words = 16; // romfs header size
-                u32_t       romfs_size = *(romfs_ptr + romfs_size_offset_words);
+                u32_t       romfs_size              = *(romfs_ptr + romfs_size_offset_words);
 
                 if (romfs_size != UINT32_MAX) {
                         driver_init2("MEMBLOCK", 0, 0, "/dev/romfs",
