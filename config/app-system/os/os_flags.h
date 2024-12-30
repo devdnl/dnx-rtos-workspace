@@ -51,7 +51,7 @@ this:AddWidget("Spinbox", 48, 8192, "Minimal size of task stack [levels]")
 this:SetToolTip("This value determines the lowest possible stack size that can be assigned for the task. "..
                 "The value is a part of entire stack size.")
 --*/
-#define __OS_TASK_MIN_STACK_DEPTH__ 48
+#define __OS_TASK_MIN_STACK_DEPTH__ 128
 
 /*--
 this:AddWidget("Spinbox", 48, 8192, "Size of I/O threads stack [levels]")

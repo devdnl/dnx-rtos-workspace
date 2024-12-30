@@ -223,6 +223,12 @@ endif
 #define _RP2040_ 0x4f58afdf
 #if __CPU_FAMILY__ == _RP2040_
 #define PICO_RP2040 1
+#define __CM0PLUS_REV          0x0001U
+#define __NVIC_PRIO_BITS       2
+#define __Vendor_SysTickConfig 0
+#define __VTOR_PRESENT         1
+#define __MPU_PRESENT          1
+#define __FPU_PRESENT          0
 #else
 #error Wrong CPU family
 #endif
