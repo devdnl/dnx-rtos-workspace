@@ -1029,6 +1029,82 @@ static inline int thread_stat(pid_t pid, tid_t tid, thread_stat_t *stat)
 
 //==============================================================================
 /**
+ * @brief Function pin selected thread to core.
+ *
+ * The function thread_pin_to_core() pin thread selected by <i>tid</i> to
+ * selected by <i>core_mask</i> cores.
+ *
+ * @param tid           thread ID
+ * @param core_mask     core mask
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOENT
+ *
+ * @return Return 0 on success. On error, -1 is returned, and
+ * <b>errno</b> is set appropriately.
+ *
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        thread_pin_to_core(0, 0x3);
+
+        // ...
+
+   @endcode
+ *
+ * @see thread_create()
+ */
+//==============================================================================
+static inline int thread_pin_to_core(tid_t tid, u32_t core_mask)
+{
+        pid_t pid = 0;
+        int err = _libc_syscall(_LIBC_SYS_PINTHREADTOCORE, &pid, &tid, &core_mask);
+        return err ? -1 : 0;
+}
+
+//==============================================================================
+/**
+ * @brief Function get current core.
+ *
+ * The function thread_get_current_core() return current working core, result
+ * pass by <i>core</i> pointer.
+ *
+ * @param core          current core
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOENT
+ *
+ * @return Return 0 on success. On error, -1 is returned, and
+ * <b>errno</b> is set appropriately.
+ *
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        u8_t core;
+        thread_get_current_core(&core);
+        printf("Current core: %u\n", core);
+
+        // ...
+
+   @endcode
+ *
+ * @see thread_create()
+ */
+//==============================================================================
+static inline int thread_get_current_core(u8_t *core)
+{
+        int err = _libc_syscall(_LIBC_SYS_GETCURRENTCORE, core);
+        return err ? -1 : 0;
+}
+
+//==============================================================================
+/**
  * @brief Function create new semaphore.
  *
  * The function semaphore_new() creates new semaphore object. The
