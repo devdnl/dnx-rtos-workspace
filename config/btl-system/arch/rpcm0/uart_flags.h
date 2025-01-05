@@ -133,27 +133,8 @@ this:AddWidget("Combobox", "IRQ priority")
 uC.AddPriorityItems(this, false)
 end
 --*/
-#define __UART_UART1_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
+#define __UART_UART0_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
-/*--
-if this:PortExist(1) then
-this:AddWidget("Combobox", "DMA mode")
-this:AddItem("No", "_NO_")
-this:AddItem("Yes", "_YES_")
-end
---*/
-#define __UART_UART1_DMA_MODE__ _NO_
-
-/*--
-if this:PortExist(1) then
-this:AddWidget("Textbox", "Rx DMA buffer length [B]")
-this:AddItem("32", "")
-this:AddItem("64", "")
-this:AddItem("128", "")
-this:AddItem("256", "")
-end
---*/
-#define __UART_UART1_DMA_BUF_LEN__ 64
 
 
 /*--
@@ -182,17 +163,7 @@ this:AddWidget("Combobox", "IRQ priority")
 uC.AddPriorityItems(this, false)
 end
 --*/
-#define __UART_UART2_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
-
-/*--
-if this:PortExist(2) then
-this:AddWidget("Combobox", "DMA mode")
-this:AddItem("No", "_NO_")
-this:AddItem("Yes", "_YES_")
-end
---*/
-#define __UART_UART2_DMA_MODE__ _NO_
-
+#define __UART_UART1_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 
 #endif /* _UART_FLAGS_H_ */

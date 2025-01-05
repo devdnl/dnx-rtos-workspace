@@ -69,9 +69,9 @@ __ENABLE_RAMFS__=_YES_
 # this:AddExtraWidget("Hyperlink", "PROCFS_CONFIGURE", "")
 # this:SetEvent("clicked", "PROCFS_CONFIGURE", function() end)
 #--*/
-#define __ENABLE_PROCFS__ _NO_
+#define __ENABLE_PROCFS__ _YES_
 #/*
-__ENABLE_PROCFS__=_NO_
+__ENABLE_PROCFS__=_YES_
 #*/
 
 #/*--
