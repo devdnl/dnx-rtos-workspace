@@ -229,6 +229,7 @@ static void show_kernel_panic_message(void)
                         ((info.flags & KERNEL_PANIC_FLAG__KERNEL_SPACE) ? "KS:1 " : "KS:0 "),
                         ((info.flags & KERNEL_PANIC_FLAG__KERNEL_PANIC) ? "KP:1 " : "KP:0 "),
                         ((info.flags & KERNEL_PANIC_FLAG__PANIC_LOOP) ? "PL:1 " : "PL:0 "));
+                printf(VT100_RESET_ATTRIBUTES "  CORE   : %u\n", info.core);
                 printf(VT100_RESET_ATTRIBUTES "\n");
 
                 sleep(3);
