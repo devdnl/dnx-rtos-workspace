@@ -136,17 +136,17 @@ static void initialize_basic_drivers(void)
          *    then node is not necessary (use NULL or empty string as file name).
          */
         driver_init("GPIO", 0, 0, "/dev/gpio");
-        // driver_init("GPIO", 1, 0, NULL);
-        // driver_init("GPIO", 2, 0, NULL);
-        // driver_init("GPIO", 3, 0, NULL);
-        // driver_init("GPIO", 4, 0, NULL);
-        // driver_init("GPIO", 5, 0, NULL);
-        // driver_init("GPIO", 6, 0, NULL);
-        // driver_init("GPIO", 7, 0, NULL);
-        // driver_init("GPIO", 8, 0, NULL);
-        // driver_init("GPIO", 9, 0, NULL);
-        // driver_init("GPIO", 10, 0, NULL);
-        // driver_init("GPIO", 11, 0, NULL);
+        driver_init("GPIO", 1, 0, NULL);
+        driver_init("GPIO", 2, 0, NULL);
+        driver_init("GPIO", 3, 0, NULL);
+        driver_init("GPIO", 4, 0, NULL);
+        driver_init("GPIO", 5, 0, NULL);
+        driver_init("GPIO", 6, 0, NULL);
+        driver_init("GPIO", 7, 0, NULL);
+        driver_init("GPIO", 8, 0, NULL);
+        driver_init("GPIO", 9, 0, NULL);
+        driver_init("GPIO", 10, 0, NULL);
+        driver_init("GPIO", 11, 0, NULL);
 
         /*
          * 2. Next part of drivers that can be initialized at this early stage.
@@ -291,7 +291,7 @@ static void mount_file_systems(void)
         /*
          * ROMFS at address 0x08070000
          */
-        const u32_t        romfs_address   = 0x100C0000;
+        const u32_t        romfs_address   = 0x08070000;
         const u32_t       *romfs_ptr       = cast(typeof(romfs_ptr), romfs_address);
         static const char *romfs_signature = "FPKG\n";
 
@@ -422,7 +422,7 @@ static void start_user_programs(void)
                 .p_stdout  = "/dev/tty2",
         };
 
-        process_create("netmgr --daemon /conf/netmgr.conf", &attr2);
+        process_create("netmgr --daemon /netmgr.conf", &attr2);
 }
 
 //==============================================================================
