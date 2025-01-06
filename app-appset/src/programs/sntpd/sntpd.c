@@ -44,53 +44,53 @@
   Local symbolic constants/macros
 ==============================================================================*/
 /** Timeoffset feature */
-#define TIMEZONE_RECEIVE_ENABLE     0
+#define TIMEZONE_RECEIVE_ENABLE 0
 
 /** SNTP server port */
-#define SNTP_PORT                   123
+#define SNTP_PORT 123
 
 /** SNTP send timeout - in milliseconds */
-#define SNTP_SEND_TIMEOUT           1000
+#define SNTP_SEND_TIMEOUT 1000
 
 /** SNTP receive timeout - in milliseconds */
-#define SNTP_RECV_TIMEOUT           3000
+#define SNTP_RECV_TIMEOUT 3000
 
 /** number of seconds between 1900 and 1970 */
-#define DIFF_SEC_1900_1970          2208988800
+#define DIFF_SEC_1900_1970 2208988800
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
 // Leap Indicator
 enum LI {
-        LI_No_warning                      = 0,
-        LI_Last_minute_has_61_sec          = 1,
-        LI_Last_minute_has_59_sec          = 2,
-        LI_Alarm_condition                 = 3,
+        LI_No_warning             = 0,
+        LI_Last_minute_has_61_sec = 1,
+        LI_Last_minute_has_59_sec = 2,
+        LI_Alarm_condition        = 3,
 };
 
 // Version Number
 enum VN {
-        VN_none_0                          = 0,
-        VN_none_1                          = 1,
-        VN_none_2                          = 2,
-        VN_IPv4_only                       = 3,
-        VN_IPv4_IPv6_OSI                   = 4,
-        VN_none_5                          = 5,
-        VN_none_6                          = 6,
-        VN_none_7                          = 7
+        VN_none_0        = 0,
+        VN_none_1        = 1,
+        VN_none_2        = 2,
+        VN_IPv4_only     = 3,
+        VN_IPv4_IPv6_OSI = 4,
+        VN_none_5        = 5,
+        VN_none_6        = 6,
+        VN_none_7        = 7
 };
 
 // Mode
-enum Mode{
-        Mode_Reserved                      = 0,
-        Mode_Symetric_active               = 1,
-        Mode_Symetric_passive              = 2,
-        Mode_Client                        = 3,
-        Mode_Server                        = 4,
-        Mode_Broadcast                     = 5,
-        Mode_Reserved_NTP_ctrl_msg         = 6,
-        Mode_Reserved_for_private_use      = 7
+enum Mode {
+        Mode_Reserved                 = 0,
+        Mode_Symetric_active          = 1,
+        Mode_Symetric_passive         = 2,
+        Mode_Client                   = 3,
+        Mode_Server                   = 4,
+        Mode_Broadcast                = 5,
+        Mode_Reserved_NTP_ctrl_msg    = 6,
+        Mode_Reserved_for_private_use = 7
 };
 
 // Stratum
@@ -124,31 +124,31 @@ typedef struct {
                         // power of two. The values that normally appear in this field
                         // range from -6 for mains-frequency clocks to -20 for microsecond
                         // clocks found in some workstations.
-                        uint32_t Precision:8;
+                        uint32_t Precision :8;
 
                         // Poll.
                         // The maximum interval between successive messages, in seconds
                         // to the nearest power of two. The values that can appear in this
                         // field presently range from 4 (16 s) to 14 (16284 s); however,
                         // most applications use only the sub-range 6 (64 s) to 10 (1024 s).
-                        uint32_t Poll:8;
+                        uint32_t Poll :8;
 
                         // Stratum
                         // Stratum level of the local clock.
-                        uint32_t Stratum:8;
+                        uint32_t Stratum :8;
 
                         // Mode
-                        uint32_t Mode:3;
+                        uint32_t Mode :3;
 
                         // Version Number.
                         // The NTP/SNTP version number. If necessary to distinguish between
                         // IPv4, IPv6 and OSI, the encapsulating context must be inspected.
-                        uint32_t VN:3;
+                        uint32_t VN :3;
 
                         // Leap Indicator.
                         // This code warns of an impending leap second
                         // to be inserted/deleted in the last minute of the current day.
-                        uint32_t LI:2;
+                        uint32_t LI :2;
 
                 } field;
                 uint32_t word;
@@ -190,15 +190,11 @@ typedef struct {
         // |DCF  + Mainflingen (Germany) Radio 77.5 kHz.
         // |GOES + Geostationary Orbit Environment Satellite.
         // |GPS  + Global Positioning Service.
-        // |LOCL + Uncalibrated local clock used as a primary reference for a subnet without external means of synchronization.
-        // |LORC + LORAN-C radionavigation system.
-        // |MSF  + Rugby (UK) Radio 60 kHz.
-        // |OMEG + OMEGA radionavigation system.
-        // |PPS  + Atomic clock or other pulse-per-second source individually calibrated to national standards.
-        // |PTB  + PTB (Germany) modem service.
-        // |TDF  + Allouis (France) Radio 164 kHz.
-        // |USNO + USNO modem service.
-        // |WWV  + Ft. Collins (US) Radio 2.5, 5, 10, 15, 20 MHz.
+        // |LOCL + Uncalibrated local clock used as a primary reference for a subnet without external means of
+        // synchronization. |LORC + LORAN-C radionavigation system. |MSF  + Rugby (UK) Radio 60 kHz. |OMEG +
+        // OMEGA radionavigation system. |PPS  + Atomic clock or other pulse-per-second source individually
+        // calibrated to national standards. |PTB  + PTB (Germany) modem service. |TDF  + Allouis (France)
+        // Radio 164 kHz. |USNO + USNO modem service. |WWV  + Ft. Collins (US) Radio 2.5, 5, 10, 15, 20 MHz.
         // |WWVB + Boulder (US) Radio 60 kHz.
         // |WWVH + Kaui Hawaii (US) Radio 2.5, 5, 10, 15 MHz.
         // |-----+--------------------------------------------------------------
@@ -206,19 +202,23 @@ typedef struct {
 
         // Reference Timestamp. 64 bits.
         // The time at which the local clock was last set or corrected.
-        uint64_t reference_timestamp;
+        uint32_t reference_timestamp_seconds;
+        uint32_t reference_timestamp_fraction;
 
         // Originate Timestamp. 64 bits.
         // The time at which the request departed the client for the server.
-        uint64_t originate_timestamp;
+        uint32_t originate_timestamp_seconds;
+        uint32_t originate_timestamp_fraction;
 
         // Receive Timestamp. 64 bits.
         // The time at which the request arrived at the server.
-        uint64_t receive_timestamp;
+        uint32_t receive_timestamp_seconds;
+        uint32_t receive_timestamp_fraction;
 
         // Transmit Timestamp. 64 bits.
         // The time at which the reply departed the server for the client.
-        uint64_t transmit_timestamp;
+        uint32_t transmit_timestamp_seconds;
+        uint32_t transmit_timestamp_fraction;
 } sntp_msg_t;
 
 /*==============================================================================
@@ -274,8 +274,7 @@ static int send_request(SOCKET *socket)
         global->pkt.settings.field.Poll      = 0;
         global->pkt.settings.field.Precision = 0;
         global->pkt.settings.field.Stratum   = Stratum_Unspecified_or_unavailable;
-        global->pkt.settings.word            = hton_u32(NET_FAMILY__INET,
-                                                        global->pkt.settings.word);
+        global->pkt.settings.word            = hton_u32(NET_FAMILY__INET, global->pkt.settings.word);
 
         int sz = socket_send(socket, &global->pkt, sizeof(sntp_msg_t), NET_FLAGS__COPY);
 
@@ -293,18 +292,22 @@ static int send_request(SOCKET *socket)
 static int receive_response(SOCKET *socket, time_t *timestamp)
 {
         int err = -1;
+        memset(&global->pkt, 0, sizeof(sntp_msg_t));
         int sz = socket_recv(socket, &global->pkt, sizeof(sntp_msg_t), NET_FLAGS__NONE);
         if (sz == sizeof(sntp_msg_t)) {
 
                 global->pkt.settings.word = ntoh_u32(NET_FAMILY__INET, global->pkt.settings.word);
 
-                if (  global->pkt.settings.field.Mode == Mode_Server
-                   || global->pkt.settings.field.Mode == Mode_Broadcast) {
+                if (global->pkt.settings.field.Mode == Mode_Server ||
+                        global->pkt.settings.field.Mode == Mode_Broadcast) {
 
-                        *timestamp = ntoh_u32(NET_FAMILY__INET, global->pkt.receive_timestamp)
-                                   - DIFF_SEC_1900_1970;
+                        u32_t sec = ntoh_u32(NET_FAMILY__INET, global->pkt.receive_timestamp_seconds);
+                        u32_t fra = ntoh_u32(NET_FAMILY__INET, global->pkt.receive_timestamp_fraction);
 
-                        err = 0;
+                        if ((sec >= DIFF_SEC_1900_1970) and (sec < UINT32_MAX)) {
+                                *timestamp = sec - DIFF_SEC_1900_1970;
+                                err        = 0;
+                        }
                 }
         }
 
@@ -326,12 +329,10 @@ static int get_SNTP_host_IP(bool once, int argc, char *argv[])
         int appends = argc - 2;
 
         int err;
-        while ((err = get_host_by_name("inet",
-                                       argv[global->current_host_arg],
-                                       &global->server, sizeof(global->server)))) {
+        while ((err = get_host_by_name("inet", argv[global->current_host_arg], &global->server,
+                        sizeof(global->server)))) {
 
-                fprintf(stderr, "[sntpd %lu] %s: no host\n",
-                        cast(u32_t, clock() / CLOCKS_PER_SEC),
+                fprintf(stderr, "[sntpd %lu] %s: no host\n", cast(u32_t, clock() / CLOCKS_PER_SEC),
                         argv[global->current_host_arg]);
 
                 select_next_host(argc);
@@ -405,7 +406,7 @@ static void set_timezone(int argc, char *argv[])
         static const char *provider = "worldtimeapi.org";
 
         size_t buf_len = 4096;
-        char *buf = calloc(1, buf_len);
+        char  *buf     = calloc(1, buf_len);
         if (not buf) {
                 perror("Buffer");
                 return;
@@ -417,7 +418,7 @@ static void set_timezone(int argc, char *argv[])
                 SOCKET *socket = socket_open("inet", NET_PROTOCOL__TCP);
                 if (socket) {
                         provider_ip.port = 80;
-                        errno = 0;
+                        errno            = 0;
 
                         socket_set_send_timeout(socket, SNTP_SEND_TIMEOUT);
                         socket_set_recv_timeout(socket, SNTP_RECV_TIMEOUT);
@@ -428,12 +429,12 @@ static void set_timezone(int argc, char *argv[])
                                                       "Host: worldtimeapi.org\r\n"
                                                       "Accept: */*\r\n"
                                                       "\r\n";
-                                errno = 0;
-                                int request_len = strlen(request);
-                                int n = socket_write(socket, request, request_len);
+                                errno               = 0;
+                                int request_len     = strlen(request);
+                                int n               = socket_write(socket, request, request_len);
                                 if (n == request_len) {
                                         errno = 0;
-                                        n = socket_read(socket, buf, buf_len - 1);
+                                        n     = socket_read(socket, buf, buf_len - 1);
                                         if (n <= 0) {
                                                 fprintf(stderr, "[sntpd %lu] tz response: %s\n",
                                                         cast(u32_t, clock() / CLOCKS_PER_SEC),
@@ -441,14 +442,12 @@ static void set_timezone(int argc, char *argv[])
                                         }
                                 } else {
                                         fprintf(stderr, "[sntpd %lu] tz request: %s\n",
-                                                cast(u32_t, clock() / CLOCKS_PER_SEC),
-                                                strerror(errno));
+                                                cast(u32_t, clock() / CLOCKS_PER_SEC), strerror(errno));
                                 }
 
                         } else {
                                 fprintf(stderr, "[sntpd %lu] tz connect: %s\n",
-                                        cast(u32_t, clock() / CLOCKS_PER_SEC),
-                                        strerror(errno));
+                                        cast(u32_t, clock() / CLOCKS_PER_SEC), strerror(errno));
                         }
 
                         bool dst = strstr(buf, "\"dst\":true");
@@ -459,7 +458,7 @@ static void set_timezone(int argc, char *argv[])
                                 if (value) {
                                         struct timezone tz;
                                         tz.tz_minuteswest = atoi(++value) / 60 + (dst ? 60 : 0);
-                                        tz.tz_dsttime = dst;
+                                        tz.tz_dsttime     = dst;
                                         settimeofday(NULL, &tz);
                                 }
                         }
