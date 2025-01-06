@@ -70,12 +70,12 @@ this:AddItem("8-bit wide bus", "SDIO_BUS_WIDE_8B")
 /*--
 this:AddWidget("Spinbox", 1, 256, "Clock divide factor")
 --*/
-#define __SDMMC_CFG_SDMMC1_CKDIV__ 1
+#define __SDMMC_CFG_SDMMC1_CKDIV__ 3
 
 /*--
 this:AddWidget("Spinbox", 100, 60000, "Card operation timeout [ms]")
 --*/
-#define __SDMMC_CFG_SDMMC1_CARD_TIMEOUT__ 500
+#define __SDMMC_CFG_SDMMC1_CARD_TIMEOUT__ 5000
 
 /*--
 this:AddWidget("Combobox", "Power save")

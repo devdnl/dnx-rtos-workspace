@@ -212,9 +212,9 @@ __CUSTOM_LD_SCRIPT__=_NO_
 # this:AddWidget("Editline", true, "Custom linker script file path")
 # this:SetToolTip("File is relative to configuration directory.")
 #--*/
-#define __CUSTOM_LD_SCRIPT_FILE__ "custom_script.ld"
+#define __CUSTOM_LD_SCRIPT_FILE__ "./config/custom_script.ld"
 #/*
-__CUSTOM_LD_SCRIPT_FILE__="custom_script.ld"
+__CUSTOM_LD_SCRIPT_FILE__="./config/custom_script.ld"
 #*/
 
 #/*--
@@ -237,11 +237,11 @@ __CPU_PREFFERED_FS_RAM__="SDRAM", "PSRAM", "SRAM", "CCM"
 
 #/*--
 # this:AddWidget("Editline", false, "Preffered fast access RAM")
-# this:SetToolTip('Default: "CCM", "SRAM"')
+# this:SetToolTip('Default: "CCM", "SRAM", "SDRAM", "PSRAM"')
 #--*/
-#define __CPU_PREFFERED_FAST_RAM__ "CCM", "SRAM"
+#define __CPU_PREFFERED_FAST_RAM__ "CCM", "SRAM", "SDRAM", "PSRAM"
 #/*
-__CPU_PREFFERED_FAST_RAM__="CCM", "SRAM"
+__CPU_PREFFERED_FAST_RAM__="CCM", "SRAM", "SDRAM", "PSRAM"
 #*/
 
 #//-----------------------------------------------------------------------------

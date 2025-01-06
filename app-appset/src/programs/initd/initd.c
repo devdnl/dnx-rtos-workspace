@@ -152,23 +152,7 @@ static void initialize_basic_drivers(void)
          * 2. Next part of drivers that can be initialized at this early stage.
          */
         driver_init("AFM", 0, 0, NULL); // alternative function configuration
-
-        int gpio = open("/dev/gpio", O_RDWR); // TEST
-        if (gpio >= 0) { // TEST
-                GPIO_pin_in_port_state_t pin = {
-                        .pin   = {IOCTL_GPIO_PIN_DECL(GP14_NC)},
-                        .state = -1,
-                };
-
-                ioctl(gpio, IOCTL_GPIO__GET_PIN_IN_PORT_STATE, &pin); // TEST
-
-                if (pin.state != 0) { // TEST
-                        driver_init("CLK", 0, 0, "/dev/clk"); // system clock configuration
-                }
-
-                close(gpio); // TEST
-        } // TEST
-
+        driver_init("CLK", 0, 0, "/dev/clk"); // system clock configuration
         driver_init("DMA", 0, 0, NULL); // DMA configuration
 
         /*
