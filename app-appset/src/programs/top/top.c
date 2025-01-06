@@ -1,4 +1,4 @@
-/*=========================================================================*//**
+/*==============================================================================
 @file    top.c
 
 @author  Daniel Zorychta
@@ -24,7 +24,7 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /*==============================================================================
   Include files
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
                         if (global->pstat.threads_count == 0) {
                                 snprintf(cpu_load_str, sizeof(cpu_load_str), "zombie");
                         } else {
-                                snprintf(cpu_load_str, 7, " %2d.%d", global->pstat.CPU_load / 10,
+                                snprintf(cpu_load_str, sizeof(cpu_load_str), "%3d.%d", global->pstat.CPU_load / 10,
                                         global->pstat.CPU_load % 10);
                         }
 
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
                                                         stack_color = VT100_FONT_COLOR_YELLOW;
                                                 }
 
-                                                printf("    %2d         %5d %s%4d%s  %2d.%d %5u %2d\n",
+                                                printf("    %2d         %5d %s%4d%s %3d.%d %5u %2d\n",
                                                         stat.priority, stat.stack_size, stack_color,
                                                         stack_max_usage_percent, VT100_RESET_ATTRIBUTES,
                                                         stat.CPU_load / 10, stat.CPU_load % 10,

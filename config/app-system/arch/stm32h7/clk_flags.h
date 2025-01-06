@@ -1,4 +1,4 @@
-/*=========================================================================*//**
+/*==============================================================================
 @file    clk_flags.h
 
 @author  Daniel Zorychta
@@ -24,7 +24,7 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /*
  * NOTE: All flags defined as: __FLAG_NAME__ (with doubled underscore as suffix
@@ -869,7 +869,7 @@ this:AddExtraWidget("Label", "LABEL_CLK_SRC_ADC", "")
 #define __CLK_SYSCLK_SRC_STATUS__ LL_RCC_SYS_CLKSOURCE_STATUS_PLL1
 
 // Value is calculated according to SYSCLK source selection
-#define __CLK_HCLK_FREQ__ 200000000
+#define __CLK_HCLK_FREQ__ 240000000
 #define __CLK_SYSCLK_FREQ__ 400000000
 
 //==============================================================================

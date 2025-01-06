@@ -783,7 +783,7 @@ this:SetToolTip("LWIP_NETIF_LOOPBACK==1: Support sending packets with a destinat
 this:AddWidget("Spinbox", 1, 1024, "LWIP_LOOPBACK_MAX_PBUFS")
 this:SetToolTip("LWIP_LOOPBACK_MAX_PBUFS: Maximum number of pbufs\non queue for loopback sending for each netif.")
 --*/
-#define __NETWORK_LWIP_LOOPBACK_MAX_PBUFS__ 32
+#define __NETWORK_LWIP_LOOPBACK_MAX_PBUFS__ 1
 
 
 

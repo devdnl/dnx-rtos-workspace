@@ -150,7 +150,7 @@ __CPU_NAME__=STM32F103TBxx
 #/*--
 # this:AddWidget("Editline", false, "Interrupt vector position")
 #--*/
-#define __CPU_VTOR_TAB_POSITION__ 0x00000
+#define __CPU_VTOR_TAB_POSITION__ 0x08000000
 
 #/*--
 # this:AddWidget("Combobox", "Custom linker script")
@@ -166,9 +166,9 @@ __CUSTOM_LD_SCRIPT__=_NO_
 # this:AddWidget("Editline", true, "Custom linker script file path")
 # this:SetToolTip("File is relative to configuration directory.")
 #--*/
-#define __CUSTOM_LD_SCRIPT_FILE__ "custom_script.ld"
+#define __CUSTOM_LD_SCRIPT_FILE__ "./config/custom_script.ld"
 #/*
-__CUSTOM_LD_SCRIPT_FILE__="custom_script.ld"
+__CUSTOM_LD_SCRIPT_FILE__="./config/custom_script.ld"
 #*/
 
 #/*--

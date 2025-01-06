@@ -6,7 +6,7 @@
 # @brief   This file contains list of existing modules
 #          Hybrid file: included both by Make and CC.
 #
-# @note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+# @note    Copyright (C) 2024 Daniel Zorychta <daniel.zorychta@gmail.com>
 #
 #          This program is free software; you can redistribute it and/or modify
 #          it under the terms of the GNU General Public License as published by
@@ -599,6 +599,20 @@
 #     uC.PERIPH["STM32H7B3ZIxx" ]={GPIO=true, CLK=true, AFM=true, RTC=true, DMA=true, UART=true, QSPI=true, I2C=true, SDMMC=true, NVM=true, EMI=true, LTDC=true}
 #     uC.PERIPH["STM32H7B3ZIxxQ"]={GPIO=true, CLK=true, AFM=true, RTC=true, DMA=true, UART=true, QSPI=true, I2C=true, SDMMC=true, NVM=true, EMI=true, LTDC=true}
 # end
+#
+# if uC.ARCH == "rpcm0" then
+#     uC.AddPriorityItems = function(this, no_default)
+#         this:AddItem("Priority 0 (the highest)", "0")
+#         this:AddItem("Priority 1", "1")
+#         this:AddItem("Priority 2", "2")
+#         this:AddItem("Priority 3 (the lowest, safe for kernel API)", "3")
+#         if no_default ~= true then
+#             this:AddItem("Default priority", "__CPU_DEFAULT_IRQ_PRIORITY__")
+#         end
+#     end
+#
+#     uC.PERIPH["RP2040"]={GPIO=true, CLK=true, UART=true}
+# end
 #++*/
 
 #/* include of CPU mandatory file in Makefile
@@ -692,6 +706,11 @@ include $(CONFIG_DIR)/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "stm32h7/can_flags.h"
 #include "stm32h7/nvm_flags.h"
 #include "stm32h7/qspi_flags.h"
+#elif (__CPU_ARCH__ == rpcm0)
+#include "rpcm0/cpu_flags.h"
+#include "rpcm0/clk_flags.h"
+#include "rpcm0/gpio_flags.h"
+#include "rpcm0/uart_flags.h"
 #endif
 
 #/*--

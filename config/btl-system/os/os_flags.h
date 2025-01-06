@@ -1,4 +1,4 @@
-/*=========================================================================*//**
+/*==============================================================================
 @file    os_flags.h
 
 @author  Daniel Zorychta
@@ -24,7 +24,7 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /*
  * NOTE: All flags defined as: __FLAG_NAME__ (with doubled underscore as suffix
@@ -51,7 +51,7 @@ this:AddWidget("Spinbox", 48, 8192, "Minimal size of task stack [levels]")
 this:SetToolTip("This value determines the lowest possible stack size that can be assigned for the task. "..
                 "The value is a part of entire stack size.")
 --*/
-#define __OS_TASK_MIN_STACK_DEPTH__ 48
+#define __OS_TASK_MIN_STACK_DEPTH__ 64
 
 /*--
 this:AddWidget("Spinbox", 48, 8192, "Size of I/O threads stack [levels]")
