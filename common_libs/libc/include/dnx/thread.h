@@ -1103,6 +1103,45 @@ static inline int thread_get_current_core(u8_t *core)
         return err ? -1 : 0;
 }
 
+
+//==============================================================================
+/**
+ * @brief Function get numer of CPU cores.
+ *
+ * The function thread_get_cpu_core_count() return a number of CPU cores.
+ *
+ * @param core_count    CPU cores count
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOENT
+ *
+ * @return Return 0 on success. On error, -1 is returned, and
+ * <b>errno</b> is set appropriately.
+ *
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        u8_t core_count;
+        if (thread_get_cpu_core_count(&core_count) == 0) {
+                printf("CPU cores: %u\n", core_count);
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see thread_create()
+ */
+//==============================================================================
+static inline int thread_get_cpu_core_count(u8_t *core_count)
+{
+        int err = _libc_syscall(_LIBC_SYS_GETCPUCORECOUNT, core_count);
+        return err ? -1 : 0;
+}
+
 //==============================================================================
 /**
  * @brief Function create new semaphore.
