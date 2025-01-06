@@ -1,4 +1,4 @@
-/*=========================================================================*//**
+/*==============================================================================
 @file    initd.c
 
 @author  Daniel Zorychta
@@ -24,7 +24,7 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /*==============================================================================
   Include files
@@ -78,6 +78,19 @@ PROGRAM_PARAMS(initd, STACK_DEPTH_LOW);
 static void create_base_file_system_structure(void)
 {
         /*
+         * NOTE: Number and naming of folders depends on user needs. There can
+         *       be mounted additional file systems that does not requires
+         *       drivers to work (e.g. procfs, devfs, etc). Remember that this
+         *       stage does not give access to drivers because drivers will be
+         *       initialized in the next runlevel.
+         *
+         *       Mounting file system is not necessary if user just want to use
+         *       basic drivers without using files. In this case drivers can
+         *       be initialized by using special path:
+         *       "dev://<DRIVER-NAME>:<major>:<minor>"
+         */
+
+        /*
          * 1. Mount base file system as root.
          */
         mount("ramfs", "", "/", "");
@@ -86,22 +99,14 @@ static void create_base_file_system_structure(void)
          * 2. Create basic folders. This folders can be used to store device
          *    files or to mount next file systems e.g. SD Card etc.
          */
-        mkdir("/dev", 0666); // this folder store devices drivers
-        mkdir("/tmp", 0666); // this folder store temporary files
-        mkdir("/run", 0666); // this folder store runtime files
-        mkdir("/mnt", 0666); // this folder store SD card content
+        mkdir("/dev", 0666);  // this folder store devices drivers
+        mkdir("/tmp", 0666);  // this folder store temporary files
+        mkdir("/run", 0666);  // this folder store runtime files
+        mkdir("/mnt", 0666);  // this folder store SD card content
         mkdir("/proc", 0666); // this folder store SD card content
         mkdir("/etc", 0666);  // this folder store SD card content
 
         mount("procfs", "", "/proc", "");
-
-        /*
-         * NOTE: Number and naming of folders depends on user needs. There can
-         *       be mounted additional file systems that does not requires
-         *       drivers to work (e.g. procfs, devfs, etc). Remember that this
-         *       stage does not give access to drivers because drivers will be
-         *       initialized in the next runlevel.
-         */
 }
 
 //==============================================================================
@@ -112,6 +117,17 @@ static void create_base_file_system_structure(void)
 //==============================================================================
 static void initialize_basic_drivers(void)
 {
+        /*
+         * NOTE: Drivers that are initialized in this stage can be reduced or
+         *       added because this depends on user needs. There are drivers
+         *       that cannot be initialized in this runlevel because are using
+         *       access to basic drivers e.g. SDSPI (SD Card over SPI).
+         *       The configuration of drivers can be done by using project
+         *       configuration -- Configtool, or by editing configuration files
+         *       directly. Some drivers need additional runtime configuration.
+         *       In this case see driver's help.
+         */
+
         /*
          * 1. Initialize GPIO drivers. Number of GPIO drivers depends on microcontroller
          *    pinout. If microcontroller has only 2 GPIO ports then only those
@@ -135,9 +151,9 @@ static void initialize_basic_drivers(void)
         /*
          * 2. Next part of drivers that can be initialized at this early stage.
          */
-        driver_init("AFM", 0, 0, NULL);       // alternative function configuration
+        driver_init("AFM", 0, 0, NULL); // alternative function configuration
         driver_init("CLK", 0, 0, "/dev/clk"); // system clock configuration
-        driver_init("DMA", 0, 0, NULL);       // DMA configuration
+        driver_init("DMA", 0, 0, NULL); // DMA configuration
 
         /*
          * NOTE: make sure that UART1 is used as terminal output!
@@ -151,16 +167,6 @@ static void initialize_basic_drivers(void)
                 .output_file = "/dev/ttyS0",
         };
         driver_init2("TTY", 0, 0, "/dev/tty0", &TTY_config); // first user terminal
-
-        /*
-         * NOTE: Drivers that are initialized in this stage can be reduced or
-         *       added because this depends on user needs. There are drivers
-         *       that cannot be initialized in this runlevel because are using
-         *       access to basic drivers e.g. SDSPI (SD Card over SPI).
-         *       The configuration of drivers can be done by using project
-         *       configuration -- Configtool. Some drivers need additional
-         *       runtime configuration. In this case see driver help.
-         */
 }
 
 //==============================================================================
@@ -207,6 +213,7 @@ static void show_kernel_panic_message(void)
                         ((info.flags & KERNEL_PANIC_FLAG__KERNEL_SPACE) ? "KS:1 " : "KS:0 "),
                         ((info.flags & KERNEL_PANIC_FLAG__KERNEL_PANIC) ? "KP:1 " : "KP:0 "),
                         ((info.flags & KERNEL_PANIC_FLAG__PANIC_LOOP) ? "PL:1 " : "PL:0 "));
+                printf("  CORE   : %u\n", info.core);
                 printf(VT100_RESET_ATTRIBUTES "\n");
 
                 sleep(3);
@@ -272,8 +279,7 @@ static void mount_file_systems(void)
          */
         driver_init("SDMMC", 0, 0, "/dev/sd0");
 
-        driver_init2("PART", 0, 0, "/dev/sd0p1",
-                &(const PART_config_t) {.path = "/dev/sd0"});
+        driver_init2("PART", 0, 0, "/dev/sd0p1", &(const PART_config_t) {.path = "/dev/sd0"});
 
         scope (int fd = open("/dev/sd0p1", O_RDWR), fd > 0, close(fd)) {
                 ioctl(fd, IOCTL_PART__READ_MBR);
@@ -292,7 +298,7 @@ static void mount_file_systems(void)
         if (memcmp(romfs_ptr, romfs_signature, strlen(romfs_signature)) == 0) {
 
                 const u32_t romfs_size_offset_words = 16; // romfs header size
-                u32_t       romfs_size = *(romfs_ptr + romfs_size_offset_words);
+                u32_t       romfs_size              = *(romfs_ptr + romfs_size_offset_words);
 
                 if (romfs_size != UINT32_MAX) {
                         driver_init2("MEMBLOCK", 0, 0, "/dev/romfs",
@@ -340,32 +346,24 @@ static void initialize_network(void)
         ifadd("unix", NET_FAMILY__UNIX, NULL);
         ifup("unix", NULL, 0);
 
-#if _ENABLE_NETWORK_
         /*
-         * 1. The DHCP configuration should be prepared to get network address.
-         *    The static IP configuration can be used as well.
+         * Internet/local network is configured in netmgr program by using
+         * configuration files. If needed then "inet" configuration can be moved
+         * here without using of netmgr program, example:
+         *
+         * ifadd("inet", NET_FAMILY__INET, "/dev/eth");
+         *
+         * static const NET_INET_config_t cfg_dhcp = {
+         *         .mode    = NET_INET_MODE__DHCP_START,
+         *         .address = NET_INET_IPv4_ANY,
+         *         .mask    = NET_INET_IPv4_ANY,
+         *         .gateway = NET_INET_IPv4_ANY,
+         * };
+         *
+         * if (ifup("inet", &cfg_dhcp, sizeof(cfg_dhcp)) != 0) {
+         *         perror("ifup");
+         * }
          */
-        errno = 0;
-        ifadd("inet", NET_FAMILY__INET, "/dev/eth");
-        perror("Network 'inet' status");
-
-        puts("Starting DHCP client...\n");
-
-        static const NET_INET_config_t cfg_dhcp = {
-                .mode    = NET_INET_MODE__DHCP_START,
-                .address = NET_INET_IPv4_ANY,
-                .mask    = NET_INET_IPv4_ANY,
-                .gateway = NET_INET_IPv4_ANY,
-        };
-
-        /*
-         * 2. Command setup network interface.
-         */
-        errno = 0;
-        if (ifup("inet", &cfg_dhcp, sizeof(cfg_dhcp)) != 0) {
-                perror("ifup");
-        }
-#endif
 }
 
 //==============================================================================
@@ -424,7 +422,7 @@ static void start_user_programs(void)
                 .p_stdout  = "/dev/tty2",
         };
 
-        process_create("netmgr --daemon /conf/netmgr.conf", &attr2);
+        process_create("netmgr --daemon /netmgr.conf", &attr2);
 }
 
 //==============================================================================

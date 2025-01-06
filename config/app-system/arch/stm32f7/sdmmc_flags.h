@@ -57,7 +57,7 @@ this:AddWidget("Combobox", "Hardware flow control")
 this:AddItem("Disable", "SDMMC_HARDWARE_FLOW_CONTROL_DISABLE")
 this:AddItem("Enable", "SDMMC_HARDWARE_FLOW_CONTROL_ENABLE")
 --*/
-#define __SDMMC_CFG_SDMMC1_HW_FLOW_CTRL__ SDMMC_HARDWARE_FLOW_CONTROL_ENABLE
+#define __SDMMC_CFG_SDMMC1_HW_FLOW_CTRL__ SDMMC_HARDWARE_FLOW_CONTROL_DISABLE
 
 /*--
 this:AddWidget("Combobox", "Bus wide")
@@ -70,12 +70,12 @@ this:AddItem("8-bit wide bus", "SDMMC_BUS_WIDE_8B")
 /*--
 this:AddWidget("Spinbox", 1, 256, "Clock divide factor")
 --*/
-#define __SDMMC_CFG_SDMMC1_CKDIV__ 1
+#define __SDMMC_CFG_SDMMC1_CKDIV__ 4
 
 /*--
 this:AddWidget("Spinbox", 100, 60000, "Card operation timeout [ms]")
 --*/
-#define __SDMMC_CFG_SDMMC1_CARD_TIMEOUT__ 500
+#define __SDMMC_CFG_SDMMC1_CARD_TIMEOUT__ 5000
 
 /*--
 this:AddWidget("Combobox", "Power save")
@@ -122,7 +122,7 @@ this:AddWidget("Combobox", "Hardware flow control")
 this:AddItem("Disable", "SDMMC_HARDWARE_FLOW_CONTROL_DISABLE")
 this:AddItem("Enable", "SDMMC_HARDWARE_FLOW_CONTROL_ENABLE")
 --*/
-#define __SDMMC_CFG_SDMMC2_HW_FLOW_CTRL__ SDMMC_HARDWARE_FLOW_CONTROL_ENABLE
+#define __SDMMC_CFG_SDMMC2_HW_FLOW_CTRL__ SDMMC_HARDWARE_FLOW_CONTROL_DISABLE
 
 /*--
 this:AddWidget("Combobox", "Bus wide")
@@ -134,12 +134,12 @@ this:AddItem("4-bit wide bus", "SDMMC_BUS_WIDE_4B")
 /*--
 this:AddWidget("Spinbox", 1, 256, "Clock divide factor")
 --*/
-#define __SDMMC_CFG_SDMMC2_CKDIV__ 1
+#define __SDMMC_CFG_SDMMC2_CKDIV__ 3
 
 /*--
 this:AddWidget("Spinbox", 100, 2000, "Card operation timeout [ms]")
 --*/
-#define __SDMMC_CFG_SDMMC2_CARD_TIMEOUT__ 500
+#define __SDMMC_CFG_SDMMC2_CARD_TIMEOUT__ 5000
 
 /*--
 this:AddWidget("Combobox", "Power save")

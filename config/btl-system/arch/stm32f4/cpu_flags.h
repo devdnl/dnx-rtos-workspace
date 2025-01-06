@@ -277,7 +277,7 @@ __CPU_NAME__=STM32F429BIxx
 #/*--
 # this:AddWidget("Editline", false, "Interrupt vector position")
 #--*/
-#define __CPU_VTOR_TAB_POSITION__ 0x00000
+#define __CPU_VTOR_TAB_POSITION__ 0x08000000
 
 #/*--
 # this:AddWidget("Combobox", "Custom linker script")
@@ -293,9 +293,9 @@ __CUSTOM_LD_SCRIPT__=_NO_
 # this:AddWidget("Editline", true, "Custom linker script file path")
 # this:SetToolTip("File is relative to configuration directory.")
 #--*/
-#define __CUSTOM_LD_SCRIPT_FILE__ "custom_script.ld"
+#define __CUSTOM_LD_SCRIPT_FILE__ "./config/custom_script.ld"
 #/*
-__CUSTOM_LD_SCRIPT_FILE__="custom_script.ld"
+__CUSTOM_LD_SCRIPT_FILE__="./config/custom_script.ld"
 #*/
 
 #/*--
@@ -313,16 +313,16 @@ __CPU_PREFFERED_APP_RAM__="SDRAM", "PSRAM", "SRAM", "SRAM1", "SRAM2", "SRAM3", "
 #--*/
 #define __CPU_PREFFERED_FS_RAM__ "SDRAM", "PSRAM", "SRAM", "SRAM1", "SRAM2", "SRAM3", "CCM"
 #/*
-__CPU_PREFFERED_FS_RAM__="SDRAM", "PSRAM", "SRAM", "SRAM1", "SRAM2", "DTCM"
+__CPU_PREFFERED_FS_RAM__="SDRAM", "PSRAM", "SRAM", "SRAM1", "SRAM2", "CCM"
 #*/
 
 #/*--
 # this:AddWidget("Editline", false, "Preffered fast access RAM")
-# this:SetToolTip('Default: "DTCM", "SRAM1", "SRAM2"')
+# this:SetToolTip('Default: "CCM", "SRAM1", "SRAM2", "SRAM"')
 #--*/
-#define __CPU_PREFFERED_FAST_RAM__ "CCM", "SRAM1", "SRAM2", "SRAM3"
+#define __CPU_PREFFERED_FAST_RAM__ "CCM", "SRAM1", "SRAM2", "SRAM3", "SRAM"
 #/*
-__CPU_PREFFERED_FAST_RAM__="CCM", "SRAM1", "SRAM2", "SRAM3"
+__CPU_PREFFERED_FAST_RAM__="CCM", "SRAM1", "SRAM2", "SRAM3", "SRAM"
 #*/
 
 #//-----------------------------------------------------------------------------

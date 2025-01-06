@@ -95,11 +95,10 @@ int main(int argc, char *argv[])
                 while ((ioctl(fileno(clk), IOCTL_CLK__GET_CLK_INFO, &ck) == 0)) {
                         if (ck.name == NULL) {
                                 break;
+
                         } else if (strcmp(ck.name, "CPUCLK") == 0) {
                                 global->cpu_freq = ck.freq_Hz;
                                 break;
-                        } else {
-                                ck.iterator++;
                         }
                 }
 

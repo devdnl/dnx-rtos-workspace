@@ -126,6 +126,7 @@ typedef struct {
         pid_t       pid;
         tid_t       tid;
         u8_t        syscall;
+        u8_t        core;
 } kernel_panic_info_t;
 
 /*==============================================================================
