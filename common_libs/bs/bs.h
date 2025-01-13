@@ -100,6 +100,7 @@ typedef enum {
  * Read methods.
  */
 extern int         bs_read_chunk(bs_rd_t *self, const uint8_t *chunk, size_t chunk_len);
+extern bs_rd_t     bs_read_init(const uint8_t *chunk, size_t chunk_len);
 extern int8_t      bs_get_int8_t(bs_rd_t *self, const char *key, int8_t df, int *err);
 extern uint8_t     bs_get_uint8_t(bs_rd_t *self, const char *key, uint8_t df, int *err);
 extern int16_t     bs_get_int16_t(bs_rd_t *self, const char *key, int16_t df, int *err);
@@ -113,27 +114,27 @@ extern double      bs_get_double(bs_rd_t *self, const char *key, double df, int 
 extern bool        bs_get_bool(bs_rd_t *self, const char *key, bool df, int *err);
 extern const char *bs_get_str(bs_rd_t *self, const char *key, const char *df, int *err);
 extern const void *bs_get_blob(bs_rd_t *self, const char *key, size_t *len, int *err);
-extern int         bs_get_next(bs_rd_t *self, uint8_t **next, const char **key,
-        const void **value, bs_type_t *type);
+extern int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key, const void **value, bs_type_t *type);
 
 /*
  * Write methods.
  */
-extern int bs_write_chunk(bs_wr_t *self, uint8_t *chunk, size_t chunk_len);
-extern int bs_get_chunk_length(bs_wr_t *self);
-extern int bs_set_int8_t(bs_wr_t *self, const char *key, int8_t value);
-extern int bs_set_uint8_t(bs_wr_t *self, const char *key, uint8_t value);
-extern int bs_set_int16_t(bs_wr_t *self, const char *key, int16_t value);
-extern int bs_set_uint16_t(bs_wr_t *self, const char *key, uint16_t value);
-extern int bs_set_int32_t(bs_wr_t *self, const char *key, int32_t value);
-extern int bs_set_uint32_t(bs_wr_t *self, const char *key, uint32_t value);
-extern int bs_set_int64_t(bs_wr_t *self, const char *key, int64_t value);
-extern int bs_set_uint64_t(bs_wr_t *self, const char *key, uint64_t value);
-extern int bs_set_float(bs_wr_t *self, const char *key, float value);
-extern int bs_set_double(bs_wr_t *self, const char *key, double value);
-extern int bs_set_str(bs_wr_t *self, const char *key, const char *str);
-extern int bs_set_bool(bs_wr_t *self, const char *key, bool value);
-extern int bs_set_blob(bs_wr_t *self, const char *key, const void *blob, size_t len);
+extern int     bs_write_chunk(bs_wr_t *self, uint8_t *chunk, size_t chunk_len);
+extern bs_wr_t bs_write_init(uint8_t *chunk, size_t chunk_len);
+extern int     bs_get_chunk_length(bs_wr_t *self);
+extern int     bs_set_int8_t(bs_wr_t *self, const char *key, int8_t value);
+extern int     bs_set_uint8_t(bs_wr_t *self, const char *key, uint8_t value);
+extern int     bs_set_int16_t(bs_wr_t *self, const char *key, int16_t value);
+extern int     bs_set_uint16_t(bs_wr_t *self, const char *key, uint16_t value);
+extern int     bs_set_int32_t(bs_wr_t *self, const char *key, int32_t value);
+extern int     bs_set_uint32_t(bs_wr_t *self, const char *key, uint32_t value);
+extern int     bs_set_int64_t(bs_wr_t *self, const char *key, int64_t value);
+extern int     bs_set_uint64_t(bs_wr_t *self, const char *key, uint64_t value);
+extern int     bs_set_float(bs_wr_t *self, const char *key, float value);
+extern int     bs_set_double(bs_wr_t *self, const char *key, double value);
+extern int     bs_set_str(bs_wr_t *self, const char *key, const char *str);
+extern int     bs_set_bool(bs_wr_t *self, const char *key, bool value);
+extern int     bs_set_blob(bs_wr_t *self, const char *key, const void *blob, size_t len);
 
 /*==============================================================================
   Exported inline functions

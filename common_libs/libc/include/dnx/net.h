@@ -233,9 +233,9 @@ extern "C" {
   INET NETWORK FAMILY
 ------------------------------------------------------------------------------*/
 /** Macro creates IPv4 address for INET family network. */
-#define NET_INET_IPv4(a, b, c, d)                                    \
-        (((((u32_t)a) & 0xFF) << 24) | ((((u32_t)b) & 0xFF) << 16) | \
-                ((((u32_t)c) & 0xFF) << 8) | ((((u32_t)d) & 0xFF)))
+#define NET_INET_IPv4(a, b, c, d)                                                                 \
+        (((((u32_t)a) & 0xFF) << 24) | ((((u32_t)b) & 0xFF) << 16) | ((((u32_t)c) & 0xFF) << 8) | \
+                ((((u32_t)d) & 0xFF)))
 
 /** Macro creates ANY address for INET family network. */
 #define NET_INET_IPv4_ANY NET_INET_IPv4(0, 0, 0, 0)
@@ -545,8 +545,7 @@ static inline int iflist(char *netname[], size_t netname_len)
  * @see ifdown(), ifstatus()
  */
 //==============================================================================
-static inline int ifup(const char *netname, const NET_generic_config_t *config,
-        size_t config_size)
+static inline int ifup(const char *netname, const NET_generic_config_t *config, size_t config_size)
 {
         int err = _libc_syscall(_LIBC_SYS_NETIFUP, netname, config, &config_size);
         return err ? -1 : 0;
@@ -584,11 +583,10 @@ static inline int ifdown(const char *netname)
  * @see ifup(), ifdown()
  */
 //==============================================================================
-static inline int ifstatus(const char *netname, NET_family_t *family,
-        NET_generic_status_t *status, size_t status_size)
+static inline int ifstatus(const char *netname, NET_family_t *family, NET_generic_status_t *status,
+        size_t status_size)
 {
-        int err = _libc_syscall(_LIBC_SYS_NETIFSTATUS, netname, family, status,
-                &status_size);
+        int err = _libc_syscall(_LIBC_SYS_NETIFSTATUS, netname, family, status, &status_size);
         return err ? -1 : 0;
 }
 
@@ -687,8 +685,7 @@ extern int socket_close(SOCKET *socket);
  *         appropriately.
  */
 //==============================================================================
-extern int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr,
-        size_t sockaddr_size);
+extern int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr, size_t sockaddr_size);
 
 //==============================================================================
 /**
@@ -703,8 +700,7 @@ extern int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr,
  * @see socket_disconnect()
  */
 //==============================================================================
-extern int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr,
-        size_t sockaddr_size);
+extern int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr, size_t sockaddr_size);
 
 //==============================================================================
 /**
@@ -808,7 +804,7 @@ static inline int socket_read(SOCKET *socket, void *buf, size_t len)
  */
 //==============================================================================
 extern int socket_recvfrom(SOCKET *socket, void *buf, size_t len, NET_flags_t flags,
-        NET_generic_sockaddr_t *from_sockaddr, size_t from_sockaddr_size);
+        const NET_generic_sockaddr_t *from_sockaddr, size_t from_sockaddr_size);
 
 //==============================================================================
 /**
@@ -930,8 +926,7 @@ extern int socket_set_send_timeout(SOCKET *socket, uint32_t timeout);
  * @see socket_connect(), socket_bind()
  */
 //==============================================================================
-extern int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr,
-        size_t addr_size);
+extern int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr, size_t addr_size);
 
 //==============================================================================
 /**
@@ -945,11 +940,10 @@ extern int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr,
  *         appropriately.
  */
 //==============================================================================
-static inline int get_host_by_name(const char *netname, const char *name,
-        NET_generic_sockaddr_t *sock_addr, size_t sock_addr_size)
+static inline int get_host_by_name(const char *netname, const char *name, NET_generic_sockaddr_t *sock_addr,
+        size_t sock_addr_size)
 {
-        int err = _libc_syscall(_LIBC_SYS_NETGETHOSTBYNAME, netname, name, sock_addr,
-                &sock_addr_size);
+        int err = _libc_syscall(_LIBC_SYS_NETGETHOSTBYNAME, netname, name, sock_addr, &sock_addr_size);
         return err ? -1 : 0;
 }
 

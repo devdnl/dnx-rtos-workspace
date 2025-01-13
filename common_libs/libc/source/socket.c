@@ -5,7 +5,7 @@ Author   Daniel Zorychta
 
 Brief    Socket implementation.
 
-	 Copyright (C) 2022 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2022 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -280,7 +280,7 @@ int socket_accept(SOCKET *socket, SOCKET **new_socket)
                 return -1;
         }
 
-        int err = -1;
+        int     err     = -1;
         SOCKET *nsocket = _libc_malloc(sizeof(*nsocket));
         if (nsocket) {
                 err = _libc_syscall(_LIBC_SYS_NETACCEPT, &socket->fd, &nsocket->fd);
@@ -318,7 +318,7 @@ int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags)
         }
 
         size_t rcved;
-        int err = _libc_syscall(_LIBC_SYS_NETRECV, &socket->fd, buf, &len, &flags, &rcved);
+        int    err = _libc_syscall(_LIBC_SYS_NETRECV, &socket->fd, buf, &len, &flags, &rcved);
         return err ? -1 : (int)rcved;
 }
 
@@ -340,12 +340,8 @@ int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags)
  * @see socket_connect(), socket_accept(), socket_recv(), socket_read()
  */
 //==============================================================================
-int socket_recvfrom(SOCKET                 *socket,
-                    void                   *buf,
-                    size_t                  len,
-                    NET_flags_t             flags,
-                    NET_generic_sockaddr_t *from_sockaddr,
-                    size_t                  from_sockaddr_size)
+int socket_recvfrom(SOCKET *socket, void *buf, size_t len, NET_flags_t flags,
+        const NET_generic_sockaddr_t *from_sockaddr, size_t from_sockaddr_size)
 {
         if (!socket or !buf or !len or !from_sockaddr or !from_sockaddr_size) {
                 errno = EINVAL;
@@ -353,8 +349,8 @@ int socket_recvfrom(SOCKET                 *socket,
         }
 
         size_t rcved;
-        int err = _libc_syscall(_LIBC_SYS_NETRECVFROM, &socket->fd, buf, &len, &flags,
-                                from_sockaddr, &from_sockaddr_size, &rcved);
+        int    err = _libc_syscall(_LIBC_SYS_NETRECVFROM, &socket->fd, buf, &len, &flags, from_sockaddr,
+                   &from_sockaddr_size, &rcved);
         return err ? -1 : (int)rcved;
 }
 
@@ -383,7 +379,7 @@ int socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags)
         }
 
         size_t sent;
-        int err = _libc_syscall(_LIBC_SYS_NETSEND, &socket->fd, buf, &len, &flags, &sent);
+        int    err = _libc_syscall(_LIBC_SYS_NETSEND, &socket->fd, buf, &len, &flags, &sent);
         return err ? -1 : (int)sent;
 }
 
@@ -405,12 +401,8 @@ int socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags)
  * @see socket_connect(), socket_send(), socket_write()
  */
 //==============================================================================
-int socket_sendto(SOCKET                       *socket,
-                  const void                   *buf,
-                  size_t                        len,
-                  NET_flags_t                   flags,
-                  const NET_generic_sockaddr_t *to_sockaddr,
-                  size_t                        to_sockaddr_size)
+int socket_sendto(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags,
+        const NET_generic_sockaddr_t *to_sockaddr, size_t to_sockaddr_size)
 {
         if (!socket or !buf or !len or !to_sockaddr or !to_sockaddr_size) {
                 errno = EINVAL;
@@ -418,8 +410,8 @@ int socket_sendto(SOCKET                       *socket,
         }
 
         size_t sent;
-        int err = _libc_syscall(_LIBC_SYS_NETSENDTO, &socket->fd, buf, &len, &flags,
-                                to_sockaddr, &to_sockaddr_size, &sent);
+        int    err = _libc_syscall(_LIBC_SYS_NETSENDTO, &socket->fd, buf, &len, &flags, to_sockaddr,
+                   &to_sockaddr_size, &sent);
         return err ? -1 : (int)sent;
 }
 

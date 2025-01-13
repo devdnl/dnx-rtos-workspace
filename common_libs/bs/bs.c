@@ -34,23 +34,22 @@ Brief    Binary serialization.
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define bs_get_template(_type_)                                                          \
-        _type_ bs_get_##_type_(bs_rd_t *self, const char *key, _type_ Default, int *err) \
-        {                                                                                \
-                typeof(Default) value = Default;                                         \
-                const void     *ptr;                                                     \
-                int e = bs_get_raw_with_type_check(self, key, &ptr, sizeof(value),       \
-                        bs_type__##_type_);                                              \
-                if (not e) {                                                             \
-                        memcpy(&value, ptr, sizeof(value));                              \
-                }                                                                        \
-                if (err) {                                                               \
-                        if (e) {                                                         \
-                                value = Default;                                         \
-                        }                                                                \
-                        *err = e;                                                        \
-                }                                                                        \
-                return value;                                                            \
+#define bs_get_template(_type_)                                                                        \
+        _type_ bs_get_##_type_(bs_rd_t *self, const char *key, _type_ Default, int *err)               \
+        {                                                                                              \
+                typeof(Default) value = Default;                                                       \
+                const void     *ptr;                                                                   \
+                int e = bs_get_raw_with_type_check(self, key, &ptr, sizeof(value), bs_type__##_type_); \
+                if (not e) {                                                                           \
+                        memcpy(&value, ptr, sizeof(value));                                            \
+                }                                                                                      \
+                if (err) {                                                                             \
+                        if (e) {                                                                       \
+                                value = Default;                                                       \
+                        }                                                                              \
+                        *err = e;                                                                      \
+                }                                                                                      \
+                return value;                                                                          \
         }
 
 #define bs_set_template(_type_)                                                         \
@@ -101,8 +100,7 @@ typedef struct PACKED {
  * @return On success 0 is returned.
  */
 //==============================================================================
-static int bs_get_raw(bs_rd_t *self, const char *key, const void **blob, size_t *len,
-        bs_type_t *type)
+static int bs_get_raw(bs_rd_t *self, const char *key, const void **blob, size_t *len, bs_type_t *type)
 {
         if (not self or not key or not blob or not len or not type) {
                 return bs_err_invalid_value;
@@ -124,8 +122,7 @@ static int bs_get_raw(bs_rd_t *self, const char *key, const void **blob, size_t 
 
                 } else {
                         item = cast(typeof(item),
-                                cast(uint8_t *, item) + sizeof(*item) + item->key_len +
-                                        item->data_len);
+                                cast(uint8_t *, item) + sizeof(*item) + item->key_len + item->data_len);
                 }
         }
 
@@ -145,8 +142,8 @@ static int bs_get_raw(bs_rd_t *self, const char *key, const void **blob, size_t 
  * @return On success 0 is returned.
  */
 //==============================================================================
-static int bs_get_raw_with_type_check(bs_rd_t *self, const char *key, const void **blob,
-        size_t len, bs_type_t type)
+static int bs_get_raw_with_type_check(bs_rd_t *self, const char *key, const void **blob, size_t len,
+        bs_type_t type)
 {
         size_t    blen;
         bs_type_t btype;
@@ -180,8 +177,7 @@ static int bs_get_raw_with_type_check(bs_rd_t *self, const char *key, const void
  * @return On success 0 is returned.
  */
 //==============================================================================
-static int bs_set_raw(bs_wr_t *self, const char *key, const void *blob, size_t len,
-        bs_type_t type)
+static int bs_set_raw(bs_wr_t *self, const char *key, const void *blob, size_t len, bs_type_t type)
 {
         if (not self or not key or not blob or not len) {
                 return bs_err_invalid_value;
@@ -231,6 +227,8 @@ static int bs_set_raw(bs_wr_t *self, const char *key, const void *blob, size_t l
  * @brief  Set bs to read chunk.
  *
  * @param  self         bs instance
+ * @param  chunk        chunk buffer
+ * @param  chunk_len    chunk buffer length
  *
  * @return On success 0 is returned.
  */
@@ -249,6 +247,26 @@ int bs_read_chunk(bs_rd_t *self, const uint8_t *chunk, size_t chunk_len)
         self->chunk_len = chunk_len;
 
         return 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Set bs to read chunk (unsafe).
+ *
+ * @param  chunk        chunk buffer
+ * @param  chunk_len    chunk buffer length
+ *
+ * @return Initialized bs read.
+ */
+//==============================================================================
+bs_rd_t bs_read_init(const uint8_t *chunk, size_t chunk_len)
+{
+        bs_rd_t bsrd = {
+                .chunk     = chunk,
+                .chunk_len = chunk_len,
+        };
+
+        return bsrd;
 }
 
 //==============================================================================
@@ -489,8 +507,7 @@ const void *bs_get_blob(bs_rd_t *self, const char *key, size_t *len, int *err)
  * @return On sucecss 0 is returned.
  */
 //==============================================================================
-int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key,
-        const void **value, bs_type_t *type)
+int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key, const void **value, bs_type_t *type)
 {
         if (not self or not key or not value or not type) {
                 return bs_err_invalid_value;
@@ -501,7 +518,7 @@ int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key,
         }
 
         if (*next == NULL) {
-                *next = cast(uint8_t*, self->chunk);
+                *next = cast(uint8_t *, self->chunk);
         }
 
         item_t *item = cast(typeof(item), *next);
@@ -509,10 +526,9 @@ int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key,
         if (cast(uintptr_t, item) < cast(uintptr_t, self->chunk) + self->chunk_len) {
 
                 *type  = item->type;
-                *key   = cast(const char*, &item->key_data[0]);
+                *key   = cast(const char *, &item->key_data[0]);
                 *value = &item->key_data[item->key_len];
-                *next  = cast(uint8_t *, item) + sizeof(*item) + item->key_len +
-                                item->data_len;
+                *next  = cast(uint8_t *, item) + sizeof(*item) + item->key_len + item->data_len;
                 return 0;
         }
 
@@ -546,6 +562,28 @@ int bs_write_chunk(bs_wr_t *self, uint8_t *chunk, size_t chunk_len)
         self->item          = chunk;
 
         return 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Prepare serializer to write (unsafe).
+ *
+ * @param  chunk        chunk
+ * @param  chunk_len    chunk length
+ *
+ * @return Initialized bs write.
+ */
+//==============================================================================
+bs_wr_t bs_write_init(uint8_t *chunk, size_t chunk_len)
+{
+        bs_wr_t bswr = {
+                .chunk         = chunk,
+                .chunk_max_len = chunk_len,
+                .chunk_len     = 0,
+                .item          = chunk,
+        };
+
+        return bswr;
 }
 
 //==============================================================================
