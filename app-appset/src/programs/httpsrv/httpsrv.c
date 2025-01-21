@@ -134,8 +134,6 @@ static const char *HTTP_CONTENT_TYPE_TEXT_TEXT = "Content-Type: text/text\r\n\r\
 //==============================================================================
 int main(int argc, char *argv[])
 {
-        UNUSED_ARG2(argc, argv);
-
         size_t mem_size;
         if (shmat(NETMGR_SHM, cast(void *, &global->shared.netmgr), &mem_size) != 0) {
                 printf("HTTPSRV: not such %s shared memory!\n", NETMGR_SHM);
@@ -713,7 +711,7 @@ static int multipart_flush_file(httpsrv_thread_t *self, const char *path)
         if (multipart->data.buf_seek > 0) {
                 int oflag = O_WRONLY | ((multipart->data.write_count == 0) ? (O_CREAT | O_TRUNC) : O_APPEND);
                 errno     = 0;
-                int fd    = open(path, oflag);
+                int fd    = open(path, oflag, 0666);
                 if (fd != -1) {
                         write(fd, multipart->data.buf, multipart->data.buf_seek);
                         close(fd);
@@ -968,11 +966,20 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
 
         char file_path[128];
         snprintf(file_path, sizeof(file_path), "%s/%s", HTTPSRV_ROOT_DIR, url);
+        const char *ext = strrchr(url, '.');
 
         errno = 0;
         if (stat(file_path, &(struct stat) {}) != 0) {
-                VERBOSE("no such '%s' file!\n", url);
-                return errno;
+
+                if (ext == NULL) {
+                        strlcat(file_path, ".html", sizeof(file_path));
+                        ext = strrchr(file_path, '.');
+                }
+
+                if (stat(file_path, &(struct stat) {}) != 0) {
+                        VERBOSE("no such '%s' file!\n", url);
+                        return errno;
+                }
         }
 
         if (isstreq(url, HTTPSRV_PAGE_NOT_FOUND)) {
@@ -982,7 +989,6 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
                 httpsrv_send(self, HTTP_STATUS_200_OK, strlen(HTTP_STATUS_200_OK), false);
         }
 
-        const char *ext = strrchr(url, '.');
         if (isstreq(ext, ".html")) {
                 httpsrv_send(self, HTTP_CONTENT_TYPE_TEXT_HTML, strlen(HTTP_CONTENT_TYPE_TEXT_HTML), false);
 
