@@ -33,6 +33,7 @@ Brief   Configuration parser.
 ==============================================================================*/
 typedef struct pair {
         struct pair *next;
+        bool         string;
         size_t       value_offset;
         char         data[];
 } pair_t;
@@ -139,6 +140,8 @@ conf_parser_t *conf_parser__delete(conf_parser_t *this)
                         free(this->file_path);
                         mutex_unlock(this->mutex);
                 }
+
+                mutex_delete(this->mutex);
 
                 free(this);
         }
@@ -377,7 +380,8 @@ int conf_parser__save_file(conf_parser_t *this, const char *path)
                         key += section_len + 1;
                 }
 
-                int n = fprintf(fp, "%s = %s\n", key, value);
+                int n = fprintf(fp, "%s = %s%s%s\n", key, pair->string ? "\"" : "", value,
+                        pair->string ? "\"" : "");
                 if (n <= 0) {
                         err = conf_parser_status__file_error;
                         break;
@@ -485,8 +489,8 @@ int conf_parser__save_buffer(conf_parser_t *this, char *buf, size_t bufsz)
         if (mutex_lock(this->mutex, MAX_DELAY_MS)) {
 
                 for (pair_t *pair = this->pair; pair; pair = pair->next) {
-                        n += snprintf(&buf[n], bufsz - n, "%s = %s\n", pair_get_key(pair),
-                                pair_get_value(pair));
+                        n += snprintf(&buf[n], bufsz - n, "%s = %s%s%s\n", pair_get_key(pair),
+                                pair->string ? "\"" : "", pair_get_value(pair), pair->string ? "\"" : "");
                 }
 
                 mutex_unlock(this->mutex);
@@ -861,6 +865,8 @@ static int interpret_line(conf_parser_t *this, char *line, pair_t **pair)
                 return interpret_section;
 
         } else {
+                bool string = false;
+
                 if (isstrempty(key)) {
                         return interpret_empty_line;
                 }
@@ -886,6 +892,7 @@ static int interpret_line(conf_parser_t *this, char *line, pair_t **pair)
                         ((first_char == '\'') and (last_char == '\''))) {
                         val++;
                         LAST_CHARACTER(val) = '\0';
+                        string              = true;
                 }
 
                 char section_key[LINE_LEN];
@@ -897,7 +904,8 @@ static int interpret_line(conf_parser_t *this, char *line, pair_t **pair)
 
                 pair_t *p = pair_new(section_key, val);
                 if (p) {
-                        *pair = p;
+                        p->string = string;
+                        *pair     = p;
                         return interpret_pair;
                 } else {
                         return interpret_no_memory;
@@ -958,21 +966,38 @@ static pair_t *pair_new(const char *key, const char *val)
 {
         size_t key_sz = strsize(key);
         size_t val_sz = strsize(val);
+        bool   string = false;
+
+        for (int i = 0; i < 2; i++) {
+                if (val[val_sz - 2] == '\n') {
+                        val_sz--;
+                }
+
+                if (val[val_sz - 2] == '\r') {
+                        val_sz--;
+                }
+        }
+
+        if (((*val == '"') and (val[val_sz - 2] == '"')) or ((*val == '\'') or (val[val_sz - 2] == '\''))) {
+                val++;
+                val_sz -= 2;
+                string = true;
+        }
 
         pair_t *pair = calloc(1, sizeof(*pair) + key_sz + val_sz);
         if (pair) {
+                pair->string       = string;
                 pair->value_offset = key_sz;
                 memcpy(&pair->data[0], key, key_sz);
                 memcpy(&pair->data[pair->value_offset], val, val_sz);
+                pair->data[pair->value_offset + val_sz - 1] = '\0';
 
-                char *val_buf = &pair->data[pair->value_offset];
-
-                if (LAST_CHARACTER(val_buf) == '\n') {
-                        LAST_CHARACTER(val_buf) = '\0';
-                }
-
-                if (LAST_CHARACTER(val_buf) == '\r') {
-                        LAST_CHARACTER(val_buf) = '\0';
+                char *value = &pair->data[pair->value_offset];
+                while (*value) {
+                        if (not isprint(*value)) {
+                                *value = '_';
+                        }
+                        value++;
                 }
         }
 

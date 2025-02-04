@@ -43,10 +43,10 @@ Brief    Binary serialization.
                 if (not e) {                                                                           \
                         memcpy(&value, ptr, sizeof(value));                                            \
                 }                                                                                      \
+                if (e) {                                                                               \
+                        value = Default;                                                               \
+                }                                                                                      \
                 if (err) {                                                                             \
-                        if (e) {                                                                       \
-                                value = Default;                                                       \
-                        }                                                                              \
                         *err = e;                                                                      \
                 }                                                                                      \
                 return value;                                                                          \
@@ -448,8 +448,13 @@ const char *bs_get_str(bs_rd_t *self, const char *key, const char *Default, int 
                 } else if (blen == 0) {
                         e = bs_err_value_size;
                 }
-        } else if (err) {
-                str  = Default;
+        }
+
+        if (e) {
+                str = Default;
+        }
+
+        if (err) {
                 *err = e;
         }
 
