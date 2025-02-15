@@ -386,6 +386,7 @@ static void start_user_programs(void)
                 .p_stderr  = "/dev/tty0",
                 .p_stdin   = "/dev/tty0",
                 .p_stdout  = "/dev/tty0",
+                .priority  = PRIORITY_NORMAL,
         };
 
         process_create("dsh", &attr0);
@@ -403,6 +404,7 @@ static void start_user_programs(void)
                 .p_stderr  = "/dev/tty1",
                 .p_stdin   = "/dev/tty1",
                 .p_stdout  = "/dev/tty1",
+                .priority  = PRIORITY_NORMAL,
         };
 
         process_create("dsh", &attr1);
@@ -420,6 +422,7 @@ static void start_user_programs(void)
                 .p_stderr  = "/dev/tty2",
                 .p_stdin   = "/dev/tty2",
                 .p_stdout  = "/dev/tty2",
+                .priority  = PRIORITY_NORMAL,
         };
 
         process_create("netmgr --daemon /netmgr.conf", &attr2);

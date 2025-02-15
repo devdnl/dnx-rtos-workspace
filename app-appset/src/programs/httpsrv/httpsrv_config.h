@@ -47,9 +47,10 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 #define HTTPSRV_DEBUG_ON                      0
+#define HTTPSRV_SINGLE_THREAD                 false
 #define HTTPSRV_MULTIPART_BUFFER_SIZE         (256 * 1024)
 #define HTTPSRV_INTERPRETER_FETCH_BUFFER_SIZE 8192
-#define HTTPSRV_INTERPRETER_CODE_BUFFER_SIZE  8192
+#define HTTPSRV_INTERPRETER_CODE_BUFFER_SIZE  16384
 #define HTTPSRV_INTERPRETER_TMP_BUFFER_SIZE   1024
 #define HTTPSRV_OUTPUT_BUFFER_SIZE            (4*1500)
 #define HTTPSRV_HTTP_PARSER_BUFFER_SIZE       2048

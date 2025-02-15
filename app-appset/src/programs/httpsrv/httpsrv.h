@@ -124,8 +124,9 @@ typedef struct {
 
                 char tmp_buf[HTTPSRV_INTERPRETER_TMP_BUFFER_SIZE];
 
-                void *object;
-                void *context;
+                SOCKET *ipc_socket;
+                void   *object;
+                void   *context;
         } interpreter;
 
         struct http_request {

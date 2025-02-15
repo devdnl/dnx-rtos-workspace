@@ -205,7 +205,21 @@ int main(int argc, char *argv[])
 
                 http_thread->socket = new_socket;
 
-                handle_http(http_thread);
+                if (HTTPSRV_SINGLE_THREAD) {
+                        handle_http(http_thread);
+
+                } else {
+                        while (thread_create(handle_http,
+                                       &(thread_attr_t) {
+                                               .detached    = false,
+                                               .stack_depth = STACK_DEPTH_LARGE,
+                                               .priority    = PRIORITY_NORMAL,
+                                       },
+                                       http_thread) == 0) {
+
+                                msleep(50);
+                        }
+                }
         }
 
 cleanup:
@@ -1034,22 +1048,22 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
 
         } else if (isstreq(ext, HTTPSRV_SCRIPT_EXTENSION)) {
 
-                if (httpsrv_interpreter_init(self) != 0) {
-                        VERBOSE("cannot initialize interpreter!\n");
-                }
-
                 httpsrv_send(self, HTTP_CONTENT_TYPE_TEXT_HTML, strlen(HTTP_CONTENT_TYPE_TEXT_HTML), false);
 
-                if (httpsrv_interpreter_dofile(self, file_path) != 0) {
-                        VERBOSE("script execute error:\n");
-                        VERBOSE("%s\n", inter->script.code_buf);
+                if (httpsrv_interpreter_init(self) == 0) {
 
-                        const char *msg = "<font color='red'><b>SCRIPT ERROR</b></font>";
-                        socket_send(self->socket, msg, strlen(msg), NET_FLAGS__MORE);
+                        int err = httpsrv_interpreter_dofile(self, file_path);
+                        if (err) {
+                                const char *msg = "<font color='red'><b>SCRIPT ERROR</b></font>";
+                                socket_send(self->socket, msg, strlen(msg), NET_FLAGS__MORE);
+                        }
 
-                        return 1;
+                        httpsrv_interpreter_deinit(self);
+                        return err;
+
                 } else {
-                        return 0;
+                        VERBOSE("cannot initialize interpreter!\n");
+                        return 1;
                 }
 
         } else {
@@ -1181,9 +1195,6 @@ static int execute_extract_script(httpsrv_thread_t *self, char c)
                 if ((inter->script.end_token.last == '?') and (c == '>')) {
 
                         if (httpsrv_interpreter_dostring(self, inter->script.code_buf)) {
-                                VERBOSE("script execute error:\n");
-                                VERBOSE("%s\n", inter->script.code_buf);
-
                                 const char *msg = "<font color='red'><b>ERROR</b></font>";
                                 httpsrv_send(self, msg, strlen(msg), false);
                         }

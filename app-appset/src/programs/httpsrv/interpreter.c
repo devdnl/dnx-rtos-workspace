@@ -109,8 +109,10 @@ static const luaL_Reg lua_libs[] = {
 //==============================================================================
 int httpsrv_interpreter_init(httpsrv_thread_t *self)
 {
-        self->interpreter.object = luaL_newstate();
-        lua_State *L             = self->interpreter.object;
+        self->interpreter.ipc_socket = NULL;
+        self->interpreter.object     = NULL;
+
+        lua_State *L = luaL_newstate();
         if (not L) {
                 VERBOSE("Lua: cannot initialize\n");
                 return ENOMEM;
@@ -139,6 +141,24 @@ int httpsrv_interpreter_init(httpsrv_thread_t *self)
                 lua_pop(L, 1);
         }
 
+        self->interpreter.ipc_socket = socket_open("unix", NET_PROTOCOL__DATAGRAM);
+        if (not self->interpreter.ipc_socket) {
+                VERBOSE("unable to create IPC socket!\n");
+                lua_close(L);
+                return ECONNREFUSED;
+        }
+
+        NET_UDS_sockaddr_t sockaddr;
+        snprintf(sockaddr.path, sizeof(sockaddr.path), "httpsrv.%u", gettid());
+        if (socket_bind(self->interpreter.ipc_socket, &sockaddr, sizeof(sockaddr)) != 0) {
+                VERBOSE("unable to bind IPC socket!\n");
+                socket_close(self->interpreter.ipc_socket);
+                lua_close(L);
+                return EADDRINUSE;
+        }
+
+        self->interpreter.object = L;
+
         return 0;
 }
 
@@ -151,7 +171,15 @@ int httpsrv_interpreter_init(httpsrv_thread_t *self)
 //==============================================================================
 void httpsrv_interpreter_deinit(httpsrv_thread_t *self)
 {
-        lua_close(self->interpreter.object);
+        if (self->interpreter.object) {
+                lua_close(self->interpreter.object);
+                self->interpreter.object = NULL;
+        }
+
+        if (self->interpreter.ipc_socket) {
+                socket_close(self->interpreter.ipc_socket);
+                self->interpreter.ipc_socket = NULL;
+        }
 }
 
 //==============================================================================
@@ -167,6 +195,10 @@ void httpsrv_interpreter_deinit(httpsrv_thread_t *self)
 int httpsrv_interpreter_dostring(httpsrv_thread_t *self, const char *string)
 {
         if (luaL_dostring(self->interpreter.object, string)) {
+                const char *error_msg = lua_tostring(self->interpreter.object, -1);
+                VERBOSE("%s\n", error_msg);
+                //httpsrv_send(self, error_msg, strlen(error_msg), false);
+                lua_pop(self->interpreter.object, 1);
                 return EFAULT;
         } else {
                 return ESUCC;
@@ -186,6 +218,10 @@ int httpsrv_interpreter_dostring(httpsrv_thread_t *self, const char *string)
 int httpsrv_interpreter_dofile(httpsrv_thread_t *self, const char *file)
 {
         if (luaL_dofile(self->interpreter.object, file)) {
+                const char *error_msg = lua_tostring(self->interpreter.object, -1);
+                VERBOSE("%s\n", error_msg);
+                //httpsrv_send(self, error_msg, strlen(error_msg), false);
+                lua_pop(self->interpreter.object, 1);
                 return EFAULT;
         } else {
                 return ESUCC;
@@ -446,47 +482,24 @@ static int luafn_ipc_request(lua_State *L)
         /*
          * Connect to selected address.
          */
-        errno          = 0;
-        SOCKET *socket = socket_open("unix", NET_PROTOCOL__DATAGRAM);
-        if (not socket) {
-                lua_pushnumber(L, errno);
-                lua_pushnil(L);
-                socket_close(socket);
-                return 2;
-        }
-
-        NET_UDS_sockaddr_t sockaddr;
-        strlcpy(sockaddr.path, "httpsrv", sizeof(sockaddr.path));
-        errno = 0;
-        if (socket_bind(socket, &sockaddr, sizeof(sockaddr)) != 0) {
-                lua_pushnumber(L, errno);
-                lua_pushnil(L);
-                socket_close(socket);
-                return 2;
-        }
-
         NET_UDS_sockaddr_t server_addr;
         strlcpy(server_addr.path, address, sizeof(server_addr.path));
         errno = 0;
-        if (socket_sendto(socket, self->interpreter.tmp_buf, chunk_len, 0, &server_addr,
+        if (socket_sendto(self->interpreter.ipc_socket, self->interpreter.tmp_buf, chunk_len, 0, &server_addr,
                     sizeof(server_addr)) != chunk_len) {
                 lua_pushnumber(L, errno);
                 lua_pushnil(L);
-                socket_close(socket);
                 return 2;
         }
 
         errno = 0;
-        int n = socket_recvfrom(socket, self->interpreter.tmp_buf, sizeof(self->interpreter.tmp_buf), 0,
-                &server_addr, sizeof(server_addr));
+        int n = socket_recvfrom(self->interpreter.ipc_socket, self->interpreter.tmp_buf,
+                sizeof(self->interpreter.tmp_buf), 0, &server_addr, sizeof(server_addr));
         if (n <= 0) {
                 lua_pushnumber(L, errno);
                 lua_pushnil(L);
-                socket_close(socket);
                 return 2;
         }
-
-        socket_close(socket);
 
         /*
          * Conver answer to Lua table.
