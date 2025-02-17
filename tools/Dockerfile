@@ -23,7 +23,7 @@ RUN zypper --non-interactive in pkgconf-pkg-config
 RUN zypper --non-interactive in jimtcl jimtcl-devel
 RUN zypper --non-interactive in libusb-1_0-0 libusb-1_0-devel
 RUN zypper --non-interactive in libjaylink libjaylink-devel libjaylink0
-RUN zypper --non-interactive in gawk lua54 lua54-devel lua54-luarocks
+RUN zypper --non-interactive in gawk lua53 lua53-devel lua53-luarocks
 
 ARG ARCHITECTURE=
 
@@ -72,7 +72,6 @@ RUN echo './openocd "$@"' >> /home/developer/bin/openocd
 RUN chmod +x /home/developer/bin/openocd
 
 # lua
-#RUN ln -s /usr/lib/libncurses.so.6 /usr/lib/libcurses.so.6
-#RUN luarocks install ltui
+RUN luarocks install lcurses
 
 RUN chown -R developer:users /home/developer
