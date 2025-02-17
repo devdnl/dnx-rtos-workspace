@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 arch=x86_64
 if [ $(uname -p) == "arm" ];
     then arch=aarch64;

@@ -1,6 +1,6 @@
 FROM opensuse/tumbleweed
 
-RUN zypper --non-interactive in opi
+RUN zypper --non-interactive in opi glibc-locale
 RUN zypper --non-interactive in make makedepend gcc
 RUN zypper --non-interactive in wget
 RUN zypper --non-interactive in tar
@@ -28,6 +28,8 @@ RUN zypper --non-interactive in gawk lua53 lua53-devel lua53-luarocks
 ARG ARCHITECTURE=
 
 ENV HOME=/home/developer
+ENV LANG="C.UTF-8"
+ENV LC_ALL="C.UTF-8"
 
 WORKDIR /home/developer
 
@@ -35,7 +37,7 @@ WORKDIR /home/developer
 RUN echo 'export PATH=$PATH:/home/developer/bin' > /home/developer/.bashrc
 RUN useradd --no-log-init --create-home --shell /bin/zsh developer
 RUN mkdir -p /home/developer/bin
-RUN mkdir -p /home/developer/project
+RUN mkdir -p /home/developer/dnx-rtos-workspace
 
 # arm-none-eabi-gcc
 RUN wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-${ARCHITECTURE}-linux.tar.bz2
