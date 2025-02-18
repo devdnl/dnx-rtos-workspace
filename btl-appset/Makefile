@@ -366,6 +366,8 @@ generate :
 	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" > build/defs.h
 	@$(ECHO) "#define BRANCH_NAME \"$(shell git symbolic-ref --short HEAD 2>/dev/null)"\" >> build/defs.h
 	@$(ECHO) "#define BUILD_TIME \"$(shell date '+%F, %T')\"" >> build/defs.h
+	@$(ECHO) "#define BOARD_NAME \"$(BOARD_NAME)\"" >> build/defs.h
+	@$(ECHO) "#define board_name_$(BOARD_NAME)" >> build/defs.h
 
 ####################################################################################################
 # Start all generators

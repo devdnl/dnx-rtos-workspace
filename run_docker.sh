@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
-docker run --net=host --user $(id -u):$(id -g) -it -w /home/developer/dnx-rtos-workspace --privileged -v /dev:/dev -v $(pwd):/home/developer/dnx-rtos-workspace dnx-rtos-workspace
+project_name="$(basename $(readlink -m $(pwd)))"
+
+docker run --net=host --user $(id -u):$(id -g) -it -w /home/developer/${project_name} --privileged -v /dev:/dev -v $(pwd):/home/developer/${project_name} ${project_name}

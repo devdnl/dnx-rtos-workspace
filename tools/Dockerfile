@@ -1,4 +1,7 @@
-FROM opensuse/tumbleweed
+FROM opensuse/leap:15.6
+
+ARG ARCHITECTURE=
+ARG PROJECT_NAME=
 
 RUN zypper --non-interactive in opi glibc-locale
 RUN zypper --non-interactive in make makedepend gcc
@@ -10,7 +13,7 @@ RUN zypper --non-interactive in bash-completion
 RUN zypper --non-interactive in zsh
 RUN zypper --non-interactive in git
 RUN zypper --non-interactive in libncurses5 libncurses6 ncurses-devel
-RUN zypper --non-interactive in libreadline6 libreadline8
+RUN zypper --non-interactive in libreadline6 libreadline7
 RUN zypper --non-interactive in libgtk-2_0-0
 RUN zypper --non-interactive in libgthread-2_0-0
 RUN zypper --non-interactive in libSM6
@@ -19,13 +22,13 @@ RUN zypper --non-interactive in srecord
 RUN zypper --non-interactive in minicom minicom-lang
 RUN zypper --non-interactive in which
 RUN zypper --non-interactive in libtool
-RUN zypper --non-interactive in pkgconf-pkg-config
+RUN zypper --non-interactive in pkgconf
 RUN zypper --non-interactive in jimtcl jimtcl-devel
 RUN zypper --non-interactive in libusb-1_0-0 libusb-1_0-devel
 RUN zypper --non-interactive in libjaylink libjaylink-devel libjaylink0
 RUN zypper --non-interactive in gawk lua53 lua53-devel lua53-luarocks
 
-ARG ARCHITECTURE=
+RUN ln -s $(which srec_cat) /bin/srec_cat
 
 ENV HOME=/home/developer
 ENV LANG="C.UTF-8"
@@ -37,7 +40,7 @@ WORKDIR /home/developer
 RUN echo 'export PATH=$PATH:/home/developer/bin' > /home/developer/.bashrc
 RUN useradd --no-log-init --create-home --shell /bin/zsh developer
 RUN mkdir -p /home/developer/bin
-RUN mkdir -p /home/developer/dnx-rtos-workspace
+RUN mkdir -p /home/developer/${PROJECT_NAME}
 
 # arm-none-eabi-gcc
 RUN wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-${ARCHITECTURE}-linux.tar.bz2

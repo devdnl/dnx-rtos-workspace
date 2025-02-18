@@ -5,4 +5,6 @@ if [ $(uname -p) == "arm" ];
     then arch=aarch64;
 fi
 
-DOCKER_BUILDKIT=1 docker build --build-arg ARCHITECTURE=${arch} -t dnx-rtos-workspace .
+project_name="$(basename $(readlink -m "$(pwd)/.."))"
+
+DOCKER_BUILDKIT=1 docker build --build-arg ARCHITECTURE=${arch} --build-arg PROJECT_NAME=${project_name} -t ${project_name} .
