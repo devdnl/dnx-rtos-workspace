@@ -71,6 +71,7 @@ define make_system
 	$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/${$@_APP_NAME}.hex
 	$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/${$@_APP_NAME}.elf
 	$(COPY) system/build/output/dnx.bin $(TARGET_DIR_NAME)/${$@_APP_NAME}.bin
+	$(REMOVE) $(TARGET_DIR_NAME)/ioctl
 	$(COPY) system/build/ioctl $(TARGET_DIR_NAME)
 	$(REMOVE) system/build/ioctl
 endef
@@ -78,7 +79,8 @@ endef
 # define macro used to build appset according to name
 define make_appset
 	$(eval $@_APP_NAME = $(1))
-	$(MAKE) -C ${$@_APP_NAME} -s -j 1 -fMakefile all
+	$(eval $@_BOARD_NAME = $(2))
+	$(MAKE) -C ${$@_APP_NAME} -s -j 1 -fMakefile all BOARD_NAME=${$@_BOARD_NAME}
 	$(COPY) ${$@_APP_NAME}/build/output/appset.hex $(TARGET_DIR_NAME)/${$@_APP_NAME}.hex
 	$(COPY) ${$@_APP_NAME}/build/output/appset.elf $(TARGET_DIR_NAME)/${$@_APP_NAME}.elf
 	$(COPY) ${$@_APP_NAME}/build/output/appset.bin $(TARGET_DIR_NAME)/${$@_APP_NAME}.bin
@@ -188,7 +190,7 @@ app-system : _build_prepare
 
 .PHONY : app-appset
 app-appset : _build_prepare
-	@$(call make_appset, app-appset)
+	@$(call make_appset, app-appset, default)
 
 .PHONY : app-romfs
 app-romfs : _build_prepare
@@ -205,7 +207,7 @@ btl-system : _build_prepare
 
 .PHONY : btl-appset
 btl-appset : _build_prepare
-	@$(call make_appset, btl-appset)
+	@$(call make_appset, btl-appset, default)
 
 .PHONY : clean-btl-appset
 clean-btl-appset : _build_prepare
