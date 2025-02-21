@@ -3,52 +3,64 @@ FROM opensuse/leap:15.6
 ARG ARCHITECTURE=
 ARG PROJECT_NAME=
 
-RUN zypper --non-interactive in opi glibc-locale
-RUN zypper --non-interactive in make makedepend gcc
-RUN zypper --non-interactive in wget
-RUN zypper --non-interactive in tar
-RUN zypper --non-interactive in bzip2
-RUN zypper --non-interactive in python3
-RUN zypper --non-interactive in bash-completion
-RUN zypper --non-interactive in zsh
-RUN zypper --non-interactive in git
-RUN zypper --non-interactive in libncurses5 libncurses6 ncurses-devel
-RUN zypper --non-interactive in libreadline6 libreadline7
-RUN zypper --non-interactive in libgtk-2_0-0
-RUN zypper --non-interactive in libgthread-2_0-0
-RUN zypper --non-interactive in libSM6
-RUN zypper --non-interactive in libGLU1
-RUN zypper --non-interactive in srecord
-RUN zypper --non-interactive in minicom minicom-lang
-RUN zypper --non-interactive in which
-RUN zypper --non-interactive in libtool
-RUN zypper --non-interactive in pkgconf
-RUN zypper --non-interactive in jimtcl jimtcl-devel
-RUN zypper --non-interactive in libusb-1_0-0 libusb-1_0-devel
-RUN zypper --non-interactive in libjaylink libjaylink-devel libjaylink0
-RUN zypper --non-interactive in gawk lua53 lua53-devel lua53-luarocks
+# packages
+ARG ZYPPER="zypper --non-interactive"
+RUN ${ZYPPER} in opi glibc-locale
+RUN ${ZYPPER} in make makedepend gcc
+RUN ${ZYPPER} in wget
+RUN ${ZYPPER} in tar
+RUN ${ZYPPER} in bzip2
+RUN ${ZYPPER} in python3
+RUN ${ZYPPER} in bash-completion
+RUN ${ZYPPER} in zsh
+RUN ${ZYPPER} in git
+RUN ${ZYPPER} in libncurses5 libncurses6 ncurses-devel
+RUN ${ZYPPER} in libreadline6 libreadline7
+RUN ${ZYPPER} in libgtk-2_0-0
+RUN ${ZYPPER} in libgthread-2_0-0
+RUN ${ZYPPER} in libSM6
+RUN ${ZYPPER} in libGLU1
+RUN ${ZYPPER} in srecord
+RUN ${ZYPPER} in minicom minicom-lang
+RUN ${ZYPPER} in which
+RUN ${ZYPPER} in libtool
+RUN ${ZYPPER} in pkgconf
+RUN ${ZYPPER} in jimtcl jimtcl-devel
+RUN ${ZYPPER} in libusb-1_0-0 libusb-1_0-devel
+RUN ${ZYPPER} in libjaylink libjaylink-devel libjaylink0
+RUN ${ZYPPER} in gawk lua53 lua53-devel lua53-luarocks
+RUN ${ZYPPER} in xorg-x11-fonts xorg-x11-fonts-converted xorg-x11-fonts-core xorg-x11-fonts-legacy
 
+# post-install operations
 RUN ln -s $(which srec_cat) /bin/srec_cat
 
+# environment variables
 ENV HOME=/home/developer
 ENV LANG="C.UTF-8"
 ENV LC_ALL="C.UTF-8"
-
-WORKDIR /home/developer
+ENV DISPLAY=:0
 
 # basic files and directories
+WORKDIR /home/developer
 RUN echo 'export PATH=$PATH:/home/developer/bin' > /home/developer/.bashrc
 RUN useradd --no-log-init --create-home --shell /bin/zsh developer
 RUN mkdir -p /home/developer/bin
 RUN mkdir -p /home/developer/${PROJECT_NAME}
 
 # arm-none-eabi-gcc
+WORKDIR /home/developer
 RUN wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-${ARCHITECTURE}-linux.tar.bz2
 RUN tar -jxf gcc-arm-none-eabi-10.3-2021.10-${ARCHITECTURE}-linux.tar.bz2 -C /home/developer/bin/
 RUN rm gcc-arm-none-eabi-10.3-2021.10-${ARCHITECTURE}-linux.tar.bz2
 RUN echo 'export PATH=$PATH:/home/developer/bin/gcc-arm-none-eabi-10.3-2021.10/bin' >> /home/developer/.bashrc
 
+#RUN wget https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-${ARCHITECTURE}-arm-none-eabi.tar.xz
+#RUN tar -xf arm-gnu-toolchain-14.2.rel1-${ARCHITECTURE}-arm-none-eabi.tar.xz -C /home/developer/bin/
+#RUN rm arm-gnu-toolchain-14.2.rel1-${ARCHITECTURE}-arm-none-eabi.tar.xz
+#RUN echo "export PATH=\$PATH:/home/developer/bin/arm-gnu-toolchain-14.2.rel1-${ARCHITECTURE}-arm-none-eabi/bin" >> /home/developer/.bashrc
+
 # oh-my-zsh
+WORKDIR /home/developer
 RUN ZSH=/home/developer/.oh-my-zsh sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 RUN echo 'export ZSH="/home/developer/.oh-my-zsh"' > .zshrc
 RUN echo 'ZSH_THEME="fwalch"' >> .zshrc
@@ -76,7 +88,6 @@ RUN echo 'cd ./openOCD' >> /home/developer/bin/openocd
 RUN echo './openocd "$@"' >> /home/developer/bin/openocd
 RUN chmod +x /home/developer/bin/openocd
 
-# lua
-RUN luarocks install lcurses
-
+# set user id and group
 RUN chown -R developer:users /home/developer
+RUN echo 'plugdev:x:1001:developer' >> /etc/group
