@@ -69,6 +69,7 @@ this:AddItem("DP83848", "DP83848")
 this:AddItem("LAN8700", "LAN8700")
 this:AddItem("STE100P", "STE100P")
 this:AddItem("LAN8742A", "LAN8742A")
+this:AddItem("KSZ9893R", "KSZ9893R")
 this:SetEvent("clicked",
     function()
         local dev    = this:GetFlagValue("__ETH_DEVICE__")
@@ -77,6 +78,7 @@ this:SetEvent("clicked",
         DEVICE["LAN8700"]  = {SR = "31", SPEED_BM = "0x0004", DUPLEX_BM = "0x0010"}
         DEVICE["STE100P"]  = {SR = "19", SPEED_BM = "0x0004", DUPLEX_BM = "0x0010"}
         DEVICE["LAN8742A"] = {SR = "31", SPEED_BM = "0x0004", DUPLEX_BM = "0x0010"}
+        DEVICE["KSZ9893R"] = {SR = "31", SPEED_BM = "0x0010", DUPLEX_BM = "0x0008"}
 
         this:SetFlagValue("__ETH_PHY_SR__", DEVICE[dev].SR)
         this:SetFlagValue("__ETH_PHY_SPEED_STATUS_BM__", DEVICE[dev].SPEED_BM)
@@ -115,6 +117,15 @@ this:AddWidget("Spinbox", 100, 2000, "Reset delay [ms]")
 this:AddWidget("Spinbox", 100, 2000, "Setup delay [ms]")
 --*/
 #define __ETH_PHY_CONFIG_DELAY__ 500
+
+/*--
+this:AddWidget("Combobox", "Auto negotiation")
+this:AddItem("Disable", "ETH_AUTONEGOTIATION_DISABLE")
+this:AddItem("Enable", "ETH_AUTONEGOTIATION_ENABLE")
+this:SetToolTip("If auto negotiation is enabled then link should be connected to PHY. "..
+                "If link is not connected then module does not initialize.")
+--*/
+#define __ETH_PHY_AUTONEGOTIATION__ ETH_AUTONEGOTIATION_ENABLE
 
 #endif /* _ETH_FLAGS_H_ */
 /*==============================================================================

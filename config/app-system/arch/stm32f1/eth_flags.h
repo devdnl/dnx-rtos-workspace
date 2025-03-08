@@ -76,6 +76,7 @@ this:AddItem("DP83848", "DP83848")
 this:AddItem("LAN8700", "LAN8700")
 this:AddItem("STE100P", "STE100P")
 this:AddItem("LAN8742A", "LAN8742A")
+this:AddItem("KSZ9893R", "KSZ9893R")
 this:SetEvent("clicked",
     function()
         local dev    = this:GetFlagValue("__ETH_DEVICE__")
@@ -84,6 +85,7 @@ this:SetEvent("clicked",
         DEVICE["LAN8700"]  = {SR = "31", SPEED_BM = "0x0004", DUPLEX_BM = "0x0010"}
         DEVICE["STE100P"]  = {SR = "19", SPEED_BM = "0x0004", DUPLEX_BM = "0x0010"}
         DEVICE["LAN8742A"] = {SR = "31", SPEED_BM = "0x0004", DUPLEX_BM = "0x0010"}
+        DEVICE["KSZ9893R"] = {SR = "31", SPEED_BM = "0x0010", DUPLEX_BM = "0x0008"}
 
         this:SetFlagValue("__ETH_PHY_SR__", DEVICE[dev].SR)
         this:SetFlagValue("__ETH_PHY_SPEED_STATUS_BM__", DEVICE[dev].SPEED_BM)
