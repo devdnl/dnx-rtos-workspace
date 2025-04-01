@@ -242,7 +242,7 @@ cleanup:
 //==============================================================================
 int httpsrv_send(httpsrv_thread_t *self, const void *buf, size_t len, bool flush)
 {
-        size_t written = 0;
+        int written = 0;
 
         while (buf and (len > 0)) {
                 size_t left = sizeof(self->output.buf) - self->output.len;
@@ -257,7 +257,9 @@ int httpsrv_send(httpsrv_thread_t *self, const void *buf, size_t len, bool flush
 
                 if (self->output.len >= ARRAY_SIZE(self->output.buf)) {
                         errno = 0;
-                        if (socket_write(self->socket, self->output.buf, self->output.len) <= 0) {
+                        if (socket_write(self->socket, self->output.buf, self->output.len) !=
+                                cast(int, self->output.len)) {
+                                self->output.len = 0;
                                 return -errno;
                         }
                         self->output.len = 0;
@@ -266,9 +268,11 @@ int httpsrv_send(httpsrv_thread_t *self, const void *buf, size_t len, bool flush
 
         if (flush and (self->output.len > 0)) {
                 errno = 0;
-                if (socket_write(self->socket, self->output.buf, self->output.len) <= 0) {
-                        return -errno;
+                if (socket_write(self->socket, self->output.buf, self->output.len) !=
+                        cast(int, self->output.len)) {
+                        written = -errno;
                 }
+
                 self->output.len = 0;
         }
 

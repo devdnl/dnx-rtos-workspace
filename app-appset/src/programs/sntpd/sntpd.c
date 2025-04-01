@@ -302,7 +302,6 @@ static int receive_response(SOCKET *socket, time_t *timestamp)
                         global->pkt.settings.field.Mode == Mode_Broadcast) {
 
                         u32_t sec = ntoh_u32(NET_FAMILY__INET, global->pkt.receive_timestamp_seconds);
-                        u32_t fra = ntoh_u32(NET_FAMILY__INET, global->pkt.receive_timestamp_fraction);
 
                         if ((sec >= DIFF_SEC_1900_1970) and (sec < UINT32_MAX)) {
                                 *timestamp = sec - DIFF_SEC_1900_1970;

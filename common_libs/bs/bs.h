@@ -74,7 +74,8 @@ typedef enum {
 } bs_err_t;
 
 typedef enum {
-        bs_type__bool,
+        bs_type__unknown = -1,
+        bs_type__bool    = 0,
         bs_type__int8_t,
         bs_type__uint8_t,
         bs_type__int16_t,
@@ -114,6 +115,7 @@ extern double      bs_get_double(bs_rd_t *self, const char *key, double df, int 
 extern bool        bs_get_bool(bs_rd_t *self, const char *key, bool df, int *err);
 extern const char *bs_get_str(bs_rd_t *self, const char *key, const char *df, int *err);
 extern const void *bs_get_blob(bs_rd_t *self, const char *key, size_t *len, int *err);
+extern bs_type_t   bs_get_type(bs_rd_t *self, const char *key);
 extern int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key, const void **value, bs_type_t *type);
 
 /*

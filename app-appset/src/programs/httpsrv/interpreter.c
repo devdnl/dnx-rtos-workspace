@@ -197,7 +197,7 @@ int httpsrv_interpreter_dostring(httpsrv_thread_t *self, const char *string)
         if (luaL_dostring(self->interpreter.object, string)) {
                 const char *error_msg = lua_tostring(self->interpreter.object, -1);
                 VERBOSE("%s\n", error_msg);
-                //httpsrv_send(self, error_msg, strlen(error_msg), false);
+                // httpsrv_send(self, error_msg, strlen(error_msg), false);
                 lua_pop(self->interpreter.object, 1);
                 return EFAULT;
         } else {
@@ -220,7 +220,7 @@ int httpsrv_interpreter_dofile(httpsrv_thread_t *self, const char *file)
         if (luaL_dofile(self->interpreter.object, file)) {
                 const char *error_msg = lua_tostring(self->interpreter.object, -1);
                 VERBOSE("%s\n", error_msg);
-                //httpsrv_send(self, error_msg, strlen(error_msg), false);
+                // httpsrv_send(self, error_msg, strlen(error_msg), false);
                 lua_pop(self->interpreter.object, 1);
                 return EFAULT;
         } else {
@@ -244,6 +244,69 @@ static httpsrv_thread_t *get_http_thread_self(lua_State *L)
         lua_pop(L, 1);
 
         return self;
+}
+
+//==============================================================================
+/**
+ * @brief  Convert %xx character encoding.
+ *
+ * @param  buf          text buffer.
+ */
+//==============================================================================
+static void convert_html_encoding(char *buf)
+{
+        char *in  = buf;
+        char *out = buf;
+
+        while (*in != '\0') {
+                if (*in == '%') {
+                        in++;
+
+                        char low  = '0';
+                        char high = '0';
+                        u8_t byte = 0x00;
+
+                        if (*in == '\0') {
+                                break;
+                        } else {
+                                high = *in++;
+                        }
+
+                        if (*in == '\0') {
+                                break;
+                        } else {
+                                low = *in++;
+                        }
+
+                        low  = tolower(low);
+                        high = tolower(high);
+
+                        if ((high >= '0') and (high <= '9')) {
+                                byte = (high - '0');
+                        } else if ((high >= 'a') and (high <= 'f')) {
+                                byte = (high - 'a') + 10;
+                        }
+
+                        byte <<= 4;
+
+                        if ((low >= '0') and (low <= '9')) {
+                                byte |= (low - '0');
+                        } else if ((low >= 'a') and (low <= 'f')) {
+                                byte |= (low - 'a') + 10;
+                        }
+
+                        *out++ = byte;
+
+                } else if (*in == '+') {
+                        *out++ = ' ';
+                        in++;
+
+                } else {
+                        *out++ = *in++;
+                }
+        }
+
+        *out = '\0';
 }
 
 //==============================================================================
@@ -273,10 +336,12 @@ static void parse_params_to_lua_table(httpsrv_thread_t *self, const char *params
 
                 strlcpy(self->interpreter.tmp_buf, val_begin,
                         min(val_len, sizeof(self->interpreter.tmp_buf)));
+                convert_html_encoding(self->interpreter.tmp_buf);
                 lua_pushstring(L, self->interpreter.tmp_buf);
 
                 strlcpy(self->interpreter.tmp_buf, key_begin,
                         min(key_len, sizeof(self->interpreter.tmp_buf)));
+                convert_html_encoding(self->interpreter.tmp_buf);
                 lua_setfield(L, -2, self->interpreter.tmp_buf);
 
                 if (*val_end == '&') {
@@ -456,11 +521,12 @@ static int luafn_ipc_request(lua_State *L)
 
                 const char *key = lua_tostring(L, -1);
 
-                if (lua_isinteger(L, -2)) {
-                        bs_set_int32_t(&bs_wr, key, lua_tointeger(L, -2));
-
-                } else if (lua_isnumber(L, -2)) {
-                        bs_set_float(&bs_wr, key, lua_tonumber(L, -2));
+                if (lua_isnumber(L, -2)) {
+                        if (sizeof(lua_Number) == sizeof(float)) {
+                                bs_set_float(&bs_wr, key, lua_tonumber(L, -2));
+                        } else {
+                                bs_set_double(&bs_wr, key, lua_tonumber(L, -2));
+                        }
 
                 } else if (lua_isstring(L, -2)) {
                         bs_set_str(&bs_wr, key, lua_tostring(L, -2));
@@ -601,6 +667,11 @@ static int luafn_ipc_request(lua_State *L)
                         break;
 
                 case bs_type__blob:
+                        // not handled
+                        lua_pushinteger(L, 0);
+                        break;
+
+                default:
                         // not handled
                         lua_pushinteger(L, 0);
                         break;

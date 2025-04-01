@@ -34,22 +34,62 @@ Brief    Binary serialization.
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define bs_get_template(_type_)                                                                        \
-        _type_ bs_get_##_type_(bs_rd_t *self, const char *key, _type_ Default, int *err)               \
-        {                                                                                              \
-                typeof(Default) value = Default;                                                       \
-                const void     *ptr;                                                                   \
-                int e = bs_get_raw_with_type_check(self, key, &ptr, sizeof(value), bs_type__##_type_); \
-                if (not e) {                                                                           \
-                        memcpy(&value, ptr, sizeof(value));                                            \
-                }                                                                                      \
-                if (e) {                                                                               \
-                        value = Default;                                                               \
-                }                                                                                      \
-                if (err) {                                                                             \
-                        *err = e;                                                                      \
-                }                                                                                      \
-                return value;                                                                          \
+#define bs_get_template(_type_)                                                          \
+        _type_ bs_get_##_type_(bs_rd_t *self, const char *key, _type_ Default, int *err) \
+        {                                                                                \
+                size_t      blen;                                                        \
+                const void *blob;                                                        \
+                bs_type_t   btype;                                                       \
+                _type_      value = 0;                                                   \
+                int         e     = bs_get_raw(self, key, &blob, &blen, &btype);         \
+                if (not e) {                                                             \
+                        union {                                                          \
+                                bool     boolean;                                        \
+                                int8_t   int8;                                           \
+                                uint8_t  uint8;                                          \
+                                int16_t  int16;                                          \
+                                uint16_t uint16;                                         \
+                                int32_t  int32;                                          \
+                                uint32_t uint32;                                         \
+                                int64_t  int64;                                          \
+                                uint64_t uint64;                                         \
+                                float    float32;                                        \
+                                double   float64;                                        \
+                        } v;                                                             \
+                        memcpy(&v, blob, min(blen, sizeof(v)));                          \
+                        if (btype == bs_type__bool) {                                    \
+                                value = v.boolean;                                       \
+                        } else if (btype == bs_type__int8_t) {                           \
+                                value = v.int8;                                          \
+                        } else if (btype == bs_type__uint8_t) {                          \
+                                value = v.uint8;                                         \
+                        } else if (btype == bs_type__int16_t) {                          \
+                                value = v.int16;                                         \
+                        } else if (btype == bs_type__uint16_t) {                         \
+                                value = v.uint16;                                        \
+                        } else if (btype == bs_type__int32_t) {                          \
+                                value = v.int32;                                         \
+                        } else if (btype == bs_type__uint32_t) {                         \
+                                value = v.uint32;                                        \
+                        } else if (btype == bs_type__int64_t) {                          \
+                                value = v.int64;                                         \
+                        } else if (btype == bs_type__uint64_t) {                         \
+                                value = v.uint64;                                        \
+                        } else if (btype == bs_type__float) {                            \
+                                value = v.float32;                                       \
+                        } else if (btype == bs_type__double) {                           \
+                                value = v.float64;                                       \
+                        } else {                                                         \
+                                value = Default;                                         \
+                        }                                                                \
+                }                                                                        \
+                if (e) {                                                                 \
+                        value = Default;                                                 \
+                }                                                                        \
+                if (err) {                                                               \
+                        *err = e;                                                        \
+                }                                                                        \
+                return value;                                                            \
         }
 
 #define bs_set_template(_type_)                                                         \
@@ -127,41 +167,6 @@ static int bs_get_raw(bs_rd_t *self, const char *key, const void **blob, size_t 
         }
 
         return bs_err_value_not_found;
-}
-
-//==============================================================================
-/**
- * @brief  Get raw data blob.
- *
- * @param  self         bs instance
- * @param  key          key to find
- * @param  blob         pointer to blob result pointer
- * @param  len          size of blob
- * @param  type         type of blob
- *
- * @return On success 0 is returned.
- */
-//==============================================================================
-static int bs_get_raw_with_type_check(bs_rd_t *self, const char *key, const void **blob, size_t len,
-        bs_type_t type)
-{
-        size_t    blen;
-        bs_type_t btype;
-
-        int err = bs_get_raw(self, key, blob, &blen, &btype);
-        if (err) {
-                return err;
-        }
-
-        if (type != btype) {
-                return bs_err_unexpected_type;
-        }
-
-        if (len != blen) {
-                return bs_err_value_size;
-        }
-
-        return 0;
 }
 
 //==============================================================================
@@ -487,16 +492,35 @@ const void *bs_get_blob(bs_rd_t *self, const char *key, size_t *len, int *err)
         bs_type_t   btype;
 
         int e = bs_get_raw(self, key, &blob, len, &btype);
-        if (not e) {
-                if (bs_type__blob != btype) {
-                        e = bs_err_unexpected_type;
-                }
-        } else if (err) {
-                blob = NULL;
+
+        if (err) {
                 *err = e;
         }
 
         return blob;
+}
+
+//==============================================================================
+/**
+ * @brief  Get key type.
+ *
+ * @param  self         bs instance
+ * @param  key          key to find
+ *
+ * @return Key type.
+ */
+//==============================================================================
+bs_type_t bs_get_type(bs_rd_t *self, const char *key)
+{
+        const void *blob;
+        bs_type_t   btype;
+        size_t      blen;
+
+        if (bs_get_raw(self, key, &blob, &blen, &btype) != 0) {
+                return bs_type__unknown;
+        } else {
+                return btype;
+        }
 }
 
 //==============================================================================

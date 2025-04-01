@@ -358,8 +358,8 @@ static void          topicsub_destroy(void *a);
 static int           topicdb_compare(const void *a, const void *b);
 static void          topicdb_destroy(void *a);
 static void          topicdb_maintenance(void);
-static mqtt_reason_t topicdb_update_topic(const char *topic, uint8_t *msg_ref, size_t msg_len, bool retain,
-        topicdb_t **topicdb_ref, bool create_only);
+static mqtt_reason_t topicdb_update_topic(const char *topic, const uint8_t *msg_ref, size_t msg_len,
+        bool retain, topicdb_t **topicdb_ref, bool create_only);
 
 /*==============================================================================
   Local objects
@@ -581,13 +581,15 @@ static int session_thread(void *arg)
 
         session->subscribtion_list = llist_new(topicsub_compare, topicsub_destroy);
         if (not session->subscribtion_list) {
+                socket_disconnect(session->socket);
+                socket_close(session->socket);
+                free(session);
                 return -1;
         }
 
-        session->id                  = gettid();
-        global->session[session->id] = session;
+        session->id = gettid();
 
-        socket_set_recv_timeout(session->socket, 100);
+        socket_set_recv_timeout(session->socket, 50);
 
         session->alive_tref = get_uptime_ms();
         session->keep_alive = 5;
@@ -600,7 +602,9 @@ static int session_thread(void *arg)
                 NET_INET_IPv4_a(addr.addr), NET_INET_IPv4_b(addr.addr), NET_INET_IPv4_c(addr.addr),
                 NET_INET_IPv4_d(addr.addr));
 
-        VERBOSE("client connected.\n");
+        VERBOSE("connecting new client...\n");
+
+        global->session[session->id] = session;
 
         bool connected = true;
 
@@ -656,7 +660,7 @@ static int session_thread(void *arg)
 
                 case MQTT_MSG_TYPE__DISCONNECT:
                         session_cmd_disconnect(session);
-                        VERBOSE("client disconnected.\n");
+                        VERBOSE("client '%s' disconnected.\n", session->client_id);
                         connected = false;
                         break;
 
@@ -684,22 +688,30 @@ static int session_thread(void *arg)
                         break;
                 }
 
-                session_send_subscribed_topics(session);
-                topicdb_maintenance();
+                if (connected) {
+                        session_send_subscribed_topics(session);
+                        topicdb_maintenance();
+                }
         }
 
         VERBOSE("closing session...\n");
+
+        topicdb_maintenance();
 
         if (session->last_will.topic and session->last_will.payload) {
                 session_publish_topic(session, 0, session->last_will.topic, session->last_will.payload,
                         session->last_will.payload_length);
         }
 
-        global->session[session->id] = NULL;
+        mutex_scope (global->topic_db.mutex, MAX_DELAY_MS) {
+                global->session[session->id] = NULL;
+        }
 
         socket_disconnect(session->socket);
         socket_close(session->socket);
         llist_delete(session->subscribtion_list);
+
+        VERBOSE("client '%s' session closed.\n", session->client_id);
 
         free(session->client_id);
         free(session->user_name);
@@ -707,8 +719,6 @@ static int session_thread(void *arg)
         free(session->last_will.topic);
         free(session->last_will.payload);
         free(session);
-
-        VERBOSE("session closed.\n");
 
         return 0;
 }
@@ -750,6 +760,7 @@ static int session_fetchbuf_read(session_t *session, void *dst, size_t count, bo
                         }
                 } else {
                         fetch_buf->seek = 0;
+                        fetch_buf->size = 0;
 
                         errno = 0;
                         int l = socket_recv(session->socket, fetch_buf->buf, sizeof(fetch_buf->buf), 0);
@@ -758,6 +769,7 @@ static int session_fetchbuf_read(session_t *session, void *dst, size_t count, bo
 
                                         if (session->close_session) {
                                                 VERBOSE("session close request.\n");
+                                                n = -EUSERS;
                                                 break;
                                         }
 
@@ -766,16 +778,13 @@ static int session_fetchbuf_read(session_t *session, void *dst, size_t count, bo
 
                                         if (now - session->alive_tref >= interval) {
                                                 VERBOSE("keep-alive: no client response!\n");
-                                                n = 0;
+                                                n = -ETIME;
                                                 break;
                                         }
 
                                         if (async_send) {
                                                 session_send_subscribed_topics(session);
-                                                topicdb_maintenance();
                                         }
-
-                                        l = 0;
 
                                 } else {
                                         int err = errno;
@@ -783,9 +792,9 @@ static int session_fetchbuf_read(session_t *session, void *dst, size_t count, bo
                                         n = -errno;
                                         break;
                                 }
+                        } else {
+                                fetch_buf->size = l;
                         }
-
-                        fetch_buf->size = l;
                 }
         }
 
@@ -816,19 +825,19 @@ static int session_pushbuf_write(session_t *session, const void *src, size_t cou
         const uint8_t *byte = src;
 
         while (count > 0) {
+                if (push_buf->seek >= sizeof(push_buf->buf)) {
+                        int l = socket_write(session->socket, push_buf->buf, push_buf->seek);
+
+                        push_buf->seek = 0;
+
+                        if (l != cast(int, push_buf->seek)) {
+                                return l;
+                        }
+                }
+
                 push_buf->buf[push_buf->seek++] = *byte++;
                 count--;
                 n++;
-
-                if (push_buf->seek >= sizeof(push_buf->buf)) {
-                        int l = socket_write(session->socket, push_buf->buf, push_buf->seek);
-                        if (l != cast(int, push_buf->seek)) {
-                                return l;
-
-                        } else {
-                                push_buf->seek = 0;
-                        }
-                }
         }
 
         return n;
@@ -854,10 +863,8 @@ static int session_pushbuf_flush(session_t *session)
         pushbuf_t *push_buf = &session->push_buf;
 
         if (push_buf->seek > 0) {
-                n = socket_write(session->socket, push_buf->buf, push_buf->seek);
-                if (n == cast(int, push_buf->seek)) {
-                        push_buf->seek = 0;
-                }
+                n              = socket_write(session->socket, push_buf->buf, push_buf->seek);
+                push_buf->seek = 0;
         }
 
         return n;
@@ -1477,13 +1484,13 @@ static bool session_cmd_connect(session_t *session)
         } else if (not isstreq(session->user_name, conf_parser__get_value(global->conf, CONFIG_KEY_USER)) or
                 not isstreq(session->password, conf_parser__get_value(global->conf, CONFIG_KEY_PASSWORD))) {
 
-                DEBUG("user: '%s' and/or password: '%s' are invalid!\n", session->user_name,
-                        session->password);
+                DEBUG("credetials of '%s' are invalid. User: '%s' and/or password: '%s' are incorrect!\n",
+                        session->client_id, session->user_name, session->password);
 
                 reason_code = mqtt_reason__bad_user_name_or_password;
 
         } else {
-                VERBOSE("client ID: '%s'\n", session->client_id);
+                VERBOSE("connected client ID: '%s'\n", session->client_id);
                 reason_code = mqtt_reason__success;
         }
 
@@ -2650,7 +2657,7 @@ static mqtt_reason_t session_publish_topic(session_t *session, uint8_t qos, cons
         reason = session_serialize_packet(session, &packet) == 0 ? mqtt_reason__success
                                                                  : mqtt_reason__implementation_specific_error;
 
-        //printf("broker -> %s: %s:%.*s\n", session->client_id, topic, msg_len, msg);
+        // printf("broker -> %s: %s:%.*s\n", session->client_id, topic, msg_len, msg);
 
 cleanup:
         if (msg_allocated) {
@@ -2856,8 +2863,8 @@ static void topicsub_destroy(void *a)
  * @return Returns MQTT reason code indicating success or failure in publishing the message.
  */
 //==============================================================================
-static mqtt_reason_t topicdb_update_topic(const char *topic, uint8_t *msg_ref, size_t msg_len, bool retain,
-        topicdb_t **topicdb_ref, bool create_only)
+static mqtt_reason_t topicdb_update_topic(const char *topic, const uint8_t *msg_ref, size_t msg_len,
+        bool retain, topicdb_t **topicdb_ref, bool create_only)
 {
         mqtt_reason_t reason = mqtt_reason__implementation_specific_error;
 
