@@ -49,6 +49,8 @@ private:
         bs_rd_t bs;
 
 public:
+        bs_rd() = default;
+
         bs_rd(const uint8_t *chunk, size_t chunk_len)
         {
                 bs_read_chunk(&this->bs, chunk, chunk_len);
@@ -231,28 +233,28 @@ public:
 
         const char *get_str(const char *key)
         {
-                return *bs_get_str(&this->bs, key, "", NULL);
+                return bs_get_str(&this->bs, key, "", NULL);
         }
 
         const char *get_str(const char *key, const char *df)
         {
-                return *bs_get_str(&this->bs, key, df, NULL);
+                return bs_get_str(&this->bs, key, df, NULL);
         }
 
         const char *get_str(const char *key, const char *df, int *err)
         {
-                return *bs_get_str(&this->bs, key, df, err);
+                return bs_get_str(&this->bs, key, df, err);
         }
 
 
         const void *get_blob(const char *key, size_t *len)
         {
-                return *bs_get_blob(&this->bs, key, len, NULL);
+                return bs_get_blob(&this->bs, key, len, NULL);
         }
 
         const void *get_blob(const char *key, size_t *len, int *err)
         {
-                return *bs_get_blob(&this->bs, key, len, err);
+                return bs_get_blob(&this->bs, key, len, err);
         }
 
         bs_type_t get_type(const char *key)
@@ -271,6 +273,8 @@ private:
         bs_wr_t bs;
 
 public:
+        bs_wr() = default;
+
         bs_wr(uint8_t *chunk, size_t chunk_len)
         {
                 bs_write_chunk(&this->bs, chunk, chunk_len);
@@ -334,6 +338,11 @@ public:
         int set_str(const char *key, const char *str)
         {
                 return bs_set_str(&this->bs, key, str);
+        }
+
+        int set_str(const char *key, const char *str, size_t str_len)
+        {
+                return bs_set_str_len(&this->bs, key, str, str_len);
         }
 
         int set_bool(const char *key, bool value)

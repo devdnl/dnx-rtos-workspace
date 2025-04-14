@@ -941,7 +941,7 @@ static int serve(void *arg)
         self->quit  = false;
 
         if (!self->sock_pasv) {
-                self->sock_pasv = socket_open("inet", NET_PROTOCOL__TCP);
+                self->sock_pasv = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
                 if (self->sock_pasv) {
                         NET_INET_sockaddr_t ADDR_ANY = {
                                 .addr = NET_INET_IPv4_ANY,
@@ -1080,7 +1080,7 @@ int main(int argc, char *argv[])
                 }
         }
 
-        SOCKET *socket = socket_open("inet", NET_PROTOCOL__TCP);
+        SOCKET *socket = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
         if (socket) {
                 static const NET_INET_sockaddr_t ADDR_ANY = {
                         .addr = NET_INET_IPv4_ANY,

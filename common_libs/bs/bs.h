@@ -135,6 +135,7 @@ extern int     bs_set_uint64_t(bs_wr_t *self, const char *key, uint64_t value);
 extern int     bs_set_float(bs_wr_t *self, const char *key, float value);
 extern int     bs_set_double(bs_wr_t *self, const char *key, double value);
 extern int     bs_set_str(bs_wr_t *self, const char *key, const char *str);
+extern int     bs_set_str_len(bs_wr_t *self, const char *key, const char *str, size_t str_len);
 extern int     bs_set_bool(bs_wr_t *self, const char *key, bool value);
 extern int     bs_set_blob(bs_wr_t *self, const char *key, const void *blob, size_t len);
 

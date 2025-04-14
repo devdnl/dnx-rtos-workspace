@@ -869,6 +869,88 @@ static int tcl_extract(struct tcl *tcl, tcl_value_t *args, void *ctx)
 
 //==============================================================================
 /**
+ * @brief  Remove file from FS.
+ *
+ * @param  tcl          TCL instance
+ * @param  args         argument list
+ * @param  ctx          user context
+ *
+ * @return One of TCL_F* values.
+ */
+//==============================================================================
+static int tcl_remove(struct tcl *tcl, tcl_value_t *args, void *ctx)
+{
+        UNUSED_ARG1(ctx);
+
+        tcl_value_t *path = tcl_list_at(args, 1);
+
+        printf("Removing '%s'...\n", path);
+
+        int err = remove(path);
+
+        char r_str[8];
+        snprintf(r_str, sizeof(r_str), "%d", err);
+        return tcl_result(tcl, TCL_FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+}
+
+//==============================================================================
+/**
+ * @brief  Create new dir on FS.
+ *
+ * @param  tcl          TCL instance
+ * @param  args         argument list
+ * @param  ctx          user context
+ *
+ * @return One of TCL_F* values.
+ */
+//==============================================================================
+static int tcl_mkdir(struct tcl *tcl, tcl_value_t *args, void *ctx)
+{
+        UNUSED_ARG1(ctx);
+
+        tcl_value_t *path = tcl_list_at(args, 1);
+        tcl_value_t *perm = tcl_list_at(args, 2);
+
+        printf("Creating '%s'...\n", path);
+
+        u32_t mode = strtoul(perm, NULL, 0);
+
+        int err = mkdir(path, mode);
+
+        char r_str[8];
+        snprintf(r_str, sizeof(r_str), "%d", err);
+        return tcl_result(tcl, TCL_FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+}
+
+//==============================================================================
+/**
+ * @brief  Rename file on FS.
+ *
+ * @param  tcl          TCL instance
+ * @param  args         argument list
+ * @param  ctx          user context
+ *
+ * @return One of TCL_F* values.
+ */
+//==============================================================================
+static int tcl_rename(struct tcl *tcl, tcl_value_t *args, void *ctx)
+{
+        UNUSED_ARG1(ctx);
+
+        tcl_value_t *path_old = tcl_list_at(args, 1);
+        tcl_value_t *path_new = tcl_list_at(args, 2);
+
+        printf("Renaming '%s' -> '%s'...\n", path_old, path_new);
+
+        int err = rename(path_old, path_new);
+
+        char r_str[8];
+        snprintf(r_str, sizeof(r_str), "%d", err);
+        return tcl_result(tcl, TCL_FNORMAL, tcl_alloc(r_str, strlen(r_str)));
+}
+
+//==============================================================================
+/**
  * @brief  Start application.
  */
 //==============================================================================
@@ -930,7 +1012,13 @@ int main(int argc, char *argv[])
 
                 tcl_register_const(&tcl, "get_file_size", tcl_get_file_size, 2, fpkg);
 
-                tcl_register_const(&tcl, "extract", tcl_extract, 3, fpkg);
+                tcl_register_const(&tcl, "fpkg_extract", tcl_extract, 3, fpkg);
+
+                tcl_register_const(&tcl, "remove", tcl_remove, 2, fpkg);
+
+                tcl_register_const(&tcl, "mkdir", tcl_mkdir, 3, fpkg);
+
+                tcl_register_const(&tcl, "rename", tcl_rename, 3, fpkg);
 
                 fpkg_extract(fpkg, FPKG_SECTION_MANIFEST, PATH_VENDOR"/manifest.tmp");
                 tcl_loadfile(&tcl, PATH_VENDOR"/manifest.tmp");

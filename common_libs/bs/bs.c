@@ -39,6 +39,7 @@ Brief    Binary serialization.
         {                                                                                \
                 size_t      blen;                                                        \
                 const void *blob;                                                        \
+                bs_type_t   rettype = bs_type__##_type_;                                 \
                 bs_type_t   btype;                                                       \
                 _type_      value = 0;                                                   \
                 int         e     = bs_get_raw(self, key, &blob, &blen, &btype);         \
@@ -79,6 +80,24 @@ Brief    Binary serialization.
                                 value = v.float32;                                       \
                         } else if (btype == bs_type__double) {                           \
                                 value = v.float64;                                       \
+                        } else if (btype == bs_type__string) {                           \
+                                if (rettype == bs_type__bool) {                          \
+                                        value = ((strcasecmp(blob, "true") == 0) ||      \
+                                                (strcasecmp(blob, "on") == 0) ||         \
+                                                (strcasecmp(blob, "yes") == 0) ||        \
+                                                (strcasecmp(blob, "enable") == 0) ||     \
+                                                (strcasecmp(blob, "set") == 0) ||        \
+                                                (strcasecmp(blob, "high") == 0) ||       \
+                                                (strcasecmp(blob, "1") == 0));           \
+                                } else if (rettype == bs_type__float) {                  \
+                                        value = atof(blob);                              \
+                                } else if (rettype == bs_type__double) {                 \
+                                        value = atof(blob);                              \
+                                } else if (rettype == bs_type__blob) {                   \
+                                        value = 0;                                       \
+                                } else {                                                 \
+                                        value = atol(blob);                              \
+                                }                                                        \
                         } else {                                                         \
                                 value = Default;                                         \
                         }                                                                \
@@ -207,7 +226,7 @@ static int bs_set_raw(bs_wr_t *self, const char *key, const void *blob, size_t l
         }
 
         size_t key_len  = strlen(key) + 1;
-        size_t item_len = sizeof(item_t) + key_len + len;
+        size_t item_len = sizeof(item_t) + key_len + len + ((type == bs_type__string) ? 1 : 0);
 
         if ((cast(uintptr_t, self->item) + item_len) >=
                 (cast(uintptr_t, self->chunk) + self->chunk_max_len)) {
@@ -215,11 +234,15 @@ static int bs_set_raw(bs_wr_t *self, const char *key, const void *blob, size_t l
         }
 
         item_t *item   = self->item;
-        item->data_len = len;
+        item->data_len = len + ((type == bs_type__string) ? 1 : 0);
         item->key_len  = key_len;
         item->type     = type;
         memcpy(&item->key_data[0], key, key_len);
         memcpy(&item->key_data[key_len], blob, len);
+
+        if (type == bs_type__string) {
+                item->key_data[key_len + len] = '\0';
+        }
 
         self->item = cast(uint8_t *, self->item) + item_len;
         self->chunk_len += item_len;
@@ -782,14 +805,31 @@ bs_set_template(bool);
  *
  * @param  self         bs instance
  * @param  key          key
- * @param  value        value
+ * @param  str          string
  *
  * @return On success 0 is returned.
  */
 //==============================================================================
 int bs_set_str(bs_wr_t *self, const char *key, const char *str)
 {
-        return bs_set_raw(self, key, str, strlen(str) + 1, bs_type__string);
+        return bs_set_raw(self, key, str, strlen(str), bs_type__string);
+}
+
+//==============================================================================
+/**
+ * @brief  Add string to buffer.
+ *
+ * @param  self         bs instance
+ * @param  key          key
+ * @param  str          string
+ * @param  str_len      string length
+ *
+ * @return On success 0 is returned.
+ */
+//==============================================================================
+int bs_set_str_len(bs_wr_t *self, const char *key, const char *str, size_t str_len)
+{
+        return bs_set_raw(self, key, str, str_len, bs_type__string);
 }
 
 //==============================================================================

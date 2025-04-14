@@ -141,7 +141,7 @@ int httpsrv_interpreter_init(httpsrv_thread_t *self)
                 lua_pop(L, 1);
         }
 
-        self->interpreter.ipc_socket = socket_open("unix", NET_PROTOCOL__DATAGRAM);
+        self->interpreter.ipc_socket = socket_open("unix", NET_SOCKET_TYPE__DATAGRAM, 0);
         if (not self->interpreter.ipc_socket) {
                 VERBOSE("unable to create IPC socket!\n");
                 lua_close(L);
@@ -522,10 +522,28 @@ static int luafn_ipc_request(lua_State *L)
                 const char *key = lua_tostring(L, -1);
 
                 if (lua_isnumber(L, -2)) {
-                        if (sizeof(lua_Number) == sizeof(float)) {
-                                bs_set_float(&bs_wr, key, lua_tonumber(L, -2));
+
+                        lua_Number num = lua_tonumber(L, -2);
+
+                        if (num == cast(int, num)) {
+                                if ((num >= INT8_MIN) and (num <= INT8_MAX)) {
+                                        bs_set_int8_t(&bs_wr, key, cast(int, num));
+
+                                } else if ((num >= INT16_MIN) and (num <= INT16_MAX)) {
+                                        bs_set_int16_t(&bs_wr, key, cast(int, num));
+
+                                } else if ((num >= INT32_MIN) and (num <= INT32_MAX)) {
+                                        bs_set_int32_t(&bs_wr, key, cast(int, num));
+
+                                } else {
+                                        bs_set_int64_t(&bs_wr, key, cast(int, num));
+                                }
                         } else {
-                                bs_set_double(&bs_wr, key, lua_tonumber(L, -2));
+                                if (sizeof(lua_Number) == sizeof(float)) {
+                                        bs_set_float(&bs_wr, key, lua_tonumber(L, -2));
+                                } else {
+                                        bs_set_double(&bs_wr, key, lua_tonumber(L, -2));
+                                }
                         }
 
                 } else if (lua_isstring(L, -2)) {

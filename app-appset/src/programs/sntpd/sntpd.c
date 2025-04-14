@@ -365,7 +365,7 @@ static void set_NTP_time(int argc, char *argv[])
                 return;
         }
 
-        SOCKET *socket = socket_open("inet", NET_PROTOCOL__UDP);
+        SOCKET *socket = socket_open("inet", NET_SOCKET_TYPE__DATAGRAM, 0);
         if (socket) {
                 socket_set_send_timeout(socket, SNTP_SEND_TIMEOUT);
                 socket_set_recv_timeout(socket, SNTP_RECV_TIMEOUT);
@@ -414,7 +414,7 @@ static void set_timezone(int argc, char *argv[])
         NET_INET_sockaddr_t provider_ip;
         if (get_host_by_name("inet", provider, &provider_ip, sizeof(provider_ip)) == 0) {
 
-                SOCKET *socket = socket_open("inet", NET_PROTOCOL__TCP);
+                SOCKET *socket = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
                 if (socket) {
                         provider_ip.port = 80;
                         errno            = 0;

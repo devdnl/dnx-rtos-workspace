@@ -506,7 +506,7 @@ int main(int argc, char *argv[])
         int exit_code = EXIT_FAILURE;
 
         errno  = 0;
-        socket = socket_open("inet", NET_PROTOCOL__TCP);
+        socket = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
         if (not socket) {
                 printf("%s: unable to create socket: %s\n", argv[0], strerror(errno));
                 goto cleanup;

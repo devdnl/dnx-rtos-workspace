@@ -37,6 +37,11 @@ public:
                 this->parser = NULL;
         }
 
+        conf_parser(conf_parser_t *parser)
+        {
+                this->parser = parser;
+        }
+
         ~conf_parser(void)
         {
                 conf_parser__delete(this->parser);

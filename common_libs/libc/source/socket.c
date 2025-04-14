@@ -66,17 +66,18 @@ Brief    Socket implementation.
  * @brief Creates an endpoint for communication and returns a socket.
  *
  * @param netname       Network name.
+ * @param type          Socket type.
  * @param protocol      The protocol name.
  *
  * @return On error @b NULL is returned and @ref errno value is set appropriately,
  *         otherwise new socket pointer.
  */
 //==============================================================================
-SOCKET *socket_open(const char *netname, NET_protocol_t protocol)
+SOCKET *socket_open(const char *netname, NET_socket_type_t type, u8_t protocol)
 {
         SOCKET *socket = _libc_malloc(sizeof(*socket));
         if (socket) {
-                int err = _libc_syscall(_LIBC_SYS_NETSOCKETCREATE, &socket->fd, netname, &protocol);
+                int err = _libc_syscall(_LIBC_SYS_NETSOCKETCREATE, &socket->fd, netname, &type, &protocol);
                 if (!err) {
                         return socket;
                 }

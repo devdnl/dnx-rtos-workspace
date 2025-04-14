@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
         int exit_code = EXIT_FAILURE;
 
         errno          = 0;
-        SOCKET *socket = socket_open("inet", NET_PROTOCOL__TCP);
+        SOCKET *socket = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
         if (not socket) {
                 VERBOSE("Unable to create socket: %s\n", strerror(errno));
                 goto cleanup;

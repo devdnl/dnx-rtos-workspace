@@ -306,7 +306,7 @@ int main(int argc, char *argv[])
 
 
 
-        SOCKET *listener = socket_open("inet", NET_PROTOCOL__TCP);
+        SOCKET *listener = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
         if (!listener) {
                 global->msg = "Connection failed";
                 goto exit;

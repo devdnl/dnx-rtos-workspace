@@ -147,7 +147,7 @@ typedef enum {
         _LIBC_SYS_NETIFDOWN,              // int errno (const char *netname)
         _LIBC_SYS_NETIFSTATUS,            // int errno (const char *netname, NET_family_t *family, NET_generic_status_t *status, size_t *status_size)
         _LIBC_SYS_NETGETHOSTBYNAME,       // int errno (const char *netname, const char *name, void *addr, size_t *addr_size)
-        _LIBC_SYS_NETSOCKETCREATE,        // int errno (int *fd, const char *netname, NET_protocol_t *protocol)
+        _LIBC_SYS_NETSOCKETCREATE,        // int errno (int *fd, const char *netname, NET_socket_type_t *type, u8_t *protocol)
         _LIBC_SYS_NETBIND,                // int errno (int *fd, const NET_generic_sockaddr_t *addr, size_t *addr_size)
         _LIBC_SYS_NETLISTEN,              // int errno (int *fd)
         _LIBC_SYS_NETACCEPT,              // int errno (int *fd, int *new_fd)
