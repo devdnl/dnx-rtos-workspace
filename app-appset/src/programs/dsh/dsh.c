@@ -26,6 +26,8 @@
 
 ==============================================================================*/
 
+// #pragma GCC optimize("Og")
+
 /*==============================================================================
   Include files
 ==============================================================================*/
@@ -235,7 +237,7 @@ static bool command_hint(void)
                 *tabstart = '\0';
 
                 char  search[128];
-                char *line;
+                char *line = "";
 
                 /*
                  * Setup file search path
@@ -622,6 +624,9 @@ static bool start_program(char *master, char *slave, char *std_in,
                 global->pidmaster_attr.fd_stdin   = fileno(stdin);
                 global->pidmaster_attr.fd_stdout  = fileno(pipe);
                 global->pidmaster_attr.fd_stderr  = fileno(stderr);
+                global->pidmaster_attr.p_stdin    = NULL;
+                global->pidmaster_attr.p_stdout   = NULL;
+                global->pidmaster_attr.p_stderr   = NULL;
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
@@ -634,6 +639,9 @@ static bool start_program(char *master, char *slave, char *std_in,
                 global->pidslave_attr.fd_stdin   = fileno(pipe);
                 global->pidslave_attr.fd_stdout  = fileno(fout);
                 global->pidslave_attr.fd_stderr  = fileno(stderr);
+                global->pidslave_attr.p_stdin    = NULL;
+                global->pidslave_attr.p_stdout   = NULL;
+                global->pidslave_attr.p_stderr   = NULL;
                 global->pidslave_attr.cwd        = global->cwd;
                 global->pidslave_attr.detached   = false;
                 global->pidslave_attr.priority   = PRIORITY_NORMAL;
@@ -652,6 +660,9 @@ static bool start_program(char *master, char *slave, char *std_in,
                 global->pidmaster_attr.fd_stdin   = fileno(stdin);
                 global->pidmaster_attr.fd_stdout  = fileno(pipe);
                 global->pidmaster_attr.fd_stderr  = fileno(stderr);
+                global->pidmaster_attr.p_stdin    = NULL;
+                global->pidmaster_attr.p_stdout   = NULL;
+                global->pidmaster_attr.p_stderr   = NULL;
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
@@ -664,6 +675,9 @@ static bool start_program(char *master, char *slave, char *std_in,
                 global->pidslave_attr.fd_stdin   = fileno(pipe);
                 global->pidslave_attr.fd_stdout  = fileno(stdout);
                 global->pidslave_attr.fd_stderr  = fileno(stderr);
+                global->pidslave_attr.p_stdin    = NULL;
+                global->pidslave_attr.p_stdout   = NULL;
+                global->pidslave_attr.p_stderr   = NULL;
                 global->pidslave_attr.cwd        = global->cwd;
                 global->pidslave_attr.detached   = false;
                 global->pidslave_attr.priority   = PRIORITY_NORMAL;
@@ -679,6 +693,11 @@ static bool start_program(char *master, char *slave, char *std_in,
                 process_wait(pidslave, NULL, MAX_DELAY_MS);
 
         } else if (master && file && std_in) {
+                printf("%s %s %s\n", std_in, file, file); // TEST
+
+                global->pidmaster_attr.fd_stdin   = -1;
+                global->pidmaster_attr.fd_stdout  = -1;
+                global->pidmaster_attr.fd_stderr  = -1;
                 global->pidmaster_attr.p_stdin    = std_in;
                 global->pidmaster_attr.p_stdout   = file;
                 global->pidmaster_attr.p_stderr   = file;
@@ -696,9 +715,12 @@ static bool start_program(char *master, char *slave, char *std_in,
                 }
 
         } else if (master && std_in) {
-                global->pidmaster_attr.p_stdin    = std_in;
+                global->pidmaster_attr.fd_stdin   = -1;
                 global->pidmaster_attr.fd_stdout  = fileno(stdout);
                 global->pidmaster_attr.fd_stderr  = fileno(stderr);
+                global->pidmaster_attr.p_stdin    = std_in;
+                global->pidmaster_attr.p_stdout   = NULL;
+                global->pidmaster_attr.p_stderr   = NULL;
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = detached;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
@@ -716,6 +738,9 @@ static bool start_program(char *master, char *slave, char *std_in,
                 global->pidmaster_attr.fd_stdin   = fileno(stdin);
                 global->pidmaster_attr.fd_stdout  = fileno(fout);
                 global->pidmaster_attr.fd_stderr  = fileno(stderr);
+                global->pidmaster_attr.p_stdin    = NULL;
+                global->pidmaster_attr.p_stdout   = NULL;
+                global->pidmaster_attr.p_stderr   = NULL;
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
@@ -729,8 +754,11 @@ static bool start_program(char *master, char *slave, char *std_in,
 
         } else if (master) {
                 global->pidmaster_attr.fd_stdin   = detached ? -1 : fileno(stdin);
-                global->pidmaster_attr.fd_stdout  = detached ? -1 : fileno(stdout);
-                global->pidmaster_attr.fd_stderr  = detached ? -1 : fileno(stderr);
+                global->pidmaster_attr.fd_stdout  = fileno(stdout);
+                global->pidmaster_attr.fd_stderr  = fileno(stderr);
+                global->pidmaster_attr.p_stdin    = NULL;
+                global->pidmaster_attr.p_stdout   = NULL;
+                global->pidmaster_attr.p_stderr   = NULL;
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = detached;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;

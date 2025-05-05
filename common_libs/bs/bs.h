@@ -121,23 +121,24 @@ extern int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key, const vo
 /*
  * Write methods.
  */
-extern int     bs_write_chunk(bs_wr_t *self, uint8_t *chunk, size_t chunk_len);
-extern bs_wr_t bs_write_init(uint8_t *chunk, size_t chunk_len);
-extern int     bs_get_chunk_length(bs_wr_t *self);
-extern int     bs_set_int8_t(bs_wr_t *self, const char *key, int8_t value);
-extern int     bs_set_uint8_t(bs_wr_t *self, const char *key, uint8_t value);
-extern int     bs_set_int16_t(bs_wr_t *self, const char *key, int16_t value);
-extern int     bs_set_uint16_t(bs_wr_t *self, const char *key, uint16_t value);
-extern int     bs_set_int32_t(bs_wr_t *self, const char *key, int32_t value);
-extern int     bs_set_uint32_t(bs_wr_t *self, const char *key, uint32_t value);
-extern int     bs_set_int64_t(bs_wr_t *self, const char *key, int64_t value);
-extern int     bs_set_uint64_t(bs_wr_t *self, const char *key, uint64_t value);
-extern int     bs_set_float(bs_wr_t *self, const char *key, float value);
-extern int     bs_set_double(bs_wr_t *self, const char *key, double value);
-extern int     bs_set_str(bs_wr_t *self, const char *key, const char *str);
-extern int     bs_set_str_len(bs_wr_t *self, const char *key, const char *str, size_t str_len);
-extern int     bs_set_bool(bs_wr_t *self, const char *key, bool value);
-extern int     bs_set_blob(bs_wr_t *self, const char *key, const void *blob, size_t len);
+extern int      bs_write_chunk(bs_wr_t *self, uint8_t *chunk, size_t chunk_len);
+extern bs_wr_t  bs_write_init(uint8_t *chunk, size_t chunk_len);
+extern int      bs_get_chunk_length(bs_wr_t *self);
+extern uint8_t *bs_get_chunk_data(bs_wr_t *self);
+extern int      bs_set_int8_t(bs_wr_t *self, const char *key, int8_t value);
+extern int      bs_set_uint8_t(bs_wr_t *self, const char *key, uint8_t value);
+extern int      bs_set_int16_t(bs_wr_t *self, const char *key, int16_t value);
+extern int      bs_set_uint16_t(bs_wr_t *self, const char *key, uint16_t value);
+extern int      bs_set_int32_t(bs_wr_t *self, const char *key, int32_t value);
+extern int      bs_set_uint32_t(bs_wr_t *self, const char *key, uint32_t value);
+extern int      bs_set_int64_t(bs_wr_t *self, const char *key, int64_t value);
+extern int      bs_set_uint64_t(bs_wr_t *self, const char *key, uint64_t value);
+extern int      bs_set_float(bs_wr_t *self, const char *key, float value);
+extern int      bs_set_double(bs_wr_t *self, const char *key, double value);
+extern int      bs_set_str(bs_wr_t *self, const char *key, const char *str);
+extern int      bs_set_str_len(bs_wr_t *self, const char *key, const char *str, size_t str_len);
+extern int      bs_set_bool(bs_wr_t *self, const char *key, bool value);
+extern int      bs_set_blob(bs_wr_t *self, const char *key, const void *blob, size_t len);
 
 /*==============================================================================
   Exported inline functions

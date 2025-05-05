@@ -658,6 +658,24 @@ int bs_get_chunk_length(bs_wr_t *self)
 
 //==============================================================================
 /**
+ * @brief  Return chunk data pointer.
+ *
+ * @param  self         bs instance
+ *
+ * @return Return chunk data pointer.
+ */
+//==============================================================================
+uint8_t *bs_get_chunk_data(bs_wr_t *self)
+{
+        if (not self) {
+                return NULL;
+        }
+
+        return self->chunk;
+}
+
+//==============================================================================
+/**
  * @brief  Add i8 to buffer.
  *
  * @param  self         bs instance

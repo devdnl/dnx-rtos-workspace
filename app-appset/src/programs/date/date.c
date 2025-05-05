@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
                         localtime_r(&t, &tm);
                 }
 
-                strftime(global->buf, TIME_FORMAT_BUF_LEN, "%a %B %d %X %Y\n", &tm);
+                strftime(global->buf, TIME_FORMAT_BUF_LEN, "%a %B %d %X %Y %z\n", &tm);
 
                 printf(global->buf);
         }

@@ -521,7 +521,13 @@ static int luafn_ipc_request(lua_State *L)
 
                 const char *key = lua_tostring(L, -1);
 
-                if (lua_isnumber(L, -2)) {
+                if (lua_type(L, -2) == LUA_TSTRING) {
+                        bs_set_str(&bs_wr, key, lua_tostring(L, -2));
+
+                } else if (lua_isboolean(L, -2)) {
+                        bs_set_bool(&bs_wr, key, lua_toboolean(L, -2));
+
+                } else if (lua_isnumber(L, -2)) {
 
                         lua_Number num = lua_tonumber(L, -2);
 
@@ -545,12 +551,6 @@ static int luafn_ipc_request(lua_State *L)
                                         bs_set_double(&bs_wr, key, lua_tonumber(L, -2));
                                 }
                         }
-
-                } else if (lua_isstring(L, -2)) {
-                        bs_set_str(&bs_wr, key, lua_tostring(L, -2));
-
-                } else if (lua_isboolean(L, -2)) {
-                        bs_set_bool(&bs_wr, key, lua_toboolean(L, -2));
 
                 } else {
                         luaL_error(L, "Type not supported!");
