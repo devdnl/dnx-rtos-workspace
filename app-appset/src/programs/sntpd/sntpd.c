@@ -229,9 +229,11 @@ typedef struct {
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
+        int                 start_host_arg;
         int                 current_host_arg;
         NET_INET_sockaddr_t server;
         sntp_msg_t          pkt;
+        bool                silent;
 };
 
 /*==============================================================================
@@ -252,7 +254,7 @@ PROGRAM_PARAMS(sntpd, STACK_DEPTH_LOW);
 static void select_next_host(int argc)
 {
         if (global->current_host_arg >= argc - 1) {
-                global->current_host_arg = 2;
+                global->current_host_arg = global->start_host_arg;
         } else {
                 global->current_host_arg++;
         }
@@ -331,8 +333,10 @@ static int get_SNTP_host_IP(bool once, int argc, char *argv[])
         while ((err = get_host_by_name("inet", argv[global->current_host_arg], &global->server,
                         sizeof(global->server)))) {
 
-                fprintf(stderr, "[sntpd %lu] %s: no host\n", cast(u32_t, clock() / CLOCKS_PER_SEC),
-                        argv[global->current_host_arg]);
+                if (not global->silent) {
+                        fprintf(stderr, "[sntpd %lu] %s: no host\n", cast(u32_t, clock() / CLOCKS_PER_SEC),
+                                argv[global->current_host_arg]);
+                }
 
                 select_next_host(argc);
 
@@ -435,18 +439,25 @@ static void set_timezone(int argc, char *argv[])
                                         errno = 0;
                                         n     = socket_read(socket, buf, buf_len - 1);
                                         if (n <= 0) {
-                                                fprintf(stderr, "[sntpd %lu] tz response: %s\n",
+                                                if (not global->silent) {
+                                                        fprintf(stderr, "[sntpd %lu] tz response: %s\n",
+                                                                cast(u32_t, clock() / CLOCKS_PER_SEC),
+                                                                strerror(errno));
+                                                }
+                                        }
+                                } else {
+                                        if (not global->silent) {
+                                                fprintf(stderr, "[sntpd %lu] tz request: %s\n",
                                                         cast(u32_t, clock() / CLOCKS_PER_SEC),
                                                         strerror(errno));
                                         }
-                                } else {
-                                        fprintf(stderr, "[sntpd %lu] tz request: %s\n",
-                                                cast(u32_t, clock() / CLOCKS_PER_SEC), strerror(errno));
                                 }
 
                         } else {
-                                fprintf(stderr, "[sntpd %lu] tz connect: %s\n",
-                                        cast(u32_t, clock() / CLOCKS_PER_SEC), strerror(errno));
+                                if (not global->silent) {
+                                        fprintf(stderr, "[sntpd %lu] tz connect: %s\n",
+                                                cast(u32_t, clock() / CLOCKS_PER_SEC), strerror(errno));
+                                }
                         }
 
                         bool dst = strstr(buf, "\"dst\":true");
@@ -483,7 +494,7 @@ static void set_timezone(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
         if (argc < 3) {
-                fprintf(stderr, "%s <interval_sec> <host_1> [host_2] [host_3]\n", argv[0]);
+                fprintf(stderr, "%s <interval_sec> [--silent] <host_1> [host_2] [host_3]\n", argv[0]);
                 return EXIT_FAILURE;
         }
 
@@ -491,11 +502,19 @@ int main(int argc, char *argv[])
         sscanf(argv[1], "%d", &interval);
 
         if (interval < 0) {
-                fprintf(stderr, "Invalid interval value\n");
+                fprintf(stderr, "Invalid interval value!\n");
                 return EXIT_FAILURE;
         }
 
-        global->current_host_arg = 2;
+        global->silent = isstreq(argv[2], "--silent");
+
+        global->start_host_arg   = global->silent ? 3 : 2;
+        global->current_host_arg = global->start_host_arg;
+
+        if (global->start_host_arg < (argc - 1)) {
+                fprintf(stderr, "No host list given!\n");
+                return EXIT_FAILURE;
+        }
 
         do {
                 set_NTP_time(argc, argv);
