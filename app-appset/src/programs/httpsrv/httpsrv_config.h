@@ -60,6 +60,7 @@ extern "C" {
 #define HTTPSRV_CACHE_TIME_FOR_PNG            300
 #define HTTPSRV_CACHE_TIME_FOR_ICO            300
 #define HTTPSRV_CACHE_TIME_FOR_CSS            300
+#define HTTPSRV_CACHE_TIME_FOR_JS             5
 #define HTTPSRV_DEFAULT_PAGE                  "index.html"
 #define HTTPSRV_PAGE_NOT_FOUND                "404.html"
 #define HTTPSRV_ROOT_DIR                      "/mmc/srv"

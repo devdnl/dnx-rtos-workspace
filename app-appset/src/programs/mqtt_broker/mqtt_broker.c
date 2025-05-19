@@ -69,21 +69,21 @@
 
 #define DEBUG(...)                                                                              \
         if (global->debug) {                                                                    \
-                printf("mqtt-broker [%llu, %s, %u]: ", get_uptime_ms(), session->client_ip_str, \
+                printf("[mqtt-broker, debug, %llu, %s, %u] ", get_uptime_ms(), session->client_ip_str, \
                         session->id);                                                           \
                 printf(__VA_ARGS__);                                                            \
         }
 
 #define DEBUG_ERROR()                                                                                        \
-        printf("mqtt-broker [%llu, %s, %u]: %s: %u\n", get_uptime_ms(), session->client_ip_str, session->id, \
+        printf("[mqtt-broker, error, %llu, %s, %u] %s: %u\n", get_uptime_ms(), session->client_ip_str, session->id, \
                 __func__, __LINE__)
 
 #define VERBOSE(...)                                                                                  \
-        printf("mqtt-broker [%llu, %s, %u]: ", get_uptime_ms(), session->client_ip_str, session->id); \
+        printf("[mqtt-broker, info, %llu, %s, %u] ", get_uptime_ms(), session->client_ip_str, session->id); \
         printf(__VA_ARGS__)
 
 #define VERBOSE2(...)                                    \
-        printf("mqtt-broker [%llu]: ", get_uptime_ms()); \
+        printf("[mqtt-broker, info, %llu] ", get_uptime_ms()); \
         printf(__VA_ARGS__)
 
 #if DEBUG_CMD_ENABLE > 0
@@ -451,41 +451,41 @@ int main(int argc, char *argv[])
         }
 
         if (not conf_path) {
-                printf("%s: no configuration file given!\n", argv[0]);
+                printf("[%s, info] no configuration file given!\n", argv[0]);
                 goto cleanup;
         }
 
         global->conf = conf_parser__new(conf_path);
         if (not global->conf) {
-                printf("%s: no such file '%s'!\n", argv[0], conf_path);
+                printf("[%s, info] no such file '%s'!\n", argv[0], conf_path);
                 goto cleanup;
         }
 
         global->debug = conf_parser__is_value_true(conf_parser__get_value(global->conf, CONFIG_KEY_DEBUG));
         if (global->debug) {
-                printf("%s: debug enabled.\n", argv[0]);
+                printf("[%s, info] debug enabled.\n", argv[0]);
         }
 
         global->allow_list_enabled = conf_parser__is_value_true(
                 conf_parser__get_value(global->conf, CONFIG_KEY_ALLOW_ENABLE));
         if (global->allow_list_enabled) {
-                printf("%s: allowing connections only from allow list.\n", argv[0]);
+                printf("[%s, info] allowing connections only from allow list.\n", argv[0]);
         }
 
         global->topic_db.data = llist_new(topicdb_compare, topicdb_destroy);
         if (not global->topic_db.data) {
-                printf("%s: unable to create topic database list!\n", argv[0]);
+                printf("[%s, info] unable to create topic database list!\n", argv[0]);
                 goto cleanup;
         }
 
         global->topic_db.mutex = mutex_new(MUTEX_TYPE_RECURSIVE);
         if (not global->topic_db.mutex) {
-                printf("%s: unable to create topic database mutex!\n", argv[0]);
+                printf("[%s, info] unable to create topic database mutex!\n", argv[0]);
                 goto cleanup;
         }
 
         if (wait_for_network) {
-                printf("%s: waiting for network to be available...\n", argv[0]);
+                printf("[%s, info] waiting for network to be available...\n", argv[0]);
         }
 
         while (wait_for_network) {
@@ -508,7 +508,7 @@ int main(int argc, char *argv[])
         errno  = 0;
         socket = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
         if (not socket) {
-                printf("%s: unable to create socket: %s\n", argv[0], strerror(errno));
+                printf("[%s, info] unable to create socket: %s\n", argv[0], strerror(errno));
                 goto cleanup;
         }
 
@@ -519,17 +519,17 @@ int main(int argc, char *argv[])
 
         errno = 0;
         if (socket_bind(socket, &ADDR_ANY, sizeof(ADDR_ANY)) != 0) {
-                printf("%s: unable to bind socket: %s\n", argv[0], strerror(errno));
+                printf("[%s, info] unable to bind socket: %s\n", argv[0], strerror(errno));
                 goto cleanup;
         }
 
         errno = 0;
         if (socket_listen(socket) != 0) {
-                printf("%s: unable to listen socket: %s\n", argv[0], strerror(errno));
+                printf("[%s, info] unable to listen socket: %s\n", argv[0], strerror(errno));
                 goto cleanup;
         }
 
-        printf("%s: listening connections at port %u.\n", argv[0], ADDR_ANY.port);
+        printf("[%s, info] listening connections at port %u.\n", argv[0], ADDR_ANY.port);
 
         while (true) {
                 topicdb_maintenance();
@@ -537,7 +537,7 @@ int main(int argc, char *argv[])
                 SOCKET *new_socket;
                 errno = 0;
                 if (socket_accept(socket, &new_socket) != 0) {
-                        printf("%s: socket not accepted: %s\n", argv[0], strerror(errno));
+                        printf("[%s, info] socket not accepted: %s\n", argv[0], strerror(errno));
                         continue;
                 }
 

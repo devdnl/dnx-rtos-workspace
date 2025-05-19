@@ -118,6 +118,8 @@ static const char *HTTP_CONTENT_TYPE_IMAGE_ICO = "Content-Type: image/x-icon\r\n
 
 static const char *HTTP_CONTENT_TYPE_TEXT_TEXT = "Content-Type: text/text\r\n\r\n";
 
+static const char *HTTP_CONTENT_TYPE_TEXT_JS = "Content-Type: text/javascript\r\n\r\n";
+
 /*==============================================================================
   Function definitions
 ==============================================================================*/
@@ -1044,6 +1046,14 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
 
         } else if (isstreq(ext, ".ico")) {
                 if (httpsrv_send_file(self, HTTP_CONTENT_TYPE_IMAGE_ICO, HTTPSRV_CACHE_TIME_FOR_ICO,
+                            file_path) >= 0) {
+                        return 0;
+                } else {
+                        return 1;
+                }
+
+        } else if (isstreq(ext, ".js")) {
+                if (httpsrv_send_file(self, HTTP_CONTENT_TYPE_TEXT_JS, HTTPSRV_CACHE_TIME_FOR_JS,
                             file_path) >= 0) {
                         return 0;
                 } else {

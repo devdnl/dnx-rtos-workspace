@@ -36,11 +36,13 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <sys/time.h>
 #include <dnx/misc.h>
 #include <dnx/os.h>
 #include <dnx/thread.h>
 #include <dnx/net.h>
 #include <dnx/vt100.h>
+#include <time.h>
 #include <unistd.h>
 
 /*==============================================================================
@@ -102,9 +104,9 @@ static void create_base_file_system_structure(void)
         mkdir("/dev", 0666);  // this folder store devices drivers
         mkdir("/tmp", 0666);  // this folder store temporary files
         mkdir("/run", 0666);  // this folder store runtime files
-        mkdir("/mnt", 0666);  // this folder store SD card content
-        mkdir("/proc", 0666); // this folder store SD card content
-        mkdir("/etc", 0666);  // this folder store SD card content
+        mkdir("/mnt", 0666);  // this folder store mounted external discs
+        mkdir("/proc", 0666); // this folder store operating system runtime files
+        mkdir("/etc", 0666);  // this folder store misc files
 
         mount("procfs", "", "/proc", "");
 }
@@ -450,9 +452,9 @@ int main(int argc, char *argv[])
         create_base_file_system_structure();
         initialize_basic_drivers();
         open_output_stream();
-        show_kernel_panic_message();
         initialize_additional_drivers();
         mount_file_systems();
+        show_kernel_panic_message();
         print_system_log_messages();
         initialize_network();
         start_user_programs();

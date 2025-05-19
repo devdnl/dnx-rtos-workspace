@@ -457,7 +457,7 @@
 		["__CPU_PREFFERED_FS_RAM__"]="\"SRAM\"";
 		["__CPU_SHOW_AND_CLEAR_RESET_SOURCE__"]="_YES_";
 		["__CPU_VTOR_TAB_POSITION__"]="0x08000000";
-		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./config/custom_linker_script.ld\"";
+		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./custom_linker_script.ld\"";
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 	};
 	["config/app-system/arch/stm32f1/crc_flags.h"]={
@@ -960,7 +960,7 @@
 		["__CPU_SERIES__"]="_STM32F303xE";
 		["__CPU_SHOW_AND_CLEAR_RESET_SOURCE__"]="_YES_";
 		["__CPU_VTOR_TAB_POSITION__"]="0x08000000";
-		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./config/custom_linker_script.ld\"";
+		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./custom_linker_script.ld\"";
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="STM32F3xx_512_64_16";
 	};
@@ -2020,7 +2020,7 @@
 		["__CPU_SERIES__"]="_STM32F429xx";
 		["__CPU_SHOW_AND_CLEAR_RESET_SOURCE__"]="_YES_";
 		["__CPU_VTOR_TAB_POSITION__"]="0x08000000";
-		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./config/custom_linker_script.ld\"";
+		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./custom_linker_script.ld\"";
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="STM32F42xxIxx";
 	};
@@ -3297,7 +3297,7 @@
 		["__CPU_SERIES__"]="_STM32F756xx";
 		["__CPU_SHOW_AND_CLEAR_RESET_SOURCE__"]="_YES_";
 		["__CPU_VTOR_TAB_POSITION__"]="0x08000000";
-		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./config/custom_linker_script.ld\"";
+		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./custom_linker_script.ld\"";
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="STM32F75xxGxx";
 	};
@@ -4551,7 +4551,7 @@
 		["__CPU_SERIES__"]="_STM32H753xx";
 		["__CPU_SHOW_AND_CLEAR_RESET_SOURCE__"]="_YES_";
 		["__CPU_VTOR_TAB_POSITION__"]="0x08000000";
-		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./config/custom_linker_script.ld\"";
+		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./custom_linker_script.ld\"";
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="STM32H753xIxx";
 	};
@@ -6345,7 +6345,7 @@
 		["__CPU_PREFFERED_FS_RAM__"]="\"SRAM\"";
 		["__CPU_SHOW_AND_CLEAR_RESET_SOURCE__"]="_YES_";
 		["__CPU_VTOR_TAB_POSITION__"]="0x08000000";
-		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./config/custom_linker_script.ld\"";
+		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./custom_linker_script.ld\"";
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 	};
 	["config/btl-system/arch/stm32f1/crc_flags.h"]={
@@ -6848,7 +6848,7 @@
 		["__CPU_SERIES__"]="_STM32F303xE";
 		["__CPU_SHOW_AND_CLEAR_RESET_SOURCE__"]="_YES_";
 		["__CPU_VTOR_TAB_POSITION__"]="0x08000000";
-		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./config/custom_linker_script.ld\"";
+		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./custom_linker_script.ld\"";
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="STM32F3xx_512_64_16";
 	};
@@ -7908,7 +7908,7 @@
 		["__CPU_SERIES__"]="_STM32F429xx";
 		["__CPU_SHOW_AND_CLEAR_RESET_SOURCE__"]="_YES_";
 		["__CPU_VTOR_TAB_POSITION__"]="0x08000000";
-		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./config/custom_linker_script.ld\"";
+		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./custom_linker_script.ld\"";
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="STM32F42xxIxx";
 	};
@@ -9185,7 +9185,7 @@
 		["__CPU_SERIES__"]="_STM32F756xx";
 		["__CPU_SHOW_AND_CLEAR_RESET_SOURCE__"]="_YES_";
 		["__CPU_VTOR_TAB_POSITION__"]="0x08000000";
-		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./config/custom_linker_script.ld\"";
+		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./custom_linker_script.ld\"";
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="STM32F75xxGxx";
 	};
@@ -10439,7 +10439,7 @@
 		["__CPU_SERIES__"]="_STM32H753xx";
 		["__CPU_SHOW_AND_CLEAR_RESET_SOURCE__"]="_YES_";
 		["__CPU_VTOR_TAB_POSITION__"]="0x08000000";
-		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./config/custom_linker_script.ld\"";
+		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./custom_linker_script.ld\"";
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="STM32H753xIxx";
 	};

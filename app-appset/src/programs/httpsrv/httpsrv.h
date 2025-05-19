@@ -75,7 +75,7 @@ extern "C" {
 #else
 #define DEBUG(...)
 #endif
-#define VERBOSE(...) printf("httpsrv: " __VA_ARGS__)
+#define VERBOSE(...) printf("[httpsrv, info] " __VA_ARGS__)
 
 /*==============================================================================
   Exported object types

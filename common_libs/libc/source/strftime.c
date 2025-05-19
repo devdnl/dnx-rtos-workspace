@@ -51,32 +51,17 @@
   Local objects
 ==============================================================================*/
 /** days of week */
-static const char *week_day_abbr[] = {
-        "Sun", "Mon", "Tue",
-        "Wed", "Thu", "Fri",
-        "Sat"
-};
+static const char *week_day_abbr[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
-static const char *week_day_full[] = {
-        "Sunday",    "Monday", "Tuesday",
-        "Wednesday", "Thrusday",
-        "Friday",    "Saturday"
-};
+static const char *week_day_full[] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thrusday", "Friday",
+        "Saturday"};
 
 /** month names */
-static const char *month_abbr[] = {
-        "Jan", "Feb", "Mar",
-        "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep",
-        "Oct", "Nov", "Dec"
-};
+static const char *month_abbr[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
+        "Nov", "Dec"};
 
-static const char *month_full[] = {
-        "January", "February", "March",
-        "April",   "May",      "June",
-        "July",    "August",   "September",
-        "October", "November", "December"
-};
+static const char *month_full[] = {"January", "February", "March", "April", "May", "June", "July", "August",
+        "September", "October", "November", "December"};
 
 /*==============================================================================
   Exported objects
@@ -122,6 +107,7 @@ static const char *month_full[] = {
  *       I - Hour in 12h format (01-12)
  *       M - Minute (00-59)
  *       S - Second (00-61)
+ *       c - full date (Sat May 10 19:05:49 2025)
  *       A - Full weekday name
  *       a - Abbreviated weekday name
  *       B - Full month name
@@ -139,6 +125,7 @@ static const char *month_full[] = {
  *       D - Short MM/DD/YY date, equivalent to %m/%d/%y        08/23/01
  *       x - Short MM/DD/YY date, equivalent to %m/%d/%y        08/23/01
  *       z - ISO 8601 offset from UTC in timezone (1 minute=1, 1 hour=100) +0100, -1230
+ *       Z - ISO 8601 offset from UTC in timezone (1 minute=1, 1 hour=100) +0100, -1230
  */
 //==============================================================================
 size_t strftime(char *buf, size_t size, const char *format, const struct tm *timeptr)
@@ -166,12 +153,14 @@ size_t strftime(char *buf, size_t size, const char *format, const struct tm *tim
                 }
 
                 while (_do && size) {
-                        if (!get_fch())
+                        if (!get_fch()) {
                                 break;
+                        }
 
                         if (ch == '%') {
-                                if (!get_fch())
+                                if (!get_fch()) {
                                         break;
+                                }
 
                                 size_t m = 0;
 
@@ -189,7 +178,9 @@ size_t strftime(char *buf, size_t size, const char *format, const struct tm *tim
                                         break;
 
                                 case 'I':
-                                        m = snprintf(buf, size, "%02d", timeptr->tm_hour > 12 ? timeptr->tm_hour - 12 : timeptr->tm_hour);
+                                        m = snprintf(buf, size, "%02d",
+                                                timeptr->tm_hour > 12 ? timeptr->tm_hour - 12
+                                                                      : timeptr->tm_hour);
                                         break;
 
                                 case 'M':
@@ -246,33 +237,43 @@ size_t strftime(char *buf, size_t size, const char *format, const struct tm *tim
                                         break;
 
                                 case 'X':
-                                        m = snprintf(buf, size, "%02d:%02d:%02d", timeptr->tm_hour, timeptr->tm_min, timeptr->tm_sec);
+                                        m = snprintf(buf, size, "%02d:%02d:%02d", timeptr->tm_hour,
+                                                timeptr->tm_min, timeptr->tm_sec);
                                         break;
 
                                 case 'F':
-                                        m = snprintf(buf, size, "%d-%02d-%02d", timeptr->tm_year+1900, timeptr->tm_mon+1, timeptr->tm_mday);
+                                        m = snprintf(buf, size, "%d-%02d-%02d", timeptr->tm_year + 1900,
+                                                timeptr->tm_mon + 1, timeptr->tm_mday);
                                         break;
 
+                                case 'Z':
                                 case 'z': {
                                         struct timezone tz = {0, 0};
                                         gettimeofday(NULL, &tz);
 
                                         i32_t timeoff = timeptr->tm_isutc ? 0 : tz.tz_minuteswest;
-                                        m = snprintf(buf, size, "%c%02d%02d",
-                                                     (timeoff < 0 ? '-':'+'),
-                                                     (timeoff < 0 ? -timeoff : timeoff) / 60,
-                                                     (timeoff < 0 ? -timeoff : timeoff) % 60);
+                                        m = snprintf(buf, size, "%c%02d%02d", (timeoff < 0 ? '-' : '+'),
+                                                (timeoff < 0 ? -timeoff : timeoff) / 60,
+                                                (timeoff < 0 ? -timeoff : timeoff) % 60);
                                         break;
                                 }
+
+                                case 'c':
+                                        m = snprintf(buf, size, "%s %s %d %02d:%02d:%02d %d",
+                                                week_day_abbr[timeptr->tm_wday], month_abbr[timeptr->tm_mon],
+                                                timeptr->tm_mday, timeptr->tm_hour, timeptr->tm_min,
+                                                timeptr->tm_sec, timeptr->tm_year + 1900);
+                                        break;
 
                                 case 'D':
                                 case 'x':
-                                        m = snprintf(buf, size, "%02d/%02d/%02d", timeptr->tm_mon+1, timeptr->tm_mday, (timeptr->tm_year+1900) % 100);
+                                        m = snprintf(buf, size, "%02d/%02d/%02d", timeptr->tm_mon + 1,
+                                                timeptr->tm_mday, (timeptr->tm_year + 1900) % 100);
                                         break;
                                 }
 
-                                n    += m;
-                                buf  += m;
+                                n += m;
+                                buf += m;
                                 size -= m;
 
                         } else {
