@@ -203,7 +203,11 @@ static int bs_get_raw(bs_rd_t *self, const char *key, const void **blob, size_t 
 //==============================================================================
 static int bs_set_raw(bs_wr_t *self, const char *key, const void *blob, size_t len, bs_type_t type)
 {
-        if (not self or not key or not blob or not len) {
+        if (not self or not key or not blob) {
+                return bs_err_invalid_value;
+        }
+
+        if ((type != bs_type__string) and (len == 0)) {
                 return bs_err_invalid_value;
         }
 
