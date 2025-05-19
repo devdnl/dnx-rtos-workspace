@@ -67,6 +67,7 @@ THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
 # define macro used to build system according to application name
 define make_system
 	$(eval $@_APP_NAME = $(1))
+	$(ECHO) "Start building dnx RTOS image..."
 	$(MKLINKERSCRIPT) ../../config/${$@_APP_NAME}/custom_linker_script.h ../config/${$@_APP_NAME}/custom_linker_script.ld
 	$(REMOVE) system/build/ioctl
 	$(MAKE) -C system -s -j 1 -fMakefile clean all CONFIG_DIR=../config/${$@_APP_NAME}
@@ -179,12 +180,13 @@ clean :
 
 
 .PHONY : app
-app : _build_prepare app-system app-appset app-romfs
+app : _build_prepare app-romfs app-system app-appset
 	@$(SREC_CAT) $(TARGET_DIR_NAME)/app-system.hex -Intel $(TARGET_DIR_NAME)/app-appset.hex -Intel $(TARGET_DIR_NAME)/app-romfs.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_app.hex -Intel
 	@$(COPY) -R ./app-dist $(TARGET_DIR_NAME)/app-dist
 	@$(COPY) $(TARGET_DIR_NAME)/app-system.bin $(TARGET_DIR_NAME)/app-dist/app-system.bin
 	@$(COPY) $(TARGET_DIR_NAME)/app-appset.bin $(TARGET_DIR_NAME)/app-dist/app-appset.bin
 	@$(MKFPKG) $(TARGET_DIR_NAME)/app-dist $(TARGET_DIR_NAME)/$(PROJECT).fpkg
+	@$(ECHO) "Target app built successfully."
 
 
 .PHONY : btl
