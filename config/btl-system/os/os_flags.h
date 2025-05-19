@@ -79,7 +79,7 @@ this:SetToolTip("Context switch frequency has influence to system response for e
 #define __OS_TASK_SCHED_FREQ__ 1000
 
 /*--
-this:AddWidget("Spinbox", 8, 32, "Maximum number of process threads")
+this:AddWidget("Spinbox", 8, 24, "Maximum number of process threads")
 this:SetToolTip("Number of threads that can be started by process.")
 --*/
 #define __OS_PROCESS_MAX_THREADS__ 16

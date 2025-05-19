@@ -46,34 +46,43 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#ifndef MAX_DELAY_MS
-#define MAX_DELAY_MS                    (UINT32_MAX - 1000)
+#ifndef MAX_DELAY_S
+#define MAX_DELAY_S ((UINT32_MAX - 1000UL) / 1000UL)
 #endif
 
-#ifndef MAX_DELAY_S
-#define MAX_DELAY_S                     (MAX_DELAY_MS / 1000)
+#ifndef MAX_DELAY_MS
+#define MAX_DELAY_MS (MAX_DELAY_S * 1000UL)
+#endif
+
+#ifndef WAIT_FOREVER_S
+#define WAIT_FOREVER_S (MAX_DELAY_S + 1)
+#endif
+
+#ifndef WAIT_FOREVER_MS
+#define WAIT_FOREVER_MS (MAX_DELAY_MS + 1)
 #endif
 
 /** PRIORITIES */
 #ifndef PRIORITY
-#define PRIORITY(prio)                  ((prio) + 3)
+#define PRIORITY(prio) ((prio) + 3)
 #endif
 
 #ifndef PRIORITY_LOWEST
-#define PRIORITY_LOWEST                 (-3)
+#define PRIORITY_LOWEST (-3)
 #endif
 
 #ifndef PRIORITY_NORMAL
-#define PRIORITY_NORMAL                 0
+#define PRIORITY_NORMAL 0
 #endif
 
 #ifndef PRIORITY_HIGHEST
-#define PRIORITY_HIGHEST                (3)
+#define PRIORITY_HIGHEST (3)
 #endif
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+// clang-format off
 typedef enum {
         _LIBC_SYS_GETRUNTIMECTX,          // int errno (_dnxrtctx_t *ctx)
         _LIBC_SYS_MALLOC,                 // int errno (size_t *blk_size, void **alloc_mem)
@@ -202,6 +211,7 @@ typedef enum {
         _LIBC_SYS_GETCURRENTCORE,         // int errno (u8_t *core)
         _LIBC_SYS_GETCPUCORECOUNT,        // int errno (u8_t *core_count)
 } _libc_syscall_t;
+// clang-format on
 
 /*==============================================================================
   Exported objects

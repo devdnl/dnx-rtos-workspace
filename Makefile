@@ -35,24 +35,25 @@ TARGET_DIR_NAME = build
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
 #---------------------------------------------------------------------------------------------------
-SHELL      = /bin/bash
-ECHO       = /bin/echo -e
-REMOVE     = /bin/rm -rf
-COPY       = /bin/cp -r
-RENAME     = /bin/mv
-MKDIR      = /bin/mkdir -p
-CAT        = /bin/cat
-SREC_CAT   = /bin/srec_cat
-GREP       = /bin/grep
-SIZEOF     = /usr/bin/stat -c %s
-WC         = /usr/bin/wc
-PYTHON3    = /usr/bin/python3
-OBJCOPY    = $(TOOLCHAIN)objcopy
-OBJDUMP    = $(TOOLCHAIN)objdump
-SIZE       = $(TOOLCHAIN)size
-CONFIGTOOL = ./tools/configtool.sh
-FLASH_CPU  = ./tools/flash.sh
-MKFPKG     = $(PYTHON3) ./system/tools/mkfpkg.py
+SHELL          = /bin/bash
+ECHO           = /bin/echo -e
+REMOVE         = /bin/rm -rf
+COPY           = /bin/cp -r
+RENAME         = /bin/mv
+MKDIR          = /bin/mkdir -p
+CAT            = /bin/cat
+SREC_CAT       = /bin/srec_cat
+GREP           = /bin/grep
+SIZEOF         = /usr/bin/stat -c %s
+WC             = /usr/bin/wc
+PYTHON3        = /usr/bin/python3
+OBJCOPY        = $(TOOLCHAIN)objcopy
+OBJDUMP        = $(TOOLCHAIN)objdump
+SIZE           = $(TOOLCHAIN)size
+CONFIGTOOL     = ./tools/configtool.sh
+FLASH_CPU      = ./tools/flash.sh
+MKFPKG         = $(PYTHON3) ./system/tools/mkfpkg.py
+MKLINKERSCRIPT = ./tools/create_linker_script.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -66,6 +67,7 @@ THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
 # define macro used to build system according to application name
 define make_system
 	$(eval $@_APP_NAME = $(1))
+	$(MKLINKERSCRIPT) ../../config/${$@_APP_NAME}/custom_linker_script.h ../config/${$@_APP_NAME}/custom_linker_script.ld
 	$(REMOVE) system/build/ioctl
 	$(MAKE) -C system -s -j 1 -fMakefile clean all CONFIG_DIR=../config/${$@_APP_NAME}
 	$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/${$@_APP_NAME}.hex
@@ -89,10 +91,9 @@ endef
 # define macro used to create ROMFS
 define make_romfs
 	$(eval $@_ROMFS_NAME = $(1))
-	$(eval $@_ROMFS_OFFSET = $(2))
-	$(ECHO) "Creating ROMFS (${$@_ROMFS_NAME}) image..."
-	$(MKFPKG) ${$@_ROMFS_NAME} $(TARGET_DIR_NAME)/${$@_ROMFS_NAME}.bin
-	$(SREC_CAT) $(TARGET_DIR_NAME)/${$@_ROMFS_NAME}.bin -binary -offset ${$@_ROMFS_OFFSET} -output $(TARGET_DIR_NAME)/${$@_ROMFS_NAME}.hex -Intel
+	$(MAKE) -C ${$@_ROMFS_NAME} -s -j 1 -fMakefile all
+	$(COPY) ${$@_ROMFS_NAME}/build/romfs.bin $(TARGET_DIR_NAME)/${$@_ROMFS_NAME}.bin
+	$(COPY) ${$@_ROMFS_NAME}/build/romfs.hex $(TARGET_DIR_NAME)/${$@_ROMFS_NAME}.hex
 endef
 
 # define macro to clean appset
@@ -100,6 +101,13 @@ define clean_appset
 	$(eval $@_APP_NAME = $(1))
 	$(ECHO) -n "Cleaning ${$@_APP_NAME} files: "
 	$(MAKE) -C ${$@_APP_NAME} -s -j 1 -fMakefile clean
+endef
+
+# define macro to clean romfs
+define clean_romfs
+	$(eval $@_ROMFS_NAME = $(1))
+	$(ECHO) "Cleaning ${$@_ROMFS_NAME}..."
+	$(MAKE) -C ${$@_ROMFS_NAME} -s -j 1 -fMakefile clean
 endef
 
 # define macro install
@@ -166,6 +174,7 @@ clean :
 	@$(call clean_appset, system)
 	@$(call clean_appset, app-appset)
 	@$(call clean_appset, btl-appset)
+	@$(call clean_romfs, app-romfs)
 	@$(REMOVE) -r $(TARGET_DIR_NAME)
 
 
@@ -194,7 +203,7 @@ app-appset : _build_prepare
 
 .PHONY : app-romfs
 app-romfs : _build_prepare
-	@$(call make_romfs, app-romfs, 0x08070000)
+	@$(call make_romfs, app-romfs)
 
 .PHONY : clean-app-appset
 clean-app-appset : _build_prepare
