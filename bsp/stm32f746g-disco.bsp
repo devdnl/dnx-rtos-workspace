@@ -27,13 +27,13 @@
 		["__LIBC_SYSTEM_PROG__"]="\"dsh -e\"";
 	};
 	["btl-appset/config/project/project_flags.h"]={
-		["__CPU_ARCH__"]="stm32f1";
+		["__CPU_ARCH__"]="stm32f7";
 		["__CPU_UART_TERM__"]="0";
 		["__LIBC_DNX_RTOS_ADDRESS__"]="0x08000000";
 		["__PROJECT_NAME__"]="appset";
 		["__PROJECT_TOOLCHAIN__"]="arm-none-eabi-";
-		["__PROJ_APPSET_TABLE_ADDRESS__"]="0x08010000";
-		["__PROJ_APPSET_TABLE_SIZE__"]="1024k";
+		["__PROJ_APPSET_TABLE_ADDRESS__"]="0x08060000";
+		["__PROJ_APPSET_TABLE_SIZE__"]="512k";
 	};
 	["config/app-system/arch/arch_flags.h"]={
 		["__ENABLE_ADC__"]="_NO_";
