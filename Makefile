@@ -268,6 +268,11 @@ config-app-appset :
 	@$(call config_appset, app-appset)
 
 
+.PHONY : config-app-romfs
+config-app-romfs :
+	@$(call config_appset, app-romfs)
+
+
 .PHONY : config-btl-system
 config-btl-system :
 	@$(call config_system, btl-system)
