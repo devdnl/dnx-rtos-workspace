@@ -166,9 +166,9 @@ __CUSTOM_LD_SCRIPT__=_NO_
 # this:AddWidget("Editline", true, "Custom linker script file path")
 # this:SetToolTip("File is relative to configuration directory.")
 #--*/
-#define __CUSTOM_LD_SCRIPT_FILE__ "./config/custom_linker_script.ld"
+#define __CUSTOM_LD_SCRIPT_FILE__ "./custom_linker_script.ld"
 #/*
-__CUSTOM_LD_SCRIPT_FILE__="./config/custom_linker_script.ld"
+__CUSTOM_LD_SCRIPT_FILE__="./custom_linker_script.ld"
 #*/
 
 #/*--

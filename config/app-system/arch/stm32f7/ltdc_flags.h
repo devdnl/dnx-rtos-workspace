@@ -42,42 +42,42 @@ this:SetLayout("TitledGridBack", 2, "Home > Microcontroller > LTDC",
 /*--
 this:AddWidget("Spinbox", 1, 4096, "Active width")
 --*/
-#define __LTDC_WIDTH__      480
+#define __LTDC_WIDTH__ 480
 
 /*--
 this:AddWidget("Spinbox", 1, 2048, "Active height")
 --*/
-#define __LTDC_HEIGHT__     272
+#define __LTDC_HEIGHT__ 272
 
 /*--
 this:AddWidget("Spinbox", 1, 4096, "HSYNC width")
 --*/
-#define __LTDC_HSYNC__      41
+#define __LTDC_HSYNC__ 41
 
 /*--
 this:AddWidget("Spinbox", 1, 1024, "Horizontal back porch")
 --*/
-#define __LTDC_HBP__        13
+#define __LTDC_HBP__ 13
 
 /*--
 this:AddWidget("Spinbox", 1, 1024, "Horizontal front porch")
 --*/
-#define __LTDC_HFP__        32
+#define __LTDC_HFP__ 32
 
 /*--
 this:AddWidget("Spinbox", 1, 2048, "VSYNC width")
 --*/
-#define __LTDC_VSYNC__      10
+#define __LTDC_VSYNC__ 10
 
 /*--
 this:AddWidget("Spinbox", 1, 1024, "Vertical back porch")
 --*/
-#define __LTDC_VBP__        2
+#define __LTDC_VBP__ 2
 
 /*--
 this:AddWidget("Spinbox", 1, 1024, "Vertical front porch")
 --*/
-#define __LTDC_VFP__        2
+#define __LTDC_VFP__ 2
 
 /*--
 this:AddWidget("Combobox", "HSYNC polarity")
