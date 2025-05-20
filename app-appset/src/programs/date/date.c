@@ -40,7 +40,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define TIME_FORMAT_BUF_LEN     100
+#define TIME_FORMAT_BUF_LEN 100
 
 /*==============================================================================
   Local types, enums definitions
@@ -74,12 +74,16 @@ PROGRAM_PARAMS(date, STACK_DEPTH_LOW);
 //==============================================================================
 int main(int argc, char *argv[])
 {
-        bool UTC       = false;
         bool show_date = true;
+
+        time_t t = time(NULL);
+
+        struct tm tm;
+        localtime_r(&t, &tm);
 
         for (int i = 1; i < argc; i++) {
                 if (strcmp(argv[i], "-u") == 0) {
-                        UTC = true;
+                        gmtime_r(&t, &tm);
                         continue;
                 }
 
@@ -91,7 +95,7 @@ int main(int argc, char *argv[])
                         puts("  --set-tz=TIMEOFFSET         set timezone offset e.g. +0400, -0100\n");
                         puts("  -u                          UTC time");
                         puts("Formats start with % character (e.g. date \"+Time: %X\"):");
-                        puts("  %nHIJMSAaBbhCYydpjmXxFDz");
+                        puts("  %nHIJMSAaBbhCYydpjmXxFDzs");
                         show_date = false;
                         break;
                 }
@@ -100,11 +104,11 @@ int main(int argc, char *argv[])
                         int day, month, year, hour, minute, second;
                         day = month = year = hour = minute = second = 0xFFFF;
 
-                        sscanf(&argv[i][6], "%d/%d/%d,%d:%d:%d",
-                               &day, &month, &year, &hour, &minute, &second);
+                        sscanf(&argv[i][6], "%d/%d/%d,%d:%d:%d", &day, &month, &year, &hour, &minute,
+                                &second);
 
-                        if (  day  > 31 || month  > 12 || month  < 1  ||year < 1970
-                           || hour > 23 || minute > 59 || second > 59) {
+                        if (day > 31 || month > 12 || month < 1 || year < 1970 || hour > 23 || minute > 59 ||
+                                second > 59) {
 
                                 puts(wrong_time_fm);
                                 return EXIT_FAILURE;
@@ -147,13 +151,12 @@ int main(int argc, char *argv[])
                                 return EXIT_FAILURE;
                         }
 
-                        int diff = cast(int, (hour * 3600 + minute * 60))
-                                 * (sign == '-' ? -1 : 1);
+                        int diff = cast(int, (hour * 3600 + minute * 60)) * (sign == '-' ? -1 : 1);
 
                         errno = 0;
                         struct timezone tz;
                         tz.tz_minuteswest = (diff / 60);
-                        tz.tz_dsttime = 0;
+                        tz.tz_dsttime     = 0;
                         if (settimeofday(NULL, &tz) != 0) {
                                 perror(argv[0]);
                                 return EXIT_FAILURE;
@@ -164,19 +167,39 @@ int main(int argc, char *argv[])
                 }
 
                 if (argv[i][0] == '+') {
-                        time_t t = time(NULL);
+                        char *fmt     = &argv[i][1];
+                        char *out_buf = global->buf;
+                        int   out_len = sizeof(global->buf);
 
-                        struct tm tm;
-                        if (UTC) {
-                                gmtime_r(&t, &tm);
-                        } else {
-                                localtime_r(&t, &tm);
+                        while ((*fmt != '\0') and (out_len > 0)) {
+                                if (*fmt == '%') {
+                                        fmt++;
+                                        char   specifier = *fmt++;
+                                        size_t n         = 0;
+
+                                        switch (specifier) {
+                                        case '\0':
+                                                break;
+
+                                        case 's':
+                                                n = snprintf(out_buf, out_len, "%lli", t);
+                                                out_buf += n;
+                                                out_len -= n;
+                                                break;
+
+                                        default:
+                                                n = strftime(out_buf, out_len,
+                                                        (char[3]) {'%', specifier, '\0'}, &tm);
+                                                out_buf += n;
+                                                out_len -= n;
+                                        }
+                                } else {
+                                        *out_buf++ = *fmt++;
+                                        out_len--;
+                                }
                         }
 
-                        strftime(global->buf, TIME_FORMAT_BUF_LEN, &argv[i][1], &tm);
                         puts(global->buf);
-
-                        free(global->buf);
 
                         show_date = false;
                         break;
@@ -184,17 +207,7 @@ int main(int argc, char *argv[])
         }
 
         if (show_date) {
-                time_t t = time(NULL);
-
-                struct tm tm;
-                if (UTC) {
-                        gmtime_r(&t, &tm);
-                } else {
-                        localtime_r(&t, &tm);
-                }
-
-                strftime(global->buf, TIME_FORMAT_BUF_LEN, "%a %B %d %X %Y %z\n", &tm);
-
+                strftime(global->buf, sizeof(global->buf), "%a %B %d %X %Y %z\n", &tm);
                 printf(global->buf);
         }
 
