@@ -54,12 +54,12 @@ this:AddItem("Enable", "_YES_")
 #define __NETWORK_UDS_DEBUG_ON__ _NO_
 
 /*--
-this:AddWidget("Spinbox", 128, 65536, "Receive buffer size [B]")
+this:AddWidget("Spinbox", 128, 65536, "Stream receive buffer size [B]")
 --*/
 #define __NETWORK_UDS_BUF_SIZE__ 2048
 
 /*--
-this:AddWidget("Spinbox", 16, 65536, "Max datagram size [B]")
+this:AddWidget("Spinbox", 16, 65536, "Datagram max receive buffer size [B]")
 --*/
 #define __NETWORK_UDS_DATAGRAM_MAX_SIZE__ 1500
 
