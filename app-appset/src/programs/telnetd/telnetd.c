@@ -48,7 +48,7 @@
 #define PIPE_NAME_LEN                   24
 #define TELNET_CFG_BYTE                 0xFF
 #define PROGRAM_NAME                    "dsh"
-#define RECEIVE_TIMOUT                  100
+#define RECEIVE_TIMEOUT                 100
 #define SEND_TIMEOUT                    3000
 #define TELNET_PORT                     23
 
@@ -197,11 +197,19 @@ static int telnet_thread(void *arg)
         if (proc == 0)
                 goto exit;
 
-        socket_set_recv_timeout(sock, RECEIVE_TIMOUT);
+        u32_t recv_timeout = RECEIVE_TIMEOUT;
+
         socket_set_send_timeout(sock, SEND_TIMEOUT);
 
         // handle telnet connection
         while (true) {
+                socket_set_recv_timeout(sock, recv_timeout);
+
+                if (recv_timeout < RECEIVE_TIMEOUT) {
+                        recv_timeout += 10;
+                        recv_timeout = min(recv_timeout, RECEIVE_TIMEOUT);
+                }
+
                 // receive input packet from telnet client
                 errno = 0;
                 int len = socket_read(sock, buf, BUF_SIZE);
@@ -224,6 +232,7 @@ static int telnet_thread(void *arg)
                         len = fread(buf, 1, BUF_SIZE, fout);
                         if (len > 0) {
                                 len = socket_write(sock, buf, len);
+                                recv_timeout = 0;
                         }
                 } while (len > 0);
 

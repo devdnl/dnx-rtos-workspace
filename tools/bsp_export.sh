@@ -7,7 +7,7 @@ if [ "$#" == "0" ]; then
     exit
 fi
 
-./configtool/configtool export="../../$1":"../../,app-appset/config,btl-appset/config,app-romfs/config,config"
+./configtool/configtool export="../../$1":"../../,app-romfs/config,config"
 
 if [ "$#" == "2" ]; then
     lua ./optimize_bsp.lua "../$1" "$2"

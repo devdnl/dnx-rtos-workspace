@@ -1,12 +1,12 @@
 {
-	["app-appset/config/config.h"]={
+	["config/app-appset/config.h"]={
 	};
-	["app-appset/config/libc/libc_flags.h"]={
+	["config/app-appset/libc/libc_flags.h"]={
 		["__LIBC_COLOR_TERMINAL_ENABLE__"]="_YES_";
 		["__LIBC_IOCTL_REQUEST_FILE__"]="\"../../build/ioctl/ioctl_requests.h\"";
 		["__LIBC_SYSTEM_PROG__"]="\"dsh -e\"";
 	};
-	["app-appset/config/project/project_flags.h"]={
+	["config/app-appset/project/project_flags.h"]={
 		["__CPU_ARCH__"]="stm32f7";
 		["__CPU_UART_TERM__"]="0";
 		["__LIBC_DNX_RTOS_ADDRESS__"]="0x08000000";
@@ -19,14 +19,14 @@
 		["__ROMFS_ADDRESS__"]="0x080E0000";
 		["__ROMFS_NAME__"]="\"romfs\"";
 	};
-	["btl-appset/config/config.h"]={
+	["config/btl-appset/config.h"]={
 	};
-	["btl-appset/config/libc/libc_flags.h"]={
+	["config/btl-appset/libc/libc_flags.h"]={
 		["__LIBC_COLOR_TERMINAL_ENABLE__"]="_YES_";
 		["__LIBC_IOCTL_REQUEST_FILE__"]="\"../../build/ioctl/ioctl_requests.h\"";
 		["__LIBC_SYSTEM_PROG__"]="\"dsh -e\"";
 	};
-	["btl-appset/config/project/project_flags.h"]={
+	["config/btl-appset/project/project_flags.h"]={
 		["__CPU_ARCH__"]="stm32f7";
 		["__CPU_UART_TERM__"]="0";
 		["__LIBC_DNX_RTOS_ADDRESS__"]="0x08000000";

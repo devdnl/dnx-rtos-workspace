@@ -26,7 +26,7 @@
 
 ==============================================================================*/
 
-// #pragma GCC optimize("Og")
+#pragma GCC optimize("Ofast")
 
 /*==============================================================================
   Include files
@@ -67,22 +67,21 @@
 #define MAX_RETAIN_TIME_ms      (24 * 60 * 60 * 1000UL)
 #define TOPICDB_MAINTENANCE_ms  (60 * 1000UL)
 
-#define DEBUG(...)                                                                              \
-        if (global->debug) {                                                                    \
-                printf("[mqtt-broker, debug, %llu, %s, %u] ", get_uptime_ms(), session->client_ip_str, \
-                        session->id);                                                           \
-                printf(__VA_ARGS__);                                                            \
+#define DEBUG_SESSION(...)                                                                          \
+        if (global->debug) {                                                                        \
+                printf("[mqtt-broker, debug, %llu, %s] ", get_uptime_ms(), session->client_ip_str); \
+                printf(__VA_ARGS__);                                                                \
         }
 
-#define DEBUG_ERROR()                                                                                        \
-        printf("[mqtt-broker, error, %llu, %s, %u] %s: %u\n", get_uptime_ms(), session->client_ip_str, session->id, \
-                __func__, __LINE__)
+#define DEBUG_SESSION_ERROR()                                                                                \
+        printf("[mqtt-broker, error, %llu, %s] %s: %u\n", get_uptime_ms(), session->client_ip_str, __func__, \
+                __LINE__)
 
-#define VERBOSE(...)                                                                                  \
-        printf("[mqtt-broker, info, %llu, %s, %u] ", get_uptime_ms(), session->client_ip_str, session->id); \
+#define VERBOSE_SESSION(...)                                                               \
+        printf("[mqtt-broker, info, %llu, %s] ", get_uptime_ms(), session->client_ip_str); \
         printf(__VA_ARGS__)
 
-#define VERBOSE2(...)                                    \
+#define VERBOSE(...)                                           \
         printf("[mqtt-broker, info, %llu] ", get_uptime_ms()); \
         printf(__VA_ARGS__)
 
@@ -132,100 +131,100 @@
   Local object types
 ==============================================================================*/
 typedef enum {
-        MQTT_MSG_TYPE__RESERVED0   = 0,
-        MQTT_MSG_TYPE__CONNECT     = 1,
-        MQTT_MSG_TYPE__CONNACK     = 2,
-        MQTT_MSG_TYPE__PUBLISH     = 3,
-        MQTT_MSG_TYPE__PUBACK      = 4,
-        MQTT_MSG_TYPE__PUBREC      = 5,
-        MQTT_MSG_TYPE__PUBREL      = 6,
-        MQTT_MSG_TYPE__PUBCOMP     = 7,
-        MQTT_MSG_TYPE__SUBSCRIBE   = 8,
-        MQTT_MSG_TYPE__SUBACK      = 9,
-        MQTT_MSG_TYPE__UNSUBSCRIBE = 10,
-        MQTT_MSG_TYPE__UNSUBACK    = 11,
-        MQTT_MSG_TYPE__PINGREQ     = 12,
-        MQTT_MSG_TYPE__PINGRESP    = 13,
-        MQTT_MSG_TYPE__DISCONNECT  = 14,
-        MQTT_MSG_TYPE__RESERVED15  = 15,
+        mqtt_msg_type__reserved0 = 0,
+        mqtt_msg_type__connect = 1,
+        mqtt_msg_type__connack = 2,
+        mqtt_msg_type__publish = 3,
+        mqtt_msg_type__puback = 4,
+        mqtt_msg_type__pubrec = 5,
+        mqtt_msg_type__pubrel = 6,
+        mqtt_msg_type__pubcomp = 7,
+        mqtt_msg_type__subscribe = 8,
+        mqtt_msg_type__suback = 9,
+        mqtt_msg_type__unsubscribe = 10,
+        mqtt_msg_type__unsuback = 11,
+        mqtt_msg_type__pingreq = 12,
+        mqtt_msg_type__pingresp = 13,
+        mqtt_msg_type__disconnect = 14,
+        mqtt_msg_type__reserved15 = 15,
 } mqtt_msg_type_t;
 
 typedef enum {
-        mqtt_reason__success                                = 0x00,
-        mqtt_reason__normal_disconnection                   = 0x00,
-        mqtt_reason__granted_qos_0                          = 0x00,
-        mqtt_reason__granted_qos_1                          = 0x01,
-        mqtt_reason__granted_qos_2                          = 0x02,
-        mqtt_reason__disconnect_with_will_message           = 0x04,
-        mqtt_reason__no_matching_subscribers                = 0x10,
-        mqtt_reason__no_subscription_existed                = 0x11,
-        mqtt_reason__continue_authentication                = 0x18,
-        mqtt_reason__re_authenticate                        = 0x19,
-        mqtt_reason__unspecified_error                      = 0x80,
-        mqtt_reason__malformed_packet                       = 0x81,
-        mqtt_reason__protocol_error                         = 0x82,
-        mqtt_reason__implementation_specific_error          = 0x83,
-        mqtt_reason__unsupported_protocol_version           = 0x84,
-        mqtt_reason__client_identifier_not_valid            = 0x85,
-        mqtt_reason__bad_user_name_or_password              = 0x86,
-        mqtt_reason__not_authorized                         = 0x87,
-        mqtt_reason__server_unavailable                     = 0x88,
-        mqtt_reason__server_busy                            = 0x89,
-        mqtt_reason__banned                                 = 0x8a,
-        mqtt_reason__server_shutting_down                   = 0x8b,
-        mqtt_reason__bad_authentication_method              = 0x8c,
-        mqtt_reason__keep_alive_timeout                     = 0x8d,
-        mqtt_reason__session_taken_over                     = 0x8e,
-        mqtt_reason__topic_filter_invalid                   = 0x8f,
-        mqtt_reason__topic_name_invalid                     = 0x90,
-        mqtt_reason__packet_identifier_in_use               = 0x91,
-        mqtt_reason__packet_identifier_not_found            = 0x92,
-        mqtt_reason__receive_maximum_exceeded               = 0x93,
-        mqtt_reason__topic_alias_invalid                    = 0x94,
-        mqtt_reason__packet_too_large                       = 0x95,
-        mqtt_reason__message_rate_too_high                  = 0x96,
-        mqtt_reason__quota_exceeded                         = 0x97,
-        mqtt_reason__administrative_action                  = 0x98,
-        mqtt_reason__payload_format_invalid                 = 0x99,
-        mqtt_reason__retain_not_supported                   = 0x9a,
-        mqtt_reason__qos_not_supported                      = 0x9b,
-        mqtt_reason__use_another_server                     = 0x9c,
-        mqtt_reason__server_moved                           = 0x9d,
-        mqtt_reason__shared_subscriptions_not_supported     = 0x9e,
-        mqtt_reason__connection_rate_exceeded               = 0x9f,
-        mqtt_reason__maximum_connect_time                   = 0xa0,
+        mqtt_reason__success = 0x00,
+        mqtt_reason__normal_disconnection = 0x00,
+        mqtt_reason__granted_qos_0 = 0x00,
+        mqtt_reason__granted_qos_1 = 0x01,
+        mqtt_reason__granted_qos_2 = 0x02,
+        mqtt_reason__disconnect_with_will_message = 0x04,
+        mqtt_reason__no_matching_subscribers = 0x10,
+        mqtt_reason__no_subscription_existed = 0x11,
+        mqtt_reason__continue_authentication = 0x18,
+        mqtt_reason__re_authenticate = 0x19,
+        mqtt_reason__unspecified_error = 0x80,
+        mqtt_reason__malformed_packet = 0x81,
+        mqtt_reason__protocol_error = 0x82,
+        mqtt_reason__implementation_specific_error = 0x83,
+        mqtt_reason__unsupported_protocol_version = 0x84,
+        mqtt_reason__client_identifier_not_valid = 0x85,
+        mqtt_reason__bad_user_name_or_password = 0x86,
+        mqtt_reason__not_authorized = 0x87,
+        mqtt_reason__server_unavailable = 0x88,
+        mqtt_reason__server_busy = 0x89,
+        mqtt_reason__banned = 0x8a,
+        mqtt_reason__server_shutting_down = 0x8b,
+        mqtt_reason__bad_authentication_method = 0x8c,
+        mqtt_reason__keep_alive_timeout = 0x8d,
+        mqtt_reason__session_taken_over = 0x8e,
+        mqtt_reason__topic_filter_invalid = 0x8f,
+        mqtt_reason__topic_name_invalid = 0x90,
+        mqtt_reason__packet_identifier_in_use = 0x91,
+        mqtt_reason__packet_identifier_not_found = 0x92,
+        mqtt_reason__receive_maximum_exceeded = 0x93,
+        mqtt_reason__topic_alias_invalid = 0x94,
+        mqtt_reason__packet_too_large = 0x95,
+        mqtt_reason__message_rate_too_high = 0x96,
+        mqtt_reason__quota_exceeded = 0x97,
+        mqtt_reason__administrative_action = 0x98,
+        mqtt_reason__payload_format_invalid = 0x99,
+        mqtt_reason__retain_not_supported = 0x9a,
+        mqtt_reason__qos_not_supported = 0x9b,
+        mqtt_reason__use_another_server = 0x9c,
+        mqtt_reason__server_moved = 0x9d,
+        mqtt_reason__shared_subscriptions_not_supported = 0x9e,
+        mqtt_reason__connection_rate_exceeded = 0x9f,
+        mqtt_reason__maximum_connect_time = 0xa0,
         mqtt_reason__subscription_identifiers_not_supported = 0xa1,
-        mqtt_reason__wildcard_subscriptions_not_supported   = 0xa2,
+        mqtt_reason__wildcard_subscriptions_not_supported = 0xa2,
 } mqtt_reason_t;
 
 typedef enum {
-        mqtt_property__payload_format_indicator          = 0x01,
-        mqtt_property__message_expiry_interval           = 0x02,
-        mqtt_property__content_type                      = 0x03,
-        mqtt_property__response_topic                    = 0x08,
-        mqtt_property__correlation_data                  = 0x09,
-        mqtt_property__subscription_identifier           = 0x0b,
-        mqtt_property__session_expiry_interval           = 0x11,
-        mqtt_property__assigned_client_identifier        = 0x12,
-        mqtt_property__server_keep_alive                 = 0x13,
-        mqtt_property__authentication_method             = 0x15,
-        mqtt_property__authentication_data               = 0x16,
-        mqtt_property__request_problem_information       = 0x17,
-        mqtt_property__will_delay_interval               = 0x18,
-        mqtt_property__request_response_information      = 0x19,
-        mqtt_property__response_information              = 0x1a,
-        mqtt_property__server_reference                  = 0x1c,
-        mqtt_property__reason_string                     = 0x1f,
-        mqtt_property__receive_maximum                   = 0x21,
-        mqtt_property__topic_alias_maximum               = 0x22,
-        mqtt_property__topic_alias                       = 0x23,
-        mqtt_property__maximum_qos                       = 0x24,
-        mqtt_property__retain_available                  = 0x25,
-        mqtt_property__user_property                     = 0x26,
-        mqtt_property__maximum_packet_size               = 0x27,
-        mqtt_property__wildcard_subscription_available   = 0x28,
+        mqtt_property__payload_format_indicator = 0x01,
+        mqtt_property__message_expiry_interval = 0x02,
+        mqtt_property__content_type = 0x03,
+        mqtt_property__response_topic = 0x08,
+        mqtt_property__correlation_data = 0x09,
+        mqtt_property__subscription_identifier = 0x0b,
+        mqtt_property__session_expiry_interval = 0x11,
+        mqtt_property__assigned_client_identifier = 0x12,
+        mqtt_property__server_keep_alive = 0x13,
+        mqtt_property__authentication_method = 0x15,
+        mqtt_property__authentication_data = 0x16,
+        mqtt_property__request_problem_information = 0x17,
+        mqtt_property__will_delay_interval = 0x18,
+        mqtt_property__request_response_information = 0x19,
+        mqtt_property__response_information = 0x1a,
+        mqtt_property__server_reference = 0x1c,
+        mqtt_property__reason_string = 0x1f,
+        mqtt_property__receive_maximum = 0x21,
+        mqtt_property__topic_alias_maximum = 0x22,
+        mqtt_property__topic_alias = 0x23,
+        mqtt_property__maximum_qos = 0x24,
+        mqtt_property__retain_available = 0x25,
+        mqtt_property__user_property = 0x26,
+        mqtt_property__maximum_packet_size = 0x27,
+        mqtt_property__wildcard_subscription_available = 0x28,
         mqtt_property__subscription_identifier_available = 0x29,
-        mqtt_property__shared_subscription_available     = 0x2a,
+        mqtt_property__shared_subscription_available = 0x2a,
 } mqtt_property_t;
 
 typedef enum {
@@ -240,66 +239,81 @@ typedef struct PACKED {
 
 typedef struct {
         mqtt_msg_type_t type;
-        uint8_t         fixed_header_flags;
-        int32_t         variable_header_length;
-        int32_t         payload_length;
-        const void     *variable_header;
-        const void     *payload;
+        uint8_t fixed_header_flags;
+        int32_t variable_header_length;
+        int32_t payload_length;
+        const void *variable_header;
+        const void *payload;
 } mqtt_control_packet_t;
 
 typedef struct {
         uint8_t buf[256];
-        size_t  seek;
-        size_t  size;
+        size_t seek;
+        size_t size;
 } fetchbuf_t;
 
 typedef struct {
         uint8_t buf[256];
-        size_t  seek;
+        size_t seek;
 } pushbuf_t;
 
+typedef enum {
+        packet_step__fixed_header,
+        packet_step__remaining_length,
+        packet_step__variable_header_and_payload,
+} packet_step_t;
+
 typedef struct {
-        char    *topic;
+        packet_step_t step;
+        u8_t remaining_length_part;
+        uint32_t remaining_length;
+        uint32_t received_length;
+        uint32_t payload_read_index;
+        mqtt_fixed_header_t fixed_header;
+        u8_t *variable_header_and_payload;
+        bool variable_header_and_payload_allocated;
+        u8_t buf[256];
+} packet_t;
+
+typedef struct {
+        char *topic;
         uint8_t *msg;
         uint16_t msg_length;
         uint16_t msg_alloc_length;
-        clock_t  msg_update_tref;
+        clock_t msg_update_tref;
         uint32_t subscribers;
-        bool     retain;
+        bool retain;
 } topicdb_t;
 
 typedef struct {
         topicdb_t *topicdb_ref;
-        clock_t    msg_sent_tref;
-        uint8_t    flags;
+        clock_t msg_sent_tref;
+        uint8_t flags;
 } topicsub_t;
 
 typedef struct {
-        SOCKET                 *socket;
-        char                   *client_id;
-        char                   *user_name;
-        char                   *password;
-        llist_t                *subscribtion_list;
-        char                    topic_buf[MAX_TOPIC_LENGTH];
-        char                    client_ip_str[16];
-        uint8_t                 msg_buf[256];
-        NET_INET_IPv4_t         client_ip;
-        clock_t                 alive_tref;
-        tid_t                   id;
-        fetchbuf_t              fetch_buf;
-        pushbuf_t               push_buf;
+        SOCKET *socket;
+        char *client_id;
+        char *user_name;
+        char *password;
+        llist_t *subscribtion_list;
+        char client_ip_str[16];
+        uint8_t msg_buf[256];
+        NET_INET_IPv4_t client_ip;
+        clock_t alive_tref;
+        packet_t packet;
+        fetchbuf_t fetch_buf;
+        pushbuf_t push_buf;
         mqtt_protocol_version_t protocol_version;
-        uint32_t                remaining_length;
-        uint32_t                publish_ctr;
-        int32_t                 session_expiry_interval;
-        int16_t                 keep_alive;
-        int8_t                  connect_flags;
-        mqtt_fixed_header_t     fixed_header;
-        bool                    close_session;
+        uint32_t publish_ctr;
+        int32_t session_expiry_interval;
+        int16_t keep_alive;
+        int8_t connect_flags;
+        bool close_session;
 
         struct {
-                char   *topic;
-                char   *payload;
+                char *topic;
+                char *payload;
                 int16_t payload_length;
         } last_will;
 } session_t;
@@ -310,20 +324,24 @@ typedef struct {
 static uint16_t ntohu16(uint16_t value);
 static uint32_t ntohu32(uint32_t value);
 
-static int  session_fetchbuf_read(session_t *session, void *dst, size_t count, bool async_send);
-static int  session_pushbuf_write(session_t *session, const void *src, size_t count);
-static int  session_pushbuf_flush(session_t *session);
-static int  session_fetch_variable_length(session_t *session, uint32_t *length, bool remaining_length_check);
-static int  session_fetch_skip(session_t *session, size_t skip_bytes);
-static int  session_fetch_buffer(session_t *session, void *dst, size_t count);
-static int  session_fetch_i8(session_t *session, int8_t *val);
-static int  session_fetch_i16(session_t *session, int16_t *val);
-static int  session_fetch_i32(session_t *session, int32_t *val);
-static int  session_fetch_string_alloc(session_t *session, size_t len, char **string);
-static int  session_push_i8(session_t *session, int8_t val);
-static int  session_push_variable_length(session_t *session, int32_t vlength);
-static int  session_push_buffer(session_t *session, const void *buf, size_t count);
-static int  session_thread(void *arg);
+static session_t *session_new(SOCKET *socket);
+static session_t *session_delete(session_t *session);
+static void llist_session_dtor(void *object);
+static bool session_poll(session_t *session);
+static int session_receive_packet(session_t *session);
+static int session_fetchbuf_read(session_t *session, void *dst, size_t count);
+static int session_pushbuf_write(session_t *session, const void *src, size_t count);
+static int session_pushbuf_flush(session_t *session);
+static int session_fetch_variable_length(session_t *session, uint32_t *length);
+static int session_fetch_skip(session_t *session, size_t skip_bytes);
+static int session_fetch_buffer(session_t *session, void *dst, size_t count);
+static int session_fetch_i8(session_t *session, int8_t *val);
+static int session_fetch_i16(session_t *session, int16_t *val);
+static int session_fetch_i32(session_t *session, int32_t *val);
+static int session_fetch_string_alloc(session_t *session, size_t len, char **string);
+static int session_push_i8(session_t *session, int8_t val);
+static int session_push_variable_length(session_t *session, int32_t vlength);
+static int session_push_buffer(session_t *session, const void *buf, size_t count);
 static bool session_cmd_connect(session_t *session);
 static bool session_resp_connack(session_t *session, mqtt_reason_t reason_code);
 static bool session_cmd_pingreq(session_t *session);
@@ -340,8 +358,8 @@ static bool session_cmd_pubcomp(session_t *session);
 static bool session_resp_pubrel(session_t *session, mqtt_reason_t reason_code, int16_t packet_identifier);
 static bool session_cmd_subscribe(session_t *session);
 static bool session_cmd_unsubscribe(session_t *session);
-static int  session_serialize_packet(session_t *session, const mqtt_control_packet_t *packet);
-static int  session_interpret_properties(session_t *session, size_t property_length);
+static int session_serialize_packet(session_t *session, const mqtt_control_packet_t *packet);
+static int session_interpret_properties(session_t *session, size_t property_length);
 static void session_send_subscribed_topics(session_t *session);
 static bool session_resp_suback(session_t *session, const mqtt_reason_t *reason_code,
         size_t reason_code_count, int16_t packet_identifier);
@@ -352,12 +370,12 @@ static mqtt_reason_t session_publish_topic(session_t *session, uint8_t qos, cons
 
 static mqtt_reason_t topicsub_subscribe(session_t *session, const char *topic, u8_t flags);
 static mqtt_reason_t topicsub_unsubscribe(session_t *session, const char *topic);
-static int           topicsub_compare(const void *a, const void *b);
-static void          topicsub_destroy(void *a);
+static int topicsub_compare(const void *a, const void *b);
+static void topicsub_destroy(void *a);
 
-static int           topicdb_compare(const void *a, const void *b);
-static void          topicdb_destroy(void *a);
-static void          topicdb_maintenance(void);
+static int topicdb_compare(const void *a, const void *b);
+static void topicdb_destroy(void *a);
+static void topicdb_maintenance(void);
 static mqtt_reason_t topicdb_update_topic(const char *topic, const uint8_t *msg_ref, size_t msg_len,
         bool retain, topicdb_t **topicdb_ref, bool create_only);
 
@@ -366,24 +384,17 @@ static mqtt_reason_t topicdb_update_topic(const char *topic, const uint8_t *msg_
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
         conf_parser_t *conf;
-        bool           debug;
-        bool           allow_list_enabled;
+        bool debug;
+        bool allow_list_enabled;
 
         struct {
-                mutex_t *mutex;
                 llist_t *data;
                 uint32_t publish_ctr;
                 uint16_t msg_id_ctr;
-                clock_t  last_maintenance_tref;
+                clock_t last_maintenance_tref;
         } topic_db;
 
-        session_t *session[MAX_CONNECTIONS];
-};
-
-static const thread_attr_t mqtt_broker_thread_attr = {
-        .stack_depth = STACK_DEPTH_MEDIUM,
-        .priority    = PRIORITY_NORMAL,
-        .detached    = true,
+        llist_t *sessions;
 };
 
 static const char *config_param = "--config=";
@@ -414,6 +425,18 @@ static void print_help(char *argv[])
         printf("  -h, --help            this help\n");
         printf("  --config=<file>       configuration file\n");
         printf("  --wait-for-network    wait for network to be available\n");
+        printf("\n");
+
+        printf("Example configuration:\n");
+        printf("user = \"user\"\n");
+        printf("password = \"password\"\n");
+        printf("port = 1883\n");
+        printf("debug = false\n");
+        printf("\n");
+        printf("[allow]\n");
+        printf("enable = false\n");
+        printf("client_id1 = false\n");
+        printf("client_id2 = false\n");
 }
 
 //==============================================================================
@@ -428,9 +451,9 @@ static void print_help(char *argv[])
 //==============================================================================
 int main(int argc, char *argv[])
 {
-        SOCKET *socket           = NULL;
-        char   *conf_path        = NULL;
-        bool    wait_for_network = false;
+        SOCKET *socket = NULL;
+        char *conf_path = NULL;
+        bool wait_for_network = false;
 
         if (argc < 2) {
                 print_help(argv);
@@ -478,9 +501,9 @@ int main(int argc, char *argv[])
                 goto cleanup;
         }
 
-        global->topic_db.mutex = mutex_new(MUTEX_TYPE_RECURSIVE);
-        if (not global->topic_db.mutex) {
-                printf("[%s, info] unable to create topic database mutex!\n", argv[0]);
+        global->sessions = llist_new(NULL, llist_session_dtor);
+        if (not global->sessions) {
+                printf("[%s, info] unable to create session list!\n", argv[0]);
                 goto cleanup;
         }
 
@@ -491,7 +514,7 @@ int main(int argc, char *argv[])
         while (wait_for_network) {
                 sleep(1);
 
-                NET_family_t      family;
+                NET_family_t family;
                 NET_INET_status_t status;
                 if (ifstatus("inet", &family, &status, sizeof(status)) == 0) {
 
@@ -505,7 +528,7 @@ int main(int argc, char *argv[])
 
         int exit_code = EXIT_FAILURE;
 
-        errno  = 0;
+        errno = 0;
         socket = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
         if (not socket) {
                 printf("[%s, info] unable to create socket: %s\n", argv[0], strerror(errno));
@@ -531,36 +554,34 @@ int main(int argc, char *argv[])
 
         printf("[%s, info] listening connections at port %u.\n", argv[0], ADDR_ANY.port);
 
+        socket_set_recv_timeout(socket, 40);
+
         while (true) {
-                topicdb_maintenance();
-
                 SOCKET *new_socket;
-                errno = 0;
-                if (socket_accept(socket, &new_socket) != 0) {
-                        printf("[%s, info] socket not accepted: %s\n", argv[0], strerror(errno));
-                        continue;
+                if (socket_accept(socket, &new_socket) == 0) {
+                        session_t *session = session_new(new_socket);
+                        if (session) {
+                                llist_push_back(global->sessions, session);
+                                VERBOSE("connected clients: %u.\n", llist_size(global->sessions));
+                        } else {
+                                socket_close(new_socket);
+                        }
                 }
 
-                session_t *session = calloc(1, sizeof(*session));
-                if (not session) {
-                        socket_close(new_socket);
-                        continue;
+                llist_foreach (session_t *, session, global->sessions) {
+                        if (not session_poll(session)) {
+                                llist_erase_by_iterator(&_iterator);
+                                VERBOSE("connected clients: %u.\n", llist_size(global->sessions));
+                        }
                 }
 
-                session->socket = new_socket;
-
-                tid_t tid = thread_create(session_thread, &mqtt_broker_thread_attr, session);
-                if (tid == 0) {
-                        socket_disconnect(session->socket);
-                        socket_close(session->socket);
-                        free(session);
-                }
+                topicdb_maintenance();
         }
 
 cleanup:
         socket_close(socket);
         llist_delete(global->topic_db.data);
-        mutex_delete(global->topic_db.mutex);
+        llist_delete(global->sessions);
         conf_parser__delete(global->conf);
 
         return exit_code;
@@ -568,31 +589,30 @@ cleanup:
 
 //==============================================================================
 /**
- * @brief  MQTT broker thread.
+ * @brief  Create new session.
  *
- * @param  arg          thread argument
+ * @param  socket       socket to use by session
  *
- * @return Thread exit code.
+ * @return Session object, or NULl on error.
  */
 //==============================================================================
-static int session_thread(void *arg)
+static session_t *session_new(SOCKET *socket)
 {
-        session_t *session = arg;
+        session_t *session = calloc(1, sizeof(*session));
+        if (not session) {
+                return NULL;
+        }
 
         session->subscribtion_list = llist_new(topicsub_compare, topicsub_destroy);
         if (not session->subscribtion_list) {
-                socket_disconnect(session->socket);
-                socket_close(session->socket);
-                free(session);
-                return -1;
+                return session_delete(session);
         }
 
-        session->id = gettid();
-
-        socket_set_recv_timeout(session->socket, 50);
-
+        session->socket = socket;
         session->alive_tref = get_uptime_ms();
         session->keep_alive = 5;
+
+        socket_set_recv_timeout(session->socket, 0);
 
         NET_INET_sockaddr_t addr;
         socket_get_address(session->socket, &addr, sizeof(addr));
@@ -602,116 +622,38 @@ static int session_thread(void *arg)
                 NET_INET_IPv4_a(addr.addr), NET_INET_IPv4_b(addr.addr), NET_INET_IPv4_c(addr.addr),
                 NET_INET_IPv4_d(addr.addr));
 
-        VERBOSE("connecting new client...\n");
+        VERBOSE_SESSION("connecting new client...\n");
 
-        global->session[session->id] = session;
+        return session;
+}
 
-        bool connected = true;
-
-        while (connected) {
-                session->fixed_header.control_packet_type = 0;
-
-                int n = session_fetchbuf_read(session, &session->fixed_header, sizeof(session->fixed_header),
-                        true);
-                if (n != sizeof(session->fixed_header)) {
-                        connected = false;
-                        break;
-                }
-
-                mqtt_msg_type_t type = (session->fixed_header.control_packet_type >> 4);
-
-                switch (type) {
-                case MQTT_MSG_TYPE__CONNECT: {
-                        connected = session_cmd_connect(session);
-                        break;
-                }
-
-                case MQTT_MSG_TYPE__PUBLISH:
-                        connected = session_cmd_publish(session);
-                        break;
-
-                case MQTT_MSG_TYPE__PUBREL:
-                        connected = session_cmd_pubrel(session);
-                        break;
-
-                case MQTT_MSG_TYPE__PUBACK:
-                        connected = session_cmd_puback(session);
-                        break;
-
-                case MQTT_MSG_TYPE__PUBREC:
-                        connected = session_cmd_pubrec(session);
-                        break;
-
-                case MQTT_MSG_TYPE__PUBCOMP:
-                        connected = session_cmd_pubcomp(session);
-                        break;
-
-                case MQTT_MSG_TYPE__SUBSCRIBE:
-                        connected = session_cmd_subscribe(session);
-                        break;
-
-                case MQTT_MSG_TYPE__UNSUBSCRIBE:
-                        connected = session_cmd_unsubscribe(session);
-                        break;
-
-                case MQTT_MSG_TYPE__PINGREQ:
-                        connected = session_cmd_pingreq(session);
-                        break;
-
-                case MQTT_MSG_TYPE__DISCONNECT:
-                        session_cmd_disconnect(session);
-                        VERBOSE("client '%s' disconnected.\n", session->client_id);
-                        connected = false;
-                        break;
-
-                case MQTT_MSG_TYPE__SUBACK:
-                        VERBOSE("client command MQTT_MSG_TYPE__SUBACK!\n");
-                        break;
-
-                case MQTT_MSG_TYPE__UNSUBACK:
-                        VERBOSE("client command MQTT_MSG_TYPE__UNSUBACK!\n");
-                        break;
-
-                case MQTT_MSG_TYPE__PINGRESP:
-                        VERBOSE("client command MQTT_MSG_TYPE__PINGRESP!\n");
-                        break;
-
-                case MQTT_MSG_TYPE__CONNACK:
-                        VERBOSE("client command MQTT_MSG_TYPE__CONNACK!\n");
-                        break;
-
-                default:
-                case MQTT_MSG_TYPE__RESERVED0:
-                case MQTT_MSG_TYPE__RESERVED15:
-                        VERBOSE("received reserved command!\n");
-                        connected = false;
-                        break;
-                }
-
-                if (connected) {
-                        session_send_subscribed_topics(session);
-                        topicdb_maintenance();
-                }
+//==============================================================================
+/**
+ * @brief  Delete session.
+ *
+ * @param  session      session object
+ *
+ * @return NULL.
+ */
+//==============================================================================
+static session_t *session_delete(session_t *session)
+{
+        if (not session) {
+                return NULL;
         }
 
-        VERBOSE("closing session...\n");
-
-        topicdb_maintenance();
-
-        if (session->last_will.topic and session->last_will.payload) {
-                session_publish_topic(session, 0, session->last_will.topic, session->last_will.payload,
-                        session->last_will.payload_length);
+        if (session->socket) {
+                socket_disconnect(session->socket);
+                socket_close(session->socket);
         }
 
-        mutex_scope (global->topic_db.mutex, MAX_DELAY_MS) {
-                global->session[session->id] = NULL;
-        }
-
-        socket_disconnect(session->socket);
-        socket_close(session->socket);
         llist_delete(session->subscribtion_list);
 
-        VERBOSE("client '%s' session closed.\n", session->client_id);
+        VERBOSE_SESSION("client '%s' session closed.\n", session->client_id);
+
+        if (session->packet.variable_header_and_payload_allocated) {
+                free(session->packet.variable_header_and_payload);
+        }
 
         free(session->client_id);
         free(session->user_name);
@@ -720,7 +662,240 @@ static int session_thread(void *arg)
         free(session->last_will.payload);
         free(session);
 
-        return 0;
+        return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief  Session descructor called from linked list.
+ *
+ * @param  object       session object
+ */
+//==============================================================================
+static void llist_session_dtor(void *object)
+{
+        session_delete(object);
+}
+
+//==============================================================================
+/**
+ * @brief  Session polling function.
+ *
+ * @param  session      session
+ *
+ * @return True on success, otherwise false.
+ */
+//==============================================================================
+static bool session_poll(session_t *session)
+{
+        bool connected = true;
+
+        session_send_subscribed_topics(session);
+
+        int packet_size = session_receive_packet(session);
+        if (packet_size < 0) {
+                return false;
+
+        } else if (packet_size == 0) {
+                return true;
+        }
+
+        mqtt_msg_type_t type = (session->packet.fixed_header.control_packet_type >> 4);
+
+        switch (type) {
+        case mqtt_msg_type__connect:
+                connected = session_cmd_connect(session);
+                break;
+
+        case mqtt_msg_type__publish:
+                connected = session_cmd_publish(session);
+                break;
+
+        case mqtt_msg_type__pubrel:
+                connected = session_cmd_pubrel(session);
+                break;
+
+        case mqtt_msg_type__puback:
+                connected = session_cmd_puback(session);
+                break;
+
+        case mqtt_msg_type__pubrec:
+                connected = session_cmd_pubrec(session);
+                break;
+
+        case mqtt_msg_type__pubcomp:
+                connected = session_cmd_pubcomp(session);
+                break;
+
+        case mqtt_msg_type__subscribe:
+                connected = session_cmd_subscribe(session);
+                break;
+
+        case mqtt_msg_type__unsubscribe:
+                connected = session_cmd_unsubscribe(session);
+                break;
+
+        case mqtt_msg_type__pingreq:
+                connected = session_cmd_pingreq(session);
+                break;
+
+        case mqtt_msg_type__disconnect:
+                session_cmd_disconnect(session);
+                VERBOSE_SESSION("client '%s' disconnected.\n", session->client_id);
+                connected = false;
+                break;
+
+        case mqtt_msg_type__suback:
+                VERBOSE_SESSION("client command mqtt_msg_type__SUBACK!\n");
+                break;
+
+        case mqtt_msg_type__unsuback:
+                VERBOSE_SESSION("client command mqtt_msg_type__UNSUBACK!\n");
+                break;
+
+        case mqtt_msg_type__pingresp:
+                VERBOSE_SESSION("client command mqtt_msg_type__PINGRESP!\n");
+                break;
+
+        case mqtt_msg_type__connack:
+                VERBOSE_SESSION("client command mqtt_msg_type__CONNACK!\n");
+                break;
+
+        default:
+        case mqtt_msg_type__reserved0:
+        case mqtt_msg_type__reserved15:
+                VERBOSE_SESSION("received reserved command!\n");
+                connected = false;
+                break;
+        }
+
+        if (session->packet.variable_header_and_payload_allocated) {
+                free(session->packet.variable_header_and_payload);
+                session->packet.variable_header_and_payload = NULL;
+                session->packet.variable_header_and_payload_allocated = false;
+        }
+
+        if (not connected) {
+                VERBOSE_SESSION("closing session...\n");
+
+                if (session->last_will.topic and session->last_will.payload) {
+                        session_publish_topic(session, 0, session->last_will.topic,
+                                session->last_will.payload, session->last_will.payload_length);
+                }
+        }
+
+        return connected;
+}
+
+//==============================================================================
+/**
+ * @brief  Receive MQTT packet.
+ *
+ * @param  session      session instance
+ *
+ * @return Number of received bytes, negative values on error.
+ */
+//==============================================================================
+static int session_receive_packet(session_t *session)
+{
+        packet_t *packet = &session->packet;
+
+        if (packet->step == packet_step__fixed_header) {
+                errno = 0;
+                int n = session_fetchbuf_read(session, &packet->fixed_header, sizeof(packet->fixed_header));
+                if (n < 0) {
+                        return n;
+
+                } else if (n == 0) {
+                        return 0;
+
+                } else if ((packet->fixed_header.control_packet_type >> 4) > mqtt_msg_type__reserved15) {
+                        packet->step = packet_step__fixed_header;
+                        return -EILSEQ;
+
+                } else {
+                        packet->remaining_length_part = 0;
+                        packet->remaining_length = 0;
+                        packet->received_length = 0;
+                        packet->step = packet_step__remaining_length;
+                }
+        }
+
+        while (packet->step == packet_step__remaining_length) {
+                errno = 0;
+                u8_t byte = 0;
+                int n = session_fetchbuf_read(session, &byte, 1);
+                if (n < 0) {
+                        packet->step = packet_step__fixed_header;
+                        return n;
+
+                } else if (n == 0) {
+                        return 0;
+
+                } else if (packet->remaining_length_part >= 4) {
+                        packet->step = packet_step__fixed_header;
+                        return 0;
+
+                } else {
+                        packet->remaining_length += cast(int, (byte & 0x7F))
+                                << (packet->remaining_length_part * 7);
+
+                        packet->remaining_length_part++;
+
+                        if ((byte & 0x80) == 0) {
+
+                                if (packet->remaining_length >= MAX_PAYLOAD_SIZE) {
+                                        packet->step = packet_step__fixed_header;
+                                        return -ENOMEM;
+
+                                } else if (packet->remaining_length < sizeof(packet->buf)) {
+                                        packet->variable_header_and_payload = packet->buf;
+                                        packet->variable_header_and_payload_allocated = false;
+
+                                } else {
+                                        packet->variable_header_and_payload = malloc(
+                                                packet->remaining_length);
+                                        if (packet->variable_header_and_payload) {
+                                                packet->variable_header_and_payload_allocated = true;
+                                        } else {
+                                                packet->step = packet_step__fixed_header;
+                                                return -ENOMEM;
+                                        }
+                                }
+
+                                packet->step = packet_step__variable_header_and_payload;
+                                break;
+                        }
+                }
+        }
+
+        while ((packet->step == packet_step__variable_header_and_payload) and
+                (packet->received_length < packet->remaining_length)) {
+
+                size_t left = packet->remaining_length - packet->received_length;
+                int n = session_fetchbuf_read(session,
+                        &packet->variable_header_and_payload[packet->received_length], left);
+                if (n < 0) {
+                        if (packet->variable_header_and_payload_allocated) {
+                                free(packet->variable_header_and_payload);
+                                packet->variable_header_and_payload = NULL;
+                                packet->variable_header_and_payload_allocated = false;
+                        }
+                        packet->step = packet_step__fixed_header;
+                        return n;
+
+                } else if (n == 0) {
+                        return 0;
+
+                } else {
+                        packet->received_length += n;
+                }
+        }
+
+        packet->payload_read_index = 0;
+        packet->step = packet_step__fixed_header;
+
+        return sizeof(packet->fixed_header) + packet->remaining_length_part + packet->received_length;
 }
 
 //==============================================================================
@@ -734,67 +909,47 @@ static int session_thread(void *arg)
  * @param session       Pointer to the session structure.
  * @param dst           Pointer to the destination buffer where the read data will be stored.
  * @param count         Number of bytes to read.
- * @param async_send    Enable sending asynchronous packets during receive timeout.
  *
  * @return On success, the number of bytes read is returned. On error, a negative
  *         value corresponding to the error code (stored in `errno`) is returned.
  */
 //==============================================================================
-static int session_fetchbuf_read(session_t *session, void *dst, size_t count, bool async_send)
+static int session_fetchbuf_read(session_t *session, void *dst, size_t count)
 {
         int n = 0;
 
         fetchbuf_t *fetch_buf = &session->fetch_buf;
 
-        while (count) {
-                if (fetch_buf->seek < fetch_buf->size) {
-                        size_t left = cast(size_t, (fetch_buf->size - fetch_buf->seek));
-                        size_t len  = min(count, left);
+        if (fetch_buf->seek >= fetch_buf->size) {
+                fetch_buf->seek = 0;
+                fetch_buf->size = 0;
 
-                        if (len) {
-                                memcpy(dst, &fetch_buf->buf[fetch_buf->seek], len);
-                                count -= len;
-                                n += len;
-                                dst += len;
-                                fetch_buf->seek += len;
+                errno = 0;
+                int l = socket_recv(session->socket, fetch_buf->buf, sizeof(fetch_buf->buf), 0);
+                if (l < 0) {
+                        if (errno == ETIME) {
+                                return 0;
+
+                        } else {
+                                int err = errno;
+                                VERBOSE_SESSION("fetching error: %s\n", strerror(err));
+                                n = -err;
                         }
                 } else {
-                        fetch_buf->seek = 0;
-                        fetch_buf->size = 0;
+                        fetch_buf->size = l;
+                }
+        }
 
-                        errno = 0;
-                        int l = socket_recv(session->socket, fetch_buf->buf, sizeof(fetch_buf->buf), 0);
-                        if (l < 0) {
-                                if (errno == ETIME) {
+        if (fetch_buf->seek < fetch_buf->size) {
+                size_t left = cast(size_t, (fetch_buf->size - fetch_buf->seek));
+                size_t len = min(count, left);
 
-                                        if (session->close_session) {
-                                                VERBOSE("session close request.\n");
-                                                n = -EUSERS;
-                                                break;
-                                        }
-
-                                        uint32_t interval = cast(u32_t, (session->keep_alive + 2)) * 1000;
-                                        clock_t  now      = get_uptime_ms();
-
-                                        if (now - session->alive_tref >= interval) {
-                                                VERBOSE("keep-alive: no client response!\n");
-                                                n = -ETIME;
-                                                break;
-                                        }
-
-                                        if (async_send) {
-                                                session_send_subscribed_topics(session);
-                                        }
-
-                                } else {
-                                        int err = errno;
-                                        VERBOSE("fetching error: %s\n", strerror(err));
-                                        n = -errno;
-                                        break;
-                                }
-                        } else {
-                                fetch_buf->size = l;
-                        }
+                if (len) {
+                        memcpy(dst, &fetch_buf->buf[fetch_buf->seek], len);
+                        count -= len;
+                        n += len;
+                        dst += len;
+                        fetch_buf->seek += len;
                 }
         }
 
@@ -827,11 +982,11 @@ static int session_pushbuf_write(session_t *session, const void *src, size_t cou
         while (count > 0) {
                 if (push_buf->seek >= sizeof(push_buf->buf)) {
                         int l = socket_write(session->socket, push_buf->buf, push_buf->seek);
-
-                        push_buf->seek = 0;
-
                         if (l != cast(int, push_buf->seek)) {
+                                push_buf->seek = 0;
                                 return l;
+                        } else {
+                                push_buf->seek = 0;
                         }
                 }
 
@@ -863,7 +1018,7 @@ static int session_pushbuf_flush(session_t *session)
         pushbuf_t *push_buf = &session->push_buf;
 
         if (push_buf->seek > 0) {
-                n              = socket_write(session->socket, push_buf->buf, push_buf->seek);
+                n = socket_write(session->socket, push_buf->buf, push_buf->seek);
                 push_buf->seek = 0;
         }
 
@@ -886,15 +1041,15 @@ static int session_pushbuf_flush(session_t *session)
 //==============================================================================
 static int session_fetch_i8(session_t *session, int8_t *val)
 {
-        if (session->remaining_length < cast(int32_t, sizeof(*val))) {
+        packet_t *packet = &session->packet;
+
+        if ((packet->remaining_length - packet->payload_read_index) < cast(int32_t, sizeof(*val))) {
                 return -1;
         }
 
-        if (session_fetchbuf_read(session, val, sizeof(*val), false) != sizeof(*val)) {
-                return -2;
-        }
+        memcpy(val, &packet->variable_header_and_payload[packet->payload_read_index], sizeof(*val));
 
-        session->remaining_length -= sizeof(*val);
+        packet->payload_read_index += sizeof(*val);
 
         return 0;
 }
@@ -916,15 +1071,15 @@ static int session_fetch_i8(session_t *session, int8_t *val)
 //==============================================================================
 static int session_fetch_i16(session_t *session, int16_t *val)
 {
-        if (session->remaining_length < cast(int32_t, sizeof(*val))) {
+        packet_t *packet = &session->packet;
+
+        if ((packet->remaining_length - packet->payload_read_index) < cast(int32_t, sizeof(*val))) {
                 return -1;
         }
 
-        if (session_fetchbuf_read(session, val, sizeof(*val), false) != sizeof(*val)) {
-                return -2;
-        }
+        memcpy(val, &packet->variable_header_and_payload[packet->payload_read_index], sizeof(*val));
 
-        session->remaining_length -= sizeof(*val);
+        packet->payload_read_index += sizeof(*val);
 
         *val = ntohu16(*val);
 
@@ -948,15 +1103,15 @@ static int session_fetch_i16(session_t *session, int16_t *val)
 //==============================================================================
 static int session_fetch_i32(session_t *session, int32_t *val)
 {
-        if (session->remaining_length < cast(int32_t, sizeof(*val))) {
+        packet_t *packet = &session->packet;
+
+        if ((packet->remaining_length - packet->payload_read_index) < cast(int32_t, sizeof(*val))) {
                 return -1;
         }
 
-        if (session_fetchbuf_read(session, val, sizeof(*val), false) != sizeof(*val)) {
-                return -2;
-        }
+        memcpy(val, &packet->variable_header_and_payload[packet->payload_read_index], sizeof(*val));
 
-        session->remaining_length -= sizeof(*val);
+        packet->payload_read_index += sizeof(*val);
 
         *val = ntohu32(*val);
 
@@ -982,20 +1137,19 @@ static int session_fetch_i32(session_t *session, int32_t *val)
 //==============================================================================
 static int session_fetch_string(session_t *session, size_t len, char *string, size_t bufsz)
 {
-        if (session->remaining_length < len) {
+        packet_t *packet = &session->packet;
+
+        if ((packet->remaining_length - packet->payload_read_index) < len) {
                 return -1;
 
         } else if (len >= (bufsz - 1)) {
                 return -1;
         }
 
-        errno = 0;
-        if (session_fetchbuf_read(session, string, len, false) != cast(int, len)) {
-                return -errno;
-        }
+        memcpy(string, &packet->variable_header_and_payload[packet->payload_read_index], len);
 
         string[len] = '\0';
-        session->remaining_length -= len;
+        packet->payload_read_index += len;
 
         return 0;
 }
@@ -1018,9 +1172,11 @@ static int session_fetch_string(session_t *session, size_t len, char *string, si
 //==============================================================================
 static int session_fetch_string_alloc(session_t *session, size_t len, char **string)
 {
+        packet_t *packet = &session->packet;
+
         *string = NULL;
 
-        if (session->remaining_length < len) {
+        if ((packet->remaining_length - packet->payload_read_index) < len) {
                 return -1;
         }
 
@@ -1029,15 +1185,11 @@ static int session_fetch_string_alloc(session_t *session, size_t len, char **str
                 return -ENOMEM;
         }
 
-        errno = 0;
-        if (session_fetchbuf_read(session, s, len, false) != cast(int, len)) {
-                free(s);
-                return -errno;
-        }
+        memcpy(s, &packet->variable_header_and_payload[packet->payload_read_index], len);
 
-        session->remaining_length -= len;
+        packet->payload_read_index += len;
 
-        s[len]  = 0;
+        s[len] = 0;
         *string = s;
 
         return 0;
@@ -1053,43 +1205,34 @@ static int session_fetch_string_alloc(session_t *session, size_t len, char **str
  *
  * @param session                 Pointer to the session structure.
  * @param length                  Pointer to the variable where the decoded length will be stored.
- * @param remaining_length_check  Boolean flag indicating whether to check the session's
- *                                remaining length before reading each byte.
  *
  * @return Returns 0 on success. Returns -1 if the remaining length is insufficient
  *         or -EINVAL on other errors.
  */
 //==============================================================================
-static int session_fetch_variable_length(session_t *session, uint32_t *length, bool remaining_length_check)
+static int session_fetch_variable_length(session_t *session, uint32_t *length)
 {
-        int      err = 0;
+        packet_t *packet = &session->packet;
+        int err = 0;
         uint32_t len = 0;
-        *length      = 0;
+        *length = 0;
 
         for (int i = 0; i < 4; i++) {
 
-                if (remaining_length_check and (session->remaining_length < 1)) {
+                if ((packet->remaining_length - packet->payload_read_index) < 1) {
                         err = -1;
                         break;
                 }
 
-                uint8_t byte;
-                int     n = session_fetchbuf_read(session, &byte, sizeof(byte), false);
-                if (n != sizeof(byte)) {
-                        err = -EINVAL;
+                uint8_t byte = packet->variable_header_and_payload[packet->payload_read_index];
+
+                packet->payload_read_index++;
+
+                len += cast(int, (byte & 0x7F)) << (i * 7);
+
+                if ((byte & 0x80) == 0) {
+                        *length = len;
                         break;
-
-                } else {
-                        if (remaining_length_check) {
-                                session->remaining_length--;
-                        }
-
-                        len += cast(int, (byte & 0x7F)) << (i * 7);
-
-                        if ((byte & 0x80) == 0) {
-                                *length = len;
-                                break;
-                        }
                 }
         }
 
@@ -1112,23 +1255,14 @@ static int session_fetch_variable_length(session_t *session, uint32_t *length, b
 //==============================================================================
 static int session_fetch_skip(session_t *session, size_t skip_bytes)
 {
+        packet_t *packet = &session->packet;
         int err = 0;
 
-        while (skip_bytes > 0) {
-                if (session->remaining_length < 1) {
-                        return -1;
-                }
+        int max_skip = min(skip_bytes, (packet->remaining_length - packet->payload_read_index));
+        packet->payload_read_index += max_skip;
 
-                uint8_t byte;
-                int     n = session_fetchbuf_read(session, &byte, sizeof(byte), false);
-                if (n != sizeof(byte)) {
-                        err = -EINVAL;
-                        break;
-
-                } else {
-                        session->remaining_length--;
-                        skip_bytes--;
-                }
+        if (max_skip == 0) {
+                err = -EINVAL;
         }
 
         return err;
@@ -1151,18 +1285,15 @@ static int session_fetch_skip(session_t *session, size_t skip_bytes)
 //==============================================================================
 static int session_fetch_buffer(session_t *session, void *dst, size_t count)
 {
-        if (session->remaining_length < count) {
+        packet_t *packet = &session->packet;
+
+        if ((packet->remaining_length - packet->payload_read_index) < count) {
                 return -1;
         }
 
-        int n = session_fetchbuf_read(session, dst, count, false);
-        if (n == cast(int, count)) {
-                session->remaining_length -= count;
-                return 0;
+        memcpy(dst, &packet->variable_header_and_payload[packet->payload_read_index], count);
 
-        } else {
-                return -1;
-        }
+        return 0;
 }
 
 //==============================================================================
@@ -1203,7 +1334,7 @@ static int session_push_i8(session_t *session, int8_t val)
 static int session_push_variable_length(session_t *session, int32_t vlength)
 {
         uint8_t buf[4];
-        int     n = 0;
+        int n = 0;
 
         if (vlength < 128) {
                 buf[n++] = (vlength & 0x7F);
@@ -1278,19 +1409,17 @@ static bool session_cmd_connect(session_t *session)
 
         session->alive_tref = get_uptime_ms();
 
+        packet_t *packet = &session->packet;
+
         /*
          * Fixed header
          */
-        if (session->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) {
-                DEBUG_ERROR();
+        if (packet->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
-        } else if (session_fetch_variable_length(session, &session->remaining_length, false) != 0) {
-                DEBUG_ERROR();
-                return false;
-
-        } else if (session->remaining_length <= 0) {
-                DEBUG_ERROR();
+        } else if (packet->remaining_length <= 0) {
+                DEBUG_SESSION_ERROR();
                 return false;
         }
 
@@ -1298,48 +1427,48 @@ static bool session_cmd_connect(session_t *session)
          * Variable header
          */
         int16_t protocol_name_len;
-        char    protocol_name[32];
-        int8_t  protocol_version;
+        char protocol_name[32];
+        int8_t protocol_version;
 
         if (session_fetch_i16(session, &protocol_name_len) != 0) {
-                DEBUG_ERROR();
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (protocol_name_len >= cast(int16_t, sizeof(protocol_name))) {
-                DEBUG_ERROR();
+                DEBUG_SESSION_ERROR();
                 return false;
 
-        } else if (session_fetch_string(session, protocol_name_len, protocol_name,
-                           sizeof(session->topic_buf)) != 0) {
-                DEBUG_ERROR();
+        } else if (session_fetch_string(session, protocol_name_len, protocol_name, sizeof(protocol_name)) !=
+                0) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session_fetch_i8(session, &protocol_version) != 0) {
-                DEBUG_ERROR();
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session_fetch_i8(session, &session->connect_flags) != 0) {
-                DEBUG_ERROR();
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session_fetch_i16(session, &session->keep_alive) != 0) {
-                DEBUG_ERROR();
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (isstreqn(protocol_name, "MQIsdp", protocol_name_len) and (protocol_version == 3)) {
                 session->protocol_version = mqtt_protocol_version__3p1;
-                DEBUG("client is using MQTT 3.1\n");
+                DEBUG_SESSION("client is using MQTT 3.1\n");
 
         } else if (isstreqn(protocol_name, "MQTT", protocol_name_len) and (protocol_version == 4)) {
                 session->protocol_version = mqtt_protocol_version__3p1p1;
-                DEBUG("client is using MQTT 3.1.1\n");
+                DEBUG_SESSION("client is using MQTT 3.1.1\n");
 
         } else if (isstreqn(protocol_name, "MQTT", protocol_name_len) and (protocol_version == 5)) {
                 session->protocol_version = mqtt_protocol_version__5p0;
-                DEBUG("client is using MQTT 5.0\n");
+                DEBUG_SESSION("client is using MQTT 5.0\n");
 
         } else {
-                DEBUG_ERROR();
+                DEBUG_SESSION_ERROR();
                 return false;
         }
 
@@ -1348,12 +1477,12 @@ static bool session_cmd_connect(session_t *session)
          */
         if (session->protocol_version == mqtt_protocol_version__5p0) {
                 uint32_t property_length = 0;
-                if (session_fetch_variable_length(session, &property_length, true) != 0) {
-                        DEBUG_ERROR();
+                if (session_fetch_variable_length(session, &property_length) != 0) {
+                        DEBUG_SESSION_ERROR();
                         return false;
 
                 } else if (session_interpret_properties(session, property_length) < 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
                 }
         }
@@ -1365,11 +1494,11 @@ static bool session_cmd_connect(session_t *session)
 
         /*client ID */ {
                 if (session_fetch_i16(session, &length) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
 
                 } else if (session_fetch_string_alloc(session, length, &session->client_id) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
                 }
         }
@@ -1378,53 +1507,53 @@ static bool session_cmd_connect(session_t *session)
 
                 if (session->protocol_version == mqtt_protocol_version__5p0) {
                         uint32_t property_length = 0;
-                        if (session_fetch_variable_length(session, &property_length, true) != 0) {
-                                DEBUG_ERROR();
+                        if (session_fetch_variable_length(session, &property_length) != 0) {
+                                DEBUG_SESSION_ERROR();
                                 return false;
 
                         } else if (session_fetch_skip(session, property_length) < 0) {
-                                DEBUG_ERROR();
+                                DEBUG_SESSION_ERROR();
                                 return false;
                         }
                 }
 
                 if (session_fetch_i16(session, &length) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
 
                 } else if (session_fetch_string_alloc(session, length, &session->last_will.topic) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
 
                 } else if (session_fetch_i16(session, &session->last_will.payload_length) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
 
                 } else if (session_fetch_string_alloc(session, session->last_will.payload_length,
                                    &session->last_will.payload) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
                 }
         }
 
         if (session->connect_flags & mqtt_connect_flag__user_name) {
                 if (session_fetch_i16(session, &length) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
 
                 } else if (session_fetch_string_alloc(session, length, &session->user_name) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
                 }
         }
 
         if (session->connect_flags & mqtt_connect_flag__password) {
                 if (session_fetch_i16(session, &length) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
 
                 } else if (session_fetch_string_alloc(session, length, &session->password) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
                 }
         }
@@ -1433,11 +1562,11 @@ static bool session_cmd_connect(session_t *session)
         if (global->allow_list_enabled) {
                 client_allowed = false;
 
-                size_t      i   = 0;
+                size_t i = 0;
                 const char *key = NULL;
                 const char *val = NULL;
 
-                const char  *base     = CONFIG_KEY_ALLOW_BASE;
+                const char *base = CONFIG_KEY_ALLOW_BASE;
                 const size_t base_len = strlen(base);
 
                 while (conf_parser__get_pair(global->conf, i, &key, &val) == 0) {
@@ -1458,15 +1587,15 @@ static bool session_cmd_connect(session_t *session)
 
         bool client_already_connected = false;
 
-        if (client_allowed) {
-                mutex_scope (global->topic_db.mutex, MAX_DELAY_MS) {
-                        for (size_t i = 0; i < ARRAY_SIZE(global->session); i++) {
-                                if (global->session[i] and (i != session->id) and
-                                        (global->session[i]->client_ip != session->client_ip) and
-                                        isstreq(global->session[i]->client_id, session->client_id)) {
+        if (isstrempty(session->client_id)) {
+                client_allowed = false;
+        }
 
-                                        global->session[i]->close_session = true;
-                                }
+        if (client_allowed) {
+                llist_foreach (session_t *, s, global->sessions) {
+                        if ((s != session) and (s->client_ip != session->client_ip) and
+                                isstreq(s->client_id, session->client_id)) {
+                                s->close_session = true;
                         }
                 }
         }
@@ -1474,23 +1603,24 @@ static bool session_cmd_connect(session_t *session)
         mqtt_reason_t reason_code;
 
         if (not client_allowed) {
-                VERBOSE("client '%s' not allowed!\n", session->client_id);
+                VERBOSE_SESSION("client '%s' not allowed!\n", session->client_id);
                 reason_code = mqtt_reason__banned;
 
         } else if (client_already_connected) {
-                VERBOSE("client '%s' is already connected!\n", session->client_id);
+                VERBOSE_SESSION("client '%s' is already connected!\n", session->client_id);
                 reason_code = mqtt_reason__client_identifier_not_valid;
 
         } else if (not isstreq(session->user_name, conf_parser__get_value(global->conf, CONFIG_KEY_USER)) or
                 not isstreq(session->password, conf_parser__get_value(global->conf, CONFIG_KEY_PASSWORD))) {
 
-                DEBUG("credetials of '%s' are invalid. User: '%s' and/or password: '%s' are incorrect!\n",
+                DEBUG_SESSION(
+                        "credetials of '%s' are invalid. User: '%s' and/or password: '%s' are incorrect!\n",
                         session->client_id, session->user_name, session->password);
 
                 reason_code = mqtt_reason__bad_user_name_or_password;
 
         } else {
-                VERBOSE("connected client ID: '%s'\n", session->client_id);
+                VERBOSE_SESSION("connected client ID: '%s'\n", session->client_id);
                 reason_code = mqtt_reason__success;
         }
 
@@ -1528,12 +1658,12 @@ static bool session_resp_connack(session_t *session, mqtt_reason_t reason_code)
         }
 
         mqtt_control_packet_t packet;
-        packet.type                   = MQTT_MSG_TYPE__CONNACK;
-        packet.fixed_header_flags     = 0;
-        packet.variable_header        = variable_header;
+        packet.type = mqtt_msg_type__connack;
+        packet.fixed_header_flags = 0;
+        packet.variable_header = variable_header;
         packet.variable_header_length = variable_header_len;
-        packet.payload                = NULL;
-        packet.payload_length         = 0;
+        packet.payload = NULL;
+        packet.payload_length = 0;
 
         return session_serialize_packet(session, &packet) == 0;
 }
@@ -1551,18 +1681,12 @@ static bool session_cmd_pingreq(session_t *session)
 {
         DEBUG_CMD("%s\n", __func__);
 
+        packet_t *packet = &session->packet;
+
         session->alive_tref = get_uptime_ms();
 
-        if (session_fetch_variable_length(session, &session->remaining_length, false) != 0) {
-                DEBUG_ERROR();
-                return false;
-
-        } else if (session->remaining_length != 0) {
-                DEBUG_ERROR();
-                return false;
-
-        } else if (session->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) {
-                DEBUG_ERROR();
+        if (packet->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else {
@@ -1584,12 +1708,12 @@ static bool session_resp_pingresp(session_t *session)
         DEBUG_CMD("%s\n", __func__);
 
         mqtt_control_packet_t packet;
-        packet.type                   = MQTT_MSG_TYPE__PINGRESP;
-        packet.fixed_header_flags     = 0;
-        packet.variable_header        = NULL;
+        packet.type = mqtt_msg_type__pingresp;
+        packet.fixed_header_flags = 0;
+        packet.variable_header = NULL;
         packet.variable_header_length = 0;
-        packet.payload                = NULL;
-        packet.payload_length         = 0;
+        packet.payload = NULL;
+        packet.payload_length = 0;
 
         return session_serialize_packet(session, &packet) == 0;
 }
@@ -1607,42 +1731,40 @@ static bool session_cmd_disconnect(session_t *session)
 {
         DEBUG_CMD("%s\n", __func__);
 
+        packet_t *packet = &session->packet;
+
         session->alive_tref = get_uptime_ms();
 
-        int8_t   reason_code     = 0;
+        int8_t reason_code = 0;
         uint32_t property_length = 0;
 
-        if (session_fetch_variable_length(session, &session->remaining_length, false) != 0) {
-                DEBUG_ERROR();
-                return false;
-
-        } else if (session->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) {
-                DEBUG_ERROR();
+        if (packet->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session->protocol_version != mqtt_protocol_version__5p0) {
                 return true;
 
-        } else if (session->remaining_length <= 0) {
-                DEBUG_ERROR();
+        } else if (packet->remaining_length <= 0) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session->protocol_version == mqtt_protocol_version__5p0) {
 
                 if (session_fetch_i8(session, &reason_code) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
 
-                } else if (session_fetch_variable_length(session, &property_length, true) != 0) {
-                        DEBUG_ERROR();
+                } else if (session_fetch_variable_length(session, &property_length) != 0) {
+                        DEBUG_SESSION_ERROR();
                         return false;
 
                 } else if (session_fetch_skip(session, property_length) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
                 }
         } else {
-                DEBUG_ERROR();
+                DEBUG_SESSION_ERROR();
                 return false;
         }
 
@@ -1662,34 +1784,32 @@ static bool session_cmd_publish(session_t *session)
 {
         DEBUG_CMD("%s\n", __func__);
 
+        packet_t *packet = &session->packet;
+
         session->alive_tref = get_uptime_ms();
 
-        uint8_t publish_flags     = session->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask;
-        uint8_t qos               = (publish_flags & mqtt_publish_flag__qos_mask);
-        int16_t topic_length      = 0;
+        uint8_t publish_flags = packet->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask;
+        uint8_t qos = (publish_flags & mqtt_publish_flag__qos_mask);
+        int16_t topic_length = 0;
         int16_t packet_identifier = 0;
+        char topic_buf[MAX_TOPIC_LENGTH] = {0};
 
-        if (session_fetch_variable_length(session, &session->remaining_length, false) != 0) {
-                DEBUG_ERROR();
-                return false;
-
-        } else if (session->remaining_length <= 0) {
-                DEBUG_ERROR();
+        if (packet->remaining_length <= 0) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session_fetch_i16(session, &topic_length) != 0) {
-                DEBUG_ERROR();
+                DEBUG_SESSION_ERROR();
                 return false;
 
-        } else if (session_fetch_string(session, topic_length, session->topic_buf,
-                           sizeof(session->topic_buf)) != 0) {
-                DEBUG_ERROR();
+        } else if (session_fetch_string(session, topic_length, topic_buf, sizeof(topic_buf)) != 0) {
+                DEBUG_SESSION_ERROR();
                 return false;
         }
 
         if (qos != mqtt_publish_flag__qos_0) {
                 if (session_fetch_i16(session, &packet_identifier) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
                 }
         }
@@ -1697,12 +1817,12 @@ static bool session_cmd_publish(session_t *session)
         if (session->protocol_version == mqtt_protocol_version__5p0) {
                 uint32_t property_length = 0;
 
-                if (session_fetch_variable_length(session, &property_length, true) != 0) {
-                        DEBUG_ERROR();
+                if (session_fetch_variable_length(session, &property_length) != 0) {
+                        DEBUG_SESSION_ERROR();
                         return false;
 
                 } else if (session_fetch_skip(session, property_length) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
                 }
         }
@@ -1710,26 +1830,26 @@ static bool session_cmd_publish(session_t *session)
         /*
          * Payload
          */
-        bool   retain  = publish_flags & mqtt_publish_flag__retain;
-        size_t msg_len = session->remaining_length;
+        bool retain = publish_flags & mqtt_publish_flag__retain;
+        size_t msg_len = (packet->remaining_length - packet->payload_read_index);
         if (msg_len >= MAX_PAYLOAD_SIZE) {
-                DEBUG_ERROR();
+                DEBUG_SESSION_ERROR();
                 return false;
         }
 
-        bool     allocated = (msg_len > sizeof(session->msg_buf));
-        uint8_t *msg       = session->msg_buf;
+        bool allocated = (msg_len > sizeof(session->msg_buf));
+        uint8_t *msg = session->msg_buf;
 
         if (allocated) {
                 msg = malloc(msg_len);
                 if (not msg) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
                 }
         }
 
-        if (session_fetch_buffer(session, msg, session->remaining_length) != 0) {
-                DEBUG_ERROR();
+        if (session_fetch_buffer(session, msg, msg_len) != 0) {
+                DEBUG_SESSION_ERROR();
 
                 if (allocated) {
                         free(msg);
@@ -1738,8 +1858,7 @@ static bool session_cmd_publish(session_t *session)
                 return false;
         }
 
-        mqtt_reason_t reason_code = topicdb_update_topic(session->topic_buf, msg, msg_len, retain, NULL,
-                false);
+        mqtt_reason_t reason_code = topicdb_update_topic(topic_buf, msg, msg_len, retain, NULL, false);
 
         if (allocated) {
                 free(msg);
@@ -1788,12 +1907,12 @@ static bool session_resp_puback(session_t *session, mqtt_reason_t reason_code, i
         }
 
         mqtt_control_packet_t packet;
-        packet.type                   = MQTT_MSG_TYPE__PUBACK;
-        packet.fixed_header_flags     = 0;
-        packet.variable_header        = variable_header;
+        packet.type = mqtt_msg_type__puback;
+        packet.fixed_header_flags = 0;
+        packet.variable_header = variable_header;
         packet.variable_header_length = variable_header_len;
-        packet.payload                = NULL;
-        packet.payload_length         = 0;
+        packet.payload = NULL;
+        packet.payload_length = 0;
 
         return session_serialize_packet(session, &packet) == 0;
 }
@@ -1825,12 +1944,12 @@ static bool session_resp_pubrec(session_t *session, mqtt_reason_t reason_code, i
         }
 
         mqtt_control_packet_t packet;
-        packet.type                   = MQTT_MSG_TYPE__PUBREC;
-        packet.fixed_header_flags     = 0;
-        packet.variable_header        = variable_header;
+        packet.type = mqtt_msg_type__pubrec;
+        packet.fixed_header_flags = 0;
+        packet.variable_header = variable_header;
         packet.variable_header_length = variable_header_len;
-        packet.payload                = NULL;
-        packet.payload_length         = 0;
+        packet.payload = NULL;
+        packet.payload_length = 0;
 
         return session_serialize_packet(session, &packet) == 0;
 }
@@ -1849,46 +1968,44 @@ static bool session_cmd_pubrel(session_t *session)
 {
         DEBUG_CMD("%s\n", __func__);
 
+        packet_t *packet = &session->packet;
+
         session->alive_tref = get_uptime_ms();
 
         int16_t packet_identifier = 0;
 
-        if ((session->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) != 2) {
-                DEBUG_ERROR();
+        if ((packet->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) != 2) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
-        } else if (session_fetch_variable_length(session, &session->remaining_length, false) != 0) {
-                DEBUG_ERROR();
-                return false;
-
-        } else if (session->remaining_length <= 0) {
-                DEBUG_ERROR();
+        } else if (packet->remaining_length <= 0) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session_fetch_i16(session, &packet_identifier) != 0) {
-                DEBUG_ERROR();
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session->protocol_version == mqtt_protocol_version__5p0) {
                 // if reason code and property length is 0 then both can be ommitted.
 
-                if (session->remaining_length > 0) {
+                if ((packet->remaining_length - packet->payload_read_index) > 0) {
                         int8_t reason_code = 0;
 
                         if (session_fetch_i8(session, &reason_code) != 0) {
-                                DEBUG_ERROR();
+                                DEBUG_SESSION_ERROR();
                                 return false;
                         }
                 }
 
-                if (session->remaining_length > 0) {
+                if ((packet->remaining_length - packet->payload_read_index) > 0) {
                         uint32_t property_length = 0;
-                        if (session_fetch_variable_length(session, &property_length, true) != 0) {
-                                DEBUG_ERROR();
+                        if (session_fetch_variable_length(session, &property_length) != 0) {
+                                DEBUG_SESSION_ERROR();
                                 return false;
 
                         } else if (session_fetch_skip(session, property_length) != 0) {
-                                DEBUG_ERROR();
+                                DEBUG_SESSION_ERROR();
                                 return false;
                         }
                 }
@@ -1913,46 +2030,44 @@ static bool session_cmd_puback(session_t *session)
 {
         DEBUG_CMD("%s\n", __func__);
 
+        packet_t *packet = &session->packet;
+
         session->alive_tref = get_uptime_ms();
 
         int16_t packet_identifier = 0;
 
-        if ((session->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) != 0) {
-                DEBUG_ERROR();
+        if ((packet->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) != 0) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
-        } else if (session_fetch_variable_length(session, &session->remaining_length, false) != 0) {
-                DEBUG_ERROR();
-                return false;
-
-        } else if (session->remaining_length < 2) {
-                DEBUG_ERROR();
+        } else if (packet->remaining_length < 2) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session_fetch_i16(session, &packet_identifier) != 0) {
-                DEBUG_ERROR();
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session->protocol_version == mqtt_protocol_version__5p0) {
                 // if reason code and property length is 0 then both can be ommitted.
 
-                if (session->remaining_length > 0) {
+                if ((packet->remaining_length - packet->payload_read_index) > 0) {
                         int8_t reason_code = 0;
 
                         if (session_fetch_i8(session, &reason_code) != 0) {
-                                DEBUG_ERROR();
+                                DEBUG_SESSION_ERROR();
                                 return false;
                         }
                 }
 
-                if (session->remaining_length > 0) {
+                if ((packet->remaining_length - packet->payload_read_index) > 0) {
                         uint32_t property_length = 0;
-                        if (session_fetch_variable_length(session, &property_length, true) != 0) {
-                                DEBUG_ERROR();
+                        if (session_fetch_variable_length(session, &property_length) != 0) {
+                                DEBUG_SESSION_ERROR();
                                 return false;
 
                         } else if (session_fetch_skip(session, property_length) != 0) {
-                                DEBUG_ERROR();
+                                DEBUG_SESSION_ERROR();
                                 return false;
                         }
                 }
@@ -1975,46 +2090,44 @@ static bool session_cmd_pubrec(session_t *session)
 {
         DEBUG_CMD("%s\n", __func__);
 
+        packet_t *packet = &session->packet;
+
         session->alive_tref = get_uptime_ms();
 
         int16_t packet_identifier = 0;
 
-        if ((session->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) != 0) {
-                DEBUG_ERROR();
+        if ((packet->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) != 0) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
-        } else if (session_fetch_variable_length(session, &session->remaining_length, false) != 0) {
-                DEBUG_ERROR();
-                return false;
-
-        } else if (session->remaining_length < 2) {
-                DEBUG_ERROR();
+        } else if (packet->remaining_length < 2) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session_fetch_i16(session, &packet_identifier) != 0) {
-                DEBUG_ERROR();
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session->protocol_version == mqtt_protocol_version__5p0) {
                 // if reason code and property length is 0 then both can be ommitted.
 
-                if (session->remaining_length > 0) {
+                if ((packet->remaining_length - packet->payload_read_index) > 0) {
                         int8_t reason_code = 0;
 
                         if (session_fetch_i8(session, &reason_code) != 0) {
-                                DEBUG_ERROR();
+                                DEBUG_SESSION_ERROR();
                                 return false;
                         }
                 }
 
-                if (session->remaining_length > 0) {
+                if ((packet->remaining_length - packet->payload_read_index) > 0) {
                         uint32_t property_length = 0;
-                        if (session_fetch_variable_length(session, &property_length, true) != 0) {
-                                DEBUG_ERROR();
+                        if (session_fetch_variable_length(session, &property_length) != 0) {
+                                DEBUG_SESSION_ERROR();
                                 return false;
 
                         } else if (session_fetch_skip(session, property_length) != 0) {
-                                DEBUG_ERROR();
+                                DEBUG_SESSION_ERROR();
                                 return false;
                         }
                 }
@@ -2039,46 +2152,44 @@ static bool session_cmd_pubcomp(session_t *session)
 {
         DEBUG_CMD("%s\n", __func__);
 
+        packet_t *packet = &session->packet;
+
         session->alive_tref = get_uptime_ms();
 
         int16_t packet_identifier = 0;
 
-        if ((session->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) != 0) {
-                DEBUG_ERROR();
+        if ((packet->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) != 0) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
-        } else if (session_fetch_variable_length(session, &session->remaining_length, false) != 0) {
-                DEBUG_ERROR();
-                return false;
-
-        } else if (session->remaining_length < 2) {
-                DEBUG_ERROR();
+        } else if (packet->remaining_length < 2) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session_fetch_i16(session, &packet_identifier) != 0) {
-                DEBUG_ERROR();
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session->protocol_version == mqtt_protocol_version__5p0) {
                 // if reason code and property length is 0 then both can be ommitted.
 
-                if (session->remaining_length > 0) {
+                if ((packet->remaining_length - packet->payload_read_index) > 0) {
                         int8_t reason_code = 0;
 
                         if (session_fetch_i8(session, &reason_code) != 0) {
-                                DEBUG_ERROR();
+                                DEBUG_SESSION_ERROR();
                                 return false;
                         }
                 }
 
-                if (session->remaining_length > 0) {
+                if ((packet->remaining_length - packet->payload_read_index) > 0) {
                         uint32_t property_length = 0;
-                        if (session_fetch_variable_length(session, &property_length, true) != 0) {
-                                DEBUG_ERROR();
+                        if (session_fetch_variable_length(session, &property_length) != 0) {
+                                DEBUG_SESSION_ERROR();
                                 return false;
 
                         } else if (session_fetch_skip(session, property_length) != 0) {
-                                DEBUG_ERROR();
+                                DEBUG_SESSION_ERROR();
                                 return false;
                         }
                 }
@@ -2114,12 +2225,12 @@ static bool session_resp_pubrel(session_t *session, mqtt_reason_t reason_code, i
         }
 
         mqtt_control_packet_t packet;
-        packet.type                   = MQTT_MSG_TYPE__PUBREL;
-        packet.fixed_header_flags     = 0;
-        packet.variable_header        = variable_header;
+        packet.type = mqtt_msg_type__pubrel;
+        packet.fixed_header_flags = 0;
+        packet.variable_header = variable_header;
         packet.variable_header_length = variable_header_len;
-        packet.payload                = NULL;
-        packet.payload_length         = 0;
+        packet.payload = NULL;
+        packet.payload_length = 0;
 
         return session_serialize_packet(session, &packet) == 0;
 }
@@ -2151,12 +2262,12 @@ static bool session_resp_pubcomp(session_t *session, mqtt_reason_t reason_code, 
         }
 
         mqtt_control_packet_t packet;
-        packet.type                   = MQTT_MSG_TYPE__PUBCOMP;
-        packet.fixed_header_flags     = 0;
-        packet.variable_header        = variable_header;
+        packet.type = mqtt_msg_type__pubcomp;
+        packet.fixed_header_flags = 0;
+        packet.variable_header = variable_header;
         packet.variable_header_length = variable_header_len;
-        packet.payload                = NULL;
-        packet.payload_length         = 0;
+        packet.payload = NULL;
+        packet.payload_length = 0;
 
         return session_serialize_packet(session, &packet) == 0;
 }
@@ -2174,68 +2285,66 @@ static bool session_cmd_subscribe(session_t *session)
 {
         DEBUG_CMD("%s\n", __func__);
 
+        packet_t *packet = &session->packet;
+
         session->alive_tref = get_uptime_ms();
 
         int16_t packet_identifier = 0;
 
-        if ((session->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) != 2) {
-                DEBUG_ERROR();
+        if ((packet->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) != 2) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
-        } else if (session_fetch_variable_length(session, &session->remaining_length, false) != 0) {
-                DEBUG_ERROR();
-                return false;
-
-        } else if (session->remaining_length <= 0) {
-                DEBUG_ERROR();
+        } else if (packet->remaining_length <= 0) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session_fetch_i16(session, &packet_identifier) != 0) {
-                DEBUG_ERROR();
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session->protocol_version == mqtt_protocol_version__5p0) {
                 uint32_t property_length = 0;
 
-                if (session_fetch_variable_length(session, &property_length, true) != 0) {
-                        DEBUG_ERROR();
+                if (session_fetch_variable_length(session, &property_length) != 0) {
+                        DEBUG_SESSION_ERROR();
                         return false;
 
                 } else if (session_fetch_skip(session, property_length) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
                 }
         }
 
         mqtt_reason_t reason_code[mqtt_max_topics_in_subscription] = {mqtt_reason__unspecified_error};
-        size_t        reason_code_count                            = 0;
+        size_t reason_code_count = 0;
 
-        while (session->remaining_length > 0) {
+        while ((packet->remaining_length - packet->payload_read_index) > 0) {
 
-                int16_t topic_length    = 0;
-                int8_t  subscribe_flags = 0;
+                char topic_buf[MAX_TOPIC_LENGTH] = {0};
+                int16_t topic_length = 0;
+                int8_t subscribe_flags = 0;
 
                 if (session_fetch_i16(session, &topic_length) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
 
-                } else if (session_fetch_string(session, topic_length, session->topic_buf,
-                                   sizeof(session->topic_buf)) != 0) {
-                        DEBUG_ERROR();
+                } else if (session_fetch_string(session, topic_length, topic_buf, sizeof(topic_buf)) != 0) {
+                        DEBUG_SESSION_ERROR();
                         return false;
 
                 } else if (session_fetch_i8(session, &subscribe_flags) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
                 }
 
                 // DEBUG("subscribe: '%s'\n", session->topic_buf);
-                mqtt_reason_t reason = topicsub_subscribe(session, session->topic_buf, subscribe_flags);
+                mqtt_reason_t reason = topicsub_subscribe(session, topic_buf, subscribe_flags);
 
                 int qos = subscribe_flags & mqtt_subscribe_flag__qos_mask;
 
                 if (reason_code_count >= sizeof(reason_code)) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
 
                 } else if (qos == mqtt_subscribe_flag__qos_0) {
@@ -2291,12 +2400,12 @@ static bool session_resp_suback(session_t *session, const mqtt_reason_t *reason_
         }
 
         mqtt_control_packet_t packet;
-        packet.type                   = MQTT_MSG_TYPE__SUBACK;
-        packet.fixed_header_flags     = 0;
-        packet.variable_header        = variable_header;
+        packet.type = mqtt_msg_type__suback;
+        packet.fixed_header_flags = 0;
+        packet.variable_header = variable_header;
         packet.variable_header_length = variable_header_len;
-        packet.payload                = reason_code;
-        packet.payload_length         = reason_code_count;
+        packet.payload = reason_code;
+        packet.payload_length = reason_code_count;
 
         return session_serialize_packet(session, &packet) == 0;
 }
@@ -2314,61 +2423,59 @@ static bool session_cmd_unsubscribe(session_t *session)
 {
         DEBUG_CMD("%s\n", __func__);
 
+        packet_t *packet = &session->packet;
+
         session->alive_tref = get_uptime_ms();
 
         int16_t packet_identifier = 0;
 
-        if ((session->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) != 2) {
-                DEBUG_ERROR();
+        if ((packet->fixed_header.control_packet_type & mqtt_fixed_header_flags_mask) != 2) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
-        } else if (session_fetch_variable_length(session, &session->remaining_length, false) != 0) {
-                DEBUG_ERROR();
-                return false;
-
-        } else if (session->remaining_length <= 0) {
-                DEBUG_ERROR();
+        } else if (packet->remaining_length <= 0) {
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session_fetch_i16(session, &packet_identifier) != 0) {
-                DEBUG_ERROR();
+                DEBUG_SESSION_ERROR();
                 return false;
 
         } else if (session->protocol_version == mqtt_protocol_version__5p0) {
                 uint32_t property_length = 0;
 
-                if (session_fetch_variable_length(session, &property_length, true) != 0) {
-                        DEBUG_ERROR();
+                if (session_fetch_variable_length(session, &property_length) != 0) {
+                        DEBUG_SESSION_ERROR();
                         return false;
 
                 } else if (session_fetch_skip(session, property_length) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
                 }
         }
 
         mqtt_reason_t reason_code[mqtt_max_topics_in_subscription] = {mqtt_reason__unspecified_error};
-        size_t        reason_code_count                            = 0;
+        size_t reason_code_count = 0;
 
-        while (session->remaining_length > 0) {
+        while ((packet->remaining_length - packet->payload_read_index) > 0) {
 
+                char topic_buf[MAX_TOPIC_LENGTH] = {0};
                 int16_t topic_length = 0;
 
                 if (session_fetch_i16(session, &topic_length) != 0) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
 
-                } else if (session_fetch_string(session, topic_length, session->topic_buf,
-                                   sizeof(session->topic_buf)) != 0) {
-                        DEBUG_ERROR();
+                } else if (session_fetch_string(session, topic_length, topic_buf, sizeof(topic_buf)) != 0) {
+                        DEBUG_SESSION_ERROR();
                         return false;
                 }
 
-                DEBUG("unsubscribe: '%s'\n", session->topic_buf);
-                mqtt_reason_t reason = topicsub_unsubscribe(session, session->topic_buf);
+                DEBUG_SESSION("unsubscribe: '%s'\n", topic_buf);
+                mqtt_reason_t reason = topicsub_unsubscribe(session, topic_buf);
 
                 if (reason_code_count >= sizeof(reason_code)) {
-                        DEBUG_ERROR();
+                        DEBUG_SESSION_ERROR();
                         return false;
                 }
 
@@ -2405,17 +2512,17 @@ static bool session_resp_unsuback(session_t *session, const mqtt_reason_t *reaso
         u8_t variable_header_len = sizeof(variable_header);
         if (session->protocol_version != mqtt_protocol_version__5p0) {
                 variable_header_len = 2;
-                reason_code         = NULL;
-                reason_code_count   = 0;
+                reason_code = NULL;
+                reason_code_count = 0;
         }
 
         mqtt_control_packet_t packet;
-        packet.type                   = MQTT_MSG_TYPE__UNSUBACK;
-        packet.fixed_header_flags     = 0;
-        packet.variable_header        = variable_header;
+        packet.type = mqtt_msg_type__unsuback;
+        packet.fixed_header_flags = 0;
+        packet.variable_header = variable_header;
         packet.variable_header_length = variable_header_len;
-        packet.payload                = reason_code;
-        packet.payload_length         = reason_code_count;
+        packet.payload = reason_code;
+        packet.payload_length = reason_code_count;
 
         return session_serialize_packet(session, &packet) == 0;
 }
@@ -2569,47 +2676,44 @@ static mqtt_reason_t session_publish_topic(session_t *session, uint8_t qos, cons
         }
 
         if (qos >= 3) {
-                VERBOSE("publish: wrong QOS value: %u!\n", qos);
+                VERBOSE_SESSION("publish: wrong QOS value: %u!\n", qos);
                 qos = 0;
         }
 
-        uint16_t      identifier      = 0;
-        mqtt_reason_t reason          = 0;
-        uint8_t      *variable_header = NULL;
-        uint8_t      *msg             = NULL;
-        size_t        msg_len         = 0;
-        bool          msg_allocated   = false;
+        uint16_t identifier = 0;
+        mqtt_reason_t reason = 0;
+        uint8_t *variable_header = NULL;
+        uint8_t *msg = NULL;
+        size_t msg_len = 0;
+        bool msg_allocated = false;
 
         if (not payload) {
-                mutex_scope (global->topic_db.mutex, MAX_DELAY_MS) {
-                        identifier = global->topic_db.msg_id_ctr++;
+                identifier = global->topic_db.msg_id_ctr++;
 
-                        int pos = llist_find_begin(global->topic_db.data,
-                                &(topicdb_t) {.topic = const_cast(topic)});
+                int pos = llist_find_begin(global->topic_db.data, &(topicdb_t) {.topic = const_cast(topic)});
 
-                        if (pos >= 0) {
-                                topicdb_t *topicdb = llist_at(global->topic_db.data, pos);
-                                if (topicdb) {
-                                        msg_len = topicdb->msg_length;
+                if (pos >= 0) {
+                        topicdb_t *topicdb = llist_at(global->topic_db.data, pos);
+                        if (topicdb) {
+                                msg_len = topicdb->msg_length;
 
-                                        if (topicdb->msg_length <= sizeof(session->msg_buf)) {
-                                                msg           = session->msg_buf;
-                                                msg_allocated = false;
-                                        } else {
-                                                msg           = malloc(msg_len);
-                                                msg_allocated = true;
-                                        }
+                                if (topicdb->msg_length <= sizeof(session->msg_buf)) {
+                                        msg = session->msg_buf;
+                                        msg_allocated = false;
+                                } else {
+                                        msg = malloc(msg_len);
+                                        msg_allocated = true;
+                                }
 
-                                        if (msg and msg_len) {
-                                                // message is copied to avoid change during send
-                                                memcpy(msg, topicdb->msg, msg_len);
-                                        }
+                                if (msg and msg_len) {
+                                        // message is copied to avoid change during send
+                                        memcpy(msg, topicdb->msg, msg_len);
                                 }
                         }
                 }
         } else {
-                msg           = const_cast(payload);
-                msg_len       = payload_length;
+                msg = const_cast(payload);
+                msg_len = payload_length;
                 msg_allocated = false;
         }
 
@@ -2618,11 +2722,11 @@ static mqtt_reason_t session_publish_topic(session_t *session, uint8_t qos, cons
                 goto cleanup;
         }
 
-        size_t topic_length_size    = sizeof(uint16_t);
-        size_t topic_length         = strlen(topic);
-        size_t identifier_length    = qos > 0 ? sizeof(uint16_t) : 0;
+        size_t topic_length_size = sizeof(uint16_t);
+        size_t topic_length = strlen(topic);
+        size_t identifier_length = qos > 0 ? sizeof(uint16_t) : 0;
         size_t property_length_size = sizeof(uint8_t);
-        size_t variable_header_len  = topic_length_size + topic_length + identifier_length +
+        size_t variable_header_len = topic_length_size + topic_length + identifier_length +
                 property_length_size;
 
         variable_header = malloc(variable_header_len);
@@ -2647,12 +2751,12 @@ static mqtt_reason_t session_publish_topic(session_t *session, uint8_t qos, cons
         }
 
         mqtt_control_packet_t packet;
-        packet.type                   = MQTT_MSG_TYPE__PUBLISH;
-        packet.fixed_header_flags     = qos << mqtt_publish_flag__qos_pos;
-        packet.variable_header        = variable_header;
+        packet.type = mqtt_msg_type__publish;
+        packet.fixed_header_flags = qos << mqtt_publish_flag__qos_pos;
+        packet.variable_header = variable_header;
         packet.variable_header_length = variable_header_len;
-        packet.payload                = msg;
-        packet.payload_length         = msg_len;
+        packet.payload = msg;
+        packet.payload_length = msg_len;
 
         reason = session_serialize_packet(session, &packet) == 0 ? mqtt_reason__success
                                                                  : mqtt_reason__implementation_specific_error;
@@ -2714,11 +2818,11 @@ static mqtt_reason_t topicsub_subscribe(session_t *session, const char *topic, u
                 return mqtt_reason__wildcard_subscriptions_not_supported;
         }
 
-        mqtt_reason_t reason   = mqtt_reason__implementation_specific_error;
-        topicsub_t   *topicsub = NULL;
+        mqtt_reason_t reason = mqtt_reason__implementation_specific_error;
+        topicsub_t *topicsub = NULL;
 
         int pos = -1;
-        int i   = 0;
+        int i = 0;
         llist_foreach (topicsub_t *, sub, session->subscribtion_list) {
                 if (sub->topicdb_ref and isstreq(sub->topicdb_ref->topic, topic)) {
                         pos = i;
@@ -2729,12 +2833,12 @@ static mqtt_reason_t topicsub_subscribe(session_t *session, const char *topic, u
 
         if (pos < 0) {
                 if (llist_size(session->subscribtion_list) >= MAX_TOPICS) {
-                        VERBOSE("server reached maximal amount of topics (%lu)!\n", MAX_TOPICS);
+                        VERBOSE_SESSION("server reached maximal amount of topics (%lu)!\n", MAX_TOPICS);
 
                 } else {
                         topicsub_t t = {
-                                .topicdb_ref   = NULL,
-                                .flags         = flags,
+                                .topicdb_ref = NULL,
+                                .flags = flags,
                                 .msg_sent_tref = 0,
                         };
 
@@ -2758,9 +2862,7 @@ static mqtt_reason_t topicsub_subscribe(session_t *session, const char *topic, u
         // #define mqtt_subscribe_flag__retain_handling_new    (2 << 4)
         // #define mqtt_subscribe_flag__retain_as_published    (1 << 3)
         if (topicsub) {
-                mutex_scope (global->topic_db.mutex, MAX_DELAY_MS) {
-                        topicsub->topicdb_ref->subscribers++;
-                }
+                topicsub->topicdb_ref->subscribers++;
 
                 topicsub->flags = flags;
 
@@ -2840,12 +2942,10 @@ static void topicsub_destroy(void *a)
         topicsub_t *sub = a;
 
         if (sub->topicdb_ref) {
-                mutex_scope (global->topic_db.mutex, MAX_DELAY_MS) {
-                        if (sub->topicdb_ref->subscribers) {
-                                sub->topicdb_ref->subscribers--;
-                        }
-                        sub->topicdb_ref = NULL;
+                if (sub->topicdb_ref->subscribers) {
+                        sub->topicdb_ref->subscribers--;
                 }
+                sub->topicdb_ref = NULL;
         }
 
         free(sub);
@@ -2872,68 +2972,65 @@ static mqtt_reason_t topicdb_update_topic(const char *topic, const uint8_t *msg_
                 return mqtt_reason__wildcard_subscriptions_not_supported;
         }
 
-        mutex_scope (global->topic_db.mutex, MAX_DELAY_MS) {
-                topicdb_t *topicdb = NULL;
+        topicdb_t *topicdb = NULL;
 
-                int pos = llist_find_begin(global->topic_db.data, &(topicdb_t) {.topic = const_cast(topic)});
-                if (pos < 0) {
-                        if (llist_size(global->topic_db.data) >= MAX_TOPICS) {
-                                VERBOSE2("server reached maximal amount of topics (%lu)!\n", MAX_TOPICS);
-
-                        } else {
-                                topicdb_t t = {0};
-                                t.topic     = strdup(topic);
-                                if (t.topic) {
-                                        topicdb = llist_push_emplace_back(global->topic_db.data, sizeof(t),
-                                                &t);
-                                        if (not topicdb) {
-                                                free(t.topic);
-                                        }
-                                }
-                        }
+        int pos = llist_find_begin(global->topic_db.data, &(topicdb_t) {.topic = const_cast(topic)});
+        if (pos < 0) {
+                if (llist_size(global->topic_db.data) >= MAX_TOPICS) {
+                        VERBOSE("server reached maximal amount of topics (%lu)!\n", MAX_TOPICS);
 
                 } else {
-                        topicdb = llist_at(global->topic_db.data, pos);
-                }
-
-                if (topicdb and not create_only) {
-                        if (msg_len == 0) {
-                                free(topicdb->msg);
-                                topicdb->msg              = NULL;
-                                topicdb->msg_length       = 0;
-                                topicdb->msg_alloc_length = 0;
-
-                        } else if (topicdb->msg_alloc_length < msg_len) {
-                                free(topicdb->msg);
-                                topicdb->msg = malloc(msg_len);
-                                if (topicdb->msg) {
-                                        topicdb->msg_length       = msg_len;
-                                        topicdb->msg_alloc_length = msg_len;
-                                } else {
-                                        topicdb->msg_length       = 0;
-                                        topicdb->msg_alloc_length = 0;
+                        topicdb_t t = {0};
+                        t.topic = strdup(topic);
+                        if (t.topic) {
+                                topicdb = llist_push_emplace_back(global->topic_db.data, sizeof(t), &t);
+                                if (not topicdb) {
+                                        free(t.topic);
                                 }
-
-                        } else if (topicdb->msg_alloc_length >= msg_len) {
-                                topicdb->msg_length = msg_len;
                         }
+                }
 
+        } else {
+                topicdb = llist_at(global->topic_db.data, pos);
+        }
+
+        if (topicdb and not create_only) {
+                if (msg_len == 0) {
+                        free(topicdb->msg);
+                        topicdb->msg = NULL;
+                        topicdb->msg_length = 0;
+                        topicdb->msg_alloc_length = 0;
+
+                } else if (topicdb->msg_alloc_length < msg_len) {
+                        free(topicdb->msg);
+                        topicdb->msg = malloc(msg_len);
                         if (topicdb->msg) {
-                                memcpy(topicdb->msg, msg_ref, topicdb->msg_length);
+                                topicdb->msg_length = msg_len;
+                                topicdb->msg_alloc_length = msg_len;
+                        } else {
+                                topicdb->msg_length = 0;
+                                topicdb->msg_alloc_length = 0;
                         }
 
-                        topicdb->retain          = retain;
-                        topicdb->msg_update_tref = get_uptime_ms();
-                        reason                   = 0;
-
-                        // printf("publish: %s:%.*s\n", topic, msg_len, msg_ref);
-
-                        global->topic_db.publish_ctr++;
+                } else if (topicdb->msg_alloc_length >= msg_len) {
+                        topicdb->msg_length = msg_len;
                 }
 
-                if (topicdb_ref) {
-                        *topicdb_ref = topicdb;
+                if (topicdb->msg) {
+                        memcpy(topicdb->msg, msg_ref, topicdb->msg_length);
                 }
+
+                topicdb->retain = retain;
+                topicdb->msg_update_tref = get_uptime_ms();
+                reason = 0;
+
+                // printf("publish: %s:%.*s\n", topic, msg_len, msg_ref);
+
+                global->topic_db.publish_ctr++;
+        }
+
+        if (topicdb_ref) {
+                *topicdb_ref = topicdb;
         }
 
         return reason;
@@ -2948,22 +3045,19 @@ static void topicdb_maintenance(void)
 {
         clock_t now = get_uptime_ms();
 
-        mutex_scope (global->topic_db.mutex, MAX_DELAY_MS) {
+        if (now - global->topic_db.last_maintenance_tref >= TOPICDB_MAINTENANCE_ms) {
 
-                if (now - global->topic_db.last_maintenance_tref >= TOPICDB_MAINTENANCE_ms) {
+                llist_foreach (topicdb_t *, topicdb, global->topic_db.data) {
 
-                        llist_foreach (topicdb_t *, topicdb, global->topic_db.data) {
+                        if ((now - topicdb->msg_update_tref >= MAX_RETAIN_TIME_ms) and
+                                (topicdb->subscribers == 0)) {
 
-                                if ((now - topicdb->msg_update_tref >= MAX_RETAIN_TIME_ms) and
-                                        (topicdb->subscribers == 0)) {
-
-                                        VERBOSE2("'%s' topic erased.\n", topicdb->topic);
-                                        llist_erase_by_iterator(&_iterator);
-                                }
+                                VERBOSE("'%s' topic erased.\n", topicdb->topic);
+                                llist_erase_by_iterator(&_iterator);
                         }
-
-                        global->topic_db.last_maintenance_tref = now;
                 }
+
+                global->topic_db.last_maintenance_tref = now;
         }
 }
 
@@ -2996,9 +3090,9 @@ static void topicdb_destroy(void *a)
         topicdb_t *sa = a;
         free(sa->topic);
         free(sa->msg);
-        sa->msg        = NULL;
+        sa->msg = NULL;
         sa->msg_length = 0;
-        sa->topic      = NULL;
+        sa->topic = NULL;
         free(a);
 }
 

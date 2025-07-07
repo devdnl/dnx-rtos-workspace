@@ -3,10 +3,10 @@
 #
 # AUTHOR: DANIEL ZORYCHTA
 #
-# Version: 20220905
+# Version: 20250626
 #--------------------------------------------------------------------------------------------------
 #
-#    Copyright (C) 2022  Daniel Zorychta (daniel.zorychta@gmail.com)
+#    Copyright (C) 2025  Daniel Zorychta (daniel.zorychta@gmail.com)
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -54,6 +54,7 @@ CONFIGTOOL     = ./tools/configtool.sh
 FLASH_CPU      = ./tools/flash.sh
 MKFPKG         = $(PYTHON3) ./system/tools/mkfpkg.py
 MKLINKERSCRIPT = ./tools/create_linker_script.sh
+MD5SUM         = /usr/bin/md5sum
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -82,8 +83,10 @@ endef
 # define macro used to build appset according to name
 define make_appset
 	$(eval $@_APP_NAME = $(1))
-	$(eval $@_BOARD_NAME = $(2))
-	$(MAKE) -C ${$@_APP_NAME} -s -j 1 -fMakefile all BOARD_NAME=${$@_BOARD_NAME}
+	$(eval $@_CONFIG_NAME = $(2))
+	$(eval $@_BOARD_NAME = $(3))
+	$(eval $@_PROJECT_OPTS = $(4))
+	$(MAKE) -C ${$@_APP_NAME} -s -j 1 -fMakefile all BOARD_NAME=${$@_BOARD_NAME} CONFIG_DIR=../config/${$@_CONFIG_NAME} PROJECT_OPTS=${$@_PROJECT_OPTS}
 	$(COPY) ${$@_APP_NAME}/build/output/appset.hex $(TARGET_DIR_NAME)/${$@_APP_NAME}.hex
 	$(COPY) ${$@_APP_NAME}/build/output/appset.elf $(TARGET_DIR_NAME)/${$@_APP_NAME}.elf
 	$(COPY) ${$@_APP_NAME}/build/output/appset.bin $(TARGET_DIR_NAME)/${$@_APP_NAME}.bin
@@ -102,6 +105,12 @@ define clean_appset
 	$(eval $@_APP_NAME = $(1))
 	$(ECHO) -n "Cleaning ${$@_APP_NAME} files: "
 	$(MAKE) -C ${$@_APP_NAME} -s -j 1 -fMakefile clean
+endef
+
+# define macro to clean system
+define clean_system
+	$(ECHO) -n "Cleaning system files: "
+	$(MAKE) -C system -s -j 1 -fMakefile clean
 endef
 
 # define macro to clean romfs
@@ -126,7 +135,7 @@ endef
 # define macro used to configure appset
 define config_appset
 	$(eval $@_APP_NAME = $(1))
-	$(CONFIGTOOL) ../../${$@_APP_NAME}/config/config.h
+	$(CONFIGTOOL) ../../config/${$@_APP_NAME}/config.h
 endef
 
 ####################################################################################################
@@ -185,7 +194,8 @@ app : _build_prepare app-romfs app-system app-appset
 	@$(COPY) -R ./app-dist $(TARGET_DIR_NAME)/app-dist
 	@$(COPY) $(TARGET_DIR_NAME)/app-system.bin $(TARGET_DIR_NAME)/app-dist/app-system.bin
 	@$(COPY) $(TARGET_DIR_NAME)/app-appset.bin $(TARGET_DIR_NAME)/app-dist/app-appset.bin
-	@$(MKFPKG) $(TARGET_DIR_NAME)/app-dist $(TARGET_DIR_NAME)/$(PROJECT).fpkg
+	@$(COPY) $(TARGET_DIR_NAME)/app-romfs.bin $(TARGET_DIR_NAME)/app-dist/app-romfs.bin
+	@$(MKFPKG) $(TARGET_DIR_NAME)/app-dist $(TARGET_DIR_NAME)/$(PROJECT)-app.fpkg
 	@$(ECHO) "Target app built successfully."
 
 
@@ -193,15 +203,20 @@ app : _build_prepare app-romfs app-system app-appset
 btl : _build_prepare btl-system btl-appset
 	@$(SREC_CAT) $(TARGET_DIR_NAME)/btl-system.hex -Intel $(TARGET_DIR_NAME)/btl-appset.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex -Intel
 	@$(OBJCOPY) --input-target=ihex --output-target=binary $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex $(TARGET_DIR_NAME)/$(PROJECT)_btl.bin
+	@$(MKDIR) $(TARGET_DIR_NAME)/btl-dist
+	@$(COPY) $(TARGET_DIR_NAME)/$(PROJECT)_btl.bin $(TARGET_DIR_NAME)/btl-dist/btl.bin
+	@$(MD5SUM) -b $(TARGET_DIR_NAME)/btl-dist/btl.bin | head -c 32 > $(TARGET_DIR_NAME)/btl-dist/btl.md5
+	@$(MKFPKG) $(TARGET_DIR_NAME)/btl-dist $(TARGET_DIR_NAME)/$(PROJECT)-btl.fpkg
 
 
 .PHONY : app-system
 app-system : _build_prepare
+	@$(call clean_system)
 	@$(call make_system, app-system)
 
 .PHONY : app-appset
 app-appset : _build_prepare
-	@$(call make_appset, app-appset, default)
+	@$(call make_appset, app-appset, app-appset, boardname, proj_opts)
 
 .PHONY : app-romfs
 app-romfs : _build_prepare
@@ -218,7 +233,7 @@ btl-system : _build_prepare
 
 .PHONY : btl-appset
 btl-appset : _build_prepare
-	@$(call make_appset, btl-appset, default)
+	@$(call make_appset, btl-appset, btl-appset, boardname, proj_opts)
 
 .PHONY : clean-btl-appset
 clean-btl-appset : _build_prepare

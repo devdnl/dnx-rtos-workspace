@@ -37,6 +37,7 @@ Detailed Doxygen description.
 ==============================================================================*/
 #include <stdbool.h>
 #include <libc/include/sys/types.h>
+#include <libc/source/heap.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -83,6 +84,8 @@ typedef struct {
         struct _libc_file *_stdin;
         struct _libc_file *_stdout;
         struct _libc_file *_stderr;
+
+        _libc_heap_t *_heap;
 } _libc_app_ctx_t;
 
 /*==============================================================================

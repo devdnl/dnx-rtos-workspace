@@ -605,23 +605,8 @@ static inline void free(void *ptr)
 //==============================================================================
 static inline void *realloc(void *ptr, size_t size)
 {
-        extern void* memcpy(void* dest, const void* src, size_t n);
-
-        if (size) {
-                void *mem = malloc(size);
-                if (ptr == NULL)
-                        return mem;
-
-                if (mem) {
-                        memcpy(mem, ptr, size);
-                        free(ptr);
-                        return mem;
-                }
-        } else {
-                free(ptr);
-        }
-
-        return NULL;
+        extern void *_libc_realloc(void *ptr, size_t size);
+        return _libc_realloc(ptr, size);
 }
 
 //==============================================================================

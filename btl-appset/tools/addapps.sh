@@ -9,7 +9,7 @@
 Makefile_name="Makefile"
 program_registration_file_name="program_registration.c"
 linker_script_file_name="layout.ld"
-project_flags_file="config/project/project_flags.h"
+project_flags_file="$4/project/project_flags.h"
 appset_section_address=$(cat $project_flags_file | grep __PROJ_APPSET_TABLE_ADDRESS__ | sed  's/.*__PROJ_APPSET_TABLE_ADDRESS__\s*//')
 appset_section_size=$(cat $project_flags_file | grep __PROJ_APPSET_TABLE_SIZE__ | sed  's/.*__PROJ_APPSET_TABLE_SIZE__\s*//')
 
@@ -35,8 +35,8 @@ function check_args()
 {
     local args="$1"
 
-    if [ "$1" == "" ] || [ "$2" == "" ] || [ "$3" == "" ]; then
-        echo "Usage: $args <path_to_scan> <output_path> <appfilter>"
+    if [ "$1" == "" ] || [ "$2" == "" ] || [ "$3" == "" ] || [ "$4" == "" ]; then
+        echo "Usage: $args <path_to_scan> <output_path> <appfilter> <config-path>"
         exit 1
     fi
 }
@@ -206,7 +206,7 @@ function create_linker_scirpt_file()
 #-------------------------------------------------------------------------------
 function main()
 {
-    check_args "$1" "$2" "$3"
+    check_args "$1" "$2" "$3" "$4"
 
     program_list=$(get_program_list "$1" "$3")
 
@@ -218,4 +218,5 @@ function main()
     create_makefile_libs >> "$2/$Makefile_name"
 }
 
-main "$1" "$2" "$3"
+main "$1" "$2" "$3" "$4"
+

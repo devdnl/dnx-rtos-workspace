@@ -795,6 +795,18 @@ static inline void cache_flush(void)
 //==============================================================================
 extern int register_appset(const void **appset_address_array, size_t appset_count);
 
+//==============================================================================
+/**
+ * @brief  Set heap allocation size. It is minimal memory block size that will
+ *         be requested from system to be used as heap memory.
+ *
+ * @param  alloc_size           allocation size
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+extern int set_heap_allocation_size(size_t alloc_size);
+
 /**@}*/
 
 #ifdef __cplusplus

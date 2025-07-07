@@ -475,7 +475,7 @@ int conf_parser__reload(conf_parser_t *this)
  * @param  buf          buffer
  * @param  bufsz        buffer size
  *
- * @return Number of loaded parameters. On error one of conf_parser_status_t value.
+ * @return Number of written bytes.
  */
 //==============================================================================
 int conf_parser__save_buffer(conf_parser_t *this, char *buf, size_t bufsz)
@@ -994,7 +994,7 @@ static pair_t *pair_new(const char *key, const char *val)
 
                 char *value = &pair->data[pair->value_offset];
                 while (*value) {
-                        if (not isprint(*value)) {
+                        if (not (*value >= 32)) {
                                 *value = '_';
                         }
                         value++;

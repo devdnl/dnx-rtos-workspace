@@ -25,7 +25,12 @@
 #
 ####################################################################################################
 
-include ./config/config.h
+ifeq ($(CONFIG_DIR),)
+	CONFIG_DIR=./config
+endif
+
+CONFIG=$(CONFIG_DIR)/config.h
+include $(CONFIG)
 
 ####################################################################################################
 # PROJECT CONFIGURATION
@@ -70,10 +75,10 @@ CFLAGS   = -c \
            -Werror=overflow \
            -Werror=array-bounds \
            -Wno-enum-conversion \
-           -include ./config/config.h \
+           -include $(CONFIG) \
            -include ./build/defs.h \
            -I./build\
-           -I./config\
+           -I$(CONFIG_DIR)\
            -Wno-main\
            -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
            $(CPUCONFIG_CFLAGS)
@@ -101,11 +106,11 @@ CXXFLAGS = -c \
            -Werror=stringop-overflow \
            -Werror=overflow \
            -Werror=array-bounds \
-           -include ./config/config.h \
+           -include $(CONFIG) \
            -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
            -include ./build/defs.h \
            -I./build\
-           -I./config\
+           -I$(CONFIG_DIR)\
            $(CPUCONFIG_CXXFLAGS)
 
 LFLAGS   = -g \
@@ -360,7 +365,7 @@ generate :
 
 	@$(MKDIR) $(GEN_PROG_DIR)
 	@$(ECHO) "Adding user's programs and libraries to the project..."
-	@$(SHELL) $(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR) "*"
+	@$(SHELL) $(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR) "*" $(CONFIG_DIR)
 
 	@$(ECHO) "Obtaining git hash..."
 	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" > build/defs.h
@@ -368,6 +373,7 @@ generate :
 	@$(ECHO) "#define BUILD_TIME \"$(shell date '+%F, %T')\"" >> build/defs.h
 	@$(ECHO) "#define BOARD_NAME \"$(BOARD_NAME)\"" >> build/defs.h
 	@$(ECHO) "#define board_name_$(BOARD_NAME)" >> build/defs.h
+	@$(ECHO) "#define PROJECT_OPTS \"$(PROJECT_OPTS)\"" >> build/defs.h
 
 ####################################################################################################
 # Start all generators

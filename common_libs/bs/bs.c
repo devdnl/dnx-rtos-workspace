@@ -37,25 +37,25 @@ Brief    Binary serialization.
 #define bs_get_template(_type_)                                                          \
         _type_ bs_get_##_type_(bs_rd_t *self, const char *key, _type_ Default, int *err) \
         {                                                                                \
-                size_t      blen;                                                        \
+                size_t blen;                                                             \
                 const void *blob;                                                        \
-                bs_type_t   rettype = bs_type__##_type_;                                 \
-                bs_type_t   btype;                                                       \
-                _type_      value = 0;                                                   \
-                int         e     = bs_get_raw(self, key, &blob, &blen, &btype);         \
+                bs_type_t rettype = bs_type__##_type_;                                   \
+                bs_type_t btype;                                                         \
+                _type_ value = 0;                                                        \
+                int e = bs_get_raw(self, key, &blob, &blen, &btype);                     \
                 if (not e) {                                                             \
                         union {                                                          \
-                                bool     boolean;                                        \
-                                int8_t   int8;                                           \
-                                uint8_t  uint8;                                          \
-                                int16_t  int16;                                          \
+                                bool boolean;                                            \
+                                int8_t int8;                                             \
+                                uint8_t uint8;                                           \
+                                int16_t int16;                                           \
                                 uint16_t uint16;                                         \
-                                int32_t  int32;                                          \
+                                int32_t int32;                                           \
                                 uint32_t uint32;                                         \
-                                int64_t  int64;                                          \
+                                int64_t int64;                                           \
                                 uint64_t uint64;                                         \
-                                float    float32;                                        \
-                                double   float64;                                        \
+                                float float32;                                           \
+                                double float64;                                          \
                         } v;                                                             \
                         memcpy(&v, blob, min(blen, sizeof(v)));                          \
                         if (btype == bs_type__bool) {                                    \
@@ -121,10 +121,10 @@ Brief    Binary serialization.
   Local object types
 ==============================================================================*/
 typedef struct PACKED {
-        uint8_t  type;
-        uint8_t  key_len;
+        uint8_t type;
+        uint8_t key_len;
         uint16_t data_len;
-        uint8_t  key_data[];
+        uint8_t key_data[];
 } item_t;
 
 /*==============================================================================
@@ -175,7 +175,7 @@ static int bs_get_raw(bs_rd_t *self, const char *key, const void **blob, size_t 
 
                 if (strcmp(key, cast(char *, item->key_data)) == 0) {
                         *type = item->type;
-                        *len  = item->data_len;
+                        *len = item->data_len;
                         *blob = &item->key_data[item->key_len];
                         return 0;
 
@@ -220,16 +220,16 @@ static int bs_set_raw(bs_wr_t *self, const char *key, const void *blob, size_t l
         }
 
         const void *b;
-        size_t      l;
-        bs_type_t   t;
-        bs_rd_t     bs;
-        bs.chunk     = self->chunk;
+        size_t l;
+        bs_type_t t;
+        bs_rd_t bs;
+        bs.chunk = self->chunk;
         bs.chunk_len = self->chunk_len;
         if (bs_get_raw(&bs, key, &b, &l, &t) == 0) {
                 return bs_err_exist;
         }
 
-        size_t key_len  = strlen(key) + 1;
+        size_t key_len = strlen(key) + 1;
         size_t item_len = sizeof(item_t) + key_len + len + ((type == bs_type__string) ? 1 : 0);
 
         if ((cast(uintptr_t, self->item) + item_len) >=
@@ -237,10 +237,10 @@ static int bs_set_raw(bs_wr_t *self, const char *key, const void *blob, size_t l
                 return bs_err_chunk_full;
         }
 
-        item_t *item   = self->item;
+        item_t *item = self->item;
         item->data_len = len + ((type == bs_type__string) ? 1 : 0);
-        item->key_len  = key_len;
-        item->type     = type;
+        item->key_len = key_len;
+        item->type = type;
         memcpy(&item->key_data[0], key, key_len);
         memcpy(&item->key_data[key_len], blob, len);
 
@@ -275,7 +275,7 @@ int bs_read_chunk(bs_rd_t *self, const uint8_t *chunk, size_t chunk_len)
                 return bs_err_invalid_value;
         }
 
-        self->chunk     = chunk;
+        self->chunk = chunk;
         self->chunk_len = chunk_len;
 
         return 0;
@@ -294,7 +294,7 @@ int bs_read_chunk(bs_rd_t *self, const uint8_t *chunk, size_t chunk_len)
 bs_rd_t bs_read_init(const uint8_t *chunk, size_t chunk_len)
 {
         bs_rd_t bsrd = {
-                .chunk     = chunk,
+                .chunk = chunk,
                 .chunk_len = chunk_len,
         };
 
@@ -468,9 +468,9 @@ bs_get_template(bool);
 //==============================================================================
 const char *bs_get_str(bs_rd_t *self, const char *key, const char *Default, int *err)
 {
-        size_t      blen;
+        size_t blen;
         const void *str = Default;
-        bs_type_t   btype;
+        bs_type_t btype;
 
         int e = bs_get_raw(self, key, &str, &blen, &btype);
         if (not e) {
@@ -516,7 +516,7 @@ const void *bs_get_blob(bs_rd_t *self, const char *key, size_t *len, int *err)
         }
 
         const void *blob = NULL;
-        bs_type_t   btype;
+        bs_type_t btype;
 
         int e = bs_get_raw(self, key, &blob, len, &btype);
 
@@ -540,8 +540,8 @@ const void *bs_get_blob(bs_rd_t *self, const char *key, size_t *len, int *err)
 bs_type_t bs_get_type(bs_rd_t *self, const char *key)
 {
         const void *blob;
-        bs_type_t   btype;
-        size_t      blen;
+        bs_type_t btype;
+        size_t blen;
 
         if (bs_get_raw(self, key, &blob, &blen, &btype) != 0) {
                 return bs_type__unknown;
@@ -558,14 +558,16 @@ bs_type_t bs_get_type(bs_rd_t *self, const char *key)
  * @param  next         next pointer (if points to NULL then from beginning)
  * @param  key          key name
  * @param  value        value data
+ * @param  value_len    value length
  * @param  type         value type
  *
  * @return On sucecss 0 is returned.
  */
 //==============================================================================
-int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key, const void **value, bs_type_t *type)
+int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key, const void **value, uint16_t *value_len,
+        bs_type_t *type)
 {
-        if (not self or not key or not value or not type) {
+        if (not self or not key or not value or not value_len or not type) {
                 return bs_err_invalid_value;
         }
 
@@ -581,10 +583,12 @@ int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key, const void **va
 
         if (cast(uintptr_t, item) < cast(uintptr_t, self->chunk) + self->chunk_len) {
 
-                *type  = item->type;
-                *key   = cast(const char *, &item->key_data[0]);
+                *type = item->type;
+                *key = cast(const char *, &item->key_data[0]);
                 *value = &item->key_data[item->key_len];
-                *next  = cast(uint8_t *, item) + sizeof(*item) + item->key_len + item->data_len;
+                *value_len = item->data_len;
+                *next = cast(uint8_t *, item) + sizeof(*item) + item->key_len + item->data_len;
+
                 return 0;
         }
 
@@ -612,10 +616,10 @@ int bs_write_chunk(bs_wr_t *self, uint8_t *chunk, size_t chunk_len)
                 return bs_err_invalid_value;
         }
 
-        self->chunk         = chunk;
+        self->chunk = chunk;
         self->chunk_max_len = chunk_len;
-        self->chunk_len     = 0;
-        self->item          = chunk;
+        self->chunk_len = 0;
+        self->item = chunk;
 
         return 0;
 }
@@ -633,10 +637,10 @@ int bs_write_chunk(bs_wr_t *self, uint8_t *chunk, size_t chunk_len)
 bs_wr_t bs_write_init(uint8_t *chunk, size_t chunk_len)
 {
         bs_wr_t bswr = {
-                .chunk         = chunk,
+                .chunk = chunk,
                 .chunk_max_len = chunk_len,
-                .chunk_len     = 0,
-                .item          = chunk,
+                .chunk_len = 0,
+                .item = chunk,
         };
 
         return bswr;

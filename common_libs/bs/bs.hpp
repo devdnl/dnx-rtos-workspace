@@ -56,7 +56,6 @@ public:
                 bs_read_chunk(&this->bs, chunk, chunk_len);
         }
 
-
         int8_t get_int8_t(const char *key)
         {
                 return bs_get_int8_t(&this->bs, key, 0, NULL);
@@ -71,7 +70,6 @@ public:
         {
                 return bs_get_int8_t(&this->bs, key, df, err);
         }
-
 
         uint8_t get_uint8_t(const char *key)
         {
@@ -88,7 +86,6 @@ public:
                 return bs_get_uint8_t(&this->bs, key, df, err);
         }
 
-
         int16_t get_int16_t(const char *key)
         {
                 return bs_get_int16_t(&this->bs, key, 0, NULL);
@@ -103,7 +100,6 @@ public:
         {
                 return bs_get_int16_t(&this->bs, key, df, err);
         }
-
 
         uint16_t get_uint16_t(const char *key)
         {
@@ -120,7 +116,6 @@ public:
                 return bs_get_uint16_t(&this->bs, key, df, err);
         }
 
-
         int32_t get_int32_t(const char *key)
         {
                 return bs_get_int32_t(&this->bs, key, 0, NULL);
@@ -135,7 +130,6 @@ public:
         {
                 return bs_get_int32_t(&this->bs, key, df, err);
         }
-
 
         uint32_t get_uint32_t(const char *key)
         {
@@ -152,7 +146,6 @@ public:
                 return bs_get_uint32_t(&this->bs, key, df, err);
         }
 
-
         int64_t get_int64_t(const char *key)
         {
                 return bs_get_int64_t(&this->bs, key, 0, NULL);
@@ -167,7 +160,6 @@ public:
         {
                 return bs_get_int64_t(&this->bs, key, df, err);
         }
-
 
         uint64_t get_uint64_t(const char *key)
         {
@@ -184,7 +176,6 @@ public:
                 return bs_get_uint64_t(&this->bs, key, df, err);
         }
 
-
         float get_float(const char *key)
         {
                 return bs_get_float(&this->bs, key, 0, NULL);
@@ -200,12 +191,13 @@ public:
                 return bs_get_float(&this->bs, key, df, err);
         }
 
-
-        double get_double(const char *key) {
+        double get_double(const char *key)
+        {
                 return bs_get_double(&this->bs, key, 0, NULL);
         }
 
-        double get_double(const char *key, double df) {
+        double get_double(const char *key, double df)
+        {
                 return bs_get_double(&this->bs, key, df, NULL);
         }
 
@@ -213,7 +205,6 @@ public:
         {
                 return bs_get_double(&this->bs, key, df, err);
         }
-
 
         bool get_bool(const char *key)
         {
@@ -230,7 +221,6 @@ public:
                 return bs_get_bool(&this->bs, key, df, err);
         }
 
-
         const char *get_str(const char *key)
         {
                 return bs_get_str(&this->bs, key, "", NULL);
@@ -245,7 +235,6 @@ public:
         {
                 return bs_get_str(&this->bs, key, df, err);
         }
-
 
         const void *get_blob(const char *key, size_t *len)
         {
@@ -262,9 +251,10 @@ public:
                 return bs_get_type(&this->bs, key);
         }
 
-        int get_next(uint8_t **next, const char **key, const void **value, bs_type_t *type)
+        int get_next(uint8_t **next, const char **key, const void **value, uint16_t *value_len,
+                bs_type_t *type)
         {
-                return bs_get_next(&this->bs, next, key, value, type);
+                return bs_get_next(&this->bs, next, key, value, value_len, type);
         }
 };
 

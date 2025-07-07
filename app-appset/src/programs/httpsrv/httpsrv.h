@@ -38,7 +38,6 @@ Detailed Doxygen description.
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "httpsrv_config.h"
 #include <ctype.h>
 #include <dirent.h>
 #include <dnx/misc.h>
@@ -59,6 +58,7 @@ Detailed Doxygen description.
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+#include <conf_parser.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,12 +70,30 @@ extern "C" {
 #undef global
 #define global cast(struct httpsrv_globals *, _getglobal)
 
-#if HTTPSRV_DEBUG_ON
-#define DEBUG(...) printf("httpsrv: " __VA_ARGS__)
-#else
-#define DEBUG(...)
-#endif
-#define VERBOSE(...) printf("[httpsrv, info] " __VA_ARGS__)
+#define DEBUG(...)                               \
+        if (global->debug) {                     \
+                printf("httpsrv: " __VA_ARGS__); \
+        }
+
+#define VERBOSE(...)                             printf("[httpsrv, info] " __VA_ARGS__)
+
+#define HTTPSRV_SCRIPT_BEGIN_TOKEN               "<?lua"
+#define HTTPSRV_SCRIPT_EXTENSION                 ".lua"
+
+#define conf_get_value(_key)                     conf_parser__get_value(global->conf, _key)
+#define conf_get_debug()                         conf_parser__is_value_true(conf_get_value("debug"))
+#define conf_get_threads_num()                   strtoul(conf_get_value("threads-num"), NULL, 0)
+#define conf_get_port()                          strtoul(conf_get_value("port"), NULL, 0)
+#define conf_get_root_dir()                      conf_get_value("root-dir")
+#define conf_get_upload_dir()                    conf_get_value("upload-dir")
+#define conf_get_page_default()                  conf_get_value("page-default")
+#define conf_get_page_not_found()                conf_get_value("page-not-found")
+#define conf_get_multipart_buffer_size()         strtoul(conf_get_value("buffer.multipart"), NULL, 0)
+#define conf_get_interpreter_fetch_buffer_size() strtoul(conf_get_value("buffer.interpreter-fetch"), NULL, 0)
+#define conf_get_interpreter_code_buffer_size()  strtoul(conf_get_value("buffer.interpreter-code"), NULL, 0)
+#define conf_get_interpreter_tmp_buffer_size()   strtoul(conf_get_value("buffer.interpreter-tmp"), NULL, 0)
+#define conf_get_output_buffer_size()            strtoul(conf_get_value("buffer.output"), NULL, 0)
+#define conf_get_http_parser_buffer_size()       strtoul(conf_get_value("buffer.http-parser"), NULL, 0)
 
 /*==============================================================================
   Exported object types
@@ -86,29 +104,33 @@ typedef enum {
 } httpsrv_content_type_t;
 
 typedef struct {
-        char  *value;
+        char *value;
         size_t value_length;
         size_t alloc_length;
 } httpsrv_chunk_t;
 
 typedef struct {
         SOCKET *socket;
+        tid_t tid;
 
         struct {
-                char   buf[HTTPSRV_OUTPUT_BUFFER_SIZE];
+                char *buf;
+                size_t buf_size;
                 size_t len;
         } output;
 
         struct interpreter {
                 struct {
-                        char   buf[HTTPSRV_INTERPRETER_FETCH_BUFFER_SIZE];
+                        char *buf;
+                        size_t buf_size;
                         size_t pos;
                         size_t len;
                 } fetch_buf;
 
                 struct {
                         struct {
-                                char   buf[sizeof(HTTPSRV_SCRIPT_BEGIN_TOKEN) - 1];
+                                char buf[sizeof(HTTPSRV_SCRIPT_BEGIN_TOKEN) - 1];
+                                size_t buf_size;
                                 size_t ptr;
                                 size_t len;
                         } begin_token;
@@ -117,22 +139,25 @@ typedef struct {
                                 char last;
                         } end_token;
 
-                        bool   script_section;
+                        bool script_section;
                         size_t code_len;
-                        char   code_buf[HTTPSRV_INTERPRETER_CODE_BUFFER_SIZE];
+                        size_t code_buf_size;
+                        char *code_buf;
                 } script;
 
-                char tmp_buf[HTTPSRV_INTERPRETER_TMP_BUFFER_SIZE];
+                char *tmp_buf;
+                size_t tmp_buf_size;
 
                 SOCKET *ipc_socket;
-                void   *object;
-                void   *context;
+                void *object;
+                void *context;
         } interpreter;
 
         struct http_request {
-                char                   buf[HTTPSRV_HTTP_PARSER_BUFFER_SIZE];
-                http_parser            parser;
-                bool                   message_complete;
+                char *buf;
+                size_t buf_size;
+                http_parser parser;
+                bool message_complete;
                 httpsrv_content_type_t content_type;
 
                 struct {
@@ -160,9 +185,10 @@ typedef struct {
                 httpsrv_chunk_t content_type;
 
                 struct {
-                        char  *buf;
-                        char  *path;
+                        char *buf;
+                        char *path;
                         size_t buf_seek;
+                        size_t buf_size;
                         size_t write_count;
                 } data;
 
@@ -174,6 +200,13 @@ struct httpsrv_globals {
         struct {
                 netmgr_shared_t *netmgr;
         } shared;
+
+        bool debug;
+        conf_parser_t *conf;
+        SOCKET *socket;
+        httpsrv_thread_t **thread;
+        int thread_count;
+        bool thread_run;
 };
 
 /*==============================================================================
@@ -184,13 +217,13 @@ GLOBAL_VARIABLES_TYPE(struct httpsrv_globals);
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int  httpsrv_interpreter_init(httpsrv_thread_t *self);
+extern int httpsrv_interpreter_init(httpsrv_thread_t *self);
 extern void httpsrv_interpreter_deinit(httpsrv_thread_t *self);
-extern int  httpsrv_interpreter_dostring(httpsrv_thread_t *self, const char *string);
-extern int  httpsrv_interpreter_dofile(httpsrv_thread_t *self, const char *file);
-extern int  httpsrv_send(httpsrv_thread_t *self, const void *buf, size_t len, bool flush);
-extern int  httpsrv_send_file(httpsrv_thread_t *self, const char *content_type, u32_t cache_time,
-         const char *path);
+extern int httpsrv_interpreter_dostring(httpsrv_thread_t *self, const char *string);
+extern int httpsrv_interpreter_dofile(httpsrv_thread_t *self, const char *file);
+extern int httpsrv_send(httpsrv_thread_t *self, const void *buf, size_t len, bool flush);
+extern int httpsrv_send_file(httpsrv_thread_t *self, const char *content_type, u32_t cache_time,
+        const char *path);
 
 /*==============================================================================
   Exported inline functions

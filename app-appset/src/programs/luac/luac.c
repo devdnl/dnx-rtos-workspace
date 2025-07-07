@@ -33,6 +33,10 @@ static void PrintFunction(const Proto* f, int full);
 
 static const char *Output = OUTPUT;
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
 GLOBAL_VARIABLES_SECTION {
         int listing;                   /* list bytecodes? */
         int dumping;                   /* dump bytecodes? */
@@ -40,8 +44,10 @@ GLOBAL_VARIABLES_SECTION {
         const char* output;            /* actual output file name */
         const char* progname;          /* actual program name */
         TString **tmname;
+        char wrbuf[8192];
+        size_t wrbuf_sz;
 };
-PROGRAM_PARAMS(luac, STACK_DEPTH_MEDIUM);
+PROGRAM_PARAMS(luac, STACK_DEPTH_VERY_LARGE);
 
 static void fatal(const char* message)
 {
@@ -115,7 +121,7 @@ static int doargs(int argc, char* argv[])
  if (i==argc && (global->listing || !global->dumping))
  {
   global->dumping=0;
-  argv[--i]=(char*)Output;
+  argv[--i]=(char*)global->output;
  }
  if (version)
  {
@@ -166,7 +172,22 @@ static const Proto* combine(lua_State* L, int n)
 static int writer(lua_State* L, const void* p, size_t size, void* u)
 {
  UNUSED(L);
- return (fwrite(p,size,1,(FILE*)u)!=1) && (size!=0);
+
+ while (size > 0) {
+   size_t left = min((sizeof(global->wrbuf) - global->wrbuf_sz), size);
+   memcpy(&global->wrbuf[global->wrbuf_sz], p, left);
+   global->wrbuf_sz += left;
+   size -= left;
+
+   if (global->wrbuf_sz >= sizeof(global->wrbuf)) {
+     if (fwrite(global->wrbuf,global->wrbuf_sz,1,(FILE*)u) != 1) {
+       return 1;
+     }
+     global->wrbuf_sz = 0;
+   }
+ }
+
+ return 0;
 }
 
 static int pmain(lua_State* L)
@@ -192,6 +213,11 @@ static int pmain(lua_State* L)
   luaU_dump(L,f,writer,D,global->stripping);
   lua_unlock(L);
   if (ferror(D)) cannot("write");
+
+  if (D && (global->wrbuf_sz > 0)) {
+    fwrite(global->wrbuf, global->wrbuf_sz, 1, D);
+  }
+
   if (fclose(D)) cannot("close");
  }
  return 0;
