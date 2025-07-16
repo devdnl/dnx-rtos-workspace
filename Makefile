@@ -87,9 +87,9 @@ define make_appset
 	$(eval $@_BOARD_NAME = $(3))
 	$(eval $@_PROJECT_OPTS = $(4))
 	$(MAKE) -C ${$@_APP_NAME} -s -j 1 -fMakefile all BOARD_NAME=${$@_BOARD_NAME} CONFIG_DIR=../config/${$@_CONFIG_NAME} PROJECT_OPTS=${$@_PROJECT_OPTS}
-	$(COPY) ${$@_APP_NAME}/build/output/appset.hex $(TARGET_DIR_NAME)/${$@_APP_NAME}.hex
-	$(COPY) ${$@_APP_NAME}/build/output/appset.elf $(TARGET_DIR_NAME)/${$@_APP_NAME}.elf
-	$(COPY) ${$@_APP_NAME}/build/output/appset.bin $(TARGET_DIR_NAME)/${$@_APP_NAME}.bin
+	$(COPY) ${$@_APP_NAME}/build/output/appset.hex $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.hex
+	$(COPY) ${$@_APP_NAME}/build/output/appset.elf $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.elf
+	$(COPY) ${$@_APP_NAME}/build/output/appset.bin $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.bin
 endef
 
 # define macro used to create ROMFS
@@ -136,6 +136,12 @@ endef
 define config_appset
 	$(eval $@_APP_NAME = $(1))
 	$(CONFIGTOOL) ../../config/${$@_APP_NAME}/config.h
+endef
+
+# define macro used to configure romfs
+define config_romfs
+	$(eval $@_ROMFS_NAME = $(1))
+	$(CONFIGTOOL) ../../${$@_ROMFS_NAME}/config/config.h
 endef
 
 ####################################################################################################
@@ -287,7 +293,7 @@ config-app-appset :
 
 .PHONY : config-app-romfs
 config-app-romfs :
-	@$(call config_appset, app-romfs)
+	@$(call config_romfs, app-romfs)
 
 
 .PHONY : config-btl-system

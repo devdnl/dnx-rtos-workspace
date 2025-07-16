@@ -365,7 +365,7 @@ generate :
 
 	@$(MKDIR) $(GEN_PROG_DIR)
 	@$(ECHO) "Adding user's programs and libraries to the project..."
-	@$(SHELL) $(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR) "*" $(CONFIG_DIR)
+	@$(SHELL) $(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR) $(__PROGRAMS_LIST__) $(CONFIG_DIR)
 
 	@$(ECHO) "Obtaining git hash..."
 	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" > build/defs.h

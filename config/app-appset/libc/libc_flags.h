@@ -37,7 +37,7 @@
 #define _LIBC_FLAGS_H_
 
 /*--
-# this:SetLayout("TitledGridBack", 2, "Home > Operating System",
+# this:SetLayout("TitledGridBack", 2, "Home > Standard library",
 #                function() this:LoadFile("config.h") end)
 ++*/
 

@@ -49,8 +49,10 @@ _YES_ = 1
 #// include all configuration flags
 #include "./project/project_flags.h"
 #include "./libc/libc_flags.h"
+#include "./programs/programs_flags.h"
 #/* include all configuration flags in Makefile
-include ./config/project/project_flags.h
+include $(CONFIG_DIR)/project/project_flags.h
+include $(CONFIG_DIR)/programs/programs_flags.h
 #*/
 
 #/*--
@@ -82,6 +84,12 @@ include ./config/project/project_flags.h
 # this:AddExtraWidget("Label", "LabelOS", "Standard Library  ", -1, "bold")
 # this:AddExtraWidget("Hyperlink", "HL_LIBC", "Configure")
 # this:SetEvent("clicked", "HL_LIBC", function() this:LoadFile("libc/libc_flags.h") end)
+#++*/
+
+#/*--
+# this:AddExtraWidget("Label", "LabelProgs", "Programs  ", -1, "bold")
+# this:AddExtraWidget("Hyperlink", "HL_PROGS", "Configure")
+# this:SetEvent("clicked", "HL_PROGS", function() this:LoadFile("programs/programs_flags.h") end)
 #++*/
 
 #endif /* _CONFIG_CONFIG_H_ */

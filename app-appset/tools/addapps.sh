@@ -77,9 +77,7 @@ function create_makefile_programs()
     echo '# Makefile for GNU make - file generated at build process'
     echo ''
 
-    if [ "$1" == "*" ]; then
-        echo 'CSRC_PROGRAMS += ../../$(GEN_PROG_DIR)/program_registration.c'
-    fi
+    echo 'CSRC_PROGRAMS += ../../$(GEN_PROG_DIR)/program_registration.c'
 
     echo 'HDRLOC_PROGRAMS += ../programs'
     for prog in $program_list; do
@@ -184,19 +182,10 @@ function create_linker_scirpt_file()
 
     echo "MEMORY"
     echo "{"
-
-    if [ "$1" == "*" ]; then
-        echo "   rom (rx)  : org = $appset_section_address, len = $appset_section_size"
-    else
-        echo "   app (rwx)  : org = 0, len = $appset_section_size"
-    fi
+    echo "   rom (rx)  : org = $appset_section_address, len = $appset_section_size"
     echo "}"
 
-    if [ "$1" == "*" ]; then
-        echo "INCLUDE memory_layout.ld"
-    else
-        echo "INCLUDE memory_layout_standalone.ld"
-    fi
+    echo "INCLUDE memory_layout.ld"
 }
 
 #-------------------------------------------------------------------------------
