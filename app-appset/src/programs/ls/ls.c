@@ -45,14 +45,14 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define CWD_MAX_LEN                     128
+#define CWD_MAX_LEN          128
 
-#define KiB                             (u32_t)(1024)
-#define MiB                             (u32_t)(1024*1024)
-#define GiB                             (u64_t)(1024*1024*1024)
-#define CONVERT_TO_KiB(_val)            (_val >> 10)
-#define CONVERT_TO_MiB(_val)            (_val >> 20)
-#define CONVERT_TO_GiB(_val)            (_val >> 30)
+#define KiB                  (u32_t)(1024)
+#define MiB                  (u32_t)(1024 * 1024)
+#define GiB                  (u64_t)(1024 * 1024 * 1024)
+#define CONVERT_TO_KiB(_val) (_val >> 10)
+#define CONVERT_TO_MiB(_val) (_val >> 20)
+#define CONVERT_TO_GiB(_val) (_val >> 30)
 
 /*==============================================================================
   Local types, enums definitions
@@ -85,6 +85,8 @@ PROGRAM_PARAMS(ls, STACK_DEPTH_LOW);
 int main(int argc, char *argv[])
 {
         getcwd(global->cwd, CWD_MAX_LEN - 1);
+
+        bool human_readable = ((argc == 3) and isstreq(argv[1], "-h"));
 
         for (int i = 0; i < argc; i++) {
 
@@ -126,7 +128,7 @@ int main(int argc, char *argv[])
                         dirent_t *dirent;
                         while (!errno && (dirent = readdir(dir))) {
 
-                                if (isstreq(dirent->d_name, ".") || isstreq(dirent->d_name, "..") ) {
+                                if (isstreq(dirent->d_name, ".") || isstreq(dirent->d_name, "..")) {
                                         continue;
                                 }
 
@@ -135,13 +137,27 @@ int main(int argc, char *argv[])
 
                                         const char *type;
                                         switch (st.st_mode & S_IFMT) {
-                                        case S_IFDIR:  type = VT100_FONT_COLOR_LIGHT_BLUE"d"; break;
-                                        case S_IFDEV:  type = VT100_FONT_COLOR_MAGENTA"c";    break;
-                                        case S_IFLNK:  type = VT100_FONT_COLOR_CYAN"l";       break;
-                                        case S_IFREG:  type = VT100_FONT_COLOR_GREEN"-";      break;
-                                        case S_IFPROG: type = VT100_FONT_BOLD"*";             break;
-                                        case S_IFIFO:  type = VT100_FONT_COLOR_BROWN"p";      break;
-                                        default:       type = "?";                            break;
+                                        case S_IFDIR:
+                                                type = VT100_FONT_COLOR_LIGHT_BLUE "d";
+                                                break;
+                                        case S_IFDEV:
+                                                type = VT100_FONT_COLOR_MAGENTA "c";
+                                                break;
+                                        case S_IFLNK:
+                                                type = VT100_FONT_COLOR_CYAN "l";
+                                                break;
+                                        case S_IFREG:
+                                                type = VT100_FONT_COLOR_GREEN "-";
+                                                break;
+                                        case S_IFPROG:
+                                                type = VT100_FONT_BOLD "*";
+                                                break;
+                                        case S_IFIFO:
+                                                type = VT100_FONT_COLOR_BROWN "p";
+                                                break;
+                                        default:
+                                                type = "?";
+                                                break;
                                         }
 
                                         char mode[10];
@@ -156,20 +172,23 @@ int main(int argc, char *argv[])
                                         mode[8] = (st.st_mode & S_IXOTH) ? 'x' : '-';
                                         mode[9] = '\0';
 
-                                        u32_t       size;
-                                        const char *unit;
-                                        if (st.st_size >= (u64_t)(1*GiB)) {
-                                                size = CONVERT_TO_MiB(st.st_size);
-                                                unit = "MiB";
-                                        } else if (st.st_size >= 1*MiB) {
-                                                size = CONVERT_TO_KiB(st.st_size);
-                                                unit = "KiB";
-                                        } else {
-                                                size = st.st_size;
-                                                unit = "B";
+                                        u64_t size = st.st_size;
+                                        const char *unit = "B";
+
+                                        if (human_readable) {
+                                                if (st.st_size >= (u64_t)(1 * GiB)) {
+                                                        size = CONVERT_TO_MiB(st.st_size);
+                                                        unit = "MiB";
+                                                } else if (st.st_size >= 1 * MiB) {
+                                                        size = CONVERT_TO_KiB(st.st_size);
+                                                        unit = "KiB";
+                                                } else {
+                                                        size = st.st_size;
+                                                        unit = "B";
+                                                }
                                         }
 
-                                        int mod_id    = get_driver_ID2(st.st_dev);
+                                        int mod_id = get_driver_ID2(st.st_dev);
                                         int mod_major = get_driver_major(st.st_dev);
                                         int mod_minor = get_driver_minor(st.st_dev);
 
@@ -177,8 +196,8 @@ int main(int argc, char *argv[])
                                         memset(mod, 0, sizeof(mod));
 
                                         if (S_ISDEV(st.st_mode)) {
-                                                snprintf(mod, sizeof(mod), "%2d,%2d,%2d",
-                                                         mod_id, mod_major, mod_minor);
+                                                snprintf(mod, sizeof(mod), "%2d,%2d,%2d", mod_id, mod_major,
+                                                        mod_minor);
                                         }
 
                                         struct tm tm;
@@ -187,12 +206,13 @@ int main(int argc, char *argv[])
                                         char time[24];
                                         strftime(time, sizeof(time), "%d-%m-%Y %H:%M", &tm);
 
-                                        printf("%s%s %9u %s"
-                                               VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(25)"%s"
-                                               VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(35)"%s"
-                                               VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(52)"%s"
-                                               VT100_RESET_ATTRIBUTES"\n",
-                                               type, mode, size, unit, mod, time, dirent->d_name);
+                                        printf("%s%s %12llu %s" VT100_CURSOR_BACKWARD(999) VT100_CURSOR_FORWARD(
+                                                       28) "%s" VT100_CURSOR_BACKWARD(999)
+                                                        VT100_CURSOR_FORWARD(38) "%s" VT100_CURSOR_BACKWARD(
+                                                                999)
+                                                                VT100_CURSOR_FORWARD(
+                                                                        55) "%s" VT100_RESET_ATTRIBUTES "\n",
+                                                type, mode, size, unit, mod, time, dirent->d_name);
 
                                         count++;
                                 } else {
