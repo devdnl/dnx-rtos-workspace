@@ -1,28 +1,32 @@
 /*==============================================================================
-@file    mqtt_broker.c
+@file   mqtt_broker.c
 
-@author  Daniel Zorychta
+@author Daniel Zorychta
 
-@brief   MQTT broker.
+@brief  MQTT broker.
 
-@note    Copyright (C) 2024 Daniel Zorychta <daniel.zorychta@gmail.com>
+        MIT License
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the Free Software Foundation and modified by the dnx RTOS exception.
+        Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-         NOTE: The modification  to the GPL is  included to allow you to
-               distribute a combined work that includes dnx RTOS without
-               being obliged to provide the source  code for proprietary
-               components outside of the dnx RTOS.
+        Permission is hereby granted, free of charge, to any person obtaining
+        a copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
 
-         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
 
-         Full license text is available on the following file: doc/license.txt.
-
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+        OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+        ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+        OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================*/
 
@@ -45,6 +49,7 @@
 #include <ctype.h>
 #include <netmgr/shared.h>
 #include <dnx/os.h>
+#include <time.h>
 #include <llist.h>
 #include <conf_parser.h>
 
@@ -67,23 +72,49 @@
 #define MAX_RETAIN_TIME_ms      (24 * 60 * 60 * 1000UL)
 #define TOPICDB_MAINTENANCE_ms  (60 * 1000UL)
 
-#define DEBUG_SESSION(...)                                                                          \
-        if (global->debug) {                                                                        \
-                printf("[mqtt-broker, debug, %llu, %s] ", get_uptime_ms(), session->client_ip_str); \
-                printf(__VA_ARGS__);                                                                \
+#define DEBUG_SESSION(...)                                                              \
+        if (global->debug) {                                                            \
+                time_t t = time(NULL);                                                  \
+                struct tm lt;                                                           \
+                localtime_r(&t, &lt);                                                   \
+                char t_str[32];                                                         \
+                strftime(t_str, sizeof(t_str), "%F %X", &lt);                           \
+                printf("[mqtt-broker, debug, %s, %s] ", t_str, session->client_ip_str); \
+                printf(__VA_ARGS__);                                                    \
         }
 
-#define DEBUG_SESSION_ERROR()                                                                                \
-        printf("[mqtt-broker, error, %llu, %s] %s: %u\n", get_uptime_ms(), session->client_ip_str, __func__, \
-                __LINE__)
+#define DEBUG_SESSION_ERROR()                                                                            \
+        do {                                                                                             \
+                time_t t = time(NULL);                                                                   \
+                struct tm lt;                                                                            \
+                localtime_r(&t, &lt);                                                                    \
+                char t_str[32];                                                                          \
+                strftime(t_str, sizeof(t_str), "%F %X", &lt);                                            \
+                printf("[mqtt-broker, error, %s, %s] %s: %u\n", t_str, session->client_ip_str, __func__, \
+                        __LINE__);                                                                       \
+        } while (false)
 
-#define VERBOSE_SESSION(...)                                                               \
-        printf("[mqtt-broker, info, %llu, %s] ", get_uptime_ms(), session->client_ip_str); \
-        printf(__VA_ARGS__)
+#define VERBOSE_SESSION(...)                                                           \
+        do {                                                                           \
+                time_t t = time(NULL);                                                 \
+                struct tm lt;                                                          \
+                localtime_r(&t, &lt);                                                  \
+                char t_str[32];                                                        \
+                strftime(t_str, sizeof(t_str), "%F %X", &lt);                          \
+                printf("[mqtt-broker, info, %s, %s] ", t_str, session->client_ip_str); \
+                printf(__VA_ARGS__);                                                   \
+        } while (false)
 
-#define VERBOSE(...)                                           \
-        printf("[mqtt-broker, info, %llu] ", get_uptime_ms()); \
-        printf(__VA_ARGS__)
+#define VERBOSE(...)                                          \
+        do {                                                  \
+                time_t t = time(NULL);                        \
+                struct tm lt;                                 \
+                localtime_r(&t, &lt);                         \
+                char t_str[32];                               \
+                strftime(t_str, sizeof(t_str), "%F %X", &lt); \
+                printf("[mqtt-broker, info, %s] ", t_str);    \
+                printf(__VA_ARGS__);                          \
+        } while (false)
 
 #if DEBUG_CMD_ENABLE > 0
 #define DEBUG_CMD(...) VERBOSE(__VA_ARGS__)
@@ -2680,7 +2711,6 @@ static mqtt_reason_t session_publish_topic(session_t *session, uint8_t qos, cons
                 qos = 0;
         }
 
-        uint16_t identifier = 0;
         mqtt_reason_t reason = 0;
         uint8_t *variable_header = NULL;
         uint8_t *msg = NULL;
@@ -2688,8 +2718,6 @@ static mqtt_reason_t session_publish_topic(session_t *session, uint8_t qos, cons
         bool msg_allocated = false;
 
         if (not payload) {
-                identifier = global->topic_db.msg_id_ctr++;
-
                 int pos = llist_find_begin(global->topic_db.data, &(topicdb_t) {.topic = const_cast(topic)});
 
                 if (pos >= 0) {
@@ -2724,7 +2752,7 @@ static mqtt_reason_t session_publish_topic(session_t *session, uint8_t qos, cons
 
         size_t topic_length_size = sizeof(uint16_t);
         size_t topic_length = strlen(topic);
-        size_t identifier_length = qos > 0 ? sizeof(uint16_t) : 0;
+        size_t identifier_length = (qos > 0) ? sizeof(uint16_t) : 0;
         size_t property_length_size = sizeof(uint8_t);
         size_t variable_header_len = topic_length_size + topic_length + identifier_length +
                 property_length_size;
@@ -2740,6 +2768,11 @@ static mqtt_reason_t session_publish_topic(session_t *session, uint8_t qos, cons
         memcpy(&variable_header[2], topic, topic_length);
 
         if (qos > 0) {
+                uint16_t identifier = ++global->topic_db.msg_id_ctr;
+                if (identifier == 0) {
+                        identifier = ++global->topic_db.msg_id_ctr;
+                }
+
                 variable_header[topic_length_size + topic_length + 0] = identifier >> 8;
                 variable_header[topic_length_size + topic_length + 1] = identifier >> 0;
         }

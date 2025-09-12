@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += ftpd/ftpd.c
+CSRC_PROGRAMS   += $(PROG_ROOT_FTPD)ftpd/ftpd.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

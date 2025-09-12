@@ -1,28 +1,32 @@
 /*==============================================================================
-File     strlcpy.c
+File    strlcpy.c
 
-Author   Daniel Zorychta
+Author  Daniel Zorychta
 
-Brief    String functions.
+Brief   String functions.
 
-         Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+        MIT License
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the Free Software Foundation and modified by the dnx RTOS exception.
+        Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-         NOTE: The modification  to the GPL is  included to allow you to
-               distribute a combined work that includes dnx RTOS without
-               being obliged to provide the source  code for proprietary
-               components outside of the dnx RTOS.
+        Permission is hereby granted, free of charge, to any person obtaining
+        a copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
 
-         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
 
-         Full license text is available on the following file: doc/license.txt.
-
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+        OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+        ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+        OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================*/
 

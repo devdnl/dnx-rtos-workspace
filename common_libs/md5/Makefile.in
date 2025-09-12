@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_LIB   += md5/md5.c
+CSRC_LIB   += $(LIB_ROOT_MD5)md5/md5.c
 CXXSRC_LIB +=
-HDRLOC_LIB += md5
+HDRLOC_LIB += $(LIB_ROOT_MD5)md5

@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += fstest/fstest.c
+CSRC_PROGRAMS   += $(PROG_ROOT_FSTEST)fstest/fstest.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS +=

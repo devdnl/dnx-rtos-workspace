@@ -1,8 +1,4 @@
 # Makefile for GNU make
 
-COMMON_LIBS_MD5_ROOT = ../../../common_libs
-
-CSRC_LIB   += $(COMMON_LIBS_MD5_ROOT)/md5/md5.c
-CXXSRC_LIB +=
-HDRLOC_LIB += $(COMMON_LIBS_MD5_ROOT)/
-HDRLOC_LIB += $(COMMON_LIBS_MD5_ROOT)/md5
+LIB_ROOT_MD5 = ../../../common_libs/
+include ../common_libs/md5/Makefile.in

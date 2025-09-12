@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += telnetd/telnetd.c
+CSRC_PROGRAMS   += $(PROG_ROOT_TELNETD)telnetd/telnetd.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

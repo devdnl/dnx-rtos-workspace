@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += mkeefs/mkeefs.c
+CSRC_PROGRAMS   += $(PROG_ROOT_MKEEFS)mkeefs/mkeefs.c
 CXXSRC_PROGRAMS +=
 HDRLOC_PROGRAMS +=

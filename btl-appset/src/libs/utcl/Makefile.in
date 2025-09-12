@@ -1,8 +1,4 @@
 # Makefile for GNU make
 
-COMMON_LIBS_UTCL_ROOT = ../../../common_libs
-
-CSRC_LIB   += $(COMMON_LIBS_UTCL_ROOT)/utcl/utcl.c
-CXXSRC_LIB +=
-HDRLOC_LIB += $(COMMON_LIBS_UTCL_ROOT)/
-HDRLOC_LIB += $(COMMON_LIBS_UTCL_ROOT)/utcl
+LIB_ROOT_UTCL = ../../../common_libs/
+include ../common_libs/utcl/Makefile.in

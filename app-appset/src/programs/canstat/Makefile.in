@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += canstat/canstat.c
+CSRC_PROGRAMS   += $(PROG_ROOT_CANSTAT)canstat/canstat.c
 CXXSRC_PROGRAMS +=
 HDRLOC_PROGRAMS +=

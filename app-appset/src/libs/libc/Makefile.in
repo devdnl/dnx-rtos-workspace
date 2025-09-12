@@ -1,38 +1,4 @@
 # Makefile for GNU make
 
-COMMON_LIBS_LIBC_ROOT = ../../../common_libs
-
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/alloc.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/appset.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/concurrent.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/conv.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/ctime_r.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/fgets.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/file.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/fputc.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/fputs.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/getc.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/heap.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/locale.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/mktime.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/perror.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/rand.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/socket.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/strcasecmp.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/strchrrep.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/strerror.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/strftime.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/strlcat.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/strlcpy.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/strncasecmp.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/strndup.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/syscall.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/system.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/threads.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/vfprintf.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/vfscanf.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/vsnprintf.c
-CSRC_LIB   += $(COMMON_LIBS_LIBC_ROOT)/libc/source/vsscanf.c
-CXXSRC_LIB +=
-HDRLOC_LIB += $(COMMON_LIBS_LIBC_ROOT)/
-HDRLOC_LIB += $(COMMON_LIBS_LIBC_ROOT)/libc/include
+LIB_ROOT_LIBC = ../../../common_libs/
+include ../common_libs/libc/Makefile.in

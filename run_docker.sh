@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-#project_name="$(basename $(readlink -m $(pwd)))"
 project_name="dnx-rtos-workspace"
 
 xhost +

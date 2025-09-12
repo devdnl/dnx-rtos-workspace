@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += mknod/mknod.c
+CSRC_PROGRAMS   += $(PROG_ROOT_MKNOD)mknod/mknod.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

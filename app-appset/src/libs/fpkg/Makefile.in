@@ -1,8 +1,4 @@
 # Makefile for GNU make
 
-COMMON_LIBS_FPKG_ROOT = ../../../common_libs
-
-CSRC_LIB   += $(COMMON_LIBS_FPKG_ROOT)/fpkg/fpkg.c
-CXXSRC_LIB += 
-HDRLOC_LIB += $(COMMON_LIBS_FPKG_ROOT)/
-HDRLOC_LIB += $(COMMON_LIBS_FPKG_ROOT)/fpkg
+LIB_ROOT_FPKG = ../../../common_libs/
+include ../common_libs/fpkg/Makefile.in

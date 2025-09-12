@@ -1,5 +1,6 @@
 # Makefile for GNU make
 
-CSRC_LIB   += bs/bs.c
-CXXSRC_LIB += 
-HDRLOC_LIB += bs
+CSRC_LIB   += $(LIB_ROOT_BS)bs/bs.c
+CXXSRC_LIB +=
+HDRLOC_LIB += $(LIB_ROOT_BS)
+HDRLOC_LIB += $(LIB_ROOT_BS)bs

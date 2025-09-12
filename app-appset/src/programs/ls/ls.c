@@ -1,28 +1,32 @@
 /*==============================================================================
-@file    ls.c
+@file   ls.c
 
-@author  Daniel Zorychta
+@author Daniel Zorychta
 
-@brief   List files in specified directory
+@brief  List files in specified directory
 
-@note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+        MIT License
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the Free Software Foundation and modified by the dnx RTOS exception.
+        Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-         NOTE: The modification  to the GPL is  included to allow you to
-               distribute a combined work that includes dnx RTOS without
-               being obliged to provide the source  code for proprietary
-               components outside of the dnx RTOS.
+        Permission is hereby granted, free of charge, to any person obtaining
+        a copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
 
-         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
 
-         Full license text is available on the following file: doc/license.txt.
-
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+        OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+        ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+        OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================*/
 
@@ -53,6 +57,8 @@
 #define CONVERT_TO_KiB(_val) (_val >> 10)
 #define CONVERT_TO_MiB(_val) (_val >> 20)
 #define CONVERT_TO_GiB(_val) (_val >> 30)
+
+#define CURSOR_AT(_col)      VT100_CURSOR_BACKWARD(999) VT100_CURSOR_FORWARD(_col)
 
 /*==============================================================================
   Local types, enums definitions
@@ -86,12 +92,22 @@ int main(int argc, char *argv[])
 {
         getcwd(global->cwd, CWD_MAX_LEN - 1);
 
-        bool human_readable = ((argc == 3) and isstreq(argv[1], "-h"));
+        bool human_readable = false;
 
         for (int i = 0; i < argc; i++) {
 
                 if ((i == 0) and (argc >= 2)) {
                         continue;
+                }
+
+                if (isstreq(argv[i], "-h")) {
+                        human_readable = true;
+
+                        if (argc > 2) {
+                                continue;
+                        } else {
+                                argv[i] = "./";
+                        }
                 }
 
                 if (argc >= 2) {
@@ -206,13 +222,9 @@ int main(int argc, char *argv[])
                                         char time[24];
                                         strftime(time, sizeof(time), "%d-%m-%Y %H:%M", &tm);
 
-                                        printf("%s%s %12llu %s" VT100_CURSOR_BACKWARD(999) VT100_CURSOR_FORWARD(
-                                                       28) "%s" VT100_CURSOR_BACKWARD(999)
-                                                        VT100_CURSOR_FORWARD(38) "%s" VT100_CURSOR_BACKWARD(
-                                                                999)
-                                                                VT100_CURSOR_FORWARD(
-                                                                        55) "%s" VT100_RESET_ATTRIBUTES "\n",
-                                                type, mode, size, unit, mod, time, dirent->d_name);
+                                        printf("%s%s %12llu %s%s%s%s%s%s%s" VT100_RESET_ATTRIBUTES "\n", type,
+                                                mode, size, unit, CURSOR_AT(28), mod, CURSOR_AT(38), time,
+                                                CURSOR_AT(55), dirent->d_name);
 
                                         count++;
                                 } else {

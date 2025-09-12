@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += shutdown/shutdown.c
+CSRC_PROGRAMS   += $(PROG_ROOT_SHUTDOWN)shutdown/shutdown.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

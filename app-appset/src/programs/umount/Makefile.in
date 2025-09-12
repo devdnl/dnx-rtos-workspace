@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += umount/umount.c
+CSRC_PROGRAMS   += $(PROG_ROOT_UMOUNT)umount/umount.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

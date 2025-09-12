@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += grep/grep.c
+CSRC_PROGRAMS   += $(PROG_ROOT_GREP)grep/grep.c
 CXXSRC_PROGRAMS +=
 HDRLOC_PROGRAMS +=

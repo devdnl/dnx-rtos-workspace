@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_LIB   += fpkg/fpkg.c
-CXXSRC_LIB += 
-HDRLOC_LIB += fpkg
+CSRC_LIB   += $(LIB_ROOT_FPKG)fpkg/fpkg.c
+CXXSRC_LIB +=
+HDRLOC_LIB += $(LIB_ROOT_FPKG)fpkg

@@ -1,39 +1,4 @@
 # Makefile for GNU make
 
-COMMON_LIBS_LUA_ROOT = ../../../common_libs
-
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lapi.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lauxlib.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lbaselib.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lcode.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lcorolib.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lctype.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/ldblib.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/ldebug.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/ldo.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/ldump.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lfunc.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lgc.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/linit.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/liolib.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/llex.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lmathlib.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lmem.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/loadlib.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lobject.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lopcodes.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/loslib.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lparser.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lstate.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lstring.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lstrlib.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/ltable.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/ltablib.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/ltm.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lundump.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lutf8lib.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lvm.c
-CSRC_LIB   += $(COMMON_LIBS_LUA_ROOT)/lua/lzio.c
-CXXSRC_LIB += 
-HDRLOC_LIB += $(COMMON_LIBS_LUA_ROOT)/
-HDRLOC_LIB += $(COMMON_LIBS_LUA_ROOT)/lua
+LIB_ROOT_LUA = ../../../common_libs/
+include ../common_libs/lua/Makefile.in

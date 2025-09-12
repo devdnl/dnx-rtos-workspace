@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += mkfifo/mkfifo.c
+CSRC_PROGRAMS   += $(PROG_ROOT_MKFIFO)mkfifo/mkfifo.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

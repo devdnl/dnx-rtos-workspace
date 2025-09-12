@@ -1,27 +1,28 @@
 # Makefile for GNU make
 ####################################################################################################
 #
-# AUTHOR: DANIEL ZORYCHTA
+# MIT License
 #
-# Version: 20130516
-#--------------------------------------------------------------------------------------------------
+# Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 #
-#    Copyright (C) 2011, 2012, 2013  Daniel Zorychta (daniel.zorychta@gmail.com)
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
 #
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the  Free Software  Foundation;  either version 2 of the License, or
-#    any later version.
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
 #
-#    This  program  is  distributed  in the hope that  it will be useful,
-#    but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
-#    MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-#    GNU General Public License for more details.
-#
-#    You  should  have received a copy  of the GNU General Public License
-#    along  with  this  program;  if not,  write  to  the  Free  Software
-#    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
 #
 ####################################################################################################
 
@@ -31,6 +32,10 @@ endif
 
 CONFIG=$(CONFIG_DIR)/config.h
 include $(CONFIG)
+
+ifeq ($(__PROGRAMS_EXCLUDE_LIST__),"")
+	__PROGRAMS_EXCLUDE_LIST__=" "
+endif
 
 ####################################################################################################
 # PROJECT CONFIGURATION
@@ -365,7 +370,7 @@ generate :
 
 	@$(MKDIR) $(GEN_PROG_DIR)
 	@$(ECHO) "Adding user's programs and libraries to the project..."
-	@$(SHELL) $(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR) $(__PROGRAMS_LIST__) $(CONFIG_DIR)
+	@$(SHELL) $(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR) $(__PROGRAMS_LIST__) $(__PROGRAMS_EXCLUDE_LIST__) $(CONFIG_DIR)
 
 	@$(ECHO) "Obtaining git hash..."
 	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" > build/defs.h
