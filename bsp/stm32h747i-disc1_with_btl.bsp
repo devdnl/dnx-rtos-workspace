@@ -15,7 +15,7 @@
 		["__PROJ_APPSET_TABLE_ADDRESS__"]="0x08100000";
 		["__PROJ_APPSET_TABLE_SIZE__"]="768k";
 	};
-	["app-romfs/config/config.h"]={
+	["config/app-romfs/config.h"]={
 		["__ROMFS_ADDRESS__"]="0x081C0000";
 		["__ROMFS_NAME__"]="\"romfs\"";
 	};

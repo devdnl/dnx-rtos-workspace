@@ -15,7 +15,7 @@
 		["__PROJ_APPSET_TABLE_ADDRESS__"]="0x08010000";
 		["__PROJ_APPSET_TABLE_SIZE__"]="1024k";
 	};
-	["app-romfs/config/config.h"]={
+	["config/app-romfs/config.h"]={
 		["__ROMFS_ADDRESS__"]="0x080C0000";
 		["__ROMFS_NAME__"]="\"romfs\"";
 	};
@@ -131,7 +131,7 @@
 		["__CPU_PREFFERED_FS_RAM__"]="\"SRAM\"";
 		["__CPU_SHOW_AND_CLEAR_RESET_SOURCE__"]="_YES_";
 		["__CPU_VTOR_TAB_POSITION__"]="0x10000100";
-		["__CUSTOM_LD_SCRIPT_FILE__"]="\"custom_script.ld\"";
+		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./custom_linker_script.ld\"";
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="RPxx40";
 	};
@@ -6019,7 +6019,7 @@
 		["__CPU_PREFFERED_FS_RAM__"]="\"SRAM\"";
 		["__CPU_SHOW_AND_CLEAR_RESET_SOURCE__"]="_YES_";
 		["__CPU_VTOR_TAB_POSITION__"]="0x10000100";
-		["__CUSTOM_LD_SCRIPT_FILE__"]="\"custom_script.ld\"";
+		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./custom_linker_script.ld\"";
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="RPxx40";
 	};
