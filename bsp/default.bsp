@@ -6,6 +6,10 @@
 		["__LIBC_IOCTL_REQUEST_FILE__"]="\"../../build/ioctl/ioctl_requests.h\"";
 		["__LIBC_SYSTEM_PROG__"]="\"dsh -e\"";
 	};
+	["config/app-appset/programs/programs_flags.h"]={
+		["__PROGRAMS_EXCLUDE_LIST__"]="\"\"";
+		["__PROGRAMS_LIST__"]="\"*\"";
+	};
 	["config/app-appset/project/project_flags.h"]={
 		["__CPU_ARCH__"]="stm32f1";
 		["__CPU_UART_TERM__"]="0";
@@ -18,22 +22,6 @@
 	["config/app-romfs/config.h"]={
 		["__ROMFS_ADDRESS__"]="0x080C0000";
 		["__ROMFS_NAME__"]="\"romfs\"";
-	};
-	["config/btl-appset/config.h"]={
-	};
-	["config/btl-appset/libc/libc_flags.h"]={
-		["__LIBC_COLOR_TERMINAL_ENABLE__"]="_YES_";
-		["__LIBC_IOCTL_REQUEST_FILE__"]="\"../../build/ioctl/ioctl_requests.h\"";
-		["__LIBC_SYSTEM_PROG__"]="\"dsh -e\"";
-	};
-	["config/btl-appset/project/project_flags.h"]={
-		["__CPU_ARCH__"]="stm32f1";
-		["__CPU_UART_TERM__"]="0";
-		["__LIBC_DNX_RTOS_ADDRESS__"]="0x08000000";
-		["__PROJECT_NAME__"]="appset";
-		["__PROJECT_TOOLCHAIN__"]="arm-none-eabi-";
-		["__PROJ_APPSET_TABLE_ADDRESS__"]="0x08010000";
-		["__PROJ_APPSET_TABLE_SIZE__"]="1024k";
 	};
 	["config/app-system/arch/arch_flags.h"]={
 		["__ENABLE_ADC__"]="_NO_";
@@ -5922,6 +5910,26 @@
 		["__PROJECT_NAME__"]="dnx";
 		["__PROJECT_TOOLCHAIN__"]="arm-none-eabi-";
 		["__PROJ_APPSET_TABLE_ADDRESS__"]="0x08010000";
+	};
+	["config/btl-appset/config.h"]={
+	};
+	["config/btl-appset/libc/libc_flags.h"]={
+		["__LIBC_COLOR_TERMINAL_ENABLE__"]="_YES_";
+		["__LIBC_IOCTL_REQUEST_FILE__"]="\"../../build/ioctl/ioctl_requests.h\"";
+		["__LIBC_SYSTEM_PROG__"]="\"dsh -e\"";
+	};
+	["config/btl-appset/programs/programs_flags.h"]={
+		["__PROGRAMS_EXCLUDE_LIST__"]="\"\"";
+		["__PROGRAMS_LIST__"]="\"*\"";
+	};
+	["config/btl-appset/project/project_flags.h"]={
+		["__CPU_ARCH__"]="stm32f1";
+		["__CPU_UART_TERM__"]="0";
+		["__LIBC_DNX_RTOS_ADDRESS__"]="0x08000000";
+		["__PROJECT_NAME__"]="appset";
+		["__PROJECT_TOOLCHAIN__"]="arm-none-eabi-";
+		["__PROJ_APPSET_TABLE_ADDRESS__"]="0x08010000";
+		["__PROJ_APPSET_TABLE_SIZE__"]="1024k";
 	};
 	["config/btl-system/arch/arch_flags.h"]={
 		["__ENABLE_ADC__"]="_NO_";
