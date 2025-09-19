@@ -173,6 +173,7 @@ typedef struct {
 
                         char *url;
                         char *get_ref;
+                        size_t get_len;
                         char *multipart_boundary;
                 } header;
         } http_request;

@@ -49,7 +49,7 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void parse_params_to_lua_table(httpsrv_thread_t *self, const char *params);
+static void parse_params_to_lua_table(httpsrv_thread_t *self, const char *params, size_t params_len);
 static int open_lib_request(lua_State *L);
 static int open_lib_ipc(lua_State *L);
 static int luafn_echo(lua_State *L);
@@ -395,29 +395,39 @@ static void convert_html_encoding(char *buf)
  * @param  params       GET or POST parameters string
  */
 //==============================================================================
-static void parse_params_to_lua_table(httpsrv_thread_t *self, const char *params)
+static void parse_params_to_lua_table(httpsrv_thread_t *self, const char *params, size_t params_len)
 {
         lua_State *L = self->interpreter.object;
 
         lua_newtable(L);
 
-        while (params and (*params != '\0')) {
+        const char *params_end = params + params_len;
+
+        while (params and (*params != '\0') and (params < params_end)) {
                 const char *key_begin = params;
                 const char *key_end = strchr(key_begin, '=');
-                size_t key_len = cast(uintptr_t, key_end) - cast(uintptr_t, key_begin) + 1;
+                int key_len = cast(uintptr_t, key_end) - cast(uintptr_t, key_begin) + 1;
+                if (key_len <= 0) {
+                        break;
+                }
 
                 const char *val_begin = key_end + 1;
                 const char *val_end = strchr(val_begin, '&');
                 if (not val_end) {
                         val_end = val_begin + strlen(val_begin);
                 }
-                size_t val_len = cast(uintptr_t, val_end) - cast(uintptr_t, val_begin) + 1;
+                int val_len = cast(uintptr_t, val_end) - cast(uintptr_t, val_begin) + 1;
+                if (val_len <= 0) {
+                        break;
+                }
 
-                strlcpy(self->interpreter.tmp_buf, val_begin, min(val_len, self->interpreter.tmp_buf_size));
+                strlcpy(self->interpreter.tmp_buf, val_begin,
+                        min(cast(size_t, val_len), self->interpreter.tmp_buf_size));
                 convert_html_encoding(self->interpreter.tmp_buf);
                 lua_pushstring(L, self->interpreter.tmp_buf);
 
-                strlcpy(self->interpreter.tmp_buf, key_begin, min(key_len, self->interpreter.tmp_buf_size));
+                strlcpy(self->interpreter.tmp_buf, key_begin,
+                        min(cast(size_t, key_len), self->interpreter.tmp_buf_size));
                 convert_html_encoding(self->interpreter.tmp_buf);
                 lua_setfield(L, -2, self->interpreter.tmp_buf);
 
@@ -530,10 +540,12 @@ static int luafn_request_data(lua_State *L)
         httpsrv_thread_t *self = get_http_thread_self(L);
 
         if (self->http_request.parser.method == HTTP_GET) {
-                parse_params_to_lua_table(self, self->http_request.header.get_ref);
+                parse_params_to_lua_table(self, self->http_request.header.get_ref,
+                        self->http_request.header.get_len);
 
         } else if (self->http_request.parser.method == HTTP_POST) {
-                parse_params_to_lua_table(self, self->http_request.header.body_data.value);
+                parse_params_to_lua_table(self, self->http_request.header.body_data.value,
+                        self->http_request.header.body_data.value_length);
         }
 
         return 1;
@@ -581,8 +593,7 @@ static int luafn_ipc_request(lua_State *L)
         /*
          * Compose request. Lua table -> bs
          */
-        bs_wr_t bs_wr;
-        bs_write_chunk(&bs_wr, cast(u8_t *, self->interpreter.tmp_buf), self->interpreter.tmp_buf_size);
+        bs_t bs_wr = bs_write_init(cast(u8_t *, self->interpreter.tmp_buf), self->interpreter.tmp_buf_size);
 
         lua_pushvalue(L, -1);
 
@@ -668,8 +679,7 @@ static int luafn_ipc_request(lua_State *L)
         lua_pushnumber(L, 0);
         lua_newtable(L);
 
-        bs_rd_t bs_rd;
-        bs_read_chunk(&bs_rd, cast(uint8_t *, self->interpreter.tmp_buf), n);
+        bs_t bs_rd = bs_read_init(cast(uint8_t *, self->interpreter.tmp_buf), n);
 
         uint8_t *next = NULL;
         const char *key;

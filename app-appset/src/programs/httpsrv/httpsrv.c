@@ -648,9 +648,15 @@ static int parser_on_url(http_parser *parser, const char *at, size_t length)
         if (get_start) {
                 *get_start = '\0';
                 self->http_request.header.get_ref = get_start + 1;
+                self->http_request.header.get_len = strlen(self->http_request.header.get_ref);
+
+                DEBUG("%s(GET): [%lu] '%s'\n", __func__, self->http_request.header.get_len, self->http_request.header.get_ref);
+        } else {
+                self->http_request.header.get_ref = NULL;
+                self->http_request.header.get_len = 0;
         }
 
-        DEBUG("%s: '%s'\n", __func__, self->http_request.header.url);
+        DEBUG("%s(URL): '%s'\n", __func__, self->http_request.header.url);
 
         return 0;
 }
