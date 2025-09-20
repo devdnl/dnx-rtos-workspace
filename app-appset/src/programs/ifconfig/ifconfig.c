@@ -369,7 +369,7 @@ static void UDS_print_status(void)
 //==============================================================================
 static void print_network_status(const char *network, NET_family_t family)
 {
-        printf("%s, ", network);
+        printf("name: %s, type: ", network);
 
         if (family == _NET_FAMILY__COUNT) {
                 puts("UNKNOWN");

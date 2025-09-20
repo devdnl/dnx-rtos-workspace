@@ -191,16 +191,13 @@ static void handle_interface(const char *config_file)
                 conf_parser__save(global->conf);
         }
 
-        if (configure_ethernet() != 0) {
-                return;
-        }
-
         NET_INET_state_t last_state = NET_INET_STATE__LINK_DISCONNECTED;
 
         while (true) {
 
                 if (global->shared->reload_conf) {
                         ifdown("inet");
+                        configure_ethernet();
                         if (conf_parser__reload(global->conf) > 0) {
                                 global->shared->reload_conf = false;
                         } else {
@@ -297,6 +294,8 @@ static int configure_ethernet(void)
 
         int fd = open(conf_if_path, O_RDWR);
         if (fd >= 0) {
+                ioctl(fd, IOCTL_ETHIF__STOP);
+
                 int err = ioctl(fd, IOCTL_ETHIF__CONFIGURE, &conf);
 
                 if (not err) {
