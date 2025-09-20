@@ -1,19 +1,19 @@
 # Makefile for GNU make
 
-CSRC_LIB   += zlib/adler32.c
-CSRC_LIB   += zlib/compress.c
-CSRC_LIB   += zlib/crc32.c
-CSRC_LIB   += zlib/deflate.c
-CSRC_LIB   += zlib/gzclose.c
-CSRC_LIB   += zlib/gzlib.c
-CSRC_LIB   += zlib/gzread.c
-CSRC_LIB   += zlib/gzwrite.c
-CSRC_LIB   += zlib/infback.c
-CSRC_LIB   += zlib/inffast.c
-CSRC_LIB   += zlib/inflate.c
-CSRC_LIB   += zlib/inftrees.c
-CSRC_LIB   += zlib/trees.c
-CSRC_LIB   += zlib/uncompr.c
-CSRC_LIB   += zlib/zutil.c
+CSRC_LIB   += $(LIB_ROOT_ZLIB)zlib/adler32.c
+CSRC_LIB   += $(LIB_ROOT_ZLIB)zlib/compress.c
+CSRC_LIB   += $(LIB_ROOT_ZLIB)zlib/crc32.c
+CSRC_LIB   += $(LIB_ROOT_ZLIB)zlib/deflate.c
+CSRC_LIB   += $(LIB_ROOT_ZLIB)zlib/gzclose.c
+CSRC_LIB   += $(LIB_ROOT_ZLIB)zlib/gzlib.c
+CSRC_LIB   += $(LIB_ROOT_ZLIB)zlib/gzread.c
+CSRC_LIB   += $(LIB_ROOT_ZLIB)zlib/gzwrite.c
+CSRC_LIB   += $(LIB_ROOT_ZLIB)zlib/infback.c
+CSRC_LIB   += $(LIB_ROOT_ZLIB)zlib/inffast.c
+CSRC_LIB   += $(LIB_ROOT_ZLIB)zlib/inflate.c
+CSRC_LIB   += $(LIB_ROOT_ZLIB)zlib/inftrees.c
+CSRC_LIB   += $(LIB_ROOT_ZLIB)zlib/trees.c
+CSRC_LIB   += $(LIB_ROOT_ZLIB)zlib/uncompr.c
+CSRC_LIB   += $(LIB_ROOT_ZLIB)zlib/zutil.c
 CXXSRC_LIB +=
-HDRLOC_LIB += zlib
+HDRLOC_LIB += $(LIB_ROOT_ZLIB)zlib

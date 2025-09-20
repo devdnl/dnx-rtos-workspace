@@ -1,28 +1,32 @@
 /*==============================================================================
-@file    telnetd.c
+@file   telnetd.c
 
-@author  Daniel Zorychta
+@author Daniel Zorychta
 
-@brief   Telnet example program
+@brief  Telnet example program
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+        MIT License
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the Free Software Foundation and modified by the dnx RTOS exception.
+        Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-         NOTE: The modification  to the GPL is  included to allow you to
-               distribute a combined work that includes dnx RTOS without
-               being obliged to provide the source  code for proprietary
-               components outside of the dnx RTOS.
+        Permission is hereby granted, free of charge, to any person obtaining
+        a copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
 
-         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
 
-         Full license text is available on the following file: doc/license.txt.
-
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+        OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+        ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+        OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================*/
 
@@ -48,7 +52,7 @@
 #define PIPE_NAME_LEN                   24
 #define TELNET_CFG_BYTE                 0xFF
 #define PROGRAM_NAME                    "dsh"
-#define RECEIVE_TIMOUT                  100
+#define RECEIVE_TIMEOUT                 100
 #define SEND_TIMEOUT                    3000
 #define TELNET_PORT                     23
 
@@ -197,11 +201,19 @@ static int telnet_thread(void *arg)
         if (proc == 0)
                 goto exit;
 
-        socket_set_recv_timeout(sock, RECEIVE_TIMOUT);
+        u32_t recv_timeout = RECEIVE_TIMEOUT;
+
         socket_set_send_timeout(sock, SEND_TIMEOUT);
 
         // handle telnet connection
         while (true) {
+                socket_set_recv_timeout(sock, recv_timeout);
+
+                if (recv_timeout < RECEIVE_TIMEOUT) {
+                        recv_timeout += 10;
+                        recv_timeout = min(recv_timeout, RECEIVE_TIMEOUT);
+                }
+
                 // receive input packet from telnet client
                 errno = 0;
                 int len = socket_read(sock, buf, BUF_SIZE);
@@ -224,6 +236,7 @@ static int telnet_thread(void *arg)
                         len = fread(buf, 1, BUF_SIZE, fout);
                         if (len > 0) {
                                 len = socket_write(sock, buf, len);
+                                recv_timeout = 0;
                         }
                 } while (len > 0);
 
@@ -306,7 +319,7 @@ int main(int argc, char *argv[])
 
 
 
-        SOCKET *listener = socket_open("inet", NET_PROTOCOL__TCP);
+        SOCKET *listener = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
         if (!listener) {
                 global->msg = "Connection failed";
                 goto exit;

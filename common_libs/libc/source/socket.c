@@ -1,26 +1,32 @@
 /*==============================================================================
-File     socket.c
+File    socket.c
 
-Author   Daniel Zorychta
+Author  Daniel Zorychta
 
-Brief    Socket implementation.
+Brief   Socket implementation.
 
-	 Copyright (C) 2022 Daniel Zorychta <daniel.zorychta@gmail.com>
+        MIT License
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+        Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+        Permission is hereby granted, free of charge, to any person obtaining
+        a copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
 
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+        OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+        ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+        OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================*/
 
@@ -66,17 +72,18 @@ Brief    Socket implementation.
  * @brief Creates an endpoint for communication and returns a socket.
  *
  * @param netname       Network name.
+ * @param type          Socket type.
  * @param protocol      The protocol name.
  *
  * @return On error @b NULL is returned and @ref errno value is set appropriately,
  *         otherwise new socket pointer.
  */
 //==============================================================================
-SOCKET *socket_open(const char *netname, NET_protocol_t protocol)
+SOCKET *socket_open(const char *netname, NET_socket_type_t type, u8_t protocol)
 {
         SOCKET *socket = _libc_malloc(sizeof(*socket));
         if (socket) {
-                int err = _libc_syscall(_LIBC_SYS_NETSOCKETCREATE, &socket->fd, netname, &protocol);
+                int err = _libc_syscall(_LIBC_SYS_NETSOCKETCREATE, &socket->fd, netname, &type, &protocol);
                 if (!err) {
                         return socket;
                 }
@@ -280,7 +287,7 @@ int socket_accept(SOCKET *socket, SOCKET **new_socket)
                 return -1;
         }
 
-        int err = -1;
+        int     err     = -1;
         SOCKET *nsocket = _libc_malloc(sizeof(*nsocket));
         if (nsocket) {
                 err = _libc_syscall(_LIBC_SYS_NETACCEPT, &socket->fd, &nsocket->fd);
@@ -318,7 +325,7 @@ int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags)
         }
 
         size_t rcved;
-        int err = _libc_syscall(_LIBC_SYS_NETRECV, &socket->fd, buf, &len, &flags, &rcved);
+        int    err = _libc_syscall(_LIBC_SYS_NETRECV, &socket->fd, buf, &len, &flags, &rcved);
         return err ? -1 : (int)rcved;
 }
 
@@ -340,12 +347,8 @@ int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags)
  * @see socket_connect(), socket_accept(), socket_recv(), socket_read()
  */
 //==============================================================================
-int socket_recvfrom(SOCKET                 *socket,
-                    void                   *buf,
-                    size_t                  len,
-                    NET_flags_t             flags,
-                    NET_generic_sockaddr_t *from_sockaddr,
-                    size_t                  from_sockaddr_size)
+int socket_recvfrom(SOCKET *socket, void *buf, size_t len, NET_flags_t flags,
+        const NET_generic_sockaddr_t *from_sockaddr, size_t from_sockaddr_size)
 {
         if (!socket or !buf or !len or !from_sockaddr or !from_sockaddr_size) {
                 errno = EINVAL;
@@ -353,8 +356,8 @@ int socket_recvfrom(SOCKET                 *socket,
         }
 
         size_t rcved;
-        int err = _libc_syscall(_LIBC_SYS_NETRECVFROM, &socket->fd, buf, &len, &flags,
-                                from_sockaddr, &from_sockaddr_size, &rcved);
+        int    err = _libc_syscall(_LIBC_SYS_NETRECVFROM, &socket->fd, buf, &len, &flags, from_sockaddr,
+                   &from_sockaddr_size, &rcved);
         return err ? -1 : (int)rcved;
 }
 
@@ -383,7 +386,7 @@ int socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags)
         }
 
         size_t sent;
-        int err = _libc_syscall(_LIBC_SYS_NETSEND, &socket->fd, buf, &len, &flags, &sent);
+        int    err = _libc_syscall(_LIBC_SYS_NETSEND, &socket->fd, buf, &len, &flags, &sent);
         return err ? -1 : (int)sent;
 }
 
@@ -405,12 +408,8 @@ int socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags)
  * @see socket_connect(), socket_send(), socket_write()
  */
 //==============================================================================
-int socket_sendto(SOCKET                       *socket,
-                  const void                   *buf,
-                  size_t                        len,
-                  NET_flags_t                   flags,
-                  const NET_generic_sockaddr_t *to_sockaddr,
-                  size_t                        to_sockaddr_size)
+int socket_sendto(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags,
+        const NET_generic_sockaddr_t *to_sockaddr, size_t to_sockaddr_size)
 {
         if (!socket or !buf or !len or !to_sockaddr or !to_sockaddr_size) {
                 errno = EINVAL;
@@ -418,8 +417,8 @@ int socket_sendto(SOCKET                       *socket,
         }
 
         size_t sent;
-        int err = _libc_syscall(_LIBC_SYS_NETSENDTO, &socket->fd, buf, &len, &flags,
-                                to_sockaddr, &to_sockaddr_size, &sent);
+        int    err = _libc_syscall(_LIBC_SYS_NETSENDTO, &socket->fd, buf, &len, &flags, to_sockaddr,
+                   &to_sockaddr_size, &sent);
         return err ? -1 : (int)sent;
 }
 

@@ -2,11 +2,11 @@
 BasedOnStyle: WebKit
 AccessModifierOffset: -8
 AlignConsecutiveAssignments:
-  Enabled: true
+  Enabled: false
 AlignConsecutiveBitFields:
   Enabled: true
 AlignConsecutiveDeclarations:
-  Enabled: true
+  Enabled: false
 AlignConsecutiveMacros:
   Enabled: true
   AcrossEmptyLines: true

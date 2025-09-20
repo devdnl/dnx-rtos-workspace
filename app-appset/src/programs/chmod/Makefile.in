@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += chmod/chmod.c
+CSRC_PROGRAMS   += $(PROG_ROOT_CHMOD)chmod/chmod.c
 CXXSRC_PROGRAMS +=
 HDRLOC_PROGRAMS +=

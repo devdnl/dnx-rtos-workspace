@@ -5,26 +5,32 @@
 
 @brief   dnx RTOS Shell interpreter
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+        MIT License
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the Free Software Foundation and modified by the dnx RTOS exception.
+        Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-         NOTE: The modification  to the GPL is  included to allow you to
-               distribute a combined work that includes dnx RTOS without
-               being obliged to provide the source  code for proprietary
-               components outside of the dnx RTOS.
+        Permission is hereby granted, free of charge, to any person obtaining
+        a copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
 
-         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
 
-         Full license text is available on the following file: doc/license.txt.
-
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+        OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+        ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+        OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================*/
+
+// #pragma GCC optimize("Og")
 
 /*==============================================================================
   Include files
@@ -235,7 +241,7 @@ static bool command_hint(void)
                 *tabstart = '\0';
 
                 char  search[128];
-                char *line;
+                char *line = "";
 
                 /*
                  * Setup file search path
@@ -622,6 +628,9 @@ static bool start_program(char *master, char *slave, char *std_in,
                 global->pidmaster_attr.fd_stdin   = fileno(stdin);
                 global->pidmaster_attr.fd_stdout  = fileno(pipe);
                 global->pidmaster_attr.fd_stderr  = fileno(stderr);
+                global->pidmaster_attr.p_stdin    = NULL;
+                global->pidmaster_attr.p_stdout   = NULL;
+                global->pidmaster_attr.p_stderr   = NULL;
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
@@ -634,6 +643,9 @@ static bool start_program(char *master, char *slave, char *std_in,
                 global->pidslave_attr.fd_stdin   = fileno(pipe);
                 global->pidslave_attr.fd_stdout  = fileno(fout);
                 global->pidslave_attr.fd_stderr  = fileno(stderr);
+                global->pidslave_attr.p_stdin    = NULL;
+                global->pidslave_attr.p_stdout   = NULL;
+                global->pidslave_attr.p_stderr   = NULL;
                 global->pidslave_attr.cwd        = global->cwd;
                 global->pidslave_attr.detached   = false;
                 global->pidslave_attr.priority   = PRIORITY_NORMAL;
@@ -652,6 +664,9 @@ static bool start_program(char *master, char *slave, char *std_in,
                 global->pidmaster_attr.fd_stdin   = fileno(stdin);
                 global->pidmaster_attr.fd_stdout  = fileno(pipe);
                 global->pidmaster_attr.fd_stderr  = fileno(stderr);
+                global->pidmaster_attr.p_stdin    = NULL;
+                global->pidmaster_attr.p_stdout   = NULL;
+                global->pidmaster_attr.p_stderr   = NULL;
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
@@ -664,6 +679,9 @@ static bool start_program(char *master, char *slave, char *std_in,
                 global->pidslave_attr.fd_stdin   = fileno(pipe);
                 global->pidslave_attr.fd_stdout  = fileno(stdout);
                 global->pidslave_attr.fd_stderr  = fileno(stderr);
+                global->pidslave_attr.p_stdin    = NULL;
+                global->pidslave_attr.p_stdout   = NULL;
+                global->pidslave_attr.p_stderr   = NULL;
                 global->pidslave_attr.cwd        = global->cwd;
                 global->pidslave_attr.detached   = false;
                 global->pidslave_attr.priority   = PRIORITY_NORMAL;
@@ -679,6 +697,11 @@ static bool start_program(char *master, char *slave, char *std_in,
                 process_wait(pidslave, NULL, MAX_DELAY_MS);
 
         } else if (master && file && std_in) {
+                printf("%s %s %s\n", std_in, file, file); // TEST
+
+                global->pidmaster_attr.fd_stdin   = -1;
+                global->pidmaster_attr.fd_stdout  = -1;
+                global->pidmaster_attr.fd_stderr  = -1;
                 global->pidmaster_attr.p_stdin    = std_in;
                 global->pidmaster_attr.p_stdout   = file;
                 global->pidmaster_attr.p_stderr   = file;
@@ -696,9 +719,12 @@ static bool start_program(char *master, char *slave, char *std_in,
                 }
 
         } else if (master && std_in) {
-                global->pidmaster_attr.p_stdin    = std_in;
+                global->pidmaster_attr.fd_stdin   = -1;
                 global->pidmaster_attr.fd_stdout  = fileno(stdout);
                 global->pidmaster_attr.fd_stderr  = fileno(stderr);
+                global->pidmaster_attr.p_stdin    = std_in;
+                global->pidmaster_attr.p_stdout   = NULL;
+                global->pidmaster_attr.p_stderr   = NULL;
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = detached;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
@@ -716,6 +742,9 @@ static bool start_program(char *master, char *slave, char *std_in,
                 global->pidmaster_attr.fd_stdin   = fileno(stdin);
                 global->pidmaster_attr.fd_stdout  = fileno(fout);
                 global->pidmaster_attr.fd_stderr  = fileno(stderr);
+                global->pidmaster_attr.p_stdin    = NULL;
+                global->pidmaster_attr.p_stdout   = NULL;
+                global->pidmaster_attr.p_stderr   = NULL;
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
@@ -729,8 +758,11 @@ static bool start_program(char *master, char *slave, char *std_in,
 
         } else if (master) {
                 global->pidmaster_attr.fd_stdin   = detached ? -1 : fileno(stdin);
-                global->pidmaster_attr.fd_stdout  = detached ? -1 : fileno(stdout);
-                global->pidmaster_attr.fd_stderr  = detached ? -1 : fileno(stderr);
+                global->pidmaster_attr.fd_stdout  = fileno(stdout);
+                global->pidmaster_attr.fd_stderr  = fileno(stderr);
+                global->pidmaster_attr.p_stdin    = NULL;
+                global->pidmaster_attr.p_stdout   = NULL;
+                global->pidmaster_attr.p_stderr   = NULL;
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = detached;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;

@@ -1,0 +1,5 @@
+# Makefile for GNU make
+
+CSRC_PROGRAMS   += $(PROG_ROOT_MQTT_BROKER)mqtt_broker/mqtt_broker.c
+CXXSRC_PROGRAMS +=
+HDRLOC_PROGRAMS +=

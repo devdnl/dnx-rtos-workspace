@@ -1,26 +1,32 @@
 /*==============================================================================
-File     syscall.h
+File    syscall.h
 
-Author   Daniel Zorychta
+Author  Daniel Zorychta
 
-Brief    Syscall handing.
+Brief   Syscall handing.
 
-         Copyright (C) 2021 Daniel Zorychta <daniel.zorychta@gmail.com>
+        MIT License
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+        Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+        Permission is hereby granted, free of charge, to any person obtaining
+        a copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
 
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+        OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+        ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+        OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================*/
 
@@ -46,34 +52,43 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#ifndef MAX_DELAY_MS
-#define MAX_DELAY_MS                    (UINT32_MAX - 1000)
+#ifndef MAX_DELAY_S
+#define MAX_DELAY_S ((UINT32_MAX - 1000UL) / 1000UL)
 #endif
 
-#ifndef MAX_DELAY_S
-#define MAX_DELAY_S                     (MAX_DELAY_MS / 1000)
+#ifndef MAX_DELAY_MS
+#define MAX_DELAY_MS (MAX_DELAY_S * 1000UL)
+#endif
+
+#ifndef WAIT_FOREVER_S
+#define WAIT_FOREVER_S (MAX_DELAY_S + 1)
+#endif
+
+#ifndef WAIT_FOREVER_MS
+#define WAIT_FOREVER_MS (MAX_DELAY_MS + 1)
 #endif
 
 /** PRIORITIES */
 #ifndef PRIORITY
-#define PRIORITY(prio)                  ((prio) + 3)
+#define PRIORITY(prio) ((prio) + 3)
 #endif
 
 #ifndef PRIORITY_LOWEST
-#define PRIORITY_LOWEST                 (-3)
+#define PRIORITY_LOWEST (-3)
 #endif
 
 #ifndef PRIORITY_NORMAL
-#define PRIORITY_NORMAL                 0
+#define PRIORITY_NORMAL 0
 #endif
 
 #ifndef PRIORITY_HIGHEST
-#define PRIORITY_HIGHEST                (3)
+#define PRIORITY_HIGHEST (3)
 #endif
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+// clang-format off
 typedef enum {
         _LIBC_SYS_GETRUNTIMECTX,          // int errno (_dnxrtctx_t *ctx)
         _LIBC_SYS_MALLOC,                 // int errno (size_t *blk_size, void **alloc_mem)
@@ -147,7 +162,7 @@ typedef enum {
         _LIBC_SYS_NETIFDOWN,              // int errno (const char *netname)
         _LIBC_SYS_NETIFSTATUS,            // int errno (const char *netname, NET_family_t *family, NET_generic_status_t *status, size_t *status_size)
         _LIBC_SYS_NETGETHOSTBYNAME,       // int errno (const char *netname, const char *name, void *addr, size_t *addr_size)
-        _LIBC_SYS_NETSOCKETCREATE,        // int errno (int *fd, const char *netname, NET_protocol_t *protocol)
+        _LIBC_SYS_NETSOCKETCREATE,        // int errno (int *fd, const char *netname, NET_socket_type_t *type, u8_t *protocol)
         _LIBC_SYS_NETBIND,                // int errno (int *fd, const NET_generic_sockaddr_t *addr, size_t *addr_size)
         _LIBC_SYS_NETLISTEN,              // int errno (int *fd)
         _LIBC_SYS_NETACCEPT,              // int errno (int *fd, int *new_fd)
@@ -202,6 +217,7 @@ typedef enum {
         _LIBC_SYS_GETCURRENTCORE,         // int errno (u8_t *core)
         _LIBC_SYS_GETCPUCORECOUNT,        // int errno (u8_t *core_count)
 } _libc_syscall_t;
+// clang-format on
 
 /*==============================================================================
   Exported objects

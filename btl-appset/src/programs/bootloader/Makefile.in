@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += bootloader/bootloader.c
+CSRC_PROGRAMS   += $(PROG_ROOT_BOOTLOADER)bootloader/bootloader.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

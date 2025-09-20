@@ -1,25 +1,32 @@
 /*==============================================================================
-File     bs.c
+File    bs.c
 
-Author   Daniel Zorychta
+Author  Daniel Zorychta
 
-Brief    Binary serialization.
+Brief   Binary serialization.
 
-         Copyright (C) 2024 Daniel Zorychta <daniel.zorychta@gmail.com>
+        MIT License
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+        Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+        Permission is hereby granted, free of charge, to any person obtaining
+        a copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
+
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+        OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+        ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+        OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================*/
 
@@ -37,17 +44,75 @@ Brief    Binary serialization.
 #define bs_get_template(_type_)                                                          \
         _type_ bs_get_##_type_(bs_rd_t *self, const char *key, _type_ Default, int *err) \
         {                                                                                \
-                typeof(Default) value = Default;                                         \
-                const void     *ptr;                                                     \
-                int e = bs_get_raw_with_type_check(self, key, &ptr, sizeof(value),       \
-                        bs_type__##_type_);                                              \
+                size_t blen;                                                             \
+                const void *blob;                                                        \
+                bs_type_t rettype = bs_type__##_type_;                                   \
+                bs_type_t btype;                                                         \
+                _type_ value = 0;                                                        \
+                int e = bs_get_raw(self, key, &blob, &blen, &btype);                     \
                 if (not e) {                                                             \
-                        value = *cast(typeof(value) *, ptr);                             \
-                }                                                                        \
-                if (err) {                                                               \
-                        if (e) {                                                         \
+                        union {                                                          \
+                                bool boolean;                                            \
+                                int8_t int8;                                             \
+                                uint8_t uint8;                                           \
+                                int16_t int16;                                           \
+                                uint16_t uint16;                                         \
+                                int32_t int32;                                           \
+                                uint32_t uint32;                                         \
+                                int64_t int64;                                           \
+                                uint64_t uint64;                                         \
+                                float float32;                                           \
+                                double float64;                                          \
+                        } v;                                                             \
+                        memcpy(&v, blob, min(blen, sizeof(v)));                          \
+                        if (btype == bs_type__bool) {                                    \
+                                value = v.boolean;                                       \
+                        } else if (btype == bs_type__int8_t) {                           \
+                                value = v.int8;                                          \
+                        } else if (btype == bs_type__uint8_t) {                          \
+                                value = v.uint8;                                         \
+                        } else if (btype == bs_type__int16_t) {                          \
+                                value = v.int16;                                         \
+                        } else if (btype == bs_type__uint16_t) {                         \
+                                value = v.uint16;                                        \
+                        } else if (btype == bs_type__int32_t) {                          \
+                                value = v.int32;                                         \
+                        } else if (btype == bs_type__uint32_t) {                         \
+                                value = v.uint32;                                        \
+                        } else if (btype == bs_type__int64_t) {                          \
+                                value = v.int64;                                         \
+                        } else if (btype == bs_type__uint64_t) {                         \
+                                value = v.uint64;                                        \
+                        } else if (btype == bs_type__float) {                            \
+                                value = v.float32;                                       \
+                        } else if (btype == bs_type__double) {                           \
+                                value = v.float64;                                       \
+                        } else if (btype == bs_type__string) {                           \
+                                if (rettype == bs_type__bool) {                          \
+                                        value = ((strcasecmp(blob, "true") == 0) ||      \
+                                                (strcasecmp(blob, "on") == 0) ||         \
+                                                (strcasecmp(blob, "yes") == 0) ||        \
+                                                (strcasecmp(blob, "enable") == 0) ||     \
+                                                (strcasecmp(blob, "set") == 0) ||        \
+                                                (strcasecmp(blob, "high") == 0) ||       \
+                                                (strcasecmp(blob, "1") == 0));           \
+                                } else if (rettype == bs_type__float) {                  \
+                                        value = atof(blob);                              \
+                                } else if (rettype == bs_type__double) {                 \
+                                        value = atof(blob);                              \
+                                } else if (rettype == bs_type__blob) {                   \
+                                        value = 0;                                       \
+                                } else {                                                 \
+                                        value = atol(blob);                              \
+                                }                                                        \
+                        } else {                                                         \
                                 value = Default;                                         \
                         }                                                                \
+                }                                                                        \
+                if (e) {                                                                 \
+                        value = Default;                                                 \
+                }                                                                        \
+                if (err) {                                                               \
                         *err = e;                                                        \
                 }                                                                        \
                 return value;                                                            \
@@ -63,10 +128,10 @@ Brief    Binary serialization.
   Local object types
 ==============================================================================*/
 typedef struct PACKED {
-        uint8_t  type;
-        uint8_t  key_len;
+        uint8_t type;
+        uint8_t key_len;
         uint16_t data_len;
-        uint8_t  key_data[];
+        uint8_t key_data[];
 } item_t;
 
 /*==============================================================================
@@ -101,8 +166,7 @@ typedef struct PACKED {
  * @return On success 0 is returned.
  */
 //==============================================================================
-static int bs_get_raw(bs_rd_t *self, const char *key, const void **blob, size_t *len,
-        bs_type_t *type)
+static int bs_get_raw(bs_rd_t *self, const char *key, const void **blob, size_t *len, bs_type_t *type)
 {
         if (not self or not key or not blob or not len or not type) {
                 return bs_err_invalid_value;
@@ -118,53 +182,17 @@ static int bs_get_raw(bs_rd_t *self, const char *key, const void **blob, size_t 
 
                 if (strcmp(key, cast(char *, item->key_data)) == 0) {
                         *type = item->type;
-                        *len  = item->data_len;
+                        *len = item->data_len;
                         *blob = &item->key_data[item->key_len];
                         return 0;
 
                 } else {
                         item = cast(typeof(item),
-                                cast(uint8_t *, item) + sizeof(*item) + item->key_len +
-                                        item->data_len);
+                                cast(uint8_t *, item) + sizeof(*item) + item->key_len + item->data_len);
                 }
         }
 
         return bs_err_value_not_found;
-}
-
-//==============================================================================
-/**
- * @brief  Get raw data blob.
- *
- * @param  self         bs instance
- * @param  key          key to find
- * @param  blob         pointer to blob result pointer
- * @param  len          size of blob
- * @param  type         type of blob
- *
- * @return On success 0 is returned.
- */
-//==============================================================================
-static int bs_get_raw_with_type_check(bs_rd_t *self, const char *key, const void **blob,
-        size_t len, bs_type_t type)
-{
-        size_t    blen;
-        bs_type_t btype;
-
-        int err = bs_get_raw(self, key, blob, &blen, &btype);
-        if (err) {
-                return err;
-        }
-
-        if (type != btype) {
-                return bs_err_unexpected_type;
-        }
-
-        if (len != blen) {
-                return bs_err_value_size;
-        }
-
-        return 0;
 }
 
 //==============================================================================
@@ -180,10 +208,13 @@ static int bs_get_raw_with_type_check(bs_rd_t *self, const char *key, const void
  * @return On success 0 is returned.
  */
 //==============================================================================
-static int bs_set_raw(bs_wr_t *self, const char *key, const void *blob, size_t len,
-        bs_type_t type)
+static int bs_set_raw(bs_wr_t *self, const char *key, const void *blob, size_t len, bs_type_t type)
 {
-        if (not self or not key or not blob or not len) {
+        if (not self or not key or not blob) {
+                return bs_err_invalid_value;
+        }
+
+        if ((type != bs_type__string) and (len == 0)) {
                 return bs_err_invalid_value;
         }
 
@@ -196,29 +227,33 @@ static int bs_set_raw(bs_wr_t *self, const char *key, const void *blob, size_t l
         }
 
         const void *b;
-        size_t      l;
-        bs_type_t   t;
-        bs_rd_t     bs;
-        bs.chunk     = self->chunk;
+        size_t l;
+        bs_type_t t;
+        bs_rd_t bs;
+        bs.chunk = self->chunk;
         bs.chunk_len = self->chunk_len;
         if (bs_get_raw(&bs, key, &b, &l, &t) == 0) {
                 return bs_err_exist;
         }
 
-        size_t key_len  = strlen(key) + 1;
-        size_t item_len = sizeof(item_t) + key_len + len;
+        size_t key_len = strlen(key) + 1;
+        size_t item_len = sizeof(item_t) + key_len + len + ((type == bs_type__string) ? 1 : 0);
 
         if ((cast(uintptr_t, self->item) + item_len) >=
                 (cast(uintptr_t, self->chunk) + self->chunk_max_len)) {
                 return bs_err_chunk_full;
         }
 
-        item_t *item   = self->item;
-        item->data_len = len;
-        item->key_len  = key_len;
-        item->type     = type;
+        item_t *item = self->item;
+        item->data_len = len + ((type == bs_type__string) ? 1 : 0);
+        item->key_len = key_len;
+        item->type = type;
         memcpy(&item->key_data[0], key, key_len);
         memcpy(&item->key_data[key_len], blob, len);
+
+        if (type == bs_type__string) {
+                item->key_data[key_len + len] = '\0';
+        }
 
         self->item = cast(uint8_t *, self->item) + item_len;
         self->chunk_len += item_len;
@@ -231,6 +266,8 @@ static int bs_set_raw(bs_wr_t *self, const char *key, const void *blob, size_t l
  * @brief  Set bs to read chunk.
  *
  * @param  self         bs instance
+ * @param  chunk        chunk buffer
+ * @param  chunk_len    chunk buffer length
  *
  * @return On success 0 is returned.
  */
@@ -245,10 +282,30 @@ int bs_read_chunk(bs_rd_t *self, const uint8_t *chunk, size_t chunk_len)
                 return bs_err_invalid_value;
         }
 
-        self->chunk     = chunk;
+        self->chunk = chunk;
         self->chunk_len = chunk_len;
 
         return 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Set bs to read chunk (unsafe).
+ *
+ * @param  chunk        chunk buffer
+ * @param  chunk_len    chunk buffer length
+ *
+ * @return Initialized bs read.
+ */
+//==============================================================================
+bs_rd_t bs_read_init(const uint8_t *chunk, size_t chunk_len)
+{
+        bs_rd_t bsrd = {
+                .chunk = chunk,
+                .chunk_len = chunk_len,
+        };
+
+        return bsrd;
 }
 
 //==============================================================================
@@ -418,9 +475,9 @@ bs_get_template(bool);
 //==============================================================================
 const char *bs_get_str(bs_rd_t *self, const char *key, const char *Default, int *err)
 {
-        size_t      blen;
+        size_t blen;
         const void *str = Default;
-        bs_type_t   btype;
+        bs_type_t btype;
 
         int e = bs_get_raw(self, key, &str, &blen, &btype);
         if (not e) {
@@ -430,8 +487,13 @@ const char *bs_get_str(bs_rd_t *self, const char *key, const char *Default, int 
                 } else if (blen == 0) {
                         e = bs_err_value_size;
                 }
-        } else if (err) {
-                str  = Default;
+        }
+
+        if (e) {
+                str = Default;
+        }
+
+        if (err) {
                 *err = e;
         }
 
@@ -461,19 +523,38 @@ const void *bs_get_blob(bs_rd_t *self, const char *key, size_t *len, int *err)
         }
 
         const void *blob = NULL;
-        bs_type_t   btype;
+        bs_type_t btype;
 
         int e = bs_get_raw(self, key, &blob, len, &btype);
-        if (not e) {
-                if (bs_type__blob != btype) {
-                        e = bs_err_unexpected_type;
-                }
-        } else if (err) {
-                blob = NULL;
+
+        if (err) {
                 *err = e;
         }
 
         return blob;
+}
+
+//==============================================================================
+/**
+ * @brief  Get key type.
+ *
+ * @param  self         bs instance
+ * @param  key          key to find
+ *
+ * @return Key type.
+ */
+//==============================================================================
+bs_type_t bs_get_type(bs_rd_t *self, const char *key)
+{
+        const void *blob;
+        bs_type_t btype;
+        size_t blen;
+
+        if (bs_get_raw(self, key, &blob, &blen, &btype) != 0) {
+                return bs_type__unknown;
+        } else {
+                return btype;
+        }
 }
 
 //==============================================================================
@@ -484,15 +565,16 @@ const void *bs_get_blob(bs_rd_t *self, const char *key, size_t *len, int *err)
  * @param  next         next pointer (if points to NULL then from beginning)
  * @param  key          key name
  * @param  value        value data
+ * @param  value_len    value length
  * @param  type         value type
  *
  * @return On sucecss 0 is returned.
  */
 //==============================================================================
-int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key,
-        const void **value, bs_type_t *type)
+int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key, const void **value, uint16_t *value_len,
+        bs_type_t *type)
 {
-        if (not self or not key or not value or not type) {
+        if (not self or not key or not value or not value_len or not type) {
                 return bs_err_invalid_value;
         }
 
@@ -501,18 +583,19 @@ int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key,
         }
 
         if (*next == NULL) {
-                *next = cast(uint8_t*, self->chunk);
+                *next = cast(uint8_t *, self->chunk);
         }
 
         item_t *item = cast(typeof(item), *next);
 
         if (cast(uintptr_t, item) < cast(uintptr_t, self->chunk) + self->chunk_len) {
 
-                *type  = item->type;
-                *key   = cast(char *, &item->key_data[0]);
+                *type = item->type;
+                *key = cast(const char *, &item->key_data[0]);
                 *value = &item->key_data[item->key_len];
-                *next  = cast(uint8_t *, item) + sizeof(*item) + item->key_len +
-                                item->data_len;
+                *value_len = item->data_len;
+                *next = cast(uint8_t *, item) + sizeof(*item) + item->key_len + item->data_len;
+
                 return 0;
         }
 
@@ -540,12 +623,34 @@ int bs_write_chunk(bs_wr_t *self, uint8_t *chunk, size_t chunk_len)
                 return bs_err_invalid_value;
         }
 
-        self->chunk         = chunk;
+        self->chunk = chunk;
         self->chunk_max_len = chunk_len;
-        self->chunk_len     = 0;
-        self->item          = chunk;
+        self->chunk_len = 0;
+        self->item = chunk;
 
         return 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Prepare serializer to write (unsafe).
+ *
+ * @param  chunk        chunk
+ * @param  chunk_len    chunk length
+ *
+ * @return Initialized bs write.
+ */
+//==============================================================================
+bs_wr_t bs_write_init(uint8_t *chunk, size_t chunk_len)
+{
+        bs_wr_t bswr = {
+                .chunk = chunk,
+                .chunk_max_len = chunk_len,
+                .chunk_len = 0,
+                .item = chunk,
+        };
+
+        return bswr;
 }
 
 //==============================================================================
@@ -564,6 +669,24 @@ int bs_get_chunk_length(bs_wr_t *self)
         }
 
         return self->chunk_len;
+}
+
+//==============================================================================
+/**
+ * @brief  Return chunk data pointer.
+ *
+ * @param  self         bs instance
+ *
+ * @return Return chunk data pointer.
+ */
+//==============================================================================
+uint8_t *bs_get_chunk_data(bs_wr_t *self)
+{
+        if (not self) {
+                return NULL;
+        }
+
+        return self->chunk;
 }
 
 //==============================================================================
@@ -715,14 +838,31 @@ bs_set_template(bool);
  *
  * @param  self         bs instance
  * @param  key          key
- * @param  value        value
+ * @param  str          string
  *
  * @return On success 0 is returned.
  */
 //==============================================================================
 int bs_set_str(bs_wr_t *self, const char *key, const char *str)
 {
-        return bs_set_raw(self, key, str, strlen(str) + 1, bs_type__string);
+        return bs_set_raw(self, key, str, strlen(str), bs_type__string);
+}
+
+//==============================================================================
+/**
+ * @brief  Add string to buffer.
+ *
+ * @param  self         bs instance
+ * @param  key          key
+ * @param  str          string
+ * @param  str_len      string length
+ *
+ * @return On success 0 is returned.
+ */
+//==============================================================================
+int bs_set_str_len(bs_wr_t *self, const char *key, const char *str, size_t str_len)
+{
+        return bs_set_raw(self, key, str, str_len, bs_type__string);
 }
 
 //==============================================================================

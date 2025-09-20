@@ -1,8 +1,4 @@
 # Makefile for GNU make
 
-COMMON_LIBS_LLIST_ROOT = ../../../common_libs
-
-CSRC_LIB   += $(COMMON_LIBS_LLIST_ROOT)/llist/llist.c
-CXXSRC_LIB += 
-HDRLOC_LIB += $(COMMON_LIBS_LLIST_ROOT)/
-HDRLOC_LIB += $(COMMON_LIBS_LLIST_ROOT)/llist
+LIB_ROOT_LLIST = ../../../common_libs/
+include ../common_libs/llist/Makefile.in

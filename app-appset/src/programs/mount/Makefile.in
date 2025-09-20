@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += mount/mount.c
+CSRC_PROGRAMS   += $(PROG_ROOT_MOUNT)mount/mount.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_LIB   += tinyexpr/tinyexpr.c
+CSRC_LIB   += $(LIB_ROOT_TINYEXPR)tinyexpr/tinyexpr.c
 CXXSRC_LIB +=
-HDRLOC_LIB += tinyexpr
+HDRLOC_LIB += $(LIB_ROOT_TINYEXPR)tinyexpr

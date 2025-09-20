@@ -131,9 +131,11 @@ void md5_init(MD5_CTX *ctx)
 	ctx->state[3] = 0x10325476;
 }
 
-void md5_update(MD5_CTX *ctx, const BYTE data[], size_t len)
+void md5_update(MD5_CTX *ctx, const void *buf, size_t len)
 {
 	size_t i;
+
+	const BYTE *data = buf;
 
 	for (i = 0; i < len; ++i) {
 		ctx->data[ctx->datalen] = data[i];

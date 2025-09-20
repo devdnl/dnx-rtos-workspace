@@ -1,3 +1,3 @@
-CSRC_PROGRAMS   += lua/lua.c
+CSRC_PROGRAMS   += $(PROG_ROOT_LUA)lua/lua.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

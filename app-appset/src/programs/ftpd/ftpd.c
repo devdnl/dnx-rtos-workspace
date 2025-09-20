@@ -1,28 +1,32 @@
 /*==============================================================================
-@file    ftpd.c
+@file   ftpd.c
 
-@author  Daniel Zorychta
+@author Daniel Zorychta
 
-@brief   The FTP server.
+@brief  The FTP server.
 
-@note    Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
+        MIT License
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the Free Software Foundation and modified by the dnx RTOS exception.
+        Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-         NOTE: The modification  to the GPL is  included to allow you to
-               distribute a combined work that includes dnx RTOS without
-               being obliged to provide the source  code for proprietary
-               components outside of the dnx RTOS.
+        Permission is hereby granted, free of charge, to any person obtaining
+        a copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
 
-         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
 
-         Full license text is available on the following file: doc/license.txt.
-
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+        OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+        ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+        OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================*/
 
@@ -941,7 +945,7 @@ static int serve(void *arg)
         self->quit  = false;
 
         if (!self->sock_pasv) {
-                self->sock_pasv = socket_open("inet", NET_PROTOCOL__TCP);
+                self->sock_pasv = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
                 if (self->sock_pasv) {
                         NET_INET_sockaddr_t ADDR_ANY = {
                                 .addr = NET_INET_IPv4_ANY,
@@ -1080,7 +1084,7 @@ int main(int argc, char *argv[])
                 }
         }
 
-        SOCKET *socket = socket_open("inet", NET_PROTOCOL__TCP);
+        SOCKET *socket = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
         if (socket) {
                 static const NET_INET_sockaddr_t ADDR_ANY = {
                         .addr = NET_INET_IPv4_ANY,

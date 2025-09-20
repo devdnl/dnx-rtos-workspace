@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += sync/sync.c
+CSRC_PROGRAMS   += $(PROG_ROOT_SYNC)sync/sync.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

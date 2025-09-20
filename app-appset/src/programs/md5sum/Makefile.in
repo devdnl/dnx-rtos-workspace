@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += md5sum/md5sum.c
+CSRC_PROGRAMS   += $(PROG_ROOT_MD5SUM)md5sum/md5sum.c
 CXXSRC_PROGRAMS +=
 HDRLOC_PROGRAMS +=

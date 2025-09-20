@@ -33,6 +33,10 @@ static void PrintFunction(const Proto* f, int full);
 
 static const char *Output = OUTPUT;
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
 GLOBAL_VARIABLES_SECTION {
         int listing;                   /* list bytecodes? */
         int dumping;                   /* dump bytecodes? */
@@ -40,8 +44,10 @@ GLOBAL_VARIABLES_SECTION {
         const char* output;            /* actual output file name */
         const char* progname;          /* actual program name */
         TString **tmname;
+        char wrbuf[8192];
+        size_t wrbuf_sz;
 };
-PROGRAM_PARAMS(luac, STACK_DEPTH_MEDIUM);
+PROGRAM_PARAMS(luac, STACK_DEPTH_VERY_LARGE);
 
 static void fatal(const char* message)
 {
@@ -115,7 +121,7 @@ static int doargs(int argc, char* argv[])
  if (i==argc && (global->listing || !global->dumping))
  {
   global->dumping=0;
-  argv[--i]=(char*)Output;
+  argv[--i]=(char*)global->output;
  }
  if (version)
  {
@@ -125,7 +131,7 @@ static int doargs(int argc, char* argv[])
  return i;
 }
 
-#define FUNCTION "(function()end)();"
+#define FUNCTION "(function()end)();\n"
 
 static const char* reader(lua_State* L, void* ud, size_t* size)
 {
@@ -142,7 +148,7 @@ static const char* reader(lua_State* L, void* ud, size_t* size)
  }
 }
 
-#define toproto(L,i) getproto(s2v(L->top+(i)))
+#define toproto(L,i) getproto(s2v(L->top.p+(i)))
 
 static const Proto* combine(lua_State* L, int n)
 {
@@ -159,7 +165,6 @@ static const Proto* combine(lua_State* L, int n)
    f->p[i]=toproto(L,i-n-1);
    if (f->p[i]->sizeupvalues>0) f->p[i]->upvalues[0].instack=0;
   }
-  f->sizelineinfo=0;
   return f;
  }
 }
@@ -167,7 +172,22 @@ static const Proto* combine(lua_State* L, int n)
 static int writer(lua_State* L, const void* p, size_t size, void* u)
 {
  UNUSED(L);
- return (fwrite(p,size,1,(FILE*)u)!=1) && (size!=0);
+
+ while (size > 0) {
+   size_t left = min((sizeof(global->wrbuf) - global->wrbuf_sz), size);
+   memcpy(&global->wrbuf[global->wrbuf_sz], p, left);
+   global->wrbuf_sz += left;
+   size -= left;
+
+   if (global->wrbuf_sz >= sizeof(global->wrbuf)) {
+     if (fwrite(global->wrbuf,global->wrbuf_sz,1,(FILE*)u) != 1) {
+       return 1;
+     }
+     global->wrbuf_sz = 0;
+   }
+ }
+
+ return 0;
 }
 
 static int pmain(lua_State* L)
@@ -193,6 +213,11 @@ static int pmain(lua_State* L)
   luaU_dump(L,f,writer,D,global->stripping);
   lua_unlock(L);
   if (ferror(D)) cannot("write");
+
+  if (D && (global->wrbuf_sz > 0)) {
+    fwrite(global->wrbuf, global->wrbuf_sz, 1, D);
+  }
+
   if (fclose(D)) cannot("close");
  }
  return 0;
@@ -610,11 +635,11 @@ static void PrintCode(const Proto* f)
 	if (c==0) printf("all out"); else printf("%d out",c-1);
 	break;
    case OP_TAILCALL:
-	printf("%d %d %d",a,b,c);
+	printf("%d %d %d%s",a,b,c,ISK);
 	printf(COMMENT "%d in",b-1);
 	break;
    case OP_RETURN:
-	printf("%d %d %d",a,b,c);
+	printf("%d %d %d%s",a,b,c,ISK);
 	printf(COMMENT);
 	if (b==0) printf("all out"); else printf("%d out",b-1);
 	break;
@@ -629,7 +654,7 @@ static void PrintCode(const Proto* f)
 	break;
    case OP_FORPREP:
 	printf("%d %d",a,bx);
-	printf(COMMENT "to %d",pc+bx+2);
+	printf(COMMENT "exit to %d",pc+bx+3);
 	break;
    case OP_TFORPREP:
 	printf("%d %d",a,bx);

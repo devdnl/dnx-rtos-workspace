@@ -1,29 +1,33 @@
 #/*=============================================================================
-# @file    project_flags.h
+# @file   project_flags.h
 #
-# @author  Daniel Zorychta
+# @author Daniel Zorychta
 #
-# @brief   This file contains base project configuration.
-#          Hybrid file: included both by Make and CC.
+# @brief  This file contains base project configuration.
+#         Hybrid file: included both by Make and CC.
 #
-# @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+#         MIT License
 #
-#          This program is free software; you can redistribute it and/or modify
-#          it under the terms of the GNU General Public License as published by
-#          the Free Software Foundation and modified by the dnx RTOS exception.
+#         Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 #
-#          NOTE: The modification  to the GPL is  included to allow you to
-#                distribute a combined work that includes dnx RTOS without
-#                being obliged to provide the source  code for proprietary
-#                components outside of the dnx RTOS.
+#         Permission is hereby granted, free of charge, to any person obtaining
+#         a copy of this software and associated documentation files (the
+#         "Software"), to deal in the Software without restriction, including
+#         without limitation the rights to use, copy, modify, merge, publish,
+#         distribute, sublicense, and/or sell copies of the Software, and to
+#         permit persons to whom the Software is furnished to do so, subject to
+#         the following conditions:
 #
-#          The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-#          but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
-#          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-#          GNU General Public License for more details.
+#         The above copyright notice and this permission notice shall be included
+#         in all copies or substantial portions of the Software.
 #
-#          Full license text is available on the following file: doc/license.txt.
-#
+#         THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#         OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#         FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#         THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+#         OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+#         ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+#         OTHER DEALINGS IN THE SOFTWARE.
 #
 #=============================================================================*/
 
@@ -81,6 +85,7 @@ __PROJECT_TOOLCHAIN__=arm-none-eabi-
 #define stm32f4 0x8dd787b6
 #define stm32f7 0x3cb2ba7c
 #define stm32h7 0x56A5cde6
+#define rpcm0   0x60b36426
 #/*--
 # this:AddWidget("Combobox", "CPU architecture")
 # this:AddItem("STMicroelectronics STM32F1", "stm32f1")
@@ -88,6 +93,7 @@ __PROJECT_TOOLCHAIN__=arm-none-eabi-
 # this:AddItem("STMicroelectronics STM32F4", "stm32f4")
 # this:AddItem("STMicroelectronics STM32F7", "stm32f7")
 # this:AddItem("STMicroelectronics STM32H7", "stm32h7")
+# this:AddItem("Raspberry Pi Pico M0+", "rpcm0")
 #--*/
 #define __CPU_ARCH__ stm32f1
 #/*
@@ -98,7 +104,7 @@ __CPU_ARCH__=stm32f1
 # this:AddWidget("Spinbox", 0, 16, "Terminal UART")
 # this:SetToolTip("This value set UART terminal. This is UART major number.")
 #--*/
-#define __CPU_UART_TERM__ 2
+#define __CPU_UART_TERM__ 0
 
 
 #/*--
@@ -115,7 +121,7 @@ __CPU_ARCH__=stm32f1
 # this:AddWidget("Editline", false, "Appset size")
 # this:SetToolTip("Size of application section.")
 #--*/
-#define __PROJ_APPSET_TABLE_SIZE__ 448k
+#define __PROJ_APPSET_TABLE_SIZE__ 1024k
 
 #/*--
 #this:AddWidget("Editline", false, "dnx RTOS section address")
@@ -175,6 +181,17 @@ CPUCONFIG_AFLAGS=-mcpu=cortex-m7 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -f
 CPUCONFIG_CFLAGS=-mcpu=cortex-m7 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM7
 CPUCONFIG_CXXFLAGS=-mcpu=cortex-m7 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM7
 CPUCONFIG_LDFLAGS=-mcpu=cortex-m7 -mthumb -mthumb-interwork -nostartfiles
+CPUCONFIG_LDFLAGS += -T./build/program/layout.ld
+endif
+#*/
+#elif (__CPU_ARCH__ == rpcm0)
+#define ARCH_rpcm0
+#/*
+ifeq ($(__CPU_ARCH__), rpcm0)
+CPUCONFIG_AFLAGS=-mcpu=cortex-m0plus -mthumb -ffast-math -fno-math-errno -mthumb-interwork
+CPUCONFIG_CFLAGS=-mcpu=cortex-m0plus -mthumb -ffast-math -fno-math-errno -mthumb-interwork
+CPUCONFIG_CXXFLAGS=-mcpu=cortex-m0plus -mthumb -ffast-math -fno-math-errno -mthumb-interwork
+CPUCONFIG_LDFLAGS=-mcpu=cortex-m0plus -mthumb -mthumb-interwork -nostartfiles
 CPUCONFIG_LDFLAGS += -T./build/program/layout.ld
 endif
 #*/

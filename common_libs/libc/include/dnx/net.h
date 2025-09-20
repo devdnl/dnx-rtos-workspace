@@ -1,28 +1,32 @@
 /*==============================================================================
-@file    net.h
+@file   net.h
 
-@author  Daniel Zorychta
+@author Daniel Zorychta
 
-@brief   This file provide network API.
+@brief  This file provide network API.
 
-@note    Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
+        MIT License
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the Free Software Foundation and modified by the dnx RTOS exception.
+        Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-         NOTE: The modification  to the GPL is  included to allow you to
-               distribute a combined work that includes dnx RTOS without
-               being obliged to provide the source  code for proprietary
-               components outside of the dnx RTOS.
+        Permission is hereby granted, free of charge, to any person obtaining
+        a copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
 
-         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
 
-         Full license text is available on the following file: doc/license.txt.
-
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+        OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+        ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+        OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================*/
 
@@ -111,7 +115,7 @@ int_main(server, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
 
-        SOCKET *socket = socket_open("inet", NET_PROTOCOL__TCP);
+        SOCKET *socket = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
         if (socket) {
                 if (socket_bind(socket, &ADDR_ANY, sizeof(ADDR_ANY)) == 0) {
                         if (socket_listen(socket) == 0) {
@@ -173,7 +177,7 @@ static const NET_INET_sockaddr_t SERVER_ADDR = {
 
 int_main(client, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        SOCKET *socket = socket_open("inet", NET_PROTOCOL__TCP);
+        SOCKET *socket = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
         if (socket) {
                 socket_set_send_timeout(socket, 2000);
                 socket_set_recv_timeout(socket, 2000);
@@ -225,6 +229,7 @@ extern "C" {
 #include <stddef.h>
 #include <dnx/misc.h>
 #include <errno.h>
+#include <sys/types.h>
 
 /*==============================================================================
   Exported macros
@@ -233,9 +238,9 @@ extern "C" {
   INET NETWORK FAMILY
 ------------------------------------------------------------------------------*/
 /** Macro creates IPv4 address for INET family network. */
-#define NET_INET_IPv4(a, b, c, d)                                    \
-        (((((u32_t)a) & 0xFF) << 24) | ((((u32_t)b) & 0xFF) << 16) | \
-                ((((u32_t)c) & 0xFF) << 8) | ((((u32_t)d) & 0xFF)))
+#define NET_INET_IPv4(a, b, c, d)                                                                 \
+        (((((u32_t)a) & 0xFF) << 24) | ((((u32_t)b) & 0xFF) << 16) | ((((u32_t)c) & 0xFF) << 8) | \
+                ((((u32_t)d) & 0xFF)))
 
 /** Macro creates ANY address for INET family network. */
 #define NET_INET_IPv4_ANY NET_INET_IPv4(0, 0, 0, 0)
@@ -257,6 +262,150 @@ extern "C" {
 
 /** Macro gets part <i>d</i> of INET family network address. */
 #define NET_INET_IPv4_d(ip) ((uint8_t)((ip >> 0) & 0xFF))
+
+#define NET_INET_PROTOCOL_HOPOPT          0
+#define NET_INET_PROTOCOL_ICMP            1
+#define NET_INET_PROTOCOL_IGMP            2
+#define NET_INET_PROTOCOL_GGP             3
+#define NET_INET_PROTOCOL_IP_IN_IP        4
+#define NET_INET_PROTOCOL_ST              5
+#define NET_INET_PROTOCOL_TCP             6
+#define NET_INET_PROTOCOL_CBT             7
+#define NET_INET_PROTOCOL_EGP             8
+#define NET_INET_PROTOCOL_IGP             9
+#define NET_INET_PROTOCOL_BBN_RCC_MON     10
+#define NET_INET_PROTOCOL_NVP_II          11
+#define NET_INET_PROTOCOL_PUP             12
+#define NET_INET_PROTOCOL_ARGUS           13
+#define NET_INET_PROTOCOL_EMCON           14
+#define NET_INET_PROTOCOL_XNET            15
+#define NET_INET_PROTOCOL_CHAOS           16
+#define NET_INET_PROTOCOL_UDP             17
+#define NET_INET_PROTOCOL_MUX             18
+#define NET_INET_PROTOCOL_DCN_MEAS        19
+#define NET_INET_PROTOCOL_HMP             20
+#define NET_INET_PROTOCOL_PRM             21
+#define NET_INET_PROTOCOL_XNS_IDP         22
+#define NET_INET_PROTOCOL_TRUNK_1         23
+#define NET_INET_PROTOCOL_TRUNK_2         24
+#define NET_INET_PROTOCOL_LEAF_1          25
+#define NET_INET_PROTOCOL_LEAF_2          26
+#define NET_INET_PROTOCOL_RDP             27
+#define NET_INET_PROTOCOL_IRTP            28
+#define NET_INET_PROTOCOL_ISO_TP4         29
+#define NET_INET_PROTOCOL_NETBLT          30
+#define NET_INET_PROTOCOL_MFE_NSP         31
+#define NET_INET_PROTOCOL_MERIT_INP       32
+#define NET_INET_PROTOCOL_DCCP            33
+#define NET_INET_PROTOCOL_3PC             34
+#define NET_INET_PROTOCOL_IDPR            35
+#define NET_INET_PROTOCOL_XTP             36
+#define NET_INET_PROTOCOL_DDP             37
+#define NET_INET_PROTOCOL_IDPR_CMTP       38
+#define NET_INET_PROTOCOL_TP              39
+#define NET_INET_PROTOCOL_IL              40
+#define NET_INET_PROTOCOL_IPV6            41
+#define NET_INET_PROTOCOL_SDRP            42
+#define NET_INET_PROTOCOL_IPV6_ROUTE      43
+#define NET_INET_PROTOCOL_IPV6_FRAG       44
+#define NET_INET_PROTOCOL_IDRP            45
+#define NET_INET_PROTOCOL_RSVP            46
+#define NET_INET_PROTOCOL_GRE             47
+#define NET_INET_PROTOCOL_DSR             48
+#define NET_INET_PROTOCOL_BNA             49
+#define NET_INET_PROTOCOL_ESP             50
+#define NET_INET_PROTOCOL_AH              51
+#define NET_INET_PROTOCOL_I_NLSP          52
+#define NET_INET_PROTOCOL_SWIPE           53
+#define NET_INET_PROTOCOL_NARP            54
+#define NET_INET_PROTOCOL_MOBILE          55
+#define NET_INET_PROTOCOL_TLSP            56
+#define NET_INET_PROTOCOL_SKIP            57
+#define NET_INET_PROTOCOL_IPV6_ICMP       58
+#define NET_INET_PROTOCOL_IPV6_NONXT      59
+#define NET_INET_PROTOCOL_IPV6_OPTS       60
+#define NET_INET_PROTOCOL_ANY             61
+#define NET_INET_PROTOCOL_CFTP            62
+#define NET_INET_PROTOCOL_SAT_EXPAK       64
+#define NET_INET_PROTOCOL_KRYPTOLAN       65
+#define NET_INET_PROTOCOL_RVD             66
+#define NET_INET_PROTOCOL_IPPC            67
+#define NET_INET_PROTOCOL_SAT_MON         69
+#define NET_INET_PROTOCOL_VISA            70
+#define NET_INET_PROTOCOL_IPCU            71
+#define NET_INET_PROTOCOL_CPNX            72
+#define NET_INET_PROTOCOL_CPHB            73
+#define NET_INET_PROTOCOL_WSN             74
+#define NET_INET_PROTOCOL_PVP             75
+#define NET_INET_PROTOCOL_BR_SAT_MON      76
+#define NET_INET_PROTOCOL_SUN_ND          77
+#define NET_INET_PROTOCOL_WB_MON          78
+#define NET_INET_PROTOCOL_WB_EXPAK        79
+#define NET_INET_PROTOCOL_ISO_IP          80
+#define NET_INET_PROTOCOL_VMTP            81
+#define NET_INET_PROTOCOL_SECURE_VMTP     82
+#define NET_INET_PROTOCOL_VINES           83
+#define NET_INET_PROTOCOL_TTP             84
+#define NET_INET_PROTOCOL_IPTM            84
+#define NET_INET_PROTOCOL_NSFNET_IGP      85
+#define NET_INET_PROTOCOL_DGP             86
+#define NET_INET_PROTOCOL_TCF             87
+#define NET_INET_PROTOCOL_EIGRP           88
+#define NET_INET_PROTOCOL_OSPF            89
+#define NET_INET_PROTOCOL_SPRITE_RPC      90
+#define NET_INET_PROTOCOL_LARP            91
+#define NET_INET_PROTOCOL_MTP             92
+#define NET_INET_PROTOCOL_AX              93
+#define NET_INET_PROTOCOL_OS              94
+#define NET_INET_PROTOCOL_MICP            95
+#define NET_INET_PROTOCOL_SCC_SP          96
+#define NET_INET_PROTOCOL_ETHERIP         97
+#define NET_INET_PROTOCOL_ENCAP           98
+#define NET_INET_PROTOCOL_GMTP            100
+#define NET_INET_PROTOCOL_IFMP            101
+#define NET_INET_PROTOCOL_PNNI            102
+#define NET_INET_PROTOCOL_PIM             103
+#define NET_INET_PROTOCOL_ARIS            104
+#define NET_INET_PROTOCOL_SCPS            105
+#define NET_INET_PROTOCOL_QNX             106
+#define NET_INET_PROTOCOL_A               107
+#define NET_INET_PROTOCOL_IPCOMP          108
+#define NET_INET_PROTOCOL_SNP             109
+#define NET_INET_PROTOCOL_COMPAQ_PEER     110
+#define NET_INET_PROTOCOL_IPX_IN_IP       111
+#define NET_INET_PROTOCOL_VRRP            112
+#define NET_INET_PROTOCOL_PGM             113
+#define NET_INET_PROTOCOL_L2TP            115
+#define NET_INET_PROTOCOL_DDX             116
+#define NET_INET_PROTOCOL_IATP            117
+#define NET_INET_PROTOCOL_STP             118
+#define NET_INET_PROTOCOL_SRP             119
+#define NET_INET_PROTOCOL_UTI             120
+#define NET_INET_PROTOCOL_SMP             121
+#define NET_INET_PROTOCOL_SM              122
+#define NET_INET_PROTOCOL_PTP             123
+#define NET_INET_PROTOCOL_IS_IS           124
+#define NET_INET_PROTOCOL_FIRE            125
+#define NET_INET_PROTOCOL_CRTP            126
+#define NET_INET_PROTOCOL_CRUDP           127
+#define NET_INET_PROTOCOL_SSCOPMCE        128
+#define NET_INET_PROTOCOL_IPLT            129
+#define NET_INET_PROTOCOL_SPS             130
+#define NET_INET_PROTOCOL_PIPE            131
+#define NET_INET_PROTOCOL_SCTP            132
+#define NET_INET_PROTOCOL_FC              133
+#define NET_INET_PROTOCOL_RSVP_E2E_IGNORE 134
+#define NET_INET_PROTOCOL_MOBILITY        135
+#define NET_INET_PROTOCOL_UDPLITE         136
+#define NET_INET_PROTOCOL_MPLS_IN_IP      137
+#define NET_INET_PROTOCOL_MANET           138
+#define NET_INET_PROTOCOL_HIP             139
+#define NET_INET_PROTOCOL_SHIM6           140
+#define NET_INET_PROTOCOL_WESP            141
+#define NET_INET_PROTOCOL_ROHC            142
+#define NET_INET_PROTOCOL_ETHERNET        143
+#define NET_INET_PROTOCOL_AGGFRAG         144
+#define NET_INET_PROTOCOL_NSH             145
 
 /*------------------------------------------------------------------------------
   SIPC NETWORK FAMILY
@@ -288,14 +437,13 @@ typedef enum {
         _NET_FAMILY__COUNT
 } NET_family_t;
 
-/** Protocol selection. Not all protocols are available for all family networks. */
+/** Socket type. */
 typedef enum {
-        NET_PROTOCOL__DATAGRAM,                     //!< DATAGRAM type protocol
-        NET_PROTOCOL__STREAM,                       //!< STREAM type protocol
-        NET_PROTOCOL__UDP = NET_PROTOCOL__DATAGRAM, //!< UDP protocol.
-        NET_PROTOCOL__TCP = NET_PROTOCOL__STREAM,   //!< TCP protocol.
-        _NET_PROTOCOL__COUNT,                       //!< number of protocols
-} NET_protocol_t;
+        NET_SOCKET_TYPE__DATAGRAM, //!< DATAGRAM type socket
+        NET_SOCKET_TYPE__STREAM,   //!< STREAM type socket
+        NET_SOCKET_TYPE__RAW,      //!< RAW type socket
+        NET_SOCKET_TYPE_COUNT,     //!< number of protocols
+} NET_socket_type_t;
 
 /** Control flags. */
 typedef enum {
@@ -545,8 +693,7 @@ static inline int iflist(char *netname[], size_t netname_len)
  * @see ifdown(), ifstatus()
  */
 //==============================================================================
-static inline int ifup(const char *netname, const NET_generic_config_t *config,
-        size_t config_size)
+static inline int ifup(const char *netname, const NET_generic_config_t *config, size_t config_size)
 {
         int err = _libc_syscall(_LIBC_SYS_NETIFUP, netname, config, &config_size);
         return err ? -1 : 0;
@@ -584,11 +731,10 @@ static inline int ifdown(const char *netname)
  * @see ifup(), ifdown()
  */
 //==============================================================================
-static inline int ifstatus(const char *netname, NET_family_t *family,
-        NET_generic_status_t *status, size_t status_size)
+static inline int ifstatus(const char *netname, NET_family_t *family, NET_generic_status_t *status,
+        size_t status_size)
 {
-        int err = _libc_syscall(_LIBC_SYS_NETIFSTATUS, netname, family, status,
-                &status_size);
+        int err = _libc_syscall(_LIBC_SYS_NETIFSTATUS, netname, family, status, &status_size);
         return err ? -1 : 0;
 }
 
@@ -605,10 +751,10 @@ static inline int ifstatus(const char *netname, NET_family_t *family,
  * @see socket_open()
  */
 //==============================================================================
-static inline int socket(const char *netname, NET_protocol_t protocol)
+static inline int socket(const char *netname, NET_socket_type_t type, u8_t protocol)
 {
         int fd;
-        int err = _libc_syscall(_LIBC_SYS_NETSOCKETCREATE, &fd, netname, protocol);
+        int err = _libc_syscall(_LIBC_SYS_NETSOCKETCREATE, &fd, netname, &type, &protocol);
         return err ? errno : fd;
 }
 
@@ -617,6 +763,7 @@ static inline int socket(const char *netname, NET_protocol_t protocol)
  * @brief Creates an endpoint for communication and returns a socket.
  *
  * @param netname       Network name.
+ * @param type          Socket type.
  * @param protocol      The protocol name.
  *
  * @return On error @b NULL is returned and @ref errno value is set appropriately,
@@ -625,7 +772,7 @@ static inline int socket(const char *netname, NET_protocol_t protocol)
  * @see socket_close()
  */
 //==============================================================================
-extern SOCKET *socket_open(const char *netname, NET_protocol_t protocol);
+extern SOCKET *socket_open(const char *netname, NET_socket_type_t type, u8_t protocol);
 
 //==============================================================================
 /**
@@ -687,8 +834,7 @@ extern int socket_close(SOCKET *socket);
  *         appropriately.
  */
 //==============================================================================
-extern int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr,
-        size_t sockaddr_size);
+extern int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr, size_t sockaddr_size);
 
 //==============================================================================
 /**
@@ -703,8 +849,7 @@ extern int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr,
  * @see socket_disconnect()
  */
 //==============================================================================
-extern int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr,
-        size_t sockaddr_size);
+extern int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr, size_t sockaddr_size);
 
 //==============================================================================
 /**
@@ -808,7 +953,7 @@ static inline int socket_read(SOCKET *socket, void *buf, size_t len)
  */
 //==============================================================================
 extern int socket_recvfrom(SOCKET *socket, void *buf, size_t len, NET_flags_t flags,
-        NET_generic_sockaddr_t *from_sockaddr, size_t from_sockaddr_size);
+        const NET_generic_sockaddr_t *from_sockaddr, size_t from_sockaddr_size);
 
 //==============================================================================
 /**
@@ -930,8 +1075,7 @@ extern int socket_set_send_timeout(SOCKET *socket, uint32_t timeout);
  * @see socket_connect(), socket_bind()
  */
 //==============================================================================
-extern int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr,
-        size_t addr_size);
+extern int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr, size_t addr_size);
 
 //==============================================================================
 /**
@@ -945,11 +1089,10 @@ extern int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr,
  *         appropriately.
  */
 //==============================================================================
-static inline int get_host_by_name(const char *netname, const char *name,
-        NET_generic_sockaddr_t *sock_addr, size_t sock_addr_size)
+static inline int get_host_by_name(const char *netname, const char *name, NET_generic_sockaddr_t *sock_addr,
+        size_t sock_addr_size)
 {
-        int err = _libc_syscall(_LIBC_SYS_NETGETHOSTBYNAME, netname, name, sock_addr,
-                &sock_addr_size);
+        int err = _libc_syscall(_LIBC_SYS_NETGETHOSTBYNAME, netname, name, sock_addr, &sock_addr_size);
         return err ? -1 : 0;
 }
 

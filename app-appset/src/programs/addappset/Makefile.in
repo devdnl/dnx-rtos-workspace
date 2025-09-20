@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += addappset/addappset.c
+CSRC_PROGRAMS   += $(PROG_ROOT_ADDAPPSET)addappset/addappset.c
 CXXSRC_PROGRAMS +=
 HDRLOC_PROGRAMS +=

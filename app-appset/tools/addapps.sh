@@ -9,7 +9,7 @@
 Makefile_name="Makefile"
 program_registration_file_name="program_registration.c"
 linker_script_file_name="layout.ld"
-project_flags_file="config/project/project_flags.h"
+project_flags_file="$5/project/project_flags.h"
 appset_section_address=$(cat $project_flags_file | grep __PROJ_APPSET_TABLE_ADDRESS__ | sed  's/.*__PROJ_APPSET_TABLE_ADDRESS__\s*//')
 appset_section_size=$(cat $project_flags_file | grep __PROJ_APPSET_TABLE_SIZE__ | sed  's/.*__PROJ_APPSET_TABLE_SIZE__\s*//')
 
@@ -35,24 +35,46 @@ function check_args()
 {
     local args="$1"
 
-    if [ "$1" == "" ] || [ "$2" == "" ] || [ "$3" == "" ]; then
-        echo "Usage: $args <path_to_scan> <output_path> <appfilter>"
+    if [ "$1" == "" ] || [ "$2" == "" ] || [ "$3" == "" ] || [ "$4" == "" ] || [ "$5" == "" ]; then
+        echo "Usage: $args <path_to_scan> <output_path> <app-include> <app-exclude> <config-path>"
         exit 1
     fi
 }
 
 #-------------------------------------------------------------------------------
+# @brief  Remove entries from input list by using exclude list.
+# @return new list
+#-------------------------------------------------------------------------------
+filter_list() {
+    local input="$1"
+    local exclude="$2"
+    local result=""
+
+    for item in $input; do
+        skip=0
+        for remove in $exclude; do
+            [[ "$item" == "$remove" ]] && skip=1 && break
+        done
+        [[ $skip -eq 0 ]] && result="$result $item"
+    done
+
+    echo "$result"
+}
+
+#-------------------------------------------------------------------------------
 # @brief  Gets program list in the current directory. Folders are interpreted as
 #         programs. Files are ignored.
-# @param  path to scan
+# @param  $1    path to scan
+# @param  $2    manual program list (* for any)
+# @param  $3    exclude list (can be empty)
 # @return program list
 #-------------------------------------------------------------------------------
 function get_program_list()
 {
     if [ "$2" == "*" ]; then
-        echo $(ls -F "$1/programs" | grep -P '/|@' | grep -Pv '#' | sed 's/\///g' | sed 's/@//g')
+        echo $(filter_list "$(ls -F "$1/programs" | grep -P '/|@' | grep -Pv '#' | sed 's/\///g' | sed 's/@//g')" "$3")
     else
-        echo "$2"
+        echo $(filter_list "$2" "$3")
     fi
 }
 
@@ -77,9 +99,7 @@ function create_makefile_programs()
     echo '# Makefile for GNU make - file generated at build process'
     echo ''
 
-    if [ "$1" == "*" ]; then
-        echo 'CSRC_PROGRAMS += ../../$(GEN_PROG_DIR)/program_registration.c'
-    fi
+    echo 'CSRC_PROGRAMS += ../../$(GEN_PROG_DIR)/program_registration.c'
 
     echo 'HDRLOC_PROGRAMS += ../programs'
     for prog in $program_list; do
@@ -184,19 +204,10 @@ function create_linker_scirpt_file()
 
     echo "MEMORY"
     echo "{"
-
-    if [ "$1" == "*" ]; then
-        echo "   rom (rx)  : org = $appset_section_address, len = $appset_section_size"
-    else
-        echo "   app (rwx)  : org = 0, len = $appset_section_size"
-    fi
+    echo "   rom (rx)  : org = $appset_section_address, len = $appset_section_size"
     echo "}"
 
-    if [ "$1" == "*" ]; then
-        echo "INCLUDE memory_layout.ld"
-    else
-        echo "INCLUDE memory_layout_standalone.ld"
-    fi
+    echo "INCLUDE memory_layout.ld"
 }
 
 #-------------------------------------------------------------------------------
@@ -206,9 +217,9 @@ function create_linker_scirpt_file()
 #-------------------------------------------------------------------------------
 function main()
 {
-    check_args "$1" "$2" "$3"
+    check_args "$1" "$2" "$3" "$4" "$5"
 
-    program_list=$(get_program_list "$1" "$3")
+    program_list=$(get_program_list "$1" "$3" "$4")
 
     create_makefile_programs "$3" > "$2/$Makefile_name"
     create_program_registration_file "$3" > "$2/$program_registration_file_name"
@@ -218,4 +229,5 @@ function main()
     create_makefile_libs >> "$2/$Makefile_name"
 }
 
-main "$1" "$2" "$3"
+main "$1" "$2" "$3" "$4" "$5"
+

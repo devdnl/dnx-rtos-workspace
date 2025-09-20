@@ -1,28 +1,32 @@
 /*==============================================================================
-@file    httpsrv.h
+@file   httpsrv.h
 
-@author  Daniel Zorychta
+@author Daniel Zorychta
 
-@brief   The HTTP server with script support.
+@brief  The HTTP server with script support.
 
-@note    Copyright (C) 2024 Daniel Zorychta <daniel.zorychta@gmail.com>
+        MIT License
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the Free Software Foundation and modified by the dnx RTOS exception.
+        Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-         NOTE: The modification  to the GPL is  included to allow you to
-               distribute a combined work that includes dnx RTOS without
-               being obliged to provide the source  code for proprietary
-               components outside of the dnx RTOS.
+        Permission is hereby granted, free of charge, to any person obtaining
+        a copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
 
-         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
 
-         Full license text is available on the following file: doc/license.txt.
-
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+        OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+        ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+        OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================*/
 
@@ -38,7 +42,6 @@ Detailed Doxygen description.
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "httpsrv_config.h"
 #include <ctype.h>
 #include <dirent.h>
 #include <dnx/misc.h>
@@ -55,10 +58,10 @@ Detailed Doxygen description.
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
-#include <netmgr/shared.h>
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+#include <conf_parser.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,12 +73,30 @@ extern "C" {
 #undef global
 #define global cast(struct httpsrv_globals *, _getglobal)
 
-#if HTTPSRV_DEBUG_ON
-#define DEBUG(...) printf("httpsrv: " __VA_ARGS__)
-#else
-#define DEBUG(...)
-#endif
-#define VERBOSE(...) printf("httpsrv: " __VA_ARGS__)
+#define DEBUG(...)                               \
+        if (global->debug) {                     \
+                printf("httpsrv: " __VA_ARGS__); \
+        }
+
+#define VERBOSE(...)                             printf("[httpsrv, info] " __VA_ARGS__)
+
+#define HTTPSRV_SCRIPT_BEGIN_TOKEN               "<?lua"
+#define HTTPSRV_SCRIPT_EXTENSION                 ".lua"
+
+#define conf_get_value(_key)                     conf_parser__get_value(global->conf, _key)
+#define conf_get_debug()                         conf_parser__is_value_true(conf_get_value("debug"))
+#define conf_get_threads_num()                   strtoul(conf_get_value("threads-num"), NULL, 0)
+#define conf_get_port()                          strtoul(conf_get_value("port"), NULL, 0)
+#define conf_get_root_dir()                      conf_get_value("root-dir")
+#define conf_get_upload_dir()                    conf_get_value("upload-dir")
+#define conf_get_page_default()                  conf_get_value("page-default")
+#define conf_get_page_not_found()                conf_get_value("page-not-found")
+#define conf_get_multipart_buffer_size()         strtoul(conf_get_value("buffer.multipart"), NULL, 0)
+#define conf_get_interpreter_fetch_buffer_size() strtoul(conf_get_value("buffer.interpreter-fetch"), NULL, 0)
+#define conf_get_interpreter_code_buffer_size()  strtoul(conf_get_value("buffer.interpreter-code"), NULL, 0)
+#define conf_get_interpreter_tmp_buffer_size()   strtoul(conf_get_value("buffer.interpreter-tmp"), NULL, 0)
+#define conf_get_output_buffer_size()            strtoul(conf_get_value("buffer.output"), NULL, 0)
+#define conf_get_http_parser_buffer_size()       strtoul(conf_get_value("buffer.http-parser"), NULL, 0)
 
 /*==============================================================================
   Exported object types
@@ -86,29 +107,33 @@ typedef enum {
 } httpsrv_content_type_t;
 
 typedef struct {
-        char  *value;
+        char *value;
         size_t value_length;
         size_t alloc_length;
 } httpsrv_chunk_t;
 
 typedef struct {
         SOCKET *socket;
+        tid_t tid;
 
         struct {
-                char   buf[HTTPSRV_OUTPUT_BUFFER_SIZE];
+                char *buf;
+                size_t buf_size;
                 size_t len;
         } output;
 
         struct interpreter {
                 struct {
-                        char   buf[HTTPSRV_INTERPRETER_FETCH_BUFFER_SIZE];
+                        char *buf;
+                        size_t buf_size;
                         size_t pos;
                         size_t len;
                 } fetch_buf;
 
                 struct {
                         struct {
-                                char   buf[sizeof(HTTPSRV_SCRIPT_BEGIN_TOKEN) - 1];
+                                char buf[sizeof(HTTPSRV_SCRIPT_BEGIN_TOKEN) - 1];
+                                size_t buf_size;
                                 size_t ptr;
                                 size_t len;
                         } begin_token;
@@ -117,21 +142,25 @@ typedef struct {
                                 char last;
                         } end_token;
 
-                        bool   script_section;
+                        bool script_section;
                         size_t code_len;
-                        char   code_buf[HTTPSRV_INTERPRETER_CODE_BUFFER_SIZE];
+                        size_t code_buf_size;
+                        char *code_buf;
                 } script;
 
-                char tmp_buf[HTTPSRV_INTERPRETER_TMP_BUFFER_SIZE];
+                char *tmp_buf;
+                size_t tmp_buf_size;
 
+                SOCKET *ipc_socket;
                 void *object;
                 void *context;
         } interpreter;
 
         struct http_request {
-                char                   buf[HTTPSRV_HTTP_PARSER_BUFFER_SIZE];
-                http_parser            parser;
-                bool                   message_complete;
+                char *buf;
+                size_t buf_size;
+                http_parser parser;
+                bool message_complete;
                 httpsrv_content_type_t content_type;
 
                 struct {
@@ -144,6 +173,7 @@ typedef struct {
 
                         char *url;
                         char *get_ref;
+                        size_t get_len;
                         char *multipart_boundary;
                 } header;
         } http_request;
@@ -159,9 +189,10 @@ typedef struct {
                 httpsrv_chunk_t content_type;
 
                 struct {
-                        char  *buf;
-                        char  *path;
+                        char *buf;
+                        char *path;
                         size_t buf_seek;
+                        size_t buf_size;
                         size_t write_count;
                 } data;
 
@@ -170,9 +201,12 @@ typedef struct {
 } httpsrv_thread_t;
 
 struct httpsrv_globals {
-        struct {
-                netmgr_shared_t *netmgr;
-        } shared;
+        bool debug;
+        conf_parser_t *conf;
+        SOCKET *socket;
+        httpsrv_thread_t **thread;
+        int thread_count;
+        bool thread_run;
 };
 
 /*==============================================================================
@@ -183,13 +217,13 @@ GLOBAL_VARIABLES_TYPE(struct httpsrv_globals);
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int  httpsrv_interpreter_init(httpsrv_thread_t *self);
+extern int httpsrv_interpreter_init(httpsrv_thread_t *self);
 extern void httpsrv_interpreter_deinit(httpsrv_thread_t *self);
-extern int  httpsrv_interpreter_dostring(httpsrv_thread_t *self, const char *string);
-extern int  httpsrv_interpreter_dofile(httpsrv_thread_t *self, const char *file);
-extern int  httpsrv_send(httpsrv_thread_t *self, const void *buf, size_t len, bool flush);
-extern int  httpsrv_send_file(httpsrv_thread_t *self, const char *content_type, u32_t cache_time,
-         const char *path);
+extern int httpsrv_interpreter_dostring(httpsrv_thread_t *self, const char *string);
+extern int httpsrv_interpreter_dofile(httpsrv_thread_t *self, const char *file);
+extern int httpsrv_send(httpsrv_thread_t *self, const void *buf, size_t len, bool flush);
+extern int httpsrv_send_file(httpsrv_thread_t *self, const char *content_type, u32_t cache_time,
+        const char *path);
 
 /*==============================================================================
   Exported inline functions

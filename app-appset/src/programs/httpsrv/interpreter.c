@@ -1,32 +1,36 @@
 /*==============================================================================
-@file    interpreter.c
+@file   interpreter.c
 
-@author  Daniel Zorychta
+@author Daniel Zorychta
 
-@brief   The HTTP server with script support - interpreter file.
+@brief  The HTTP server with script support - interpreter file.
 
-@note    Copyright (C) 2024 Daniel Zorychta <daniel.zorychta@gmail.com>
+        MIT License
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the Free Software Foundation and modified by the dnx RTOS exception.
+        Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-         NOTE: The modification  to the GPL is  included to allow you to
-               distribute a combined work that includes dnx RTOS without
-               being obliged to provide the source  code for proprietary
-               components outside of the dnx RTOS.
+        Permission is hereby granted, free of charge, to any person obtaining
+        a copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
 
-         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
 
-         Full license text is available on the following file: doc/license.txt.
-
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+        OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+        ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+        OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================*/
 
-// #pragma GCC optimize("Og")
+#pragma GCC optimize("Ofast")
 
 /*==============================================================================
   Include files
@@ -45,14 +49,14 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void parse_params_to_lua_table(httpsrv_thread_t *self, const char *params);
-static int  open_lib_request(lua_State *L);
-static int  open_lib_ipc(lua_State *L);
-static int  luafn_echo(lua_State *L);
-static int  luafn_request_method(lua_State *L);
-static int  luafn_request_data(lua_State *L);
-static int  luafn_ipc_request(lua_State *L);
-static int  luafn_send_file(lua_State *L);
+static void parse_params_to_lua_table(httpsrv_thread_t *self, const char *params, size_t params_len);
+static int open_lib_request(lua_State *L);
+static int open_lib_ipc(lua_State *L);
+static int luafn_echo(lua_State *L);
+static int luafn_request_method(lua_State *L);
+static int luafn_request_data(lua_State *L);
+static int luafn_ipc_request(lua_State *L);
+static int luafn_send_file(lua_State *L);
 
 /*==============================================================================
   Local object definitions
@@ -100,6 +104,47 @@ static const luaL_Reg lua_libs[] = {
 
 //==============================================================================
 /**
+ * @brief  Lua allocation function.
+ *
+ * @param  ud           user data
+ * @param  ptr          pointer to free/resize
+ * @param  osize        old size
+ * @param  nsize        new size
+ *
+ * @return Pointer to object or NULL.
+ */
+//==============================================================================
+static void *lua_alloc(void *ud, void *ptr, size_t osize, size_t nsize)
+{
+        UNUSED_ARG1(ud);
+
+        if (nsize == 0) {
+                free(ptr);
+                return NULL;
+
+        } else {
+                if (ptr) {
+                        if (osize >= nsize) {
+                                return ptr;
+
+                        } else {
+                                void *mem = malloc(nsize);
+                                if (mem) {
+                                        memcpy(mem, ptr, osize);
+                                }
+
+                                free(ptr);
+
+                                return mem;
+                        }
+                } else {
+                        return malloc(nsize);
+                }
+        }
+}
+
+//==============================================================================
+/**
  * @brief  Initialize interpreter.
  *
  * @param  self         http thread
@@ -109,20 +154,44 @@ static const luaL_Reg lua_libs[] = {
 //==============================================================================
 int httpsrv_interpreter_init(httpsrv_thread_t *self)
 {
-        self->interpreter.object = luaL_newstate();
-        lua_State *L             = self->interpreter.object;
+        self->interpreter.ipc_socket = NULL;
+        self->interpreter.object = NULL;
+
+        self->interpreter.fetch_buf.buf_size = conf_get_interpreter_fetch_buffer_size();
+        self->interpreter.fetch_buf.buf = malloc(self->interpreter.fetch_buf.buf_size);
+        if (not self->interpreter.fetch_buf.buf) {
+                httpsrv_interpreter_deinit(self);
+                return ENOMEM;
+        }
+
+        self->interpreter.script.code_buf_size = conf_get_interpreter_code_buffer_size();
+        self->interpreter.script.code_buf = malloc(self->interpreter.script.code_buf_size);
+        if (not self->interpreter.script.code_buf) {
+                httpsrv_interpreter_deinit(self);
+                return ENOMEM;
+        }
+
+        self->interpreter.tmp_buf_size = conf_get_interpreter_tmp_buffer_size();
+        self->interpreter.tmp_buf = malloc(self->interpreter.tmp_buf_size);
+        if (not self->interpreter.tmp_buf) {
+                httpsrv_interpreter_deinit(self);
+                return ENOMEM;
+        }
+
+        lua_State *L = lua_newstate(lua_alloc, self);
         if (not L) {
                 VERBOSE("Lua: cannot initialize\n");
+                httpsrv_interpreter_deinit(self);
                 return ENOMEM;
         }
 
         lua_pushlightuserdata(L, self);
         lua_setglobal(L, "_self");
 
-        lua_pushstring(L, HTTPSRV_ROOT_DIR);
+        lua_pushstring(L, conf_get_root_dir());
         lua_setglobal(L, "root_dir");
 
-        lua_pushstring(L, HTTPSRV_UPLOAD_DIR);
+        lua_pushstring(L, conf_get_upload_dir());
         lua_setglobal(L, "upload_dir");
 
         for (const luaL_Reg *lib = lua_libs; lib->func; lib++) {
@@ -139,6 +208,24 @@ int httpsrv_interpreter_init(httpsrv_thread_t *self)
                 lua_pop(L, 1);
         }
 
+        self->interpreter.ipc_socket = socket_open("unix", NET_SOCKET_TYPE__DATAGRAM, 0);
+        if (not self->interpreter.ipc_socket) {
+                VERBOSE("unable to create IPC socket!\n");
+                lua_close(L);
+                return ECONNREFUSED;
+        }
+
+        NET_UDS_sockaddr_t sockaddr;
+        snprintf(sockaddr.path, sizeof(sockaddr.path), "httpsrv.%u", gettid());
+        if (socket_bind(self->interpreter.ipc_socket, &sockaddr, sizeof(sockaddr)) != 0) {
+                VERBOSE("unable to bind IPC socket!\n");
+                socket_close(self->interpreter.ipc_socket);
+                lua_close(L);
+                return EADDRINUSE;
+        }
+
+        self->interpreter.object = L;
+
         return 0;
 }
 
@@ -151,7 +238,27 @@ int httpsrv_interpreter_init(httpsrv_thread_t *self)
 //==============================================================================
 void httpsrv_interpreter_deinit(httpsrv_thread_t *self)
 {
-        lua_close(self->interpreter.object);
+        if (self->interpreter.ipc_socket) {
+                socket_close(self->interpreter.ipc_socket);
+                self->interpreter.ipc_socket = NULL;
+        }
+
+        if (self->interpreter.object) {
+                lua_close(self->interpreter.object);
+                self->interpreter.object = NULL;
+        }
+
+        free(self->interpreter.fetch_buf.buf);
+        self->interpreter.fetch_buf.buf = NULL;
+        self->interpreter.fetch_buf.buf_size = 0;
+
+        free(self->interpreter.script.code_buf);
+        self->interpreter.script.code_buf = NULL;
+        self->interpreter.script.code_buf_size = 0;
+
+        free(self->interpreter.tmp_buf);
+        self->interpreter.tmp_buf = NULL;
+        self->interpreter.tmp_buf_size = 0;
 }
 
 //==============================================================================
@@ -167,6 +274,10 @@ void httpsrv_interpreter_deinit(httpsrv_thread_t *self)
 int httpsrv_interpreter_dostring(httpsrv_thread_t *self, const char *string)
 {
         if (luaL_dostring(self->interpreter.object, string)) {
+                const char *error_msg = lua_tostring(self->interpreter.object, -1);
+                VERBOSE("%s\n", error_msg);
+                // httpsrv_send(self, error_msg, strlen(error_msg), false);
+                lua_pop(self->interpreter.object, 1);
                 return EFAULT;
         } else {
                 return ESUCC;
@@ -186,6 +297,10 @@ int httpsrv_interpreter_dostring(httpsrv_thread_t *self, const char *string)
 int httpsrv_interpreter_dofile(httpsrv_thread_t *self, const char *file)
 {
         if (luaL_dofile(self->interpreter.object, file)) {
+                const char *error_msg = lua_tostring(self->interpreter.object, -1);
+                VERBOSE("%s\n", error_msg);
+                // httpsrv_send(self, error_msg, strlen(error_msg), false);
+                lua_pop(self->interpreter.object, 1);
                 return EFAULT;
         } else {
                 return ESUCC;
@@ -212,35 +327,108 @@ static httpsrv_thread_t *get_http_thread_self(lua_State *L)
 
 //==============================================================================
 /**
+ * @brief  Convert %xx character encoding.
+ *
+ * @param  buf          text buffer.
+ */
+//==============================================================================
+static void convert_html_encoding(char *buf)
+{
+        char *in = buf;
+        char *out = buf;
+
+        while (*in != '\0') {
+                if (*in == '%') {
+                        in++;
+
+                        char low = '0';
+                        char high = '0';
+                        u8_t byte = 0x00;
+
+                        if (*in == '\0') {
+                                break;
+                        } else {
+                                high = *in++;
+                        }
+
+                        if (*in == '\0') {
+                                break;
+                        } else {
+                                low = *in++;
+                        }
+
+                        low = tolower(low);
+                        high = tolower(high);
+
+                        if ((high >= '0') and (high <= '9')) {
+                                byte = (high - '0');
+                        } else if ((high >= 'a') and (high <= 'f')) {
+                                byte = (high - 'a') + 10;
+                        }
+
+                        byte <<= 4;
+
+                        if ((low >= '0') and (low <= '9')) {
+                                byte |= (low - '0');
+                        } else if ((low >= 'a') and (low <= 'f')) {
+                                byte |= (low - 'a') + 10;
+                        }
+
+                        *out++ = byte;
+
+                } else if (*in == '+') {
+                        *out++ = ' ';
+                        in++;
+
+                } else {
+                        *out++ = *in++;
+                }
+        }
+
+        *out = '\0';
+}
+
+//==============================================================================
+/**
  * @brief  Parse GET or POST parameters to Lua table.
  *
  * @param  params       GET or POST parameters string
  */
 //==============================================================================
-static void parse_params_to_lua_table(httpsrv_thread_t *self, const char *params)
+static void parse_params_to_lua_table(httpsrv_thread_t *self, const char *params, size_t params_len)
 {
         lua_State *L = self->interpreter.object;
 
         lua_newtable(L);
 
-        while (params and (*params != '\0')) {
+        const char *params_end = params + params_len;
+
+        while (params and (*params != '\0') and (params < params_end)) {
                 const char *key_begin = params;
-                const char *key_end   = strchr(key_begin, '=');
-                size_t      key_len   = cast(uintptr_t, key_end) - cast(uintptr_t, key_begin) + 1;
+                const char *key_end = strchr(key_begin, '=');
+                int key_len = cast(uintptr_t, key_end) - cast(uintptr_t, key_begin) + 1;
+                if (key_len <= 0) {
+                        break;
+                }
 
                 const char *val_begin = key_end + 1;
-                const char *val_end   = strchr(val_begin, '&');
+                const char *val_end = strchr(val_begin, '&');
                 if (not val_end) {
                         val_end = val_begin + strlen(val_begin);
                 }
-                size_t val_len = cast(uintptr_t, val_end) - cast(uintptr_t, val_begin) + 1;
+                int val_len = cast(uintptr_t, val_end) - cast(uintptr_t, val_begin) + 1;
+                if (val_len <= 0) {
+                        break;
+                }
 
                 strlcpy(self->interpreter.tmp_buf, val_begin,
-                        min(val_len, sizeof(self->interpreter.tmp_buf)));
+                        min(cast(size_t, val_len), self->interpreter.tmp_buf_size));
+                convert_html_encoding(self->interpreter.tmp_buf);
                 lua_pushstring(L, self->interpreter.tmp_buf);
 
                 strlcpy(self->interpreter.tmp_buf, key_begin,
-                        min(key_len, sizeof(self->interpreter.tmp_buf)));
+                        min(cast(size_t, key_len), self->interpreter.tmp_buf_size));
+                convert_html_encoding(self->interpreter.tmp_buf);
                 lua_setfield(L, -2, self->interpreter.tmp_buf);
 
                 if (*val_end == '&') {
@@ -298,7 +486,7 @@ static int luafn_echo(lua_State *L)
 
         int n = lua_gettop(L);
         for (int i = 1; i <= n; i++) {
-                size_t      l;
+                size_t l;
                 const char *s = luaL_tolstring(L, i, &l);
 
                 httpsrv_send(self, s, l, false);
@@ -352,10 +540,12 @@ static int luafn_request_data(lua_State *L)
         httpsrv_thread_t *self = get_http_thread_self(L);
 
         if (self->http_request.parser.method == HTTP_GET) {
-                parse_params_to_lua_table(self, self->http_request.header.get_ref);
+                parse_params_to_lua_table(self, self->http_request.header.get_ref,
+                        self->http_request.header.get_len);
 
         } else if (self->http_request.parser.method == HTTP_POST) {
-                parse_params_to_lua_table(self, self->http_request.header.body_data.value);
+                parse_params_to_lua_table(self, self->http_request.header.body_data.value,
+                        self->http_request.header.body_data.value_length);
         }
 
         return 1;
@@ -403,8 +593,7 @@ static int luafn_ipc_request(lua_State *L)
         /*
          * Compose request. Lua table -> bs
          */
-        bs_wr_t bs_wr;
-        bs_write_chunk(&bs_wr, cast(u8_t *, self->interpreter.tmp_buf), sizeof(self->interpreter.tmp_buf));
+        bs_t bs_wr = bs_write_init(cast(u8_t *, self->interpreter.tmp_buf), self->interpreter.tmp_buf_size);
 
         lua_pushvalue(L, -1);
 
@@ -420,17 +609,36 @@ static int luafn_ipc_request(lua_State *L)
 
                 const char *key = lua_tostring(L, -1);
 
-                if (lua_isinteger(L, -2)) {
-                        bs_set_int32_t(&bs_wr, key, lua_tointeger(L, -2));
-
-                } else if (lua_isnumber(L, -2)) {
-                        bs_set_float(&bs_wr, key, lua_tonumber(L, -2));
-
-                } else if (lua_isstring(L, -2)) {
+                if (lua_type(L, -2) == LUA_TSTRING) {
                         bs_set_str(&bs_wr, key, lua_tostring(L, -2));
 
                 } else if (lua_isboolean(L, -2)) {
                         bs_set_bool(&bs_wr, key, lua_toboolean(L, -2));
+
+                } else if (lua_isnumber(L, -2)) {
+
+                        lua_Number num = lua_tonumber(L, -2);
+
+                        if (num == cast(int, num)) {
+                                if ((num >= INT8_MIN) and (num <= INT8_MAX)) {
+                                        bs_set_int8_t(&bs_wr, key, cast(int, num));
+
+                                } else if ((num >= INT16_MIN) and (num <= INT16_MAX)) {
+                                        bs_set_int16_t(&bs_wr, key, cast(int, num));
+
+                                } else if ((num >= INT32_MIN) and (num <= INT32_MAX)) {
+                                        bs_set_int32_t(&bs_wr, key, cast(int, num));
+
+                                } else {
+                                        bs_set_int64_t(&bs_wr, key, cast(int, num));
+                                }
+                        } else {
+                                if (sizeof(lua_Number) == sizeof(float)) {
+                                        bs_set_float(&bs_wr, key, lua_tonumber(L, -2));
+                                } else {
+                                        bs_set_double(&bs_wr, key, lua_tonumber(L, -2));
+                                }
+                        }
 
                 } else {
                         luaL_error(L, "Type not supported!");
@@ -446,47 +654,24 @@ static int luafn_ipc_request(lua_State *L)
         /*
          * Connect to selected address.
          */
-        errno          = 0;
-        SOCKET *socket = socket_open("unix", NET_PROTOCOL__DATAGRAM);
-        if (not socket) {
-                lua_pushnumber(L, errno);
-                lua_pushnil(L);
-                socket_close(socket);
-                return 2;
-        }
-
-        NET_UDS_sockaddr_t sockaddr;
-        strlcpy(sockaddr.path, "httpsrv", sizeof(sockaddr.path));
-        errno = 0;
-        if (socket_bind(socket, &sockaddr, sizeof(sockaddr)) != 0) {
-                lua_pushnumber(L, errno);
-                lua_pushnil(L);
-                socket_close(socket);
-                return 2;
-        }
-
         NET_UDS_sockaddr_t server_addr;
         strlcpy(server_addr.path, address, sizeof(server_addr.path));
         errno = 0;
-        if (socket_sendto(socket, self->interpreter.tmp_buf, chunk_len, 0, &server_addr,
+        if (socket_sendto(self->interpreter.ipc_socket, self->interpreter.tmp_buf, chunk_len, 0, &server_addr,
                     sizeof(server_addr)) != chunk_len) {
                 lua_pushnumber(L, errno);
                 lua_pushnil(L);
-                socket_close(socket);
                 return 2;
         }
 
         errno = 0;
-        int n = socket_recvfrom(socket, self->interpreter.tmp_buf, sizeof(self->interpreter.tmp_buf), 0,
-                &server_addr, sizeof(server_addr));
+        int n = socket_recvfrom(self->interpreter.ipc_socket, self->interpreter.tmp_buf,
+                self->interpreter.tmp_buf_size, 0, &server_addr, sizeof(server_addr));
         if (n <= 0) {
                 lua_pushnumber(L, errno);
                 lua_pushnil(L);
-                socket_close(socket);
                 return 2;
         }
-
-        socket_close(socket);
 
         /*
          * Conver answer to Lua table.
@@ -494,15 +679,15 @@ static int luafn_ipc_request(lua_State *L)
         lua_pushnumber(L, 0);
         lua_newtable(L);
 
-        bs_rd_t bs_rd;
-        bs_read_chunk(&bs_rd, cast(uint8_t *, self->interpreter.tmp_buf), n);
+        bs_t bs_rd = bs_read_init(cast(uint8_t *, self->interpreter.tmp_buf), n);
 
-        uint8_t    *next = NULL;
+        uint8_t *next = NULL;
         const char *key;
         const void *value;
-        bs_type_t   type;
+        uint16_t value_len;
+        bs_type_t type;
 
-        while (bs_get_next(&bs_rd, &next, &key, &value, &type) == 0) {
+        while (bs_get_next(&bs_rd, &next, &key, &value, &value_len, &type) == 0) {
 
                 // value
                 switch (type) {
@@ -588,6 +773,10 @@ static int luafn_ipc_request(lua_State *L)
                         break;
 
                 case bs_type__blob:
+                        lua_pushlstring(L, value, value_len);
+                        break;
+
+                default:
                         // not handled
                         lua_pushinteger(L, 0);
                         break;

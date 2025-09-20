@@ -1,8 +1,4 @@
 # Makefile for GNU make
 
-COMMON_LIBS_SHA256_ROOT = ../../../common_libs
-
-CSRC_LIB   += $(COMMON_LIBS_SHA256_ROOT)/sha256/sha256.c
-CXXSRC_LIB +=
-HDRLOC_LIB += $(COMMON_LIBS_SHA256_ROOT)/
-HDRLOC_LIB += $(COMMON_LIBS_SHA256_ROOT)/sha256
+LIB_ROOT_SHA256 = ../../../common_libs/
+include ../common_libs/sha256/Makefile.in

@@ -1,6 +1,6 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += httpsrv/httpsrv.c
-CSRC_PROGRAMS   += httpsrv/interpreter.c
+CSRC_PROGRAMS   += $(PROG_ROOT_HTTPSRV)httpsrv/httpsrv.c
+CSRC_PROGRAMS   += $(PROG_ROOT_HTTPSRV)httpsrv/interpreter.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

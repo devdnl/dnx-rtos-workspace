@@ -1,28 +1,32 @@
 /*==============================================================================
-@file    file.c
+@file   file.c
 
-@author  Daniel Zorychta
+@author Daniel Zorychta
 
-@brief   File handling functions.
+@brief  File handling functions.
 
-@note    Copyright (C) 2021 Daniel Zorychta <daniel.zorychta@gmail.com>
+        MIT License
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the Free Software Foundation and modified by the dnx RTOS exception.
+        Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-         NOTE: The modification  to the GPL is  included to allow you to
-               distribute a combined work that includes dnx RTOS without
-               being obliged to provide the source  code for proprietary
-               components outside of the dnx RTOS.
+        Permission is hereby granted, free of charge, to any person obtaining
+        a copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
 
-         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
 
-         Full license text is available on the following file: doc/license.txt.
-
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+        OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+        ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+        OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================*/
 
@@ -39,35 +43,35 @@
   Local macros
 ==============================================================================*/
 #ifndef O_RDONLY
-#define O_RDONLY                                00
+#define O_RDONLY 00
 #endif
 
 #ifndef O_WRONLY
-#define O_WRONLY                                01
+#define O_WRONLY 01
 #endif
 
 #ifndef O_RDWR
-#define O_RDWR                                  02
+#define O_RDWR 02
 #endif
 
 #ifndef O_CREAT
-#define O_CREAT                                 0100
+#define O_CREAT 0100
 #endif
 
 #ifndef O_EXCL
-#define O_EXCL                                  0200
+#define O_EXCL 0200
 #endif
 
 #ifndef O_TRUNC
-#define O_TRUNC                                 01000
+#define O_TRUNC 01000
 #endif
 
 #ifndef O_APPEND
-#define O_APPEND                                02000
+#define O_APPEND 02000
 #endif
 
 #ifndef O_NONBLOCK
-#define O_NONBLOCK                              04000
+#define O_NONBLOCK 04000
 #endif
 
 /*==============================================================================
@@ -92,7 +96,7 @@ int unlink(const char *pathname);
   External objects
 ==============================================================================*/
 extern void *_libc_malloc(size_t size);
-extern void _libc_free(void *ptr);
+extern void  _libc_free(void *ptr);
 
 /*==============================================================================
   Function definitions
@@ -212,10 +216,10 @@ FILE *_libc_fopen(const char *path, const char *mode)
 {
         FILE *f = _libc_malloc(sizeof(*f));
         if (f) {
-                f->tmppath = NULL;
-                f->flag.eof = false;
+                f->tmppath    = NULL;
+                f->flag.eof   = false;
                 f->flag.error = false;
-                f->fd = open(path, parse_flags(mode), 0600);
+                f->fd         = open(path, parse_flags(mode), 0600);
                 if (f->fd >= 0) {
                         return f;
                 }
@@ -251,10 +255,10 @@ FILE *_libc_fdopen(int fd, const char *mode)
                 return NULL;
         }
 
-        f->tmppath = NULL;
-        f->flag.eof = false;
+        f->tmppath    = NULL;
+        f->flag.eof   = false;
         f->flag.error = false;
-        f->fd = fd;
+        f->fd         = fd;
         return f;
 }
 
@@ -275,7 +279,7 @@ FILE *_libc_fdopen(int fd, const char *mode)
 FILE *_libc_tmpfile(void)
 {
         uint64_t time_ms = 0;
-        int err = _libc_syscall(_LIBC_SYS_GETUPTIMEMS, &time_ms);
+        int      err     = _libc_syscall(_LIBC_SYS_GETUPTIMEMS, &time_ms);
         if (err) {
                 return NULL;
         }
@@ -374,8 +378,8 @@ int _libc_fclose(FILE *file)
 //==============================================================================
 ssize_t write(int fd, const void *buf, size_t count)
 {
-        size_t n = 0;
-        int err = _libc_syscall(_LIBC_SYS_WRITE, &fd, buf, &count, &n);
+        size_t n   = 0;
+        int    err = _libc_syscall(_LIBC_SYS_WRITE, &fd, buf, &count, &n);
         return err ? -1 : (ssize_t)n;
 }
 
@@ -432,8 +436,8 @@ size_t _libc_fwrite(const void *ptr, size_t size, size_t count, FILE *file)
 //==============================================================================
 ssize_t read(int fd, void *buf, size_t count)
 {
-        size_t n = 0;
-        int err = _libc_syscall(_LIBC_SYS_READ, &fd, buf, &count, &n);
+        size_t n   = 0;
+        int    err = _libc_syscall(_LIBC_SYS_READ, &fd, buf, &count, &n);
         return err ? -1 : (ssize_t)n;
 }
 
@@ -494,7 +498,7 @@ size_t _libc_fread(void *ptr, size_t size, size_t count, FILE *file)
 int64_t lseek64(int fd, int64_t offset, int whence)
 {
         i64_t seek = offset;
-        int err = _libc_syscall(_LIBC_SYS_SEEK64, &fd, &seek, &whence);
+        int   err  = _libc_syscall(_LIBC_SYS_SEEK64, &fd, &seek, &whence);
         return err ? -1 : seek;
 }
 
@@ -680,7 +684,7 @@ int _libc_feof(FILE *file)
 void _libc_clearerr(FILE *file)
 {
         if (file) {
-                file->flag.eof = false;
+                file->flag.eof   = false;
                 file->flag.error = false;
         }
 }
@@ -999,7 +1003,7 @@ i32_t _libc_telldir(DIR *dir)
 
         if (dir) {
                 u32_t seek = 0;
-                int err = _libc_syscall(_LIBC_SYS_DIRTELL, &dir->fd, &seek);
+                int   err  = _libc_syscall(_LIBC_SYS_DIRTELL, &dir->fd, &seek);
                 if (!err) {
                         pos = (i32_t)seek;
                 }

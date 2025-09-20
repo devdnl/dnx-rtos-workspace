@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += perf/perf.c
+CSRC_PROGRAMS   += $(PROG_ROOT_PERF)perf/perf.c
 CXXSRC_PROGRAMS +=
 HDRLOC_PROGRAMS +=

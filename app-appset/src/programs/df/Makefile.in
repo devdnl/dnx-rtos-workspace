@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += df/df.c
+CSRC_PROGRAMS   += $(PROG_ROOT_DF)df/df.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

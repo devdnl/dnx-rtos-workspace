@@ -8,6 +8,6 @@ flash_erase 0x08040000 262144
 flash_write "/app-system.bin" 0x08040000
 flash_write "/app-appset.bin" 0x08070000
 
-extract "/manifest" "/sd/manifest"
+fpkg_extract "/manifest" "/sd/manifest"
 
 puts "DONE"

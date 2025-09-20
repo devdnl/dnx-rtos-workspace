@@ -1,22 +1,4 @@
 # Makefile for GNU make
 
-COMMON_LIBS_ZLIB_ROOT = ../../../common_libs
-
-CSRC_LIB   += $(COMMON_LIBS_ZLIB_ROOT)/zlib/adler32.c
-CSRC_LIB   += $(COMMON_LIBS_ZLIB_ROOT)/zlib/compress.c
-CSRC_LIB   += $(COMMON_LIBS_ZLIB_ROOT)/zlib/crc32.c
-CSRC_LIB   += $(COMMON_LIBS_ZLIB_ROOT)/zlib/deflate.c
-CSRC_LIB   += $(COMMON_LIBS_ZLIB_ROOT)/zlib/gzclose.c
-CSRC_LIB   += $(COMMON_LIBS_ZLIB_ROOT)/zlib/gzlib.c
-CSRC_LIB   += $(COMMON_LIBS_ZLIB_ROOT)/zlib/gzread.c
-CSRC_LIB   += $(COMMON_LIBS_ZLIB_ROOT)/zlib/gzwrite.c
-CSRC_LIB   += $(COMMON_LIBS_ZLIB_ROOT)/zlib/infback.c
-CSRC_LIB   += $(COMMON_LIBS_ZLIB_ROOT)/zlib/inffast.c
-CSRC_LIB   += $(COMMON_LIBS_ZLIB_ROOT)/zlib/inflate.c
-CSRC_LIB   += $(COMMON_LIBS_ZLIB_ROOT)/zlib/inftrees.c
-CSRC_LIB   += $(COMMON_LIBS_ZLIB_ROOT)/zlib/trees.c
-CSRC_LIB   += $(COMMON_LIBS_ZLIB_ROOT)/zlib/uncompr.c
-CSRC_LIB   += $(COMMON_LIBS_ZLIB_ROOT)/zlib/zutil.c
-CXXSRC_LIB +=
-HDRLOC_LIB += $(COMMON_LIBS_ZLIB_ROOT)/
-HDRLOC_LIB += $(COMMON_LIBS_ZLIB_ROOT)/zlib
+LIB_ROOT_ZLIB = ../../../common_libs/
+include ../common_libs/zlib/Makefile.in

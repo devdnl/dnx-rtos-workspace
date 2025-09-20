@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += top/top.c
+CSRC_PROGRAMS   += $(PROG_ROOT_TOP)top/top.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

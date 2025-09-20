@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += ifconfig/ifconfig.c
+CSRC_PROGRAMS   += $(PROG_ROOT_IFCONFIG)ifconfig/ifconfig.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += touch/touch.c
+CSRC_PROGRAMS   += $(PROG_ROOT_TOUCH)touch/touch.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

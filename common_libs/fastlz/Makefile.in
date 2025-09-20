@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_LIB   += fastlz/fastlz.c
-CXXSRC_LIB += 
-HDRLOC_LIB += fastlz
+CSRC_LIB   += $(LIB_ROOT_FASTLZ)fastlz/fastlz.c
+CXXSRC_LIB +=
+HDRLOC_LIB += $(LIB_ROOT_FASTLZ)fastlz

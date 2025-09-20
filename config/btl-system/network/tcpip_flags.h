@@ -548,7 +548,11 @@ this:AddItem("Enable (1)", "1")
 this:SetToolTip("Set this to 1 to enable querying \".local\" names via mDNS using a One-Shot Multicast DNS Query.")
 --*/
 #define __NETWORK_LWIP_DNS_SUPPORT_MDNS_QUERIES__ 0
-
+/*--
+this:AddWidget("Editline", true, "LWIP_DNS_LIST_PATH")
+this:SetToolTip("Set path to DNS server list. Each DNS IP address should be added in seperated line.")
+--*/
+#define __NETWORK_LWIP_DNS_LIST_PATH__ "/conf/dns.conf"
 
 
 /*------------------------------------------------------------------------------

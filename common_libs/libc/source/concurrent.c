@@ -1,28 +1,32 @@
 /*==============================================================================
-@file    concurrent.c
+@file   concurrent.c
 
-@author  Daniel Zorychta
+@author Daniel Zorychta
 
-@brief   Concurrency functions (mutex, semaphore, queue).
+@brief  Concurrency functions (mutex, semaphore, queue).
 
-@note    Copyright (C) 2021 Daniel Zorychta <daniel.zorychta@gmail.com>
+        MIT License
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the Free Software Foundation and modified by the dnx RTOS exception.
+        Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-         NOTE: The modification  to the GPL is  included to allow you to
-               distribute a combined work that includes dnx RTOS without
-               being obliged to provide the source  code for proprietary
-               components outside of the dnx RTOS.
+        Permission is hereby granted, free of charge, to any person obtaining
+        a copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
 
-         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
 
-         Full license text is available on the following file: doc/license.txt.
-
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+        OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+        ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+        OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================*/
 
@@ -68,18 +72,18 @@ typedef struct {
  * @brief Process attributes passed to the syscall.
  */
 typedef struct {
-        void       (*at_init)(void*);   //!< function called at init before main()
-        void       *at_init_ctx;        //!< context of at_init function
-        const char *cwd;                //!< working directory path
-        size_t      app_ctx_size;       //!< size of application context object
-        int         fd_stdin;           //!< stdin file descriptor (major)
-        int         fd_stdout;          //!< stdin file descriptor (major)
-        int         fd_stderr;          //!< stdin file descriptor (major)
-        const char *p_stdin;            //!< stdin  file path (minor)
-        const char *p_stdout;           //!< stdout file path (minor)
-        const char *p_stderr;           //!< stderr file path (minor)
-        i16_t       priority;           //!< process priority
-        bool        detached;           //!< independent process (no parent)
+        void (*at_init)(void *);  //!< function called at init before main()
+        void       *at_init_ctx;  //!< context of at_init function
+        const char *cwd;          //!< working directory path
+        size_t      app_ctx_size; //!< size of application context object
+        int         fd_stdin;     //!< stdin file descriptor (major)
+        int         fd_stdout;    //!< stdin file descriptor (major)
+        int         fd_stderr;    //!< stdin file descriptor (major)
+        const char *p_stdin;      //!< stdin  file path (minor)
+        const char *p_stdout;     //!< stdout file path (minor)
+        const char *p_stderr;     //!< stderr file path (minor)
+        i16_t       priority;     //!< process priority
+        bool        detached;     //!< independent process (no parent)
 } _syscall_process_attr_t;
 
 /*==============================================================================
@@ -193,7 +197,7 @@ pid_t process_create(const char *cmd, const process_attr_t *attr)
         sys_attr.detached     = attr->detached;
         sys_attr.priority     = attr->priority;
         sys_attr.at_init      = process_at_init;
-        sys_attr.at_init_ctx  = (void*)attr;
+        sys_attr.at_init_ctx  = (void *)attr;
         sys_attr.app_ctx_size = sizeof(_libc_app_ctx_t);
 
         // keep _syscall_process_attr_t as small as possible because is stored
@@ -483,7 +487,7 @@ int sem_getvalue(int fd)
         }
 
         size_t ctr;
-        int err = _libc_syscall(_LIBC_SYS_SEMAPHOREGETVALUE, &fd, &ctr);
+        int    err = _libc_syscall(_LIBC_SYS_SEMAPHOREGETVALUE, &fd, &ctr);
         return err ? -1 : (int)ctr;
 }
 
@@ -889,7 +893,7 @@ int q_recv_peek(int fd, void *item, u32_t timeout)
 int q_items(int fd)
 {
         size_t count = 0;
-        int err = _libc_syscall(_LIBC_SYS_QUEUEITEMSCOUNT, &fd, &count);
+        int    err   = _libc_syscall(_LIBC_SYS_QUEUEITEMSCOUNT, &fd, &count);
         return err ? -1 : (int)count;
 }
 
@@ -910,7 +914,7 @@ int q_items(int fd)
 int q_space(int fd)
 {
         size_t count = 0;
-        int err = _libc_syscall(_LIBC_SYS_QUEUEFREESPACE, &fd, &count);
+        int    err   = _libc_syscall(_LIBC_SYS_QUEUEFREESPACE, &fd, &count);
         return err ? -1 : (int)count;
 }
 

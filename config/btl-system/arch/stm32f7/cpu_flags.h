@@ -255,9 +255,9 @@ __CUSTOM_LD_SCRIPT__=_NO_
 # this:AddWidget("Editline", true, "Custom linker script file path")
 # this:SetToolTip("File is relative to configuration directory.")
 #--*/
-#define __CUSTOM_LD_SCRIPT_FILE__ "./config/custom_script.ld"
+#define __CUSTOM_LD_SCRIPT_FILE__ "./custom_linker_script.ld"
 #/*
-__CUSTOM_LD_SCRIPT_FILE__="./config/custom_script.ld"
+__CUSTOM_LD_SCRIPT_FILE__="./custom_linker_script.ld"
 #*/
 
 #/*--
@@ -284,7 +284,7 @@ __CPU_PREFFERED_FS_RAM__="SDRAM", "PSRAM", "SRAM", "SRAM1", "SRAM2", "DTCM"
 #--*/
 #define __CPU_PREFFERED_FAST_RAM__ "DTCM", "SRAM1", "SRAM2"
 #/*
-__CPU_PREFFERED_FAST_RAM__="DTCM", "DTCM", "SRAM1", "SRAM2"
+__CPU_PREFFERED_FAST_RAM__="DTCM", "SRAM1", "SRAM2"
 #*/
 
 #/*--
