@@ -327,69 +327,6 @@ static httpsrv_thread_t *get_http_thread_self(lua_State *L)
 
 //==============================================================================
 /**
- * @brief  Convert %xx character encoding.
- *
- * @param  buf          text buffer.
- */
-//==============================================================================
-static void convert_html_encoding(char *buf)
-{
-        char *in = buf;
-        char *out = buf;
-
-        while (*in != '\0') {
-                if (*in == '%') {
-                        in++;
-
-                        char low = '0';
-                        char high = '0';
-                        u8_t byte = 0x00;
-
-                        if (*in == '\0') {
-                                break;
-                        } else {
-                                high = *in++;
-                        }
-
-                        if (*in == '\0') {
-                                break;
-                        } else {
-                                low = *in++;
-                        }
-
-                        low = tolower(low);
-                        high = tolower(high);
-
-                        if ((high >= '0') and (high <= '9')) {
-                                byte = (high - '0');
-                        } else if ((high >= 'a') and (high <= 'f')) {
-                                byte = (high - 'a') + 10;
-                        }
-
-                        byte <<= 4;
-
-                        if ((low >= '0') and (low <= '9')) {
-                                byte |= (low - '0');
-                        } else if ((low >= 'a') and (low <= 'f')) {
-                                byte |= (low - 'a') + 10;
-                        }
-
-                        *out++ = byte;
-
-                } else if (*in == '+') {
-                        *out++ = ' ';
-                        in++;
-
-                } else {
-                        *out++ = *in++;
-                }
-        }
-
-        *out = '\0';
-}
-
-//==============================================================================
-/**
  * @brief  Parse GET or POST parameters to Lua table.
  *
  * @param  params       GET or POST parameters string
@@ -423,12 +360,12 @@ static void parse_params_to_lua_table(httpsrv_thread_t *self, const char *params
 
                 strlcpy(self->interpreter.tmp_buf, val_begin,
                         min(cast(size_t, val_len), self->interpreter.tmp_buf_size));
-                convert_html_encoding(self->interpreter.tmp_buf);
+                httpsrv_convert_html_encoding(self->interpreter.tmp_buf);
                 lua_pushstring(L, self->interpreter.tmp_buf);
 
                 strlcpy(self->interpreter.tmp_buf, key_begin,
                         min(cast(size_t, key_len), self->interpreter.tmp_buf_size));
-                convert_html_encoding(self->interpreter.tmp_buf);
+                httpsrv_convert_html_encoding(self->interpreter.tmp_buf);
                 lua_setfield(L, -2, self->interpreter.tmp_buf);
 
                 if (*val_end == '&') {

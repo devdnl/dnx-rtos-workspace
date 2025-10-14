@@ -63,7 +63,7 @@
 		["__ENABLE_ZERO__"]="_YES_";
 	};
 	["config/app-system/arch/noarch/tty_flags.h"]={
-		["__TTY_NUMBER_OF_TERM__"]="2";
+		["__TTY_NUMBER_OF_TERM__"]="3";
 		["__TTY_OUT_STREAM_LEN__"]="80";
 		["__TTY_TERM_COLS__"]="80";
 		["__TTY_TERM_ROWS__"]="24";

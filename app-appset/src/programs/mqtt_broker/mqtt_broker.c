@@ -65,7 +65,6 @@
 #define CONFIG_KEY_ALLOW_ENABLE "allow.enable"
 #define CONFIG_KEY_ALLOW_BASE   "allow."
 
-#define MAX_CONNECTIONS         32
 #define MAX_TOPIC_LENGTH        128
 #define MAX_TOPICS              500
 #define MAX_PAYLOAD_SIZE        4096
@@ -79,7 +78,7 @@
                 localtime_r(&t, &lt);                                                   \
                 char t_str[32];                                                         \
                 strftime(t_str, sizeof(t_str), "%F %X", &lt);                           \
-                printf("[mqtt-broker, debug, %s, %s] ", t_str, session->client_ip_str); \
+                printf("[mqtt_broker, debug, %s, %s] ", t_str, session->client_ip_str); \
                 printf(__VA_ARGS__);                                                    \
         }
 
@@ -90,7 +89,7 @@
                 localtime_r(&t, &lt);                                                                    \
                 char t_str[32];                                                                          \
                 strftime(t_str, sizeof(t_str), "%F %X", &lt);                                            \
-                printf("[mqtt-broker, error, %s, %s] %s: %u\n", t_str, session->client_ip_str, __func__, \
+                printf("[mqtt_broker, error, %s, %s] %s: %u\n", t_str, session->client_ip_str, __func__, \
                         __LINE__);                                                                       \
         } while (false)
 
@@ -101,8 +100,19 @@
                 localtime_r(&t, &lt);                                                  \
                 char t_str[32];                                                        \
                 strftime(t_str, sizeof(t_str), "%F %X", &lt);                          \
-                printf("[mqtt-broker, info, %s, %s] ", t_str, session->client_ip_str); \
+                printf("[mqtt_broker, info, %s, %s] ", t_str, session->client_ip_str); \
                 printf(__VA_ARGS__);                                                   \
+        } while (false)
+
+#define VERBOSE_SESSION_WARNING(...)                                                      \
+        do {                                                                              \
+                time_t t = time(NULL);                                                    \
+                struct tm lt;                                                             \
+                localtime_r(&t, &lt);                                                     \
+                char t_str[32];                                                           \
+                strftime(t_str, sizeof(t_str), "%F %X", &lt);                             \
+                printf("[mqtt_broker, warning, %s, %s] ", t_str, session->client_ip_str); \
+                printf(__VA_ARGS__);                                                      \
         } while (false)
 
 #define VERBOSE(...)                                          \
@@ -112,7 +122,7 @@
                 localtime_r(&t, &lt);                         \
                 char t_str[32];                               \
                 strftime(t_str, sizeof(t_str), "%F %X", &lt); \
-                printf("[mqtt-broker, info, %s] ", t_str);    \
+                printf("[mqtt_broker, info, %s] ", t_str);    \
                 printf(__VA_ARGS__);                          \
         } while (false)
 
@@ -433,7 +443,7 @@ static const char *config_param = "--config=";
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-PROGRAM_PARAMS(mqtt_broker, STACK_DEPTH_LOW);
+PROGRAM_PARAMS(mqtt_broker, STACK_DEPTH_MEDIUM);
 
 /*==============================================================================
   External objects
@@ -588,12 +598,13 @@ int main(int argc, char *argv[])
         socket_set_recv_timeout(socket, 40);
 
         while (true) {
+                size_t last_num_clients = llist_size(global->sessions);
+
                 SOCKET *new_socket;
                 if (socket_accept(socket, &new_socket) == 0) {
                         session_t *session = session_new(new_socket);
                         if (session) {
                                 llist_push_back(global->sessions, session);
-                                VERBOSE("connected clients: %u.\n", llist_size(global->sessions));
                         } else {
                                 socket_close(new_socket);
                         }
@@ -602,8 +613,13 @@ int main(int argc, char *argv[])
                 llist_foreach (session_t *, session, global->sessions) {
                         if (not session_poll(session)) {
                                 llist_erase_by_iterator(&_iterator);
-                                VERBOSE("connected clients: %u.\n", llist_size(global->sessions));
                         }
+                }
+
+                size_t num_clients = llist_size(global->sessions);
+                if (num_clients != last_num_clients) {
+                        last_num_clients = num_clients;
+                        VERBOSE("connected clients: %u.\n", llist_size(global->sessions));
                 }
 
                 topicdb_maintenance();
@@ -644,6 +660,7 @@ static session_t *session_new(SOCKET *socket)
         session->keep_alive = 5;
 
         socket_set_recv_timeout(session->socket, 0);
+        socket_set_send_timeout(session->socket, 1000);
 
         NET_INET_sockaddr_t addr;
         socket_get_address(session->socket, &addr, sizeof(addr));
@@ -691,6 +708,8 @@ static session_t *session_delete(session_t *session)
         free(session->password);
         free(session->last_will.topic);
         free(session->last_will.payload);
+
+        memset(session, 0, sizeof(*session));
         free(session);
 
         return NULL;
@@ -719,6 +738,18 @@ static void llist_session_dtor(void *object)
 //==============================================================================
 static bool session_poll(session_t *session)
 {
+        clock_t now = get_uptime_ms();
+
+        if (session->close_session) {
+                VERBOSE_SESSION_WARNING("closing session because of double connection.\n");
+                return false;
+        }
+
+        if ((now - session->alive_tref) >= ((session->keep_alive * 1000) + 60000UL)) {
+                VERBOSE_SESSION_WARNING("closing session because of inactivity.\n");
+                return false;
+        }
+
         bool connected = true;
 
         session_send_subscribed_topics(session);
@@ -777,25 +808,25 @@ static bool session_poll(session_t *session)
                 break;
 
         case mqtt_msg_type__suback:
-                VERBOSE_SESSION("client command mqtt_msg_type__SUBACK!\n");
+                VERBOSE_SESSION_WARNING("client command mqtt_msg_type__SUBACK!\n");
                 break;
 
         case mqtt_msg_type__unsuback:
-                VERBOSE_SESSION("client command mqtt_msg_type__UNSUBACK!\n");
+                VERBOSE_SESSION_WARNING("client command mqtt_msg_type__UNSUBACK!\n");
                 break;
 
         case mqtt_msg_type__pingresp:
-                VERBOSE_SESSION("client command mqtt_msg_type__PINGRESP!\n");
+                VERBOSE_SESSION_WARNING("client command mqtt_msg_type__PINGRESP!\n");
                 break;
 
         case mqtt_msg_type__connack:
-                VERBOSE_SESSION("client command mqtt_msg_type__CONNACK!\n");
+                VERBOSE_SESSION_WARNING("client command mqtt_msg_type__CONNACK!\n");
                 break;
 
         default:
         case mqtt_msg_type__reserved0:
         case mqtt_msg_type__reserved15:
-                VERBOSE_SESSION("received reserved command!\n");
+                VERBOSE_SESSION_WARNING("received reserved command!\n");
                 connected = false;
                 break;
         }
@@ -963,7 +994,7 @@ static int session_fetchbuf_read(session_t *session, void *dst, size_t count)
 
                         } else {
                                 int err = errno;
-                                VERBOSE_SESSION("fetching error: %s\n", strerror(err));
+                                VERBOSE_SESSION_WARNING("fetching error: %s\n", strerror(err));
                                 n = -err;
                         }
                 } else {
@@ -1012,10 +1043,13 @@ static int session_pushbuf_write(session_t *session, const void *src, size_t cou
 
         while (count > 0) {
                 if (push_buf->seek >= sizeof(push_buf->buf)) {
+                        errno = 0;
                         int l = socket_write(session->socket, push_buf->buf, push_buf->seek);
                         if (l != cast(int, push_buf->seek)) {
+                                int err = errno;
+                                VERBOSE_SESSION_WARNING("write error: %s\n", strerror(err));
                                 push_buf->seek = 0;
-                                return l;
+                                return -err;
                         } else {
                                 push_buf->seek = 0;
                         }
@@ -1049,7 +1083,14 @@ static int session_pushbuf_flush(session_t *session)
         pushbuf_t *push_buf = &session->push_buf;
 
         if (push_buf->seek > 0) {
+                errno = 0;
                 n = socket_write(session->socket, push_buf->buf, push_buf->seek);
+                if (n != cast(int, push_buf->seek)) {
+                        int err = errno;
+                        VERBOSE_SESSION_WARNING("flush error: %s\n", strerror(err));
+                        n = -err;
+                }
+
                 push_buf->seek = 0;
         }
 
@@ -1367,24 +1408,17 @@ static int session_push_variable_length(session_t *session, int32_t vlength)
         uint8_t buf[4];
         int n = 0;
 
-        if (vlength < 128) {
-                buf[n++] = (vlength & 0x7F);
+        do {
+                uint8_t byte = vlength & 0x7F;
+                vlength >>= 7;
 
-        } else if (vlength < 16384) {
-                buf[n++] = 0x80 | (vlength & 0x7F);
-                buf[n++] = vlength >> 7;
+                if (vlength > 0) {
+                        byte |= 0x80;
+                }
 
-        } else if (vlength < 2097152) {
-                buf[n++] = 0x80 | (vlength & 0x7F);
-                buf[n++] = 0x80 | (vlength >> 7);
-                buf[n++] = vlength >> 14;
+                buf[n++] = byte;
 
-        } else {
-                buf[n++] = 0x80 | (vlength & 0x7F);
-                buf[n++] = 0x80 | (vlength >> 7);
-                buf[n++] = 0x80 | (vlength >> 14);
-                buf[n++] = vlength >> 21;
-        }
+        } while ((vlength > 0) and (n < 4));
 
         if (session_pushbuf_write(session, buf, n) == n) {
                 return 0;
@@ -1624,8 +1658,7 @@ static bool session_cmd_connect(session_t *session)
 
         if (client_allowed) {
                 llist_foreach (session_t *, s, global->sessions) {
-                        if ((s != session) and (s->client_ip != session->client_ip) and
-                                isstreq(s->client_id, session->client_id)) {
+                        if ((s != session) and isstreq(s->client_id, session->client_id)) {
                                 s->close_session = true;
                         }
                 }
@@ -1634,17 +1667,17 @@ static bool session_cmd_connect(session_t *session)
         mqtt_reason_t reason_code;
 
         if (not client_allowed) {
-                VERBOSE_SESSION("client '%s' not allowed!\n", session->client_id);
+                VERBOSE_SESSION_WARNING("client '%s' not allowed!\n", session->client_id);
                 reason_code = mqtt_reason__banned;
 
         } else if (client_already_connected) {
-                VERBOSE_SESSION("client '%s' is already connected!\n", session->client_id);
+                VERBOSE_SESSION_WARNING("client '%s' is already connected!\n", session->client_id);
                 reason_code = mqtt_reason__client_identifier_not_valid;
 
         } else if (not isstreq(session->user_name, conf_parser__get_value(global->conf, CONFIG_KEY_USER)) or
                 not isstreq(session->password, conf_parser__get_value(global->conf, CONFIG_KEY_PASSWORD))) {
 
-                DEBUG_SESSION(
+                VERBOSE_SESSION_WARNING(
                         "credetials of '%s' are invalid. User: '%s' and/or password: '%s' are incorrect!\n",
                         session->client_id, session->user_name, session->password);
 
@@ -2707,7 +2740,7 @@ static mqtt_reason_t session_publish_topic(session_t *session, uint8_t qos, cons
         }
 
         if (qos >= 3) {
-                VERBOSE_SESSION("publish: wrong QOS value: %u!\n", qos);
+                VERBOSE_SESSION_WARNING("publish: wrong QOS value: %u!\n", qos);
                 qos = 0;
         }
 
@@ -2824,8 +2857,13 @@ static void session_send_subscribed_topics(session_t *session)
 
                         u8_t qos = sub->flags & mqtt_subscribe_flag__qos_mask;
 
-                        session_publish_topic(session, qos, sub->topicdb_ref->topic, sub->topicdb_ref->msg,
-                                sub->topicdb_ref->msg_length);
+                        mqtt_reason_t reason = session_publish_topic(session, qos, sub->topicdb_ref->topic,
+                                sub->topicdb_ref->msg, sub->topicdb_ref->msg_length);
+
+                        if (reason != mqtt_reason__success) {
+                                VERBOSE_SESSION("unable to publish topic.");
+                                break;
+                        }
 
                         sub->msg_sent_tref = get_uptime_ms();
                 }
@@ -2866,7 +2904,8 @@ static mqtt_reason_t topicsub_subscribe(session_t *session, const char *topic, u
 
         if (pos < 0) {
                 if (llist_size(session->subscribtion_list) >= MAX_TOPICS) {
-                        VERBOSE_SESSION("server reached maximal amount of topics (%lu)!\n", MAX_TOPICS);
+                        VERBOSE_SESSION_WARNING("server reached maximal amount of topics (%lu)!\n",
+                                MAX_TOPICS);
 
                 } else {
                         topicsub_t t = {

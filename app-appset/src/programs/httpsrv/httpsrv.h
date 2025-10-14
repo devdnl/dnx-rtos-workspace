@@ -224,6 +224,7 @@ extern int httpsrv_interpreter_dofile(httpsrv_thread_t *self, const char *file);
 extern int httpsrv_send(httpsrv_thread_t *self, const void *buf, size_t len, bool flush);
 extern int httpsrv_send_file(httpsrv_thread_t *self, const char *content_type, u32_t cache_time,
         const char *path);
+extern void httpsrv_convert_html_encoding(char *buf);
 
 /*==============================================================================
   Exported inline functions

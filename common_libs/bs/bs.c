@@ -42,7 +42,7 @@ Brief   Binary serialization.
   Local macros
 ==============================================================================*/
 #define bs_get_template(_type_)                                                          \
-        _type_ bs_get_##_type_(bs_rd_t *self, const char *key, _type_ Default, int *err) \
+        _type_ bs_get_##_type_(bs_t *self, const char *key, _type_ Default, int *err) \
         {                                                                                \
                 size_t blen;                                                             \
                 const void *blob;                                                        \
@@ -119,7 +119,7 @@ Brief   Binary serialization.
         }
 
 #define bs_set_template(_type_)                                                         \
-        int bs_set_##_type_(bs_wr_t *self, const char *key, _type_ value)               \
+        int bs_set_##_type_(bs_t *self, const char *key, _type_ value)               \
         {                                                                               \
                 return bs_set_raw(self, key, &value, sizeof(value), bs_type__##_type_); \
         }
@@ -166,7 +166,7 @@ typedef struct PACKED {
  * @return On success 0 is returned.
  */
 //==============================================================================
-static int bs_get_raw(bs_rd_t *self, const char *key, const void **blob, size_t *len, bs_type_t *type)
+static int bs_get_raw(bs_t *self, const char *key, const void **blob, size_t *len, bs_type_t *type)
 {
         if (not self or not key or not blob or not len or not type) {
                 return bs_err_invalid_value;
@@ -208,7 +208,7 @@ static int bs_get_raw(bs_rd_t *self, const char *key, const void **blob, size_t 
  * @return On success 0 is returned.
  */
 //==============================================================================
-static int bs_set_raw(bs_wr_t *self, const char *key, const void *blob, size_t len, bs_type_t type)
+static int bs_set_raw(bs_t *self, const char *key, const void *blob, size_t len, bs_type_t type)
 {
         if (not self or not key or not blob) {
                 return bs_err_invalid_value;
@@ -229,7 +229,7 @@ static int bs_set_raw(bs_wr_t *self, const char *key, const void *blob, size_t l
         const void *b;
         size_t l;
         bs_type_t t;
-        bs_rd_t bs;
+        bs_t bs;
         bs.chunk = self->chunk;
         bs.chunk_len = self->chunk_len;
         if (bs_get_raw(&bs, key, &b, &l, &t) == 0) {
@@ -263,33 +263,6 @@ static int bs_set_raw(bs_wr_t *self, const char *key, const void *blob, size_t l
 
 //==============================================================================
 /**
- * @brief  Set bs to read chunk.
- *
- * @param  self         bs instance
- * @param  chunk        chunk buffer
- * @param  chunk_len    chunk buffer length
- *
- * @return On success 0 is returned.
- */
-//==============================================================================
-int bs_read_chunk(bs_rd_t *self, const uint8_t *chunk, size_t chunk_len)
-{
-        if (not self) {
-                return bs_err_invalid_value;
-        }
-
-        if (not chunk or not chunk_len or (chunk_len < sizeof(item_t))) {
-                return bs_err_invalid_value;
-        }
-
-        self->chunk = chunk;
-        self->chunk_len = chunk_len;
-
-        return 0;
-}
-
-//==============================================================================
-/**
  * @brief  Set bs to read chunk (unsafe).
  *
  * @param  chunk        chunk buffer
@@ -298,11 +271,13 @@ int bs_read_chunk(bs_rd_t *self, const uint8_t *chunk, size_t chunk_len)
  * @return Initialized bs read.
  */
 //==============================================================================
-bs_rd_t bs_read_init(const uint8_t *chunk, size_t chunk_len)
+bs_t bs_read_init(uint8_t *chunk, size_t chunk_len)
 {
-        bs_rd_t bsrd = {
+        bs_t bsrd = {
                 .chunk = chunk,
+                .item = chunk,
                 .chunk_len = chunk_len,
+                .chunk_max_len = chunk_len,
         };
 
         return bsrd;
@@ -473,7 +448,7 @@ bs_get_template(bool);
  * @return On success 0 is returned.
  */
 //==============================================================================
-const char *bs_get_str(bs_rd_t *self, const char *key, const char *Default, int *err)
+const char *bs_get_str(bs_t *self, const char *key, const char *Default, int *err)
 {
         size_t blen;
         const void *str = Default;
@@ -512,7 +487,7 @@ const char *bs_get_str(bs_rd_t *self, const char *key, const char *Default, int 
  * @return On success 0 is returned.
  */
 //==============================================================================
-const void *bs_get_blob(bs_rd_t *self, const char *key, size_t *len, int *err)
+const void *bs_get_blob(bs_t *self, const char *key, size_t *len, int *err)
 {
         if (not len) {
                 if (err) {
@@ -544,7 +519,7 @@ const void *bs_get_blob(bs_rd_t *self, const char *key, size_t *len, int *err)
  * @return Key type.
  */
 //==============================================================================
-bs_type_t bs_get_type(bs_rd_t *self, const char *key)
+bs_type_t bs_get_type(bs_t *self, const char *key)
 {
         const void *blob;
         bs_type_t btype;
@@ -571,7 +546,7 @@ bs_type_t bs_get_type(bs_rd_t *self, const char *key)
  * @return On sucecss 0 is returned.
  */
 //==============================================================================
-int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key, const void **value, uint16_t *value_len,
+int bs_get_next(bs_t *self, uint8_t **next, const char **key, const void **value, uint16_t *value_len,
         bs_type_t *type)
 {
         if (not self or not key or not value or not value_len or not type) {
@@ -604,35 +579,6 @@ int bs_get_next(bs_rd_t *self, uint8_t **next, const char **key, const void **va
 
 //==============================================================================
 /**
- * @brief  Prepare serializer to write.
- *
- * @param  self         bs instance
- * @param  chunk        chunk
- * @param  chunk_len    chunk length
- *
- * @return On success 0 is returned.
- */
-//==============================================================================
-int bs_write_chunk(bs_wr_t *self, uint8_t *chunk, size_t chunk_len)
-{
-        if (not self) {
-                return bs_err_invalid_value;
-        }
-
-        if (not chunk or not chunk_len or (chunk_len < sizeof(item_t))) {
-                return bs_err_invalid_value;
-        }
-
-        self->chunk = chunk;
-        self->chunk_max_len = chunk_len;
-        self->chunk_len = 0;
-        self->item = chunk;
-
-        return 0;
-}
-
-//==============================================================================
-/**
  * @brief  Prepare serializer to write (unsafe).
  *
  * @param  chunk        chunk
@@ -641,13 +587,13 @@ int bs_write_chunk(bs_wr_t *self, uint8_t *chunk, size_t chunk_len)
  * @return Initialized bs write.
  */
 //==============================================================================
-bs_wr_t bs_write_init(uint8_t *chunk, size_t chunk_len)
+bs_t bs_write_init(uint8_t *chunk, size_t chunk_len)
 {
-        bs_wr_t bswr = {
+        bs_t bswr = {
                 .chunk = chunk,
+                .item = chunk,
                 .chunk_max_len = chunk_len,
                 .chunk_len = 0,
-                .item = chunk,
         };
 
         return bswr;
@@ -662,7 +608,7 @@ bs_wr_t bs_write_init(uint8_t *chunk, size_t chunk_len)
  * @return Return total chunk length.
  */
 //==============================================================================
-int bs_get_chunk_length(bs_wr_t *self)
+int bs_get_chunk_length(bs_t *self)
 {
         if (not self) {
                 return 0;
@@ -680,7 +626,7 @@ int bs_get_chunk_length(bs_wr_t *self)
  * @return Return chunk data pointer.
  */
 //==============================================================================
-uint8_t *bs_get_chunk_data(bs_wr_t *self)
+uint8_t *bs_get_chunk_data(bs_t *self)
 {
         if (not self) {
                 return NULL;
@@ -843,7 +789,7 @@ bs_set_template(bool);
  * @return On success 0 is returned.
  */
 //==============================================================================
-int bs_set_str(bs_wr_t *self, const char *key, const char *str)
+int bs_set_str(bs_t *self, const char *key, const char *str)
 {
         return bs_set_raw(self, key, str, strlen(str), bs_type__string);
 }
@@ -860,7 +806,7 @@ int bs_set_str(bs_wr_t *self, const char *key, const char *str)
  * @return On success 0 is returned.
  */
 //==============================================================================
-int bs_set_str_len(bs_wr_t *self, const char *key, const char *str, size_t str_len)
+int bs_set_str_len(bs_t *self, const char *key, const char *str, size_t str_len)
 {
         return bs_set_raw(self, key, str, str_len, bs_type__string);
 }
@@ -876,7 +822,7 @@ int bs_set_str_len(bs_wr_t *self, const char *key, const char *str, size_t str_l
  * @return On success 0 is returned.
  */
 //==============================================================================
-int bs_set_blob(bs_wr_t *self, const char *key, const void *blob, size_t len)
+int bs_set_blob(bs_t *self, const char *key, const void *blob, size_t len)
 {
         return bs_set_raw(self, key, blob, len, bs_type__blob);
 }

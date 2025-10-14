@@ -527,6 +527,69 @@ int httpsrv_send_file(httpsrv_thread_t *self, const char *content_type, u32_t ca
 
 //==============================================================================
 /**
+ * @brief  Convert %xx character encoding.
+ *
+ * @param  buf          text buffer.
+ */
+//==============================================================================
+void httpsrv_convert_html_encoding(char *buf)
+{
+        char *in = buf;
+        char *out = buf;
+
+        while (*in != '\0') {
+                if (*in == '%') {
+                        in++;
+
+                        char low = '0';
+                        char high = '0';
+                        u8_t byte = 0x00;
+
+                        if (*in == '\0') {
+                                break;
+                        } else {
+                                high = *in++;
+                        }
+
+                        if (*in == '\0') {
+                                break;
+                        } else {
+                                low = *in++;
+                        }
+
+                        low = tolower(low);
+                        high = tolower(high);
+
+                        if ((high >= '0') and (high <= '9')) {
+                                byte = (high - '0');
+                        } else if ((high >= 'a') and (high <= 'f')) {
+                                byte = (high - 'a') + 10;
+                        }
+
+                        byte <<= 4;
+
+                        if ((low >= '0') and (low <= '9')) {
+                                byte |= (low - '0');
+                        } else if ((low >= 'a') and (low <= 'f')) {
+                                byte |= (low - 'a') + 10;
+                        }
+
+                        *out++ = byte;
+
+                } else if (*in == '+') {
+                        *out++ = ' ';
+                        in++;
+
+                } else {
+                        *out++ = *in++;
+                }
+        }
+
+        *out = '\0';
+}
+
+//==============================================================================
+/**
  * @brief  Convert string to lower case.
  *
  * @param  string       string to convert
@@ -643,6 +706,7 @@ static int parser_on_url(http_parser *parser, const char *at, size_t length)
         }
 
         strtolower(self->http_request.header.url);
+        httpsrv_convert_html_encoding(self->http_request.header.url);
 
         char *get_start = strchr(self->http_request.header.url, '?');
         if (get_start) {
@@ -650,7 +714,8 @@ static int parser_on_url(http_parser *parser, const char *at, size_t length)
                 self->http_request.header.get_ref = get_start + 1;
                 self->http_request.header.get_len = strlen(self->http_request.header.get_ref);
 
-                DEBUG("%s(GET): [%lu] '%s'\n", __func__, self->http_request.header.get_len, self->http_request.header.get_ref);
+                DEBUG("%s(GET): [%lu] '%s'\n", __func__, self->http_request.header.get_len,
+                        self->http_request.header.get_ref);
         } else {
                 self->http_request.header.get_ref = NULL;
                 self->http_request.header.get_len = 0;
