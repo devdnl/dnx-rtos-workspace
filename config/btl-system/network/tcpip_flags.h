@@ -319,7 +319,7 @@ this:AddItem("Enable (1)", "1")
 this:SetToolTip("IP_FORWARD==1: Enables the ability to\nforward IP packets across network\n"..
                 "interfaces. If you are going to run\nlwIP on a device with only one network interface,\ndefine this to 0.")
 --*/
-#define __NETWORK_IP_FORWARD__ 0
+#define __NETWORK_IP_FORWARD__ 1
 /*--
 this:AddWidget("Combobox", "IP_REASSEMBLY")
 this:AddItem("Disable (0)", "0")
@@ -742,7 +742,7 @@ this:AddItem("Disable (0)", "0")
 this:AddItem("Enable (1)", "1")
 this:SetToolTip("LWIP_SINGLE_NETIF==1: use a single netif only.")
 --*/
-#define __NETWORK_LWIP_SINGLE_NETIF__ 1
+#define __NETWORK_LWIP_SINGLE_NETIF__ 0
 /*--
 this:AddWidget("Combobox", "LWIP_NETIF_HOSTNAME")
 this:AddItem("Disable (0)", "0")
@@ -774,7 +774,7 @@ this:AddItem("Disable (0)", "0")
 this:AddItem("Enable (1)", "1")
 this:SetToolTip("LWIP_LOOPIF_MULTICAST==1: Support multicast/IGMP on loop interface (127.0.0.1).")
 --*/
-#define __NETWORK_LWIP_LOOPIF_MULTICAST__ 0
+#define __NETWORK_LWIP_LOOPIF_MULTICAST__ 1
 /*--
 this:AddWidget("Combobox", "LWIP_NETIF_LOOPBACK")
 this:AddItem("Disable (0)", "0")
@@ -782,12 +782,12 @@ this:AddItem("Enable (1)", "1")
 this:SetToolTip("LWIP_NETIF_LOOPBACK==1: Support sending packets with a destination IP\n"..
                 "address equal to the netif IP address, looping them back up the stack.")
 --*/
-#define __NETWORK_LWIP_NETIF_LOOPBACK__ 0
+#define __NETWORK_LWIP_NETIF_LOOPBACK__ 1
 /*--
 this:AddWidget("Spinbox", 1, 1024, "LWIP_LOOPBACK_MAX_PBUFS")
 this:SetToolTip("LWIP_LOOPBACK_MAX_PBUFS: Maximum number of pbufs\non queue for loopback sending for each netif.")
 --*/
-#define __NETWORK_LWIP_LOOPBACK_MAX_PBUFS__ 1
+#define __NETWORK_LWIP_LOOPBACK_MAX_PBUFS__ 16
 
 
 

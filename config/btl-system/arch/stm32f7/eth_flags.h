@@ -5,7 +5,7 @@
 
 @brief   ETHMAC module configuration flags.
 
-@note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -47,12 +47,6 @@ this:SetLayout("TitledGridBack", 2, "Home > Microcontroller > ETH",
 this:AddExtraWidget("Label", "LabelGeneral", "General", -1, "bold")
 this:AddExtraWidget("Void", "VoidGeneral")
 ++*/
-/*--
-this:AddWidget("Combobox", "Link speed")
-this:AddItem("10 Mbps", "ETH_SPEED_10M")
-this:AddItem("100 Mbps", "ETH_SPEED_100M")
---*/
-#define __ETH_SPEED__ ETH_SPEED_100M
 
 /*--
 this:AddWidget("Spinbox", 3, 256, "Number of RX buffers")
@@ -65,6 +59,12 @@ this:AddWidget("Spinbox", 2, 256, "Number of Tx buffers")
 this:SetToolTip("Each buffer is 1524 B long.")
 --*/
 #define __ETH_TXBUFNB__ 10
+
+#define DP83848 0
+#define LAN8700 1
+#define STE100P 2
+#define LAN8742A 3
+#define KSZ9893R 4
 
 /*--
 this:AddExtraWidget("Label", "LabelPHY", "\nPHY", -1, "bold")
