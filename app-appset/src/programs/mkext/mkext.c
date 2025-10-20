@@ -28,6 +28,8 @@
         ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
         OTHER DEALINGS IN THE SOFTWARE.
 
+==============================================================================*/
+
 /*==============================================================================
   Include files
 ==============================================================================*/
@@ -41,7 +43,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define SECTOR_SIZE             512
+#define SECTOR_SIZE 512
 
 /*==============================================================================
   Local types, enums definitions
@@ -62,11 +64,11 @@ static int bdev_unlock(struct ext4_blockdev *bdev);
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
         struct ext4_blockdev_iface bdif;
-        struct ext4_blockdev       bd;
-        struct ext4_fs             fs;
-        struct ext4_mkfs_info      info;
-        FILE                      *dev;
-        u8_t                       buf[SECTOR_SIZE];
+        struct ext4_blockdev bd;
+        struct ext4_fs fs;
+        struct ext4_mkfs_info info;
+        FILE *dev;
+        u8_t buf[SECTOR_SIZE];
 };
 
 /*==============================================================================
@@ -135,23 +137,23 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
         }
 
-        global->bdif.open     = bopen;
-        global->bdif.bread    = bread;
-        global->bdif.bwrite   = bwrite;
-        global->bdif.close    = bclose;
-        global->bdif.lock     = bdev_lock;
-        global->bdif.unlock   = bdev_unlock;
+        global->bdif.open = bopen;
+        global->bdif.bread = bread;
+        global->bdif.bwrite = bwrite;
+        global->bdif.close = bclose;
+        global->bdif.lock = bdev_lock;
+        global->bdif.unlock = bdev_unlock;
         global->bdif.ph_bsize = SECTOR_SIZE;
-        global->bdif.ph_bbuf  = global->buf;
-        global->bdif.ph_bcnt  = dev_stat.st_size / SECTOR_SIZE;
-        global->bdif.p_user   = NULL;
+        global->bdif.ph_bbuf = global->buf;
+        global->bdif.ph_bcnt = dev_stat.st_size / SECTOR_SIZE;
+        global->bdif.p_user = NULL;
 
-        global->bd.part_size   = dev_stat.st_size;
-        global->bd.bdif        = &global->bdif;
+        global->bd.part_size = dev_stat.st_size;
+        global->bd.bdif = &global->bdif;
 
         global->info.block_size = block_size;
-        global->info.journal    = journaling;
-        global->info.label      = label;
+        global->info.journal = journaling;
+        global->info.label = label;
 
         int err = ext4_mkfs(&global->fs, &global->bd, &global->info, ext_version);
         if (not err) {
@@ -170,7 +172,7 @@ int main(int argc, char *argv[])
                         printf("Features compat: 0x%x\n", global->info.feat_compat);
                         printf("Features incompat: 0x%x\n", global->info.feat_incompat);
                         printf("BG desc reserve: %lu\n", global->info.bg_desc_reserve_blocks);
-                        printf("Descriptor size: %lu\n",global->info.dsc_size);
+                        printf("Descriptor size: %lu\n", global->info.dsc_size);
                         printf("Label: %s\n", global->info.label);
 
                 } else {

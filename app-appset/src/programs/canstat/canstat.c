@@ -108,8 +108,10 @@ int main(int argc, char *argv[])
                                 printf("RX errors    : %u\n", global->status.rx_error_ctr);
                                 printf("TX errors    : %u\n", global->status.tx_error_ctr);
                                 printf("RX overruns  : %lu\n", global->status.rx_overrun_ctr);
-                                printf("TX frames    : %llu (%llu bytes)\n", global->status.tx_frames, global->status.tx_bytes);
-                                printf("RX frames    : %llu (%llu bytes)\n", global->status.rx_frames, global->status.rx_bytes);
+                                printf("TX frames    : %llu (%llu bytes)\n", global->status.tx_frames,
+                                        global->status.tx_bytes);
+                                printf("RX frames    : %llu (%llu bytes)\n", global->status.rx_frames,
+                                        global->status.rx_bytes);
                         } else {
                                 perror(argv[1]);
                         }
@@ -127,4 +129,3 @@ int main(int argc, char *argv[])
 /*==============================================================================
   End of file
 ==============================================================================*/
-

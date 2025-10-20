@@ -59,9 +59,9 @@ GLOBAL_VARIABLES_SECTION {
         ETHIF_status_t status;
 };
 
-static const char *ETH_STATE[]  = {"RESET", "READY", "ERROR"};
-static const char *ETH_LINK[]   = {"DISCONNECTED", "CONNECTED", "PHY ERROR"};
-static const char *ETH_SPEED[]  = {"10", "100"};
+static const char *ETH_STATE[] = {"RESET", "READY", "ERROR"};
+static const char *ETH_LINK[] = {"DISCONNECTED", "CONNECTED", "PHY ERROR"};
+static const char *ETH_SPEED[] = {"10", "100"};
 static const char *ETH_DUPLEX[] = {"HALF", "FULL"};
 
 /*==============================================================================
@@ -104,12 +104,11 @@ int main(int argc, char *argv[])
                                 printf("Link      : %16s\n", ETH_LINK[global->status.link_status]);
                                 printf("Duplex    : %16s\n", ETH_DUPLEX[global->status.duplex]);
                                 printf("Speed     : %16s Mbps\n", ETH_SPEED[global->status.speed]);
-                                printf("MAC       : %02x:%02x:%02x:%02x:%02x:%02x\n",
-                                       global->status.MAC[0], global->status.MAC[1],
-                                       global->status.MAC[2], global->status.MAC[3],
-                                       global->status.MAC[4], global->status.MAC[5]);
-                                printf("RX packets: %llu, %u dropped\n",
-                                       global->status.rx_packets, global->status.rx_dropped_frames);
+                                printf("MAC       : %02x:%02x:%02x:%02x:%02x:%02x\n", global->status.MAC[0],
+                                        global->status.MAC[1], global->status.MAC[2], global->status.MAC[3],
+                                        global->status.MAC[4], global->status.MAC[5]);
+                                printf("RX packets: %llu, %u dropped\n", global->status.rx_packets,
+                                        global->status.rx_dropped_frames);
                                 printf("RX bytes  : %llu\n", global->status.rx_bytes);
                                 printf("TX packets: %llu\n", global->status.tx_packets);
                                 printf("TX bytes  : %llu\n", global->status.tx_bytes);
@@ -133,4 +132,3 @@ int main(int argc, char *argv[])
 /*==============================================================================
   End of file
 ==============================================================================*/
-

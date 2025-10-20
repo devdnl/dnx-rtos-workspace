@@ -47,14 +47,14 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define NUMBER_OF_CONNECTIONS           3
-#define BUF_SIZE                        100
-#define PIPE_NAME_LEN                   24
-#define TELNET_CFG_BYTE                 0xFF
-#define PROGRAM_NAME                    "dsh"
-#define RECEIVE_TIMEOUT                 100
-#define SEND_TIMEOUT                    3000
-#define TELNET_PORT                     23
+#define NUMBER_OF_CONNECTIONS 3
+#define BUF_SIZE              100
+#define PIPE_NAME_LEN         24
+#define TELNET_CFG_BYTE       0xFF
+#define PROGRAM_NAME          "dsh"
+#define RECEIVE_TIMEOUT       100
+#define SEND_TIMEOUT          3000
+#define TELNET_PORT           23
 
 /*==============================================================================
   Local types, enums definitions
@@ -69,21 +69,15 @@
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
         const char *msg;
-        mutex_t    *mtx;
-        uint8_t     conn_cnt;
+        mutex_t *mtx;
+        uint8_t conn_cnt;
 };
 
+static const NET_INET_sockaddr_t IP_ADDR_ANY = {.addr = NET_INET_IPv4_ANY, .port = TELNET_PORT};
 
-static const NET_INET_sockaddr_t IP_ADDR_ANY = {
-        .addr = NET_INET_IPv4_ANY,
-        .port = TELNET_PORT
-};
-
-static const thread_attr_t thread_attr = {
-        .priority    = PRIORITY_NORMAL,
+static const thread_attr_t thread_attr = {.priority = PRIORITY_NORMAL,
         .stack_depth = STACK_DEPTH_LOW,
-        .detached    = true
-};
+        .detached = true};
 
 /*==============================================================================
   Exported object definitions
@@ -148,13 +142,13 @@ static void replace_CRLF_by_LF(char *buf, size_t len)
 //==============================================================================
 static int telnet_thread(void *arg)
 {
-        SOCKET *sock          = arg;
-        FILE   *fin           = NULL;
-        FILE   *fout          = NULL;
-        char   *buf           = NULL;
-        pid_t   proc          = 0;
-        char   *pipe_in_name  = NULL;
-        char   *pipe_out_name = NULL;
+        SOCKET *sock = arg;
+        FILE *fin = NULL;
+        FILE *fout = NULL;
+        char *buf = NULL;
+        pid_t proc = 0;
+        char *pipe_in_name = NULL;
+        char *pipe_out_name = NULL;
 
         // increase number of threads
         if (mutex_lock(global->mtx, MAX_DELAY_MS)) {
@@ -166,40 +160,39 @@ static int telnet_thread(void *arg)
         NET_INET_sockaddr_t addr;
         socket_get_address(sock, &addr, sizeof(addr));
 
-        printf("New connection from: %d.%d.%d.%d\n",
-               NET_INET_IPv4_a(addr.addr),
-               NET_INET_IPv4_b(addr.addr),
-               NET_INET_IPv4_c(addr.addr),
-               NET_INET_IPv4_d(addr.addr));
+        printf("New connection from: %d.%d.%d.%d\n", NET_INET_IPv4_a(addr.addr), NET_INET_IPv4_b(addr.addr),
+                NET_INET_IPv4_c(addr.addr), NET_INET_IPv4_d(addr.addr));
 
         // create buffer for program output data
         buf = malloc(BUF_SIZE);
-        if (!buf)
+        if (!buf) {
                 goto exit;
+        }
 
         // create program input pipe
         pipe_in_name = create_and_open_pipe(sock, 'i', &fin);
-        if (!pipe_in_name)
+        if (!pipe_in_name) {
                 goto exit;
+        }
 
         // create program output pipe
         pipe_out_name = create_and_open_pipe(sock, 'o', &fout);
-        if (!pipe_out_name)
+        if (!pipe_out_name) {
                 goto exit;
+        }
 
         // start program
-        process_attr_t process_attr = {
-                .cwd = "/",
+        process_attr_t process_attr = {.cwd = "/",
                 .fd_stderr = fileno(fout),
                 .fd_stdout = fileno(fout),
-                .fd_stdin  = fileno(fin),
+                .fd_stdin = fileno(fin),
                 .priority = PRIORITY_NORMAL,
-                .detached = false
-        };
+                .detached = false};
 
         proc = process_create(PROGRAM_NAME, &process_attr);
-        if (proc == 0)
+        if (proc == 0) {
                 goto exit;
+        }
 
         u32_t recv_timeout = RECEIVE_TIMEOUT;
 
@@ -227,7 +220,6 @@ static int telnet_thread(void *arg)
                         replace_CRLF_by_LF(buf, len);
                         len = strnlen(buf, len);
                         fwrite(buf, 1, len, fin);
-
                 }
 
                 // send data from running program
@@ -247,14 +239,17 @@ static int telnet_thread(void *arg)
         }
 
 exit:
-        if (buf)
+        if (buf) {
                 free(buf);
+        }
 
-        if (fin)
+        if (fin) {
                 fclose(fin);
+        }
 
-        if (fout)
+        if (fout) {
                 fclose(fout);
+        }
 
         if (proc) {
                 process_kill(proc);
@@ -272,11 +267,9 @@ exit:
 
         NET_INET_sockaddr_t sockaddr;
         socket_get_address(sock, &sockaddr, sizeof(sockaddr));
-        printf("Connection closed: %d.%d.%d.%d\n",
-               NET_INET_IPv4_a(sockaddr.addr),
-               NET_INET_IPv4_b(sockaddr.addr),
-               NET_INET_IPv4_c(sockaddr.addr),
-               NET_INET_IPv4_d(sockaddr.addr));
+        printf("Connection closed: %d.%d.%d.%d\n", NET_INET_IPv4_a(sockaddr.addr),
+                NET_INET_IPv4_b(sockaddr.addr), NET_INET_IPv4_c(sockaddr.addr),
+                NET_INET_IPv4_d(sockaddr.addr));
 
         socket_close(sock);
 
@@ -300,13 +293,12 @@ exit:
 //==============================================================================
 int main(int argc, char *argv[])
 {
-        (void) argc;
-        (void) argv;
+        (void)argc;
+        (void)argv;
 
         errno = 0;
 
         mkdir("/run", 0777);
-
 
         NET_INET_status_t netstat = {0};
 
@@ -314,10 +306,8 @@ int main(int argc, char *argv[])
                 NET_family_t family;
                 ifstatus("inet", &family, &netstat, sizeof(netstat));
                 msleep(500);
-        } while (! ( (netstat.state == NET_INET_STATE__DHCP_CONFIGURED)
-                   ||(netstat.state == NET_INET_STATE__STATIC_IP) ) );
-
-
+        } while (!((netstat.state == NET_INET_STATE__DHCP_CONFIGURED) ||
+                (netstat.state == NET_INET_STATE__STATIC_IP)));
 
         SOCKET *listener = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
         if (!listener) {

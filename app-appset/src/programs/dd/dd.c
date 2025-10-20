@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
 
         u8_t *blk = malloc(global->block_size);
         if (blk) {
-                FILE *in  = fopen(global->input_file, "r");
+                FILE *in = fopen(global->input_file, "r");
                 if (!in) {
                         perror(global->input_file);
                 }
@@ -173,10 +173,10 @@ int main(int argc, char *argv[])
                         u64_t stop_time = get_uptime_ms();
 
                         float time = (float)(stop_time - start_time) / 1000.0f;
-                              time = max(time, 0.0001f);
+                        time = max(time, 0.0001f);
 
                         printf("%u bytes copied, %0.3f s, %u KiB/s\n", s, time,
-                               (uint)(((float)s / time) / 1024));
+                                (uint)(((float)s / time) / 1024));
                 }
 
                 if (in) {
@@ -216,4 +216,3 @@ static void help(const char *name)
 /*==============================================================================
   End of file
 ==============================================================================*/
-

@@ -58,8 +58,8 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void        print_test_result(const test_entry_t *test_entry);
-static void        print_byte_array(const char *title, const void *array, size_t array_size);
+static void print_test_result(const test_entry_t *test_entry);
+static void print_byte_array(const char *title, const void *array, size_t array_size);
 static const char *test_file_seek(void);
 static const char *test_file_create_and_remove(void);
 static const char *test_file_mode(void);
@@ -70,8 +70,8 @@ static const char *test_dir_mode(void);
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
         size_t passed_test;
-        char   msg_buf[128];
-        bool   verbose;
+        char msg_buf[128];
+        bool verbose;
 };
 
 static const char *SUCCESS_MSG = "SUCCESS";
@@ -169,8 +169,8 @@ static void print_test_result(const test_entry_t *test_entry)
 //==============================================================================
 static void print_byte_array(const char *title, const void *array, size_t array_size)
 {
-        const uint8_t *byte   = array;
-        size_t         offset = 0;
+        const uint8_t *byte = array;
+        size_t offset = 0;
 
         if (title) {
                 printf("%s (%lu bytes long):\n", title, array_size);
@@ -224,7 +224,7 @@ static const char *test_file_create_and_remove(void)
 {
         const char *exit_msg = SUCCESS_MSG;
 
-        errno    = 0;
+        errno = 0;
         FILE *fp = fopen("test.file", "w");
         if (not fp) {
                 snprintf(global->msg_buf, sizeof(global->msg_buf), "unable to create test file (errno:%s)",
@@ -289,11 +289,11 @@ static const char *test_file_seek(void)
                 goto cleanup;
         }
 
-        const u8_t   block[5] = {0x51, 0x52, 0x53, 0x54, 0x55};
-        const size_t blocks   = 10;
+        const u8_t block[5] = {0x51, 0x52, 0x53, 0x54, 0x55};
+        const size_t blocks = 10;
 
         for (size_t i = 0; i < blocks; i++) {
-                errno    = 0;
+                errno = 0;
                 size_t n = fwrite(block, 1, sizeof(block), fp);
                 if (n != sizeof(block)) {
                         snprintf(global->msg_buf, sizeof(global->msg_buf),
@@ -379,7 +379,7 @@ static const char *test_file_mode(void)
          */
         const char *file_path = "test.file";
 
-        struct stat stat_fp   = {0};
+        struct stat stat_fp = {0};
         struct stat stat_path = {0};
 
         FILE *fp = fopen(file_path, "w");

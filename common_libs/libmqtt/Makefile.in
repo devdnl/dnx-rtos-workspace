@@ -1,0 +1,5 @@
+# Makefile for GNU make
+
+CSRC_LIB   += $(LIB_ROOT_LIB_LIBMQTT)libmqtt/libmqtt.c
+CXXSRC_LIB += 
+HDRLOC_LIB += $(LIB_ROOT_LIB_LIBMQTT)libmqtt

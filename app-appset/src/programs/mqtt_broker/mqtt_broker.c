@@ -595,7 +595,7 @@ int main(int argc, char *argv[])
 
         printf("[%s, info] listening connections at port %u.\n", argv[0], ADDR_ANY.port);
 
-        socket_set_recv_timeout(socket, 40);
+        socket_set_recv_timeout(socket, 10);
 
         while (true) {
                 size_t last_num_clients = llist_size(global->sessions);
@@ -2861,7 +2861,7 @@ static void session_send_subscribed_topics(session_t *session)
                                 sub->topicdb_ref->msg, sub->topicdb_ref->msg_length);
 
                         if (reason != mqtt_reason__success) {
-                                VERBOSE_SESSION("unable to publish topic.");
+                                VERBOSE_SESSION("unable to publish topic.\n");
                                 break;
                         }
 
@@ -2925,27 +2925,14 @@ static mqtt_reason_t topicsub_subscribe(session_t *session, const char *topic, u
                 topicsub = llist_at(session->subscribtion_list, pos);
         }
 
-        /*
-         * Send existing data
-         */
-        // #define mqtt_subscribe_flag__retain_handling_mask   (3 << 4)
-        // #define mqtt_subscribe_flag__retain_handling_always (0 << 4)
-        // #define mqtt_subscribe_flag__retain_handling_avoid  (1 << 4)
-        // #define mqtt_subscribe_flag__retain_handling_new    (2 << 4)
-        // #define mqtt_subscribe_flag__retain_as_published    (1 << 3)
         if (topicsub) {
                 topicsub->topicdb_ref->subscribers++;
 
                 topicsub->flags = flags;
 
-                if (flags & mqtt_subscribe_flag__no_local) {
-                        reason = mqtt_reason__success;
-                } else {
-                        reason = session_publish_topic(session, flags & mqtt_subscribe_flag__qos_mask, topic,
-                                NULL, 0);
-                }
+                reason = mqtt_reason__success;
 
-                topicsub->msg_sent_tref = get_uptime_ms();
+                global->topic_db.publish_ctr++;
         }
 
         return reason;

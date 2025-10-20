@@ -56,8 +56,8 @@ typedef char tcl_value_t;
 struct tcl {
         struct tcl_env *env;
         struct tcl_cmd *cmds;
-        tcl_value_t    *result;
-        int             exit;
+        tcl_value_t *result;
+        int exit;
 };
 
 /**
@@ -81,17 +81,17 @@ enum {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int         tcl_init(struct tcl *tcl);
-extern void        tcl_destroy(struct tcl *tcl);
+extern int tcl_init(struct tcl *tcl);
+extern void tcl_destroy(struct tcl *tcl);
 extern const char *tcl_string(const tcl_value_t *v);
-extern float       tcl_float(tcl_value_t *v);
-extern int         tcl_length(tcl_value_t *v);
-extern void        tcl_free(tcl_value_t *v);
-extern void        tcl_list_free(tcl_value_t *v);
-extern int         tcl_result(struct tcl *tcl, int flow, tcl_value_t *result);
-extern int         tcl_subst(struct tcl *tcl, const char *s, size_t len);
-extern int         tcl_eval(struct tcl *tcl, const char *s, size_t len);
-extern int         tcl_register(struct tcl *tcl, const char *name, tcl_cmd_fn_t fn, int arity, void *arg);
+extern float tcl_float(tcl_value_t *v);
+extern int tcl_length(tcl_value_t *v);
+extern void tcl_free(tcl_value_t *v);
+extern void tcl_list_free(tcl_value_t *v);
+extern int tcl_result(struct tcl *tcl, int flow, tcl_value_t *result);
+extern int tcl_subst(struct tcl *tcl, const char *s, size_t len);
+extern int tcl_eval(struct tcl *tcl, const char *s, size_t len);
+extern int tcl_register(struct tcl *tcl, const char *name, tcl_cmd_fn_t fn, int arity, void *arg);
 extern int tcl_register_const(struct tcl *tcl, const char *name, tcl_cmd_fn_t fn, int arity, void *arg);
 extern int tcl_loadfile(struct tcl *tcl, const char *filename);
 extern int tcl_list_length(tcl_value_t *v);

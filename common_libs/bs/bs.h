@@ -117,8 +117,8 @@ extern bool bs_get_bool(bs_t *self, const char *key, bool df, int *err);
 extern const char *bs_get_str(bs_t *self, const char *key, const char *df, int *err);
 extern const void *bs_get_blob(bs_t *self, const char *key, size_t *len, int *err);
 extern bs_type_t bs_get_type(bs_t *self, const char *key);
-extern int bs_get_next(bs_t *self, uint8_t **next, const char **key, const void **value,
-        uint16_t *value_len, bs_type_t *type);
+extern int bs_get_next(bs_t *self, uint8_t **next, const char **key, const void **value, uint16_t *value_len,
+        bs_type_t *type);
 
 /*
  * Write methods.

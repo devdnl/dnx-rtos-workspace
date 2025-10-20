@@ -61,13 +61,13 @@ extern "C" {
 typedef struct conf_parser conf_parser_t;
 
 typedef enum {
-        conf_parser_status__success      = 0,
+        conf_parser_status__success = 0,
         conf_parser_status__syntax_error = -1,
-        conf_parser_status__no_memory    = -2,
-        conf_parser_status__file_error   = -3,
-        conf_parser_status__arg_error    = -4,
-        conf_parser_status__no_entry     = -5,
-        conf_parser_status__mutex_error  = -6,
+        conf_parser_status__no_memory = -2,
+        conf_parser_status__file_error = -3,
+        conf_parser_status__arg_error = -4,
+        conf_parser_status__no_entry = -5,
+        conf_parser_status__mutex_error = -6,
 } conf_parser_status_t;
 
 /*==============================================================================

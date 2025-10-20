@@ -105,19 +105,25 @@ int main(int argc, char *argv[])
                 struct stat st;
                 if (stat(argv[2], &st) == 0) {
 
-                        bool set   = argv[1][0] == '+';
+                        bool set = argv[1][0] == '+';
                         bool unset = argv[1][0] == '-';
 
                         if (set || unset) {
                                 mode_t flag = 0;
 
                                 switch (argv[1][1]) {
-                                case 'r': flag = S_IRUSR; break;
-                                case 'w': flag = S_IWUSR; break;
-                                case 'x': flag = S_IXUSR; break;
+                                case 'r':
+                                        flag = S_IRUSR;
+                                        break;
+                                case 'w':
+                                        flag = S_IWUSR;
+                                        break;
+                                case 'x':
+                                        flag = S_IXUSR;
+                                        break;
                                 }
 
-                                st.st_mode |=  (set   ? flag : 0);
+                                st.st_mode |= (set ? flag : 0);
                                 st.st_mode &= ~(unset ? flag : 0);
                         } else {
                                 if (isdigit(argv[1][0])) {

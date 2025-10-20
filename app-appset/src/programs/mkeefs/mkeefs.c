@@ -45,13 +45,13 @@ Brief   Format selected file by EEFS.
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define BLOCK_SIZE              128
-#define BLOCKS_IN_BYTE          8
-#define ENTRY_TYPE_NONE         0xFF
+#define BLOCK_SIZE         128
+#define BLOCKS_IN_BYTE     8
+#define ENTRY_TYPE_NONE    0xFF
 
-#define BLOCK_MAIN_MAGIC        0x53464545
-#define BLOCK_MAGIC_DIR         0x30524944
-#define BLOCK_MAGIC_BITMAP      0x20504D42
+#define BLOCK_MAIN_MAGIC   0x53464545
+#define BLOCK_MAGIC_DIR    0x30524944
+#define BLOCK_MAGIC_BITMAP 0x20504D42
 
 /*==============================================================================
   Local object types
@@ -72,7 +72,7 @@ Brief   Format selected file by EEFS.
  * Generic checksum block (calculation purposes).
  */
 typedef struct PACKED {
-        uint8_t  buf[126];
+        uint8_t buf[126];
         uint16_t checksum;
 } block_chsum_t;
 
@@ -80,47 +80,47 @@ typedef struct PACKED {
  * Main block definition (block 0).
  */
 typedef struct PACKED {
-        uint32_t magic;         //!< FS identifier ('EEFS')
-        uint16_t blocks;        //!< number of memory 128B blocks
-        uint8_t  bitmap_blocks; //!< number of next bitmap blocks
-        uint8_t  bitmap[119];   //!< empty block bitmap
-        uint16_t checksum;      //!< checksum
+        uint32_t magic;        //!< FS identifier ('EEFS')
+        uint16_t blocks;       //!< number of memory 128B blocks
+        uint8_t bitmap_blocks; //!< number of next bitmap blocks
+        uint8_t bitmap[119];   //!< empty block bitmap
+        uint16_t checksum;     //!< checksum
 } block_main_t;
 
 /**
  * Bitmap block definition.
  */
 typedef struct PACKED {
-        uint32_t magic;         //!< block magic number
-        uint8_t  map[122];      //!< bitmap
-        uint16_t checksum;      //!< checksum
+        uint32_t magic;    //!< block magic number
+        uint8_t map[122];  //!< bitmap
+        uint16_t checksum; //!< checksum
 } block_bitmap_t;
 
 /**
  * Single directory entry.
  */
 typedef struct PACKED {
-        uint16_t block_addr;    //!< block address with object
-        uint8_t  type;          //!< entry type
-        char     name[21];      //!< entry name
+        uint16_t block_addr; //!< block address with object
+        uint8_t type;        //!< entry type
+        char name[21];       //!< entry name
 } dir_entry_t;
 
 /**
  * Directory block.
  */
-typedef struct PACKED{
-        uint32_t    magic;      //!< block magic number
-        uint32_t    ctime;      //!< create timestamp
-        uint32_t    mtime;      //!< modification timestamp
-        uint16_t    gid;        //!< group ID
-        uint16_t    uid;        //!< user ID
-        uint16_t    mode;       //!< mode
-        uint16_t    parent;     //!< parent entry block number
-        uint16_t    next;       //!< next directory entries
-        uint16_t    all_items;  //!< number of items in all chains
-        uint8_t     _[6];       //!< reserved
-        dir_entry_t entry[4];   //!< directory entry
-        uint16_t    checksum;   //!< checksum
+typedef struct PACKED {
+        uint32_t magic;       //!< block magic number
+        uint32_t ctime;       //!< create timestamp
+        uint32_t mtime;       //!< modification timestamp
+        uint16_t gid;         //!< group ID
+        uint16_t uid;         //!< user ID
+        uint16_t mode;        //!< mode
+        uint16_t parent;      //!< parent entry block number
+        uint16_t next;        //!< next directory entries
+        uint16_t all_items;   //!< number of items in all chains
+        uint8_t _[6];         //!< reserved
+        dir_entry_t entry[4]; //!< directory entry
+        uint16_t checksum;    //!< checksum
 } block_dir_t;
 
 /*==============================================================================
@@ -131,14 +131,14 @@ typedef struct PACKED{
   Local objects
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
-        FILE  *file;
+        FILE *file;
         size_t mem_size;
 
         union {
-                block_main_t   main;
+                block_main_t main;
                 block_bitmap_t bitmap;
-                block_dir_t    dir;
-                block_chsum_t  chsum;
+                block_dir_t dir;
+                block_chsum_t chsum;
         } block;
 };
 
@@ -213,8 +213,7 @@ static void show_help(char *pname)
 //==============================================================================
 static int write_block(uint16_t block_pos)
 {
-        global->block.chsum.checksum = fletcher16(global->block.chsum.buf,
-                                                  sizeof(global->block.chsum.buf));
+        global->block.chsum.checksum = fletcher16(global->block.chsum.buf, sizeof(global->block.chsum.buf));
 
         global->block.chsum.checksum ^= block_pos;
 
@@ -256,7 +255,8 @@ static int mkfs(void)
 
         int32_t tmp = total_blocks - (sizeof(global->block.main.bitmap) * BLOCKS_IN_BYTE);
 
-        uint32_t extra_bmp_blks = tmp > 0 ? CEILING(tmp / BLOCKS_IN_BYTE, sizeof(global->block.bitmap.map)) : 0;
+        uint32_t extra_bmp_blks = tmp > 0 ? CEILING(tmp / BLOCKS_IN_BYTE, sizeof(global->block.bitmap.map))
+                                          : 0;
 
         uint16_t root_dir_block_addr = 1 + extra_bmp_blks;
 
@@ -265,9 +265,9 @@ static int mkfs(void)
         // create main block
         memset(&global->block.main, 0xFF, sizeof(global->block));
 
-        global->block.main.magic          = BLOCK_MAIN_MAGIC;
-        global->block.main.blocks         = total_blocks;
-        global->block.main.bitmap_blocks  = extra_bmp_blks;
+        global->block.main.magic = BLOCK_MAIN_MAGIC;
+        global->block.main.blocks = total_blocks;
+        global->block.main.bitmap_blocks = extra_bmp_blks;
 
         for (u16_t block = 0; block < used_blocks; block++) {
                 alloc_block(global->block.main.bitmap, block);
@@ -291,15 +291,15 @@ static int mkfs(void)
         time_t t = time(NULL);
 
         memset(&global->block.dir, 0xFF, sizeof(global->block.dir));
-        global->block.dir.magic      = BLOCK_MAGIC_DIR;
-        global->block.dir.ctime      = t;
-        global->block.dir.mtime      = t;
-        global->block.dir.gid        = getgid();
-        global->block.dir.uid        = getuid();
-        global->block.dir.mode       = 0666;
-        global->block.dir.parent     = 0;
-        global->block.dir.all_items  = 0;
-        global->block.dir.next       = 0;
+        global->block.dir.magic = BLOCK_MAGIC_DIR;
+        global->block.dir.ctime = t;
+        global->block.dir.mtime = t;
+        global->block.dir.gid = getgid();
+        global->block.dir.uid = getuid();
+        global->block.dir.mode = 0666;
+        global->block.dir.parent = 0;
+        global->block.dir.all_items = 0;
+        global->block.dir.next = 0;
 
         return write_block(root_dir_block_addr);
 }
@@ -335,8 +335,7 @@ int main(int argc, char *argv[])
 
                         } else {
                                 printf("Memory size set automatically to %d bytes.\n",
-                                       cast(uint, global->mem_size)
-                                );
+                                        cast(uint, global->mem_size));
 
                                 err = mkfs();
                         }

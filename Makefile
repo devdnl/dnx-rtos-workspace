@@ -157,13 +157,13 @@ help :
 	@$(ECHO) "   clean               clean project"
 	@$(ECHO) "   clean-app-appset    clean application's appset"
 	@$(ECHO) "   clean-btl-appset    clean bootloader's appset"
-	@$(ECHO) "   all                 build application with bootloader in single hex file"
-	@$(ECHO) "   btl                 build bootloader (system + appset)"
-	@$(ECHO) "   app                 build application (system + appset)"
-	@$(ECHO) "   app-system          build application's system"
-	@$(ECHO) "   app-appset          build application's appset"
-	@$(ECHO) "   btl-system          build bootloader's system"
-	@$(ECHO) "   btl-appset          build bootloader's appset"
+	@$(ECHO) "   build-all           build application with bootloader in single hex file"
+	@$(ECHO) "   build-btl           build bootloader (system + appset)"
+	@$(ECHO) "   build-app           build application (system + appset)"
+	@$(ECHO) "   build-app-system    build application's system"
+	@$(ECHO) "   build-app-appset    build application's appset"
+	@$(ECHO) "   build-btl-system    build bootloader's system"
+	@$(ECHO) "   build-btl-appset    build bootloader's appset"
 	@$(ECHO) "   install             install (flash) all build files"
 	@$(ECHO) "   install-app         install (flash) application"
 	@$(ECHO) "   install-btl         install (flash) bootloader"
@@ -182,8 +182,8 @@ _build_prepare :
 	@$(MKDIR) $(TARGET_DIR_NAME)
 
 
-.PHONY : all
-all : _build_prepare btl app
+.PHONY : build-all
+build-all : _build_prepare build-btl build-app
 	@$(SREC_CAT) $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex -Intel $(TARGET_DIR_NAME)/$(PROJECT)_app.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_btl_app.hex -Intel;\
 
 
@@ -196,8 +196,8 @@ clean :
 	@$(REMOVE) -r $(TARGET_DIR_NAME)
 
 
-.PHONY : app
-app : _build_prepare app-romfs app-system app-appset
+.PHONY : build-app
+build-app : _build_prepare build-app-romfs build-app-system build-app-appset
 	@$(SREC_CAT) $(TARGET_DIR_NAME)/app-system.hex -Intel $(TARGET_DIR_NAME)/app-appset.hex -Intel $(TARGET_DIR_NAME)/app-romfs.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_app.hex -Intel
 	@$(COPY) -R ./app-dist $(TARGET_DIR_NAME)/app-dist
 	@$(COPY) $(TARGET_DIR_NAME)/app-system.bin $(TARGET_DIR_NAME)/app-dist/app-system.bin
@@ -207,8 +207,8 @@ app : _build_prepare app-romfs app-system app-appset
 	@$(ECHO) "Target app built successfully."
 
 
-.PHONY : btl
-btl : _build_prepare btl-system btl-appset
+.PHONY : build-btl
+build-btl : _build_prepare build-btl-system build-btl-appset
 	@$(SREC_CAT) $(TARGET_DIR_NAME)/btl-system.hex -Intel $(TARGET_DIR_NAME)/btl-appset.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex -Intel
 	@$(OBJCOPY) --input-target=ihex --output-target=binary $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex $(TARGET_DIR_NAME)/$(PROJECT)_btl.bin
 	@$(MKDIR) $(TARGET_DIR_NAME)/btl-dist
@@ -217,17 +217,17 @@ btl : _build_prepare btl-system btl-appset
 	@$(MKFPKG) $(TARGET_DIR_NAME)/btl-dist $(TARGET_DIR_NAME)/$(PROJECT)-btl.fpkg
 
 
-.PHONY : app-system
-app-system : _build_prepare
+.PHONY : build-app-system
+build-app-system : _build_prepare
 	@$(call clean_system)
 	@$(call make_system, app-system)
 
-.PHONY : app-appset
-app-appset : _build_prepare
+.PHONY : build-app-appset
+build-app-appset : _build_prepare
 	@$(call make_appset, app-appset, app-appset, boardname, proj_opts)
 
-.PHONY : app-romfs
-app-romfs : _build_prepare
+.PHONY : build-app-romfs
+build-app-romfs : _build_prepare
 	@$(call make_romfs, app-romfs, app-romfs)
 
 .PHONY : clean-app-appset
@@ -235,12 +235,12 @@ clean-app-appset : _build_prepare
 	@$(call clean_appset, app-appset)
 
 
-.PHONY : btl-system
-btl-system : _build_prepare
+.PHONY : build-btl-system
+build-btl-system : _build_prepare
 	@$(call make_system, btl-system)
 
-.PHONY : btl-appset
-btl-appset : _build_prepare
+.PHONY : build-btl-appset
+build-btl-appset : _build_prepare
 	@$(call make_appset, btl-appset, btl-appset, boardname, proj_opts)
 
 .PHONY : clean-btl-appset

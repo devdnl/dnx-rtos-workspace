@@ -41,85 +41,85 @@ Brief   Binary serialization.
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define bs_get_template(_type_)                                                          \
+#define bs_get_template(_type_)                                                       \
         _type_ bs_get_##_type_(bs_t *self, const char *key, _type_ Default, int *err) \
-        {                                                                                \
-                size_t blen;                                                             \
-                const void *blob;                                                        \
-                bs_type_t rettype = bs_type__##_type_;                                   \
-                bs_type_t btype;                                                         \
-                _type_ value = 0;                                                        \
-                int e = bs_get_raw(self, key, &blob, &blen, &btype);                     \
-                if (not e) {                                                             \
-                        union {                                                          \
-                                bool boolean;                                            \
-                                int8_t int8;                                             \
-                                uint8_t uint8;                                           \
-                                int16_t int16;                                           \
-                                uint16_t uint16;                                         \
-                                int32_t int32;                                           \
-                                uint32_t uint32;                                         \
-                                int64_t int64;                                           \
-                                uint64_t uint64;                                         \
-                                float float32;                                           \
-                                double float64;                                          \
-                        } v;                                                             \
-                        memcpy(&v, blob, min(blen, sizeof(v)));                          \
-                        if (btype == bs_type__bool) {                                    \
-                                value = v.boolean;                                       \
-                        } else if (btype == bs_type__int8_t) {                           \
-                                value = v.int8;                                          \
-                        } else if (btype == bs_type__uint8_t) {                          \
-                                value = v.uint8;                                         \
-                        } else if (btype == bs_type__int16_t) {                          \
-                                value = v.int16;                                         \
-                        } else if (btype == bs_type__uint16_t) {                         \
-                                value = v.uint16;                                        \
-                        } else if (btype == bs_type__int32_t) {                          \
-                                value = v.int32;                                         \
-                        } else if (btype == bs_type__uint32_t) {                         \
-                                value = v.uint32;                                        \
-                        } else if (btype == bs_type__int64_t) {                          \
-                                value = v.int64;                                         \
-                        } else if (btype == bs_type__uint64_t) {                         \
-                                value = v.uint64;                                        \
-                        } else if (btype == bs_type__float) {                            \
-                                value = v.float32;                                       \
-                        } else if (btype == bs_type__double) {                           \
-                                value = v.float64;                                       \
-                        } else if (btype == bs_type__string) {                           \
-                                if (rettype == bs_type__bool) {                          \
-                                        value = ((strcasecmp(blob, "true") == 0) ||      \
-                                                (strcasecmp(blob, "on") == 0) ||         \
-                                                (strcasecmp(blob, "yes") == 0) ||        \
-                                                (strcasecmp(blob, "enable") == 0) ||     \
-                                                (strcasecmp(blob, "set") == 0) ||        \
-                                                (strcasecmp(blob, "high") == 0) ||       \
-                                                (strcasecmp(blob, "1") == 0));           \
-                                } else if (rettype == bs_type__float) {                  \
-                                        value = atof(blob);                              \
-                                } else if (rettype == bs_type__double) {                 \
-                                        value = atof(blob);                              \
-                                } else if (rettype == bs_type__blob) {                   \
-                                        value = 0;                                       \
-                                } else {                                                 \
-                                        value = atol(blob);                              \
-                                }                                                        \
-                        } else {                                                         \
-                                value = Default;                                         \
-                        }                                                                \
-                }                                                                        \
-                if (e) {                                                                 \
-                        value = Default;                                                 \
-                }                                                                        \
-                if (err) {                                                               \
-                        *err = e;                                                        \
-                }                                                                        \
-                return value;                                                            \
+        {                                                                             \
+                size_t blen;                                                          \
+                const void *blob;                                                     \
+                bs_type_t rettype = bs_type__##_type_;                                \
+                bs_type_t btype;                                                      \
+                _type_ value = 0;                                                     \
+                int e = bs_get_raw(self, key, &blob, &blen, &btype);                  \
+                if (not e) {                                                          \
+                        union {                                                       \
+                                bool boolean;                                         \
+                                int8_t int8;                                          \
+                                uint8_t uint8;                                        \
+                                int16_t int16;                                        \
+                                uint16_t uint16;                                      \
+                                int32_t int32;                                        \
+                                uint32_t uint32;                                      \
+                                int64_t int64;                                        \
+                                uint64_t uint64;                                      \
+                                float float32;                                        \
+                                double float64;                                       \
+                        } v;                                                          \
+                        memcpy(&v, blob, min(blen, sizeof(v)));                       \
+                        if (btype == bs_type__bool) {                                 \
+                                value = v.boolean;                                    \
+                        } else if (btype == bs_type__int8_t) {                        \
+                                value = v.int8;                                       \
+                        } else if (btype == bs_type__uint8_t) {                       \
+                                value = v.uint8;                                      \
+                        } else if (btype == bs_type__int16_t) {                       \
+                                value = v.int16;                                      \
+                        } else if (btype == bs_type__uint16_t) {                      \
+                                value = v.uint16;                                     \
+                        } else if (btype == bs_type__int32_t) {                       \
+                                value = v.int32;                                      \
+                        } else if (btype == bs_type__uint32_t) {                      \
+                                value = v.uint32;                                     \
+                        } else if (btype == bs_type__int64_t) {                       \
+                                value = v.int64;                                      \
+                        } else if (btype == bs_type__uint64_t) {                      \
+                                value = v.uint64;                                     \
+                        } else if (btype == bs_type__float) {                         \
+                                value = v.float32;                                    \
+                        } else if (btype == bs_type__double) {                        \
+                                value = v.float64;                                    \
+                        } else if (btype == bs_type__string) {                        \
+                                if (rettype == bs_type__bool) {                       \
+                                        value = ((strcasecmp(blob, "true") == 0) ||   \
+                                                (strcasecmp(blob, "on") == 0) ||      \
+                                                (strcasecmp(blob, "yes") == 0) ||     \
+                                                (strcasecmp(blob, "enable") == 0) ||  \
+                                                (strcasecmp(blob, "set") == 0) ||     \
+                                                (strcasecmp(blob, "high") == 0) ||    \
+                                                (strcasecmp(blob, "1") == 0));        \
+                                } else if (rettype == bs_type__float) {               \
+                                        value = atof(blob);                           \
+                                } else if (rettype == bs_type__double) {              \
+                                        value = atof(blob);                           \
+                                } else if (rettype == bs_type__blob) {                \
+                                        value = 0;                                    \
+                                } else {                                              \
+                                        value = atol(blob);                           \
+                                }                                                     \
+                        } else {                                                      \
+                                value = Default;                                      \
+                        }                                                             \
+                }                                                                     \
+                if (e) {                                                              \
+                        value = Default;                                              \
+                }                                                                     \
+                if (err) {                                                            \
+                        *err = e;                                                     \
+                }                                                                     \
+                return value;                                                         \
         }
 
 #define bs_set_template(_type_)                                                         \
-        int bs_set_##_type_(bs_t *self, const char *key, _type_ value)               \
+        int bs_set_##_type_(bs_t *self, const char *key, _type_ value)                  \
         {                                                                               \
                 return bs_set_raw(self, key, &value, sizeof(value), bs_type__##_type_); \
         }

@@ -70,7 +70,7 @@ PROGRAM_PARAMS(mkdir, STACK_DEPTH_LOW);
 //==============================================================================
 int main(int argc, char *argv[])
 {
-        (void) argc;
+        (void)argc;
 
         if (mkdir(argv[1], 0666) != 0) {
                 perror(argv[1]);

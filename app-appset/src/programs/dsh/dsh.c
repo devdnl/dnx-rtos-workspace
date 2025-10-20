@@ -53,12 +53,12 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define PROMPT_LINE_LEN                 100
-#define CWD_PATH_LEN                    128
-#define HISTORY_NEXT_KEY                "\033^[A"
-#define HISTORY_PREV_KEY                "\033^[B"
-#define COMMAND_HINT_KEY                "\033^[T"
-#define HISTORY_ENTRIES                 8
+#define PROMPT_LINE_LEN  100
+#define CWD_PATH_LEN     128
+#define HISTORY_NEXT_KEY "\033^[A"
+#define HISTORY_PREV_KEY "\033^[B"
+#define COMMAND_HINT_KEY "\033^[T"
+#define HISTORY_ENTRIES  8
 
 /*==============================================================================
   Local types, enums definitions
@@ -67,37 +67,37 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void  clear_prompt         (void);
-static void  print_prompt         (void);
-static bool  read_input           (void);
-static bool  history_request      (void);
-static bool  command_hint         (void);
-static bool  is_cd_cmd            (const char *cmd);
-static bool  is_exit_cmd          (const char *cmd);
-static bool  is_clear_cmd         (const char *cmd);
-static bool  is_detached_cmd      (char *cmd);
-static char *find_arg             (char *cmd);
-static void  change_directory     (char *str);
-static char *trim_string          (char *str);
-static void  print_fail_message   (char *cmd);
-static bool  start_program        (char *master, char *slave, char *std_in, char *file, char *fmode, bool detached);
-static bool  analyze_line         (char *cmd);
+static void clear_prompt(void);
+static void print_prompt(void);
+static bool read_input(void);
+static bool history_request(void);
+static bool command_hint(void);
+static bool is_cd_cmd(const char *cmd);
+static bool is_exit_cmd(const char *cmd);
+static bool is_clear_cmd(const char *cmd);
+static bool is_detached_cmd(char *cmd);
+static char *find_arg(char *cmd);
+static void change_directory(char *str);
+static char *trim_string(char *str);
+static void print_fail_message(char *cmd);
+static bool start_program(char *master, char *slave, char *std_in, char *file, char *fmode, bool detached);
+static bool analyze_line(char *cmd);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
-        char            line[PROMPT_LINE_LEN];
-        char           *history[HISTORY_ENTRIES];
-        u8_t            history_wr;
-        u8_t            history_rd;
-        char            cwd[CWD_PATH_LEN];
-        bool            prompt_enable;
-        FILE           *input;
-        bool            stream_closed;
-        process_attr_t  pidmaster_attr;
-        process_attr_t  pidslave_attr;
-        const char     *pipe_file;
+        char line[PROMPT_LINE_LEN];
+        char *history[HISTORY_ENTRIES];
+        u8_t history_wr;
+        u8_t history_rd;
+        char cwd[CWD_PATH_LEN];
+        bool prompt_enable;
+        FILE *input;
+        bool stream_closed;
+        process_attr_t pidmaster_attr;
+        process_attr_t pidslave_attr;
+        const char *pipe_file;
 };
 
 /*==============================================================================
@@ -130,10 +130,9 @@ static void print_prompt(void)
                 char hostname[64];
                 get_host_name(hostname, sizeof(hostname));
 
-                printf(VT100_FONT_COLOR_GREEN"%s:%s"VT100_RESET_ATTRIBUTES"\n",
-                       hostname, global->cwd);
+                printf(VT100_FONT_COLOR_GREEN "%s:%s" VT100_RESET_ATTRIBUTES "\n", hostname, global->cwd);
 
-                printf(VT100_FONT_COLOR_GREEN"$ "VT100_RESET_ATTRIBUTES);
+                printf(VT100_FONT_COLOR_GREEN "$ " VT100_RESET_ATTRIBUTES);
 
                 fflush(stdout);
         }
@@ -183,7 +182,8 @@ static bool history_request(void)
 
                 for (size_t i = 0; i < HISTORY_ENTRIES and not found; i++) {
                         if (not isstrempty(global->history[global->history_rd])) {
-                                ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, global->history[global->history_rd]);
+                                ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE,
+                                        global->history[global->history_rd]);
                                 found = true;
                         }
 
@@ -201,8 +201,8 @@ static bool history_request(void)
 
                 if (strlen(global->line) and (global->line[0] != '\033')) {
 
-                        if ( (global->history[global->history_rd] == NULL)
-                           or not isstreq(global->history[global->history_wr], global->line)) {
+                        if ((global->history[global->history_rd] == NULL) or
+                                not isstreq(global->history[global->history_wr], global->line)) {
 
                                 if (++global->history_wr >= HISTORY_ENTRIES) {
                                         global->history_wr = 0;
@@ -213,7 +213,6 @@ static bool history_request(void)
                                 }
 
                                 global->history[global->history_wr] = strdup(global->line);
-
                         }
 
                         global->history_rd = global->history_wr;
@@ -240,7 +239,7 @@ static bool command_hint(void)
 
                 *tabstart = '\0';
 
-                char  search[128];
+                char search[128];
                 char *line = "";
 
                 /*
@@ -251,7 +250,7 @@ static bool command_hint(void)
                         line = begin + 1;
                 } else if (strncmp(global->line, "./", 2) == 0) {
                         begin = global->line;
-                        line  = global->line + 2;
+                        line = global->line + 2;
                 } else if ((begin = strchr(global->line, '/'))) {
                         line = begin;
                 }
@@ -340,14 +339,16 @@ static bool command_hint(void)
 
                                                         common[min_len] = '\0';
 
-                                                } else  {
-                                                        strlcpy(line, dirent->d_name, PROMPT_LINE_LEN - (global->line - line));
+                                                } else {
+                                                        strlcpy(line, dirent->d_name,
+                                                                PROMPT_LINE_LEN - (global->line - line));
 
                                                         if (S_ISDIR(dirent->mode)) {
                                                                 strlcat(global->line, "/", PROMPT_LINE_LEN);
                                                         }
 
-                                                        ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, global->line);
+                                                        ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE,
+                                                                global->line);
                                                         break;
                                                 }
                                         }
@@ -440,9 +441,10 @@ static bool is_comment(const char *cmd)
 //==============================================================================
 static bool is_detached_cmd(char *cmd)
 {
-        size_t len  = strlen(cmd);
-        char  *back = &cmd[len - 1];
-        while (len-- && isspace(cast(int, *back)) && --back);
+        size_t len = strlen(cmd);
+        char *back = &cmd[len - 1];
+        while (len-- && isspace(cast(int, *back)) && --back)
+                ;
 
         if (*back == '&') {
                 *back = '\0';
@@ -542,8 +544,9 @@ static void print_fail_message(char *cmd)
 {
         cmd = trim_string(cmd);
 
-        if (strchr(cmd, ' '))
+        if (strchr(cmd, ' ')) {
                 *strchr(cmd, ' ') = '\0';
+        }
 
         if (errno == ENOMEM || errno == EACCES) {
                 perror(cmd);
@@ -565,16 +568,15 @@ static void print_fail_message(char *cmd)
  * @return true if command executed, false if error
  */
 //==============================================================================
-static bool start_program(char *master, char *slave, char *std_in,
-                          char *file,   char *fmode, bool detached)
+static bool start_program(char *master, char *slave, char *std_in, char *file, char *fmode, bool detached)
 {
-        errno              = 0;
-        FILE    *pipe      = NULL;
-        FILE    *fout      = NULL;
-        char    *pipe_name = NULL;
-        bool     status    = true;
-        pid_t    pidmaster = 0;
-        pid_t    pidslave  = 0;
+        errno = 0;
+        FILE *pipe = NULL;
+        FILE *fout = NULL;
+        char *pipe_name = NULL;
+        bool status = true;
+        pid_t pidmaster = 0;
+        pid_t pidslave = 0;
 
         if (master) {
                 master = trim_string(master);
@@ -604,7 +606,8 @@ static bool start_program(char *master, char *slave, char *std_in,
                 pipe_name = calloc(sizeof(char), strlen(global->pipe_file) + 7);
                 if (pipe_name) {
                         u64_t uptime = get_uptime_ms();
-                        snprintf(pipe_name, strlen(global->pipe_file) + 7, "%s%llx", global->pipe_file, uptime);
+                        snprintf(pipe_name, strlen(global->pipe_file) + 7, "%s%llx", global->pipe_file,
+                                uptime);
 
                         if (mkfifo(pipe_name, 0666)) {
                                 perror("sh");
@@ -625,30 +628,30 @@ static bool start_program(char *master, char *slave, char *std_in,
         memset(&global->pidmaster_attr, 0, sizeof(process_attr_t));
 
         if (master && slave && file) {
-                global->pidmaster_attr.fd_stdin   = fileno(stdin);
-                global->pidmaster_attr.fd_stdout  = fileno(pipe);
-                global->pidmaster_attr.fd_stderr  = fileno(stderr);
-                global->pidmaster_attr.p_stdin    = NULL;
-                global->pidmaster_attr.p_stdout   = NULL;
-                global->pidmaster_attr.p_stderr   = NULL;
-                global->pidmaster_attr.cwd        = global->cwd;
-                global->pidmaster_attr.detached   = false;
-                global->pidmaster_attr.priority   = PRIORITY_NORMAL;
+                global->pidmaster_attr.fd_stdin = fileno(stdin);
+                global->pidmaster_attr.fd_stdout = fileno(pipe);
+                global->pidmaster_attr.fd_stderr = fileno(stderr);
+                global->pidmaster_attr.p_stdin = NULL;
+                global->pidmaster_attr.p_stdout = NULL;
+                global->pidmaster_attr.p_stderr = NULL;
+                global->pidmaster_attr.cwd = global->cwd;
+                global->pidmaster_attr.detached = false;
+                global->pidmaster_attr.priority = PRIORITY_NORMAL;
                 pidmaster = process_create(master, &global->pidmaster_attr);
                 if (pidmaster == 0) {
                         print_fail_message(master);
                         goto free_resources;
                 }
 
-                global->pidslave_attr.fd_stdin   = fileno(pipe);
-                global->pidslave_attr.fd_stdout  = fileno(fout);
-                global->pidslave_attr.fd_stderr  = fileno(stderr);
-                global->pidslave_attr.p_stdin    = NULL;
-                global->pidslave_attr.p_stdout   = NULL;
-                global->pidslave_attr.p_stderr   = NULL;
-                global->pidslave_attr.cwd        = global->cwd;
-                global->pidslave_attr.detached   = false;
-                global->pidslave_attr.priority   = PRIORITY_NORMAL;
+                global->pidslave_attr.fd_stdin = fileno(pipe);
+                global->pidslave_attr.fd_stdout = fileno(fout);
+                global->pidslave_attr.fd_stderr = fileno(stderr);
+                global->pidslave_attr.p_stdin = NULL;
+                global->pidslave_attr.p_stdout = NULL;
+                global->pidslave_attr.p_stderr = NULL;
+                global->pidslave_attr.cwd = global->cwd;
+                global->pidslave_attr.detached = false;
+                global->pidslave_attr.priority = PRIORITY_NORMAL;
                 pidslave = process_create(slave, &global->pidslave_attr);
                 if (pidslave == 0) {
                         process_kill(pidmaster);
@@ -661,30 +664,30 @@ static bool start_program(char *master, char *slave, char *std_in,
                 process_wait(pidslave, NULL, MAX_DELAY_MS);
 
         } else if (master && slave) {
-                global->pidmaster_attr.fd_stdin   = fileno(stdin);
-                global->pidmaster_attr.fd_stdout  = fileno(pipe);
-                global->pidmaster_attr.fd_stderr  = fileno(stderr);
-                global->pidmaster_attr.p_stdin    = NULL;
-                global->pidmaster_attr.p_stdout   = NULL;
-                global->pidmaster_attr.p_stderr   = NULL;
-                global->pidmaster_attr.cwd        = global->cwd;
-                global->pidmaster_attr.detached   = false;
-                global->pidmaster_attr.priority   = PRIORITY_NORMAL;
+                global->pidmaster_attr.fd_stdin = fileno(stdin);
+                global->pidmaster_attr.fd_stdout = fileno(pipe);
+                global->pidmaster_attr.fd_stderr = fileno(stderr);
+                global->pidmaster_attr.p_stdin = NULL;
+                global->pidmaster_attr.p_stdout = NULL;
+                global->pidmaster_attr.p_stderr = NULL;
+                global->pidmaster_attr.cwd = global->cwd;
+                global->pidmaster_attr.detached = false;
+                global->pidmaster_attr.priority = PRIORITY_NORMAL;
                 pidmaster = process_create(master, &global->pidmaster_attr);
                 if (pidmaster == 0) {
                         print_fail_message(master);
                         goto free_resources;
                 }
 
-                global->pidslave_attr.fd_stdin   = fileno(pipe);
-                global->pidslave_attr.fd_stdout  = fileno(stdout);
-                global->pidslave_attr.fd_stderr  = fileno(stderr);
-                global->pidslave_attr.p_stdin    = NULL;
-                global->pidslave_attr.p_stdout   = NULL;
-                global->pidslave_attr.p_stderr   = NULL;
-                global->pidslave_attr.cwd        = global->cwd;
-                global->pidslave_attr.detached   = false;
-                global->pidslave_attr.priority   = PRIORITY_NORMAL;
+                global->pidslave_attr.fd_stdin = fileno(pipe);
+                global->pidslave_attr.fd_stdout = fileno(stdout);
+                global->pidslave_attr.fd_stderr = fileno(stderr);
+                global->pidslave_attr.p_stdin = NULL;
+                global->pidslave_attr.p_stdout = NULL;
+                global->pidslave_attr.p_stderr = NULL;
+                global->pidslave_attr.cwd = global->cwd;
+                global->pidslave_attr.detached = false;
+                global->pidslave_attr.priority = PRIORITY_NORMAL;
                 pidslave = process_create(slave, &global->pidslave_attr);
                 if (pidslave == 0) {
                         process_kill(pidmaster);
@@ -697,17 +700,15 @@ static bool start_program(char *master, char *slave, char *std_in,
                 process_wait(pidslave, NULL, MAX_DELAY_MS);
 
         } else if (master && file && std_in) {
-                printf("%s %s %s\n", std_in, file, file); // TEST
-
-                global->pidmaster_attr.fd_stdin   = -1;
-                global->pidmaster_attr.fd_stdout  = -1;
-                global->pidmaster_attr.fd_stderr  = -1;
-                global->pidmaster_attr.p_stdin    = std_in;
-                global->pidmaster_attr.p_stdout   = file;
-                global->pidmaster_attr.p_stderr   = file;
-                global->pidmaster_attr.cwd        = global->cwd;
-                global->pidmaster_attr.detached   = detached;
-                global->pidmaster_attr.priority   = PRIORITY_NORMAL;
+                global->pidmaster_attr.fd_stdin = -1;
+                global->pidmaster_attr.fd_stdout = -1;
+                global->pidmaster_attr.fd_stderr = -1;
+                global->pidmaster_attr.p_stdin = std_in;
+                global->pidmaster_attr.p_stdout = file;
+                global->pidmaster_attr.p_stderr = file;
+                global->pidmaster_attr.cwd = global->cwd;
+                global->pidmaster_attr.detached = detached;
+                global->pidmaster_attr.priority = PRIORITY_NORMAL;
                 pidmaster = process_create(master, &global->pidmaster_attr);
                 if (pidmaster == 0) {
                         print_fail_message(master);
@@ -719,15 +720,15 @@ static bool start_program(char *master, char *slave, char *std_in,
                 }
 
         } else if (master && std_in) {
-                global->pidmaster_attr.fd_stdin   = -1;
-                global->pidmaster_attr.fd_stdout  = fileno(stdout);
-                global->pidmaster_attr.fd_stderr  = fileno(stderr);
-                global->pidmaster_attr.p_stdin    = std_in;
-                global->pidmaster_attr.p_stdout   = NULL;
-                global->pidmaster_attr.p_stderr   = NULL;
-                global->pidmaster_attr.cwd        = global->cwd;
-                global->pidmaster_attr.detached   = detached;
-                global->pidmaster_attr.priority   = PRIORITY_NORMAL;
+                global->pidmaster_attr.fd_stdin = -1;
+                global->pidmaster_attr.fd_stdout = fileno(stdout);
+                global->pidmaster_attr.fd_stderr = fileno(stderr);
+                global->pidmaster_attr.p_stdin = std_in;
+                global->pidmaster_attr.p_stdout = NULL;
+                global->pidmaster_attr.p_stderr = NULL;
+                global->pidmaster_attr.cwd = global->cwd;
+                global->pidmaster_attr.detached = detached;
+                global->pidmaster_attr.priority = PRIORITY_NORMAL;
                 pidmaster = process_create(master, &global->pidmaster_attr);
                 if (pidmaster == 0) {
                         print_fail_message(master);
@@ -739,15 +740,15 @@ static bool start_program(char *master, char *slave, char *std_in,
                 }
 
         } else if (master && file) {
-                global->pidmaster_attr.fd_stdin   = fileno(stdin);
-                global->pidmaster_attr.fd_stdout  = fileno(fout);
-                global->pidmaster_attr.fd_stderr  = fileno(stderr);
-                global->pidmaster_attr.p_stdin    = NULL;
-                global->pidmaster_attr.p_stdout   = NULL;
-                global->pidmaster_attr.p_stderr   = NULL;
-                global->pidmaster_attr.cwd        = global->cwd;
-                global->pidmaster_attr.detached   = false;
-                global->pidmaster_attr.priority   = PRIORITY_NORMAL;
+                global->pidmaster_attr.fd_stdin = fileno(stdin);
+                global->pidmaster_attr.fd_stdout = fileno(fout);
+                global->pidmaster_attr.fd_stderr = fileno(stderr);
+                global->pidmaster_attr.p_stdin = NULL;
+                global->pidmaster_attr.p_stdout = NULL;
+                global->pidmaster_attr.p_stderr = NULL;
+                global->pidmaster_attr.cwd = global->cwd;
+                global->pidmaster_attr.detached = false;
+                global->pidmaster_attr.priority = PRIORITY_NORMAL;
                 pidmaster = process_create(master, &global->pidmaster_attr);
                 if (pidmaster == 0) {
                         print_fail_message(master);
@@ -757,15 +758,15 @@ static bool start_program(char *master, char *slave, char *std_in,
                 process_wait(pidmaster, NULL, MAX_DELAY_MS);
 
         } else if (master) {
-                global->pidmaster_attr.fd_stdin   = detached ? -1 : fileno(stdin);
-                global->pidmaster_attr.fd_stdout  = fileno(stdout);
-                global->pidmaster_attr.fd_stderr  = fileno(stderr);
-                global->pidmaster_attr.p_stdin    = NULL;
-                global->pidmaster_attr.p_stdout   = NULL;
-                global->pidmaster_attr.p_stderr   = NULL;
-                global->pidmaster_attr.cwd        = global->cwd;
-                global->pidmaster_attr.detached   = detached;
-                global->pidmaster_attr.priority   = PRIORITY_NORMAL;
+                global->pidmaster_attr.fd_stdin = detached ? -1 : fileno(stdin);
+                global->pidmaster_attr.fd_stdout = fileno(stdout);
+                global->pidmaster_attr.fd_stderr = fileno(stderr);
+                global->pidmaster_attr.p_stdin = NULL;
+                global->pidmaster_attr.p_stdout = NULL;
+                global->pidmaster_attr.p_stderr = NULL;
+                global->pidmaster_attr.cwd = global->cwd;
+                global->pidmaster_attr.detached = detached;
+                global->pidmaster_attr.priority = PRIORITY_NORMAL;
                 pidmaster = process_create(master, &global->pidmaster_attr);
                 if (pidmaster == 0) {
                         print_fail_message(master);
@@ -783,7 +784,8 @@ static bool start_program(char *master, char *slave, char *std_in,
         // clear stdin
         if (global->input == stdin) {
                 ioctl(fileno(global->input), IOCTL_VFS__NON_BLOCKING_RD_MODE);
-                while (getc(global->input) != EOF);
+                while (getc(global->input) != EOF)
+                        ;
                 clearerr(global->input);
                 ioctl(fileno(global->input), IOCTL_VFS__DEFAULT_RD_MODE);
         }
@@ -816,11 +818,11 @@ free_resources:
 //==============================================================================
 static bool analyze_line(char *cmd)
 {
-        int   pipe_number = 0;
-        int   out_number  = 0;
-        int   in_number   = 0;
-        bool  detached    = is_detached_cmd(cmd);
-        char *fmode       = "";
+        int pipe_number = 0;
+        int out_number = 0;
+        int in_number = 0;
+        bool detached = is_detached_cmd(cmd);
+        char *fmode = "";
 
         size_t n = strlen(cmd);
         for (size_t i = 0; i < n; i++) {
@@ -934,8 +936,8 @@ static bool analyze_line(char *cmd)
 int main(int argc, char *argv[])
 {
         global->prompt_enable = true;
-        global->input         = stdin;
-        global->pipe_file     = "/run/dsh-";
+        global->input = stdin;
+        global->pipe_file = "/run/dsh-";
 
         if (argc >= 2) {
                 for (int i = 1; i < argc; i++) {
@@ -951,7 +953,7 @@ int main(int argc, char *argv[])
                                 char *cmd = trim_string(global->line);
 
                                 if (!analyze_line(cmd)) {
-                                        print_fail_message(argv[i+1]);
+                                        print_fail_message(argv[i + 1]);
                                 }
 
                                 exit(0);
@@ -991,11 +993,13 @@ int main(int argc, char *argv[])
                         }
                 }
 
-                if (history_request())
+                if (history_request()) {
                         continue;
+                }
 
-                if (command_hint())
+                if (command_hint()) {
                         continue;
+                }
 
                 char *cmd = trim_string(global->line);
 

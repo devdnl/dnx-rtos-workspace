@@ -67,55 +67,55 @@
 ==============================================================================*/
 // Leap Indicator
 enum LI {
-        LI_No_warning             = 0,
+        LI_No_warning = 0,
         LI_Last_minute_has_61_sec = 1,
         LI_Last_minute_has_59_sec = 2,
-        LI_Alarm_condition        = 3,
+        LI_Alarm_condition = 3,
 };
 
 // Version Number
 enum VN {
-        VN_none_0        = 0,
-        VN_none_1        = 1,
-        VN_none_2        = 2,
-        VN_IPv4_only     = 3,
+        VN_none_0 = 0,
+        VN_none_1 = 1,
+        VN_none_2 = 2,
+        VN_IPv4_only = 3,
         VN_IPv4_IPv6_OSI = 4,
-        VN_none_5        = 5,
-        VN_none_6        = 6,
-        VN_none_7        = 7
+        VN_none_5 = 5,
+        VN_none_6 = 6,
+        VN_none_7 = 7
 };
 
 // Mode
 enum Mode {
-        Mode_Reserved                 = 0,
-        Mode_Symetric_active          = 1,
-        Mode_Symetric_passive         = 2,
-        Mode_Client                   = 3,
-        Mode_Server                   = 4,
-        Mode_Broadcast                = 5,
-        Mode_Reserved_NTP_ctrl_msg    = 6,
+        Mode_Reserved = 0,
+        Mode_Symetric_active = 1,
+        Mode_Symetric_passive = 2,
+        Mode_Client = 3,
+        Mode_Server = 4,
+        Mode_Broadcast = 5,
+        Mode_Reserved_NTP_ctrl_msg = 6,
         Mode_Reserved_for_private_use = 7
 };
 
 // Stratum
 enum Stratum {
         Stratum_Unspecified_or_unavailable = 0,
-        Stratum_Primary_reference          = 1,
-        Stratum_Secondary_reference_2      = 2,
-        Stratum_Secondary_reference_3      = 3,
-        Stratum_Secondary_reference_4      = 4,
-        Stratum_Secondary_reference_5      = 5,
-        Stratum_Secondary_reference_6      = 6,
-        Stratum_Secondary_reference_7      = 7,
-        Stratum_Secondary_reference_8      = 8,
-        Stratum_Secondary_reference_9      = 9,
-        Stratum_Secondary_reference_10     = 10,
-        Stratum_Secondary_reference_11     = 11,
-        Stratum_Secondary_reference_12     = 12,
-        Stratum_Secondary_reference_13     = 13,
-        Stratum_Secondary_reference_14     = 14,
-        Stratum_Secondary_reference_15     = 15,
-        Startum_Reserved                   = 16,
+        Stratum_Primary_reference = 1,
+        Stratum_Secondary_reference_2 = 2,
+        Stratum_Secondary_reference_3 = 3,
+        Stratum_Secondary_reference_4 = 4,
+        Stratum_Secondary_reference_5 = 5,
+        Stratum_Secondary_reference_6 = 6,
+        Stratum_Secondary_reference_7 = 7,
+        Stratum_Secondary_reference_8 = 8,
+        Stratum_Secondary_reference_9 = 9,
+        Stratum_Secondary_reference_10 = 10,
+        Stratum_Secondary_reference_11 = 11,
+        Stratum_Secondary_reference_12 = 12,
+        Stratum_Secondary_reference_13 = 13,
+        Stratum_Secondary_reference_14 = 14,
+        Stratum_Secondary_reference_15 = 15,
+        Startum_Reserved = 16,
 };
 
 /** SNTP request/response packet structure */
@@ -233,11 +233,11 @@ typedef struct {
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
-        int                 start_host_arg;
-        int                 current_host_arg;
+        int start_host_arg;
+        int current_host_arg;
         NET_INET_sockaddr_t server;
-        sntp_msg_t          pkt;
-        bool                silent;
+        sntp_msg_t pkt;
+        bool silent;
 };
 
 /*==============================================================================
@@ -274,13 +274,13 @@ static void select_next_host(int argc)
 static int send_request(SOCKET *socket)
 {
         memset(&global->pkt, 0, sizeof(sntp_msg_t));
-        global->pkt.settings.field.LI        = LI_No_warning;
-        global->pkt.settings.field.VN        = VN_IPv4_IPv6_OSI;
-        global->pkt.settings.field.Mode      = Mode_Client;
-        global->pkt.settings.field.Poll      = 0;
+        global->pkt.settings.field.LI = LI_No_warning;
+        global->pkt.settings.field.VN = VN_IPv4_IPv6_OSI;
+        global->pkt.settings.field.Mode = Mode_Client;
+        global->pkt.settings.field.Poll = 0;
         global->pkt.settings.field.Precision = 0;
-        global->pkt.settings.field.Stratum   = Stratum_Unspecified_or_unavailable;
-        global->pkt.settings.word            = hton_u32(NET_FAMILY__INET, global->pkt.settings.word);
+        global->pkt.settings.field.Stratum = Stratum_Unspecified_or_unavailable;
+        global->pkt.settings.word = hton_u32(NET_FAMILY__INET, global->pkt.settings.word);
 
         int sz = socket_send(socket, &global->pkt, sizeof(sntp_msg_t), NET_FLAGS__COPY);
 
@@ -311,7 +311,7 @@ static int receive_response(SOCKET *socket, time_t *timestamp)
 
                         if ((sec >= DIFF_SEC_1900_1970) and (sec < UINT32_MAX)) {
                                 *timestamp = sec - DIFF_SEC_1900_1970;
-                                err        = 0;
+                                err = 0;
                         }
                 }
         }
@@ -413,7 +413,7 @@ static void set_timezone(int argc, char *argv[])
         static const char *provider = "worldtimeapi.org";
 
         size_t buf_len = 4096;
-        char  *buf     = calloc(1, buf_len);
+        char *buf = calloc(1, buf_len);
         if (not buf) {
                 perror("Buffer");
                 return;
@@ -425,7 +425,7 @@ static void set_timezone(int argc, char *argv[])
                 SOCKET *socket = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
                 if (socket) {
                         provider_ip.port = 80;
-                        errno            = 0;
+                        errno = 0;
 
                         socket_set_send_timeout(socket, SNTP_SEND_TIMEOUT);
                         socket_set_recv_timeout(socket, SNTP_RECV_TIMEOUT);
@@ -436,12 +436,12 @@ static void set_timezone(int argc, char *argv[])
                                                       "Host: worldtimeapi.org\r\n"
                                                       "Accept: */*\r\n"
                                                       "\r\n";
-                                errno               = 0;
-                                int request_len     = strlen(request);
-                                int n               = socket_write(socket, request, request_len);
+                                errno = 0;
+                                int request_len = strlen(request);
+                                int n = socket_write(socket, request, request_len);
                                 if (n == request_len) {
                                         errno = 0;
-                                        n     = socket_read(socket, buf, buf_len - 1);
+                                        n = socket_read(socket, buf, buf_len - 1);
                                         if (n <= 0) {
                                                 if (not global->silent) {
                                                         fprintf(stderr, "[sntpd %lu] tz response: %s\n",
@@ -472,7 +472,7 @@ static void set_timezone(int argc, char *argv[])
                                 if (value) {
                                         struct timezone tz;
                                         tz.tz_minuteswest = atoi(++value) / 60 + (dst ? 60 : 0);
-                                        tz.tz_dsttime     = dst;
+                                        tz.tz_dsttime = dst;
                                         settimeofday(NULL, &tz);
                                 }
                         }
@@ -512,7 +512,7 @@ int main(int argc, char *argv[])
 
         global->silent = isstreq(argv[2], "--silent");
 
-        global->start_host_arg   = global->silent ? 3 : 2;
+        global->start_host_arg = global->silent ? 3 : 2;
         global->current_host_arg = global->start_host_arg;
 
         if (global->start_host_arg < (argc - 1)) {

@@ -53,7 +53,7 @@ Detailed Doxygen description.
 ==============================================================================*/
 class bs {
 private:
-        bs_t ctx{};
+        bs_t ctx {};
 
 public:
         bs() = default;

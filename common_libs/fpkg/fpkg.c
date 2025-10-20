@@ -64,7 +64,7 @@ typedef struct {
         uint32_t file_crc32;
         uint32_t content_prng_seed;
         uint32_t flags;
-        uint8_t  file_name_file_data[];
+        uint8_t file_name_file_data[];
 } file_descriptor_t;
 
 typedef struct {
@@ -84,15 +84,15 @@ typedef struct {
 } container_header_t;
 
 struct fpkg {
-        FILE    *file;
+        FILE *file;
         uint32_t prng_seed;
         uint32_t number_of_files;
         uint32_t flags;
-        char     tmp[256];
+        char tmp[256];
 };
 
 struct fpkg_file {
-        fpkg_t  *self;
+        fpkg_t *self;
         uint32_t size;
         uint32_t seek;
         uint32_t content_prng_seed;
@@ -101,9 +101,9 @@ struct fpkg_file {
 };
 
 struct fpkg_dir {
-        fpkg_t  *self;
-        char    *dir_root;
-        char    *item_name;
+        fpkg_t *self;
+        char *dir_root;
+        char *item_name;
         uint32_t dir_root_len;
         uint32_t seek;
 };
@@ -123,18 +123,16 @@ static bool is_file_entry_valid(const file_entry_t *file_entry);
 
 static bool is_file_descriptor_valid(const file_descriptor_t *file_desc);
 
-static bool is_file_descriptor_name_valid(const file_descriptor_t *file_desc,
-        const char                                                *name);
+static bool is_file_descriptor_name_valid(const file_descriptor_t *file_desc, const char *name);
 
 static int read_container_header(fpkg_t *self, container_header_t *hdr);
 
 static int read_file_entry(fpkg_t *self, uint16_t n, file_entry_t *entry);
 
-static int read_file_descriptor(fpkg_t *self, file_entry_t *entry,
-        file_descriptor_t *desc);
+static int read_file_descriptor(fpkg_t *self, file_entry_t *entry, file_descriptor_t *desc);
 
-static int read_file_descriptor_name(fpkg_t *self, file_entry_t *entry,
-        file_descriptor_t *desc, char *buf, size_t buf_len);
+static int read_file_descriptor_name(fpkg_t *self, file_entry_t *entry, file_descriptor_t *desc, char *buf,
+        size_t buf_len);
 
 static uint32_t calc_CRC32(const void *buf, uint32_t buflen, uint32_t init);
 
@@ -189,9 +187,9 @@ fpkg_t *fpkg__open(const char *path, bool validate)
                 return fpkg__close(self);
         }
 
-        self->prng_seed       = header.prng_seed;
+        self->prng_seed = header.prng_seed;
         self->number_of_files = header.number_of_files;
-        self->flags           = header.flags;
+        self->flags = header.flags;
 
         return self;
 }
@@ -276,7 +274,7 @@ fpkg_dir_t *fpkg__diropen(fpkg_t *self, const char *dirname)
         }
 
         dir->dir_root_len = strlen(dir->dir_root);
-        dir->self         = self;
+        dir->self = self;
 
         for (size_t i = 0; i < self->number_of_files; i++) {
 
@@ -290,8 +288,8 @@ fpkg_dir_t *fpkg__diropen(fpkg_t *self, const char *dirname)
                         goto error;
                 }
 
-                if (read_file_descriptor_name(self, &entry, &desc, self->tmp,
-                            sizeof(self->tmp)) != cast(int, desc.file_name_len)) {
+                if (read_file_descriptor_name(self, &entry, &desc, self->tmp, sizeof(self->tmp)) !=
+                        cast(int, desc.file_name_len)) {
                         goto error;
                 }
 
@@ -365,18 +363,18 @@ int fpkg__readdir(fpkg_dir_t *dir, fpkg_dirent_t *dirent)
 
                         char *slash = strchr(item_name, '/');
                         if (slash) {
-                                *slash       = '\0';
-                                dirent->dir  = true;
+                                *slash = '\0';
+                                dirent->dir = true;
                                 dirent->size = 0;
                         } else {
-                                dirent->dir  = false;
+                                dirent->dir = false;
                                 dirent->size = desc.file_size;
                         }
 
                         if (strcmp(dir->item_name, item_name) != 0) {
                                 free(dir->item_name);
                                 dir->item_name = strdup(item_name);
-                                dirent->name   = dir->item_name;
+                                dirent->name = dir->item_name;
                                 return 0;
                         }
                 }
@@ -415,8 +413,8 @@ fpkg_file_t *fpkg__fopen(fpkg_t *self, const char *filename)
                         return NULL;
                 }
 
-                if (read_file_descriptor_name(self, &entry, &desc, self->tmp,
-                            sizeof(self->tmp)) != cast(int, desc.file_name_len)) {
+                if (read_file_descriptor_name(self, &entry, &desc, self->tmp, sizeof(self->tmp)) !=
+                        cast(int, desc.file_name_len)) {
                         return NULL;
                 }
 
@@ -424,14 +422,14 @@ fpkg_file_t *fpkg__fopen(fpkg_t *self, const char *filename)
 
                         fpkg_file_t *file = malloc(sizeof(*file));
                         if (file) {
-                                file->content_offset = entry.file_descriptor_address +
-                                        sizeof(desc) + desc.file_name_len;
+                                file->content_offset = entry.file_descriptor_address + sizeof(desc) +
+                                        desc.file_name_len;
 
                                 file->content_prng_seed = desc.content_prng_seed;
-                                file->current_seed      = desc.content_prng_seed;
-                                file->size              = desc.file_size;
-                                file->seek              = 0;
-                                file->self              = self;
+                                file->current_seed = desc.content_prng_seed;
+                                file->size = desc.file_size;
+                                file->seek = 0;
+                                file->self = self;
 
                                 return file;
                         }
@@ -510,7 +508,7 @@ int fpkg__fseek(fpkg_file_t *file, int32_t seek, fpkg_seek_mode_t mode)
 
                 } else {
                         file->current_seed = file->content_prng_seed;
-                        n                  = file->seek;
+                        n = file->seek;
                 }
 
                 while (n > 0) {
@@ -548,7 +546,7 @@ size_t fpkg__fread(fpkg_file_t *file, void *dst, uint32_t count)
         }
 
         size_t len = min((file->size - file->seek), count);
-        n          = fread(buf, 1, len, file->self->file);
+        n = fread(buf, 1, len, file->self->file);
         file->seek += n;
 
         if (n > 0 and is_encrypted(file->self)) {
@@ -645,7 +643,7 @@ static uint32_t calc_CRC32(const void *buf, uint32_t buflen, uint32_t init)
 
                 for (int shift = 7; shift >= 0; shift--) {
                         uint32_t mask = -(crc & 1);
-                        crc           = (crc >> 1) ^ (0xEDB88320 & mask);
+                        crc = (crc >> 1) ^ (0xEDB88320 & mask);
                 }
         }
 
@@ -708,8 +706,7 @@ static int read_container_header(fpkg_t *self, container_header_t *hdr)
 
         if (fseek(self->file, -sizeof(container_header_t), SEEK_END) == 0) {
 
-                if ((fread(hdr, sizeof(*hdr), 1, self->file) == 1) and
-                        (!ferror(self->file))) {
+                if ((fread(hdr, sizeof(*hdr), 1, self->file) == 1) and (!ferror(self->file))) {
 
                         if (hdr->prng_seed != 0) {
                                 uint32_t seed = hdr->prng_seed + 1;
@@ -741,16 +738,14 @@ static int read_file_entry(fpkg_t *self, uint16_t n, file_entry_t *entry)
 {
         int err = -1;
 
-        int32_t entry_address = sizeof(container_header_t) +
-                (sizeof(file_entry_t) * self->number_of_files) -
+        int32_t entry_address = sizeof(container_header_t) + (sizeof(file_entry_t) * self->number_of_files) -
                 (sizeof(file_entry_t) * n);
 
         if (fseek(self->file, -entry_address, SEEK_END) == 0) {
 
                 clearerr(self->file);
 
-                if ((fread(entry, sizeof(*entry), 1, self->file) == 1) and
-                        (!ferror(self->file))) {
+                if ((fread(entry, sizeof(*entry), 1, self->file) == 1) and (!ferror(self->file))) {
 
                         if (is_encrypted(self)) {
                                 uint32_t seed = self->prng_seed + n;
@@ -775,15 +770,13 @@ static int read_file_entry(fpkg_t *self, uint16_t n, file_entry_t *entry)
  * @return On success 0 is returned.
  */
 //==============================================================================
-static int read_file_descriptor(fpkg_t *self, file_entry_t *entry,
-        file_descriptor_t *desc)
+static int read_file_descriptor(fpkg_t *self, file_entry_t *entry, file_descriptor_t *desc)
 {
         int err = -1;
 
         if (fseek(self->file, entry->file_descriptor_address, SEEK_SET) == 0) {
 
-                if ((fread(desc, sizeof(*desc), 1, self->file) == 1) and
-                        (!ferror(self->file))) {
+                if ((fread(desc, sizeof(*desc), 1, self->file) == 1) and (!ferror(self->file))) {
 
                         if (is_encrypted(self)) {
                                 uint32_t seed = self->prng_seed;
@@ -808,18 +801,16 @@ static int read_file_descriptor(fpkg_t *self, file_entry_t *entry,
  * @return File name length.
  */
 //==============================================================================
-static int read_file_descriptor_name(fpkg_t *self, file_entry_t *entry,
-        file_descriptor_t *desc, char *buf, size_t buf_len)
+static int read_file_descriptor_name(fpkg_t *self, file_entry_t *entry, file_descriptor_t *desc, char *buf,
+        size_t buf_len)
 {
         size_t name_len = 0;
 
-        if (fseek(self->file, entry->file_descriptor_address + sizeof(file_descriptor_t),
-                    SEEK_SET) == 0) {
+        if (fseek(self->file, entry->file_descriptor_address + sizeof(file_descriptor_t), SEEK_SET) == 0) {
 
                 name_len = min(desc->file_name_len, buf_len - 1);
 
-                if ((fread(buf, 1, name_len, self->file) == name_len) and
-                        (!ferror(self->file))) {
+                if ((fread(buf, 1, name_len, self->file) == name_len) and (!ferror(self->file))) {
 
                         if (is_encrypted(self)) {
                                 uint32_t seed = desc->content_prng_seed;
@@ -856,7 +847,7 @@ static bool is_file_valid(fpkg_t *self, bool full_check)
 
         if (full_check) {
                 uint32_t size = 0;
-                uint32_t crc  = ~FPKG_CRC32_INIT;
+                uint32_t crc = ~FPKG_CRC32_INIT;
 
                 if (fseek(self->file, 0, SEEK_END) == 0) {
                         size = ftell(self->file) - sizeof(uint32_t);
@@ -895,9 +886,9 @@ static bool is_file_valid(fpkg_t *self, bool full_check)
                         return false;
                 }
 
-                self->prng_seed       = header.prng_seed;
+                self->prng_seed = header.prng_seed;
                 self->number_of_files = header.number_of_files;
-                self->flags           = header.flags;
+                self->flags = header.flags;
 
                 for (uint16_t i = 0; i < header.number_of_files; i++) {
 
@@ -924,8 +915,8 @@ static bool is_file_valid(fpkg_t *self, bool full_check)
                         }
 
                         char *buf_name = cast(char *, buf);
-                        if (read_file_descriptor_name(self, &file_entry, &file_desc,
-                                    buf_name, buflen) != cast(int, file_desc.file_name_len)) {
+                        if (read_file_descriptor_name(self, &file_entry, &file_desc, buf_name, buflen) !=
+                                cast(int, file_desc.file_name_len)) {
                                 valid = false;
                                 break;
                         }
@@ -956,8 +947,7 @@ static bool is_container_header_valid(const container_header_t *hdr)
         bool valid = false;
 
         uint32_t crc = calc_CRC32(&hdr->prng_seed,
-                sizeof(*hdr) - offsetof(container_header_t, prng_seed) -
-                        sizeof(hdr->file_crc32),
+                sizeof(*hdr) - offsetof(container_header_t, prng_seed) - sizeof(hdr->file_crc32),
                 FPKG_CRC32_INIT);
 
         if ((hdr->magic == CONTAINER_HEADER_MAGIC) && (hdr->crc32 == crc)) {
@@ -984,8 +974,7 @@ static bool is_container_header_valid(const container_header_t *hdr)
 static bool is_file_entry_valid(const file_entry_t *file_entry)
 {
         uint32_t crc = calc_CRC32(&file_entry->file_descriptor_address,
-                sizeof(*file_entry) - offsetof(file_entry_t, file_descriptor_address),
-                FPKG_CRC32_INIT);
+                sizeof(*file_entry) - offsetof(file_entry_t, file_descriptor_address), FPKG_CRC32_INIT);
 
         return ((file_entry->magic == FILE_ENTRY_MAGIC) and (file_entry->crc32 == crc) and
                 (file_entry->file_descriptor_address < cast(uintptr_t, file_entry)));
@@ -1006,11 +995,9 @@ static bool is_file_entry_valid(const file_entry_t *file_entry)
 static bool is_file_descriptor_valid(const file_descriptor_t *file_desc)
 {
         uint32_t crc = calc_CRC32(&file_desc->file_name_len,
-                sizeof(*file_desc) - offsetof(file_descriptor_t, file_name_len),
-                FPKG_CRC32_INIT);
+                sizeof(*file_desc) - offsetof(file_descriptor_t, file_name_len), FPKG_CRC32_INIT);
 
-        return ((file_desc->magic == FILE_DESCRIPTOR_MAGIC) and
-                (file_desc->crc32 == crc));
+        return ((file_desc->magic == FILE_DESCRIPTOR_MAGIC) and (file_desc->crc32 == crc));
 }
 
 //==============================================================================
@@ -1025,8 +1012,7 @@ static bool is_file_descriptor_valid(const file_descriptor_t *file_desc)
  * @return True if valid, otherwise false.
  */
 //==============================================================================
-static bool is_file_descriptor_name_valid(const file_descriptor_t *file_desc,
-        const char                                                *name)
+static bool is_file_descriptor_name_valid(const file_descriptor_t *file_desc, const char *name)
 {
         uint32_t crc = calc_CRC32(name, file_desc->file_name_len, FPKG_CRC32_INIT);
 

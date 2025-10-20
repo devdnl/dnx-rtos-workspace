@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
                         global->buf = malloc(buf_size);
 
                         TTY_buffer_t buf;
-                        buf.ptr  = global->buf;
+                        buf.ptr = global->buf;
                         buf.size = buf_size;
 
                         int err = ioctl(fileno(tty), IOCTL_TTY__READ_BUFFER, &buf);
@@ -124,4 +124,3 @@ int main(int argc, char *argv[])
 /*==============================================================================
   End of file
 ==============================================================================*/
-

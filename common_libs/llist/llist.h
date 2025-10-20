@@ -50,20 +50,18 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 // list foreach iterator
-#define llist_foreach(type, element, llist_t__list)\
-        for (bool __loop = true; __loop && llist_size(llist_t__list); __loop = false)\
-                for (llist_iterator_t _iterator = llist_iterator(llist_t__list); __loop; __loop = false)\
-                        for (type element = (typeof(element))llist_begin(&_iterator);\
-                             element;\
-                             element = (typeof(element))llist_iterator_next(&_iterator), __loop = false)
+#define llist_foreach(type, element, llist_t__list)                                                      \
+        for (bool __loop = true; __loop && llist_size(llist_t__list); __loop = false)                    \
+                for (llist_iterator_t _iterator = llist_iterator(llist_t__list); __loop; __loop = false) \
+                        for (type element = (typeof(element))llist_begin(&_iterator); element;           \
+                                element = (typeof(element))llist_iterator_next(&_iterator), __loop = false)
 
 // list reversed foreach iterator
-#define llist_foreach_reverse(type, element, llist_t__list)\
-        for (bool __loop = true; __loop && llist_size(llist_t__list); __loop = false)\
-                for (llist_iterator_t _iterator = llist_iterator(llist_t__list); __loop; __loop = false)\
-                        for (type element = (typeof(element))llist_end(&_iterator);\
-                             element;\
-                             element = (typeof(element))llist_iterator_prev(&_iterator), __loop = false)
+#define llist_foreach_reverse(type, element, llist_t__list)                                              \
+        for (bool __loop = true; __loop && llist_size(llist_t__list); __loop = false)                    \
+                for (llist_iterator_t _iterator = llist_iterator(llist_t__list); __loop; __loop = false) \
+                        for (type element = (typeof(element))llist_end(&_iterator); element;             \
+                                element = (typeof(element))llist_iterator_prev(&_iterator), __loop = false)
 
 // list iterator
 #define llist_foreach_iterator _iterator
@@ -99,11 +97,11 @@ typedef struct _llist llist_t;
 
 /** iterator object */
 typedef struct {
-        llist_t  *list;
-        void     *current;
-        void     *next;
-        void     *to;
-        uint32_t  magic;
+        llist_t *list;
+        void *current;
+        void *next;
+        void *to;
+        uint32_t magic;
 } llist_iterator_t;
 
 /*==============================================================================

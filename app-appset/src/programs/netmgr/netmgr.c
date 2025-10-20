@@ -57,14 +57,14 @@ Brief   Network Manager.
   Local function prototypes
 ==============================================================================*/
 static void handle_interface(const char *config_file);
-static int  configure_ethernet(void);
+static int configure_ethernet(void);
 static void ifup_by_config(void);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
-        conf_parser_t   *conf;
+        conf_parser_t *conf;
         netmgr_shared_t *shared;
 };
 
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
         }
 
-        char *option    = argv[1];
+        char *option = argv[1];
         char *conf_file = argv[2];
 
         if (isstreq(option, "--daemon")) {
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
                         return EXIT_FAILURE;
                 }
 
-                void  *mem;
+                void *mem;
                 size_t mem_size;
                 if (shmat(NETMGR_SHM, &mem, &mem_size) == 0) {
                         debug("daemon is already running!\n");
@@ -121,8 +121,8 @@ int main(int argc, char *argv[])
                 }
 
                 global->shared->reload_conf = true;
-                global->shared->conf_path   = conf_file;
-                global->shared->ready       = true;
+                global->shared->conf_path = conf_file;
+                global->shared->ready = true;
 
                 handle_interface(conf_file);
 
@@ -169,7 +169,7 @@ static void handle_interface(const char *config_file)
 
                 srand(get_uptime_ms());
                 char hwaddr[32] = "50:67:21";
-                u8_t n          = strlen(hwaddr);
+                u8_t n = strlen(hwaddr);
                 for (size_t i = 0; i < 3; i++) {
                         n += snprintf(hwaddr + n, sizeof(hwaddr) - n, ":%02X", rand() & 0xFF);
                 }
@@ -207,7 +207,7 @@ static void handle_interface(const char *config_file)
                 }
 
                 NET_INET_status_t status;
-                NET_family_t      family;
+                NET_family_t family;
                 if (ifstatus("inet", &family, &status, sizeof(status)) == 0) {
 
                         switch (status.state) {
@@ -287,8 +287,8 @@ static int configure_ethernet(void)
         }
 
         conf.auto_negotiation = conf_parser__is_value_true(conf_autoneg);
-        conf.speed  = isstreq(conf_speed, NETMGR_CONF_KEY__INTERFACE_SPEED_100M) ? ETHIF_SPEED__100Mbps
-                                                                                 : ETHIF_SPEED__10Mbps;
+        conf.speed = isstreq(conf_speed, NETMGR_CONF_KEY__INTERFACE_SPEED_100M) ? ETHIF_SPEED__100Mbps
+                                                                                : ETHIF_SPEED__10Mbps;
         conf.duplex = isstreq(conf_duplex, NETMGR_CONF_KEY__INTERFACE_DUPLEX_FULL) ? ETHIF_DUPLEX__FULL
                                                                                    : ETHIF_DUPLEX__HALF;
 
@@ -304,7 +304,7 @@ static int configure_ethernet(void)
 
                 if (not err) {
                         errno = 0;
-                        err   = ifadd("inet", NET_FAMILY__INET, conf_if_path);
+                        err = ifadd("inet", NET_FAMILY__INET, conf_if_path);
                         debug("ifadd: %s\n", conf_if_path, strerror(errno));
                 }
 
@@ -327,7 +327,7 @@ static void ifup_by_config(void)
         const char *conf_ip_address = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__IP_ADDRESS);
         const char *conf_ip_gateway = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__IP_GATEWAY);
         const char *conf_ip_netmask = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__IP_NETMASK);
-        const char *conf_ip_mode    = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__IP_MODE);
+        const char *conf_ip_mode = conf_parser__get_value(global->conf, NETMGR_CONF_KEY__IP_MODE);
 
         bool dhcp_enable = true;
         if (isstreq(conf_ip_mode, NETMGR_CONF_KEY__IP_MODE_DHCP)) {
@@ -360,16 +360,16 @@ static void ifup_by_config(void)
 
         if (dhcp_enable) {
                 debug("applying DHCP configuration...\n");
-                netcfg.mode    = NET_INET_MODE__DHCP_START;
+                netcfg.mode = NET_INET_MODE__DHCP_START;
                 netcfg.address = NET_INET_IPv4_ANY;
-                netcfg.mask    = NET_INET_IPv4_ANY;
+                netcfg.mask = NET_INET_IPv4_ANY;
                 netcfg.gateway = NET_INET_IPv4_ANY;
 
         } else {
                 debug("applying static configuration...\n");
-                netcfg.mode    = NET_INET_MODE__STATIC;
+                netcfg.mode = NET_INET_MODE__STATIC;
                 netcfg.address = NET_INET_IPv4(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
-                netcfg.mask    = NET_INET_IPv4(ip_netmask[0], ip_netmask[1], ip_netmask[2], ip_netmask[3]);
+                netcfg.mask = NET_INET_IPv4(ip_netmask[0], ip_netmask[1], ip_netmask[2], ip_netmask[3]);
                 netcfg.gateway = NET_INET_IPv4(ip_gateway[0], ip_gateway[1], ip_gateway[2], ip_gateway[3]);
         }
 

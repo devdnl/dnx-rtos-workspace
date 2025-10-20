@@ -49,54 +49,57 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define USER_NAME               "dnx"
-#define PASSWORD                "dnx"
-#define FTP_PORT                21
-#define FTP_PASV_PORT_START     2121
+#define USER_NAME           "dnx"
+#define PASSWORD            "dnx"
+#define FTP_PORT            21
+#define FTP_PASV_PORT_START 2121
 
-#define TIMEOUT_SEND            5000
-#define TIMEOUT_RECV            5000
+#define TIMEOUT_SEND        5000
+#define TIMEOUT_RECV        5000
 
-#define VERBOSE(...)            if (global->verbose) {printf(__VA_ARGS__);}
+#define VERBOSE(...)                 \
+        if (global->verbose) {       \
+                printf(__VA_ARGS__); \
+        }
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
 typedef enum {
-    FTP_CMD__ABOR,       //!< abort a file transfer
-    FTP_CMD__CWD ,       //!< change working directory
-    FTP_CMD__DELE,       //!< delete a remote file
-    FTP_CMD__LIST,       //!< list remote files
-    FTP_CMD__MDTM,       //!< return the modification time of a file
-    FTP_CMD__MKD ,       //!< make a remote directory
-    FTP_CMD__NLST,       //!< name list of remote directory
-    FTP_CMD__PASS,       //!< send password
-    FTP_CMD__PASV,       //!< enter passive mode
-    FTP_CMD__PORT,       //!< open a data port
-    FTP_CMD__PWD ,       //!< print working directory
-    FTP_CMD__QUIT,       //!< terminate the connection
-    FTP_CMD__RETR,       //!< retrieve a remote file
-    FTP_CMD__RMD ,       //!< remove a remote directory
-    FTP_CMD__RNFR,       //!< rename from
-    FTP_CMD__RNTO,       //!< rename to
-    FTP_CMD__SITE,       //!< site-specific commands
-    FTP_CMD__SIZE,       //!< return the size of a file
-    FTP_CMD__STOR,       //!< store a file on the remote host
-    FTP_CMD__TYPE,       //!< set transfer type
-    FTP_CMD__USER,       //!< send username
-    // Less common commands
-    FTP_CMD__ACCT,       //!< *send account information
-    FTP_CMD__APPE,       //!< append to a remote file
-    FTP_CMD__CDUP,       //!< CWD to the parent of the current directory
-    FTP_CMD__HELP,       //!< return help on using the server
-    FTP_CMD__MODE,       //!< set transfer mode
-    FTP_CMD__NOOP,       //!< do nothing
-    FTP_CMD__REIN,       //!< *reinitialize the connection
-    FTP_CMD__STAT,       //!< return server status
-    FTP_CMD__STOU,       //!< store a file uniquely
-    FTP_CMD__STRU,       //!< set file transfer structure
-    FTP_CMD__SYST,       //!< return system type
-    FTP_CMD__COUNT
+        FTP_CMD__ABOR, //!< abort a file transfer
+        FTP_CMD__CWD,  //!< change working directory
+        FTP_CMD__DELE, //!< delete a remote file
+        FTP_CMD__LIST, //!< list remote files
+        FTP_CMD__MDTM, //!< return the modification time of a file
+        FTP_CMD__MKD,  //!< make a remote directory
+        FTP_CMD__NLST, //!< name list of remote directory
+        FTP_CMD__PASS, //!< send password
+        FTP_CMD__PASV, //!< enter passive mode
+        FTP_CMD__PORT, //!< open a data port
+        FTP_CMD__PWD,  //!< print working directory
+        FTP_CMD__QUIT, //!< terminate the connection
+        FTP_CMD__RETR, //!< retrieve a remote file
+        FTP_CMD__RMD,  //!< remove a remote directory
+        FTP_CMD__RNFR, //!< rename from
+        FTP_CMD__RNTO, //!< rename to
+        FTP_CMD__SITE, //!< site-specific commands
+        FTP_CMD__SIZE, //!< return the size of a file
+        FTP_CMD__STOR, //!< store a file on the remote host
+        FTP_CMD__TYPE, //!< set transfer type
+        FTP_CMD__USER, //!< send username
+        // Less common commands
+        FTP_CMD__ACCT, //!< *send account information
+        FTP_CMD__APPE, //!< append to a remote file
+        FTP_CMD__CDUP, //!< CWD to the parent of the current directory
+        FTP_CMD__HELP, //!< return help on using the server
+        FTP_CMD__MODE, //!< set transfer mode
+        FTP_CMD__NOOP, //!< do nothing
+        FTP_CMD__REIN, //!< *reinitialize the connection
+        FTP_CMD__STAT, //!< return server status
+        FTP_CMD__STOU, //!< store a file uniquely
+        FTP_CMD__STRU, //!< set file transfer structure
+        FTP_CMD__SYST, //!< return system type
+        FTP_CMD__COUNT
 } FTP_cmd_t;
 
 /*==============================================================================
@@ -110,16 +113,16 @@ GLOBAL_VARIABLES_SECTION {
         bool verbose;
 
         struct thread {
-                tid_t       id;
-                SOCKET     *socket;         // cmd channel
-                SOCKET     *sock_pasv;      // data channel
-                char       *RNFR;
-                char       *cmd_args;
-                uint16_t    data_port;
-                char        CWD[256];
-                char        buf[8192];
-                int         bufsz;
-                bool        quit;
+                tid_t id;
+                SOCKET *socket;    // cmd channel
+                SOCKET *sock_pasv; // data channel
+                char *RNFR;
+                char *cmd_args;
+                uint16_t data_port;
+                char CWD[256];
+                char buf[8192];
+                int bufsz;
+                bool quit;
         } thread[8];
 };
 
@@ -160,18 +163,13 @@ static int send_file_list(struct thread *self, SOCKET *socket)
                         struct tm tm;
                         localtime_r(&fsta.st_mtime, &tm);
 
-                        int sz = snprintf(self->buf, sizeof(self->buf),
-                                          "%crw-r--r-- 1 %s  %s %u ",
-                                          (S_ISDIR(fsta.st_mode) ? 'd' : '-'),
-                                          "root",
-                                          "root",
-                                          cast(uint, fsta.st_size));
+                        int sz = snprintf(self->buf, sizeof(self->buf), "%crw-r--r-- 1 %s  %s %u ",
+                                (S_ISDIR(fsta.st_mode) ? 'd' : '-'), "root", "root",
+                                cast(uint, fsta.st_size));
 
-                        sz += strftime(self->buf + sz, sizeof(self->buf) - sz,
-                                       "%b %d %H:%M ", &tm);
+                        sz += strftime(self->buf + sz, sizeof(self->buf) - sz, "%b %d %H:%M ", &tm);
 
-                        sz += snprintf(self->buf + sz, sizeof(self->buf) - sz,
-                                       "%s\n", name);
+                        sz += snprintf(self->buf + sz, sizeof(self->buf) - sz, "%s\n", name);
 
                         if (socket_send(socket, self->buf, sz, NET_FLAGS__COPY) == sz) {
                                 VERBOSE(self->buf);
@@ -182,7 +180,7 @@ static int send_file_list(struct thread *self, SOCKET *socket)
                 }
 
         } else {
-                errno    = 0;
+                errno = 0;
                 DIR *dir = opendir(self->CWD);
                 if (dir) {
                         dirent_t *dirent = NULL;
@@ -194,18 +192,14 @@ static int send_file_list(struct thread *self, SOCKET *socket)
                                 struct tm tm;
                                 localtime_r(&fsta.st_mtime, &tm);
 
-                                int sz = snprintf(self->buf, sizeof(self->buf),
-                                                  "%crw-r--r-- 1 %s %s %u ",
-                                                  (S_ISDIR(dirent->mode) ? 'd' : '-'),
-                                                  "root",
-                                                  "root",
-                                                  cast(uint, dirent->size));
+                                int sz = snprintf(self->buf, sizeof(self->buf), "%crw-r--r-- 1 %s %s %u ",
+                                        (S_ISDIR(dirent->mode) ? 'd' : '-'), "root", "root",
+                                        cast(uint, dirent->size));
 
-                                sz += strftime(self->buf + sz, sizeof(self->buf) - sz,
-                                               "%b %d %Y ", &tm);
+                                sz += strftime(self->buf + sz, sizeof(self->buf) - sz, "%b %d %Y ", &tm);
 
-                                sz += snprintf(self->buf + sz, sizeof(self->buf) - sz,
-                                               "%s\n", dirent->d_name);
+                                sz += snprintf(self->buf + sz, sizeof(self->buf) - sz, "%s\n",
+                                        dirent->d_name);
 
                                 if (socket_send(socket, self->buf, sz, NET_FLAGS__COPY) == sz) {
                                         VERBOSE(self->buf);
@@ -237,7 +231,7 @@ static int receive_file(struct thread *self, const char *mode, SOCKET *socket)
 {
         socket_set_recv_timeout(socket, TIMEOUT_RECV);
 
-        int   err  = 1;
+        int err = 1;
         FILE *file = fopen(self->cmd_args, mode);
         if (file) {
 
@@ -246,8 +240,8 @@ static int receive_file(struct thread *self, const char *mode, SOCKET *socket)
 
                 while (not err and not xfer_end) {
                         size_t buflen = sizeof(self->buf);
-                        size_t blksz  = 0;
-                        char   *buf   = self->buf;
+                        size_t blksz = 0;
+                        char *buf = self->buf;
 
                         while (buflen > 0) {
                                 int sz = socket_read(socket, buf, buflen);
@@ -301,7 +295,7 @@ static int transmit_file(struct thread *self, SOCKET *socket)
 {
         socket_set_send_timeout(socket, TIMEOUT_SEND);
 
-        int   err  = 1;
+        int err = 1;
         FILE *file = fopen(self->cmd_args, "r");
         if (file) {
                 struct stat stat;
@@ -351,7 +345,7 @@ static int transmit_file(struct thread *self, SOCKET *socket)
 static void handle_cmd_USER(struct thread *self)
 {
         if (isstreq(self->cmd_args, USER_NAME)) {
-                static const char *PASS_NEEDED  = "331 Enter user password\r\n";
+                static const char *PASS_NEEDED = "331 Enter user password\r\n";
                 socket_send(self->socket, PASS_NEEDED, strlen(PASS_NEEDED), NET_FLAGS__COPY);
                 VERBOSE(PASS_NEEDED);
         } else {
@@ -370,7 +364,7 @@ static void handle_cmd_USER(struct thread *self)
 static void handle_cmd_PASS(struct thread *self)
 {
         if (isstreq(self->cmd_args, PASSWORD)) {
-                static const char *PASS_OK  = "230 Hello!\r\n";
+                static const char *PASS_OK = "230 Hello!\r\n";
                 socket_send(self->socket, PASS_OK, strlen(PASS_OK), NET_FLAGS__COPY);
                 VERBOSE(PASS_OK);
         } else {
@@ -394,7 +388,6 @@ static void handle_cmd_QUIT(struct thread *self)
 
         self->quit = true;
 }
-
 
 //==============================================================================
 /**
@@ -464,14 +457,10 @@ static void handle_cmd_PASV(struct thread *self)
 
         if (ifstatus("inet", &family, &status, sizeof(status)) == 0) {
 
-                int n = snprintf(self->buf, sizeof(self->buf),
-                                 "227 =%d,%d,%d,%d,%d,%d\r\n",
-                                 NET_INET_IPv4_a(status.address),
-                                 NET_INET_IPv4_b(status.address),
-                                 NET_INET_IPv4_c(status.address),
-                                 NET_INET_IPv4_d(status.address),
-                                 (self->data_port >> 8) & 0xFF,
-                                 (self->data_port & 0xFF) );
+                int n = snprintf(self->buf, sizeof(self->buf), "227 =%d,%d,%d,%d,%d,%d\r\n",
+                        NET_INET_IPv4_a(status.address), NET_INET_IPv4_b(status.address),
+                        NET_INET_IPv4_c(status.address), NET_INET_IPv4_d(status.address),
+                        (self->data_port >> 8) & 0xFF, (self->data_port & 0xFF));
 
                 socket_send(self->socket, self->buf, n, NET_FLAGS__COPY);
                 VERBOSE(self->buf);
@@ -603,8 +592,7 @@ static void handle_cmd_SIZE(struct thread *self)
 {
         struct stat st;
         if (stat(self->cmd_args, &st) == 0) {
-                snprintf(self->buf, sizeof(self->buf),
-                         "250 %u\r\n", cast(uint, st.st_size));
+                snprintf(self->buf, sizeof(self->buf), "250 %u\r\n", cast(uint, st.st_size));
         } else {
                 strcpy(self->buf, "550 No such file.\r\n");
         }
@@ -796,8 +784,8 @@ static void handle_cmd_NOOP(struct thread *self)
 //==============================================================================
 static void handle_cmd_REIN(struct thread *self)
 {
-//        strlcpy(self->CWD, self->CWD_arg, sizeof(global->PWD));
-//        chdir_(global->PWD);
+        //        strlcpy(self->CWD, self->CWD_arg, sizeof(global->PWD));
+        //        chdir_(global->PWD);
 
         static const char *OK = "200 OK\r\n";
         socket_send(self->socket, OK, strlen(OK), NET_FLAGS__COPY);
@@ -859,19 +847,19 @@ static FTP_cmd_t get_cmd(struct thread *self)
 {
         static const char *CMD_STR[] = {
                 [FTP_CMD__ABOR] = "ABOR",
-                [FTP_CMD__CWD ] = "CWD",
+                [FTP_CMD__CWD] = "CWD",
                 [FTP_CMD__DELE] = "DELE",
                 [FTP_CMD__LIST] = "LIST",
                 [FTP_CMD__MDTM] = "MDTM",
-                [FTP_CMD__MKD ] = "MKD",
+                [FTP_CMD__MKD] = "MKD",
                 [FTP_CMD__NLST] = "NLST",
                 [FTP_CMD__PASS] = "PASS",
                 [FTP_CMD__PASV] = "PASV",
                 [FTP_CMD__PORT] = "PORT",
-                [FTP_CMD__PWD ] = "PWD",
+                [FTP_CMD__PWD] = "PWD",
                 [FTP_CMD__QUIT] = "QUIT",
                 [FTP_CMD__RETR] = "RETR",
-                [FTP_CMD__RMD ] = "RMD",
+                [FTP_CMD__RMD] = "RMD",
                 [FTP_CMD__RNFR] = "RNFR",
                 [FTP_CMD__RNTO] = "RNTO",
                 [FTP_CMD__SITE] = "SITE",
@@ -901,8 +889,7 @@ static FTP_cmd_t get_cmd(struct thread *self)
                 if (strncasecmp(CMD_STR[cmd], self->buf, cmdlen) == 0) {
 
                         for (int i = 0; i < self->bufsz; i++) {
-                                if (  self->buf[i] == '\r'
-                                   || self->buf[i] == '\n') {
+                                if (self->buf[i] == '\r' || self->buf[i] == '\n') {
 
                                         self->buf[i] = '\0';
                                         break;
@@ -921,7 +908,6 @@ static FTP_cmd_t get_cmd(struct thread *self)
 
         return cmd;
 }
-
 
 //==============================================================================
 /**
@@ -942,15 +928,12 @@ static int serve(void *arg)
         self->data_port = FTP_PASV_PORT_START + self->id - 1;
         self->cmd_args = NULL;
         self->bufsz = 0;
-        self->quit  = false;
+        self->quit = false;
 
         if (!self->sock_pasv) {
                 self->sock_pasv = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
                 if (self->sock_pasv) {
-                        NET_INET_sockaddr_t ADDR_ANY = {
-                                .addr = NET_INET_IPv4_ANY,
-                                .port = self->data_port
-                        };
+                        NET_INET_sockaddr_t ADDR_ANY = {.addr = NET_INET_IPv4_ANY, .port = self->data_port};
 
                         int err = socket_bind(self->sock_pasv, &ADDR_ANY, sizeof(ADDR_ANY));
                         if (!err) {
@@ -966,15 +949,11 @@ static int serve(void *arg)
                 }
         }
 
-
         NET_INET_sockaddr_t addr;
         socket_get_address(self->socket, &addr, sizeof(addr));
 
-        VERBOSE("New connection from: %d.%d.%d.%d\n",
-                NET_INET_IPv4_a(addr.addr),
-                NET_INET_IPv4_b(addr.addr),
-                NET_INET_IPv4_c(addr.addr),
-                NET_INET_IPv4_d(addr.addr));
+        VERBOSE("New connection from: %d.%d.%d.%d\n", NET_INET_IPv4_a(addr.addr), NET_INET_IPv4_b(addr.addr),
+                NET_INET_IPv4_c(addr.addr), NET_INET_IPv4_d(addr.addr));
 
         // send server features
         static const char *WELCOME = "220 Service ready\r\n";
@@ -983,8 +962,7 @@ static int serve(void *arg)
         // receive command
         while (not self->quit) {
                 errno = 0;
-                self->bufsz = socket_recv(self->socket, self->buf, sizeof(self->buf),
-                                          NET_FLAGS__FREEBUF);
+                self->bufsz = socket_recv(self->socket, self->buf, sizeof(self->buf), NET_FLAGS__FREEBUF);
 
                 if (self->bufsz == -1) {
                         VERBOSE("CMD stream: %s\n", strerror(errno));
@@ -994,39 +972,105 @@ static int serve(void *arg)
                 }
 
                 switch (get_cmd(self)) {
-                case FTP_CMD__ABOR: handle_cmd_ABOR(self); break;
-                case FTP_CMD__CWD : handle_cmd_CWD(self); break;
-                case FTP_CMD__DELE: handle_cmd_DELE_RMD(self); break;
-                case FTP_CMD__RMD : handle_cmd_DELE_RMD(self); break;
-                case FTP_CMD__LIST: handle_cmd_LIST(self); break;
-                case FTP_CMD__MDTM: handle_cmd_unknown(self); break;
-                case FTP_CMD__MKD : handle_cmd_MKD(self); break;
-                case FTP_CMD__NLST: handle_cmd_unknown(self); break;
-                case FTP_CMD__PASS: handle_cmd_PASS(self); break;
-                case FTP_CMD__PASV: handle_cmd_PASV(self); break;
-                case FTP_CMD__PORT: handle_cmd_PORT(self); break;
-                case FTP_CMD__PWD : handle_cmd_PWD(self); break;
-                case FTP_CMD__QUIT: handle_cmd_QUIT(self); break;
-                case FTP_CMD__RETR: handle_cmd_RETR(self); break;
-                case FTP_CMD__RNFR: handle_cmd_RNFR(self); break;
-                case FTP_CMD__RNTO: handle_cmd_RNTO(self); break;
-                case FTP_CMD__SITE: handle_cmd_unknown(self); break;
-                case FTP_CMD__SIZE: handle_cmd_SIZE(self); break;
-                case FTP_CMD__STOR: handle_cmd_STOR_APPE(self, true); break;
-                case FTP_CMD__APPE: handle_cmd_STOR_APPE(self, false); break;
-                case FTP_CMD__STOU: handle_cmd_unknown(self); break;
-                case FTP_CMD__TYPE: handle_cmd_TYPE(self); break;
-                case FTP_CMD__USER: handle_cmd_USER(self); break;
-                case FTP_CMD__ACCT: handle_cmd_unknown(self); break;
-                case FTP_CMD__CDUP: handle_cmd_unknown(self); break;
-                case FTP_CMD__HELP: handle_cmd_unknown(self); break;
-                case FTP_CMD__MODE: handle_cmd_MODE(self); break;
-                case FTP_CMD__NOOP: handle_cmd_NOOP(self); break;
-                case FTP_CMD__REIN: handle_cmd_REIN(self); break;
-                case FTP_CMD__STAT: handle_cmd_STAT(self); break;
-                case FTP_CMD__STRU: handle_cmd_STRU(self); break;
-                case FTP_CMD__SYST: handle_cmd_SYST(self); break;
-                default: handle_cmd_unknown(self); break;
+                case FTP_CMD__ABOR:
+                        handle_cmd_ABOR(self);
+                        break;
+                case FTP_CMD__CWD:
+                        handle_cmd_CWD(self);
+                        break;
+                case FTP_CMD__DELE:
+                        handle_cmd_DELE_RMD(self);
+                        break;
+                case FTP_CMD__RMD:
+                        handle_cmd_DELE_RMD(self);
+                        break;
+                case FTP_CMD__LIST:
+                        handle_cmd_LIST(self);
+                        break;
+                case FTP_CMD__MDTM:
+                        handle_cmd_unknown(self);
+                        break;
+                case FTP_CMD__MKD:
+                        handle_cmd_MKD(self);
+                        break;
+                case FTP_CMD__NLST:
+                        handle_cmd_unknown(self);
+                        break;
+                case FTP_CMD__PASS:
+                        handle_cmd_PASS(self);
+                        break;
+                case FTP_CMD__PASV:
+                        handle_cmd_PASV(self);
+                        break;
+                case FTP_CMD__PORT:
+                        handle_cmd_PORT(self);
+                        break;
+                case FTP_CMD__PWD:
+                        handle_cmd_PWD(self);
+                        break;
+                case FTP_CMD__QUIT:
+                        handle_cmd_QUIT(self);
+                        break;
+                case FTP_CMD__RETR:
+                        handle_cmd_RETR(self);
+                        break;
+                case FTP_CMD__RNFR:
+                        handle_cmd_RNFR(self);
+                        break;
+                case FTP_CMD__RNTO:
+                        handle_cmd_RNTO(self);
+                        break;
+                case FTP_CMD__SITE:
+                        handle_cmd_unknown(self);
+                        break;
+                case FTP_CMD__SIZE:
+                        handle_cmd_SIZE(self);
+                        break;
+                case FTP_CMD__STOR:
+                        handle_cmd_STOR_APPE(self, true);
+                        break;
+                case FTP_CMD__APPE:
+                        handle_cmd_STOR_APPE(self, false);
+                        break;
+                case FTP_CMD__STOU:
+                        handle_cmd_unknown(self);
+                        break;
+                case FTP_CMD__TYPE:
+                        handle_cmd_TYPE(self);
+                        break;
+                case FTP_CMD__USER:
+                        handle_cmd_USER(self);
+                        break;
+                case FTP_CMD__ACCT:
+                        handle_cmd_unknown(self);
+                        break;
+                case FTP_CMD__CDUP:
+                        handle_cmd_unknown(self);
+                        break;
+                case FTP_CMD__HELP:
+                        handle_cmd_unknown(self);
+                        break;
+                case FTP_CMD__MODE:
+                        handle_cmd_MODE(self);
+                        break;
+                case FTP_CMD__NOOP:
+                        handle_cmd_NOOP(self);
+                        break;
+                case FTP_CMD__REIN:
+                        handle_cmd_REIN(self);
+                        break;
+                case FTP_CMD__STAT:
+                        handle_cmd_STAT(self);
+                        break;
+                case FTP_CMD__STRU:
+                        handle_cmd_STRU(self);
+                        break;
+                case FTP_CMD__SYST:
+                        handle_cmd_SYST(self);
+                        break;
+                default:
+                        handle_cmd_unknown(self);
+                        break;
                 }
 
                 self->bufsz = 0;
@@ -1037,7 +1081,7 @@ static int serve(void *arg)
                 self->RNFR = NULL;
         }
 
-        finish:
+finish:
         VERBOSE("Connection closed.\n");
         socket_close(self->socket);
         self->id = 0;
@@ -1063,7 +1107,7 @@ int main(int argc, char *argv[])
                 if (isstreq(argv[i], "-v")) {
                         global->verbose = true;
                 } else if (isstreq(argv[i], "-c")) {
-//                        chdir(argv[i+1]);
+                        //                        chdir(argv[i+1]);
                 } else if (isstreq(argv[i], "--wait-for-network")) {
                         wait_for_network = true;
                 }
@@ -1072,7 +1116,7 @@ int main(int argc, char *argv[])
         while (wait_for_network) {
                 sleep(1);
 
-                NET_family_t      family;
+                NET_family_t family;
                 NET_INET_status_t status;
                 if (ifstatus("inet", &family, &status, sizeof(status)) == 0) {
 
@@ -1086,10 +1130,7 @@ int main(int argc, char *argv[])
 
         SOCKET *socket = socket_open("inet", NET_SOCKET_TYPE__STREAM, 0);
         if (socket) {
-                static const NET_INET_sockaddr_t ADDR_ANY = {
-                        .addr = NET_INET_IPv4_ANY,
-                        .port = FTP_PORT
-                };
+                static const NET_INET_sockaddr_t ADDR_ANY = {.addr = NET_INET_IPv4_ANY, .port = FTP_PORT};
 
                 if (socket_bind(socket, &ADDR_ANY, sizeof(ADDR_ANY)) == 0) {
 
@@ -1111,7 +1152,8 @@ int main(int argc, char *argv[])
                                                                 attr.priority = 0;
                                                                 attr.stack_depth = STACK_DEPTH_MEDIUM;
 
-                                                                global->thread[i].id = thread_create(serve, &attr, &global->thread[i]);
+                                                                global->thread[i].id = thread_create(serve,
+                                                                        &attr, &global->thread[i]);
                                                                 if (global->thread[i].id) {
                                                                         global->thread[i].socket = new_socket;
                                                                         started = true;

@@ -68,8 +68,8 @@ extern "C" {
   Exported object types
 ==============================================================================*/
 typedef struct {
-        bool        ready;
-        bool        reload_conf;
+        bool ready;
+        bool reload_conf;
         const char *conf_path;
 } netmgr_shared_t;
 

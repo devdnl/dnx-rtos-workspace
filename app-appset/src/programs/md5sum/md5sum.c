@@ -55,9 +55,9 @@ static void calculate_hash(const char *filename);
   Local objects
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
-        MD5_CTX  ctx;
-        uint8_t  results[16];
-        uint8_t  buf[32768];
+        MD5_CTX ctx;
+        uint8_t results[16];
+        uint8_t buf[32768];
 };
 
 /*==============================================================================

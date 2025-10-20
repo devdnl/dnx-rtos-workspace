@@ -120,15 +120,15 @@ int main(int argc, char *argv[])
 
                         struct tm t;
                         t.tm_hour = hour;
-                        t.tm_min  = minute;
-                        t.tm_sec  = second;
+                        t.tm_min = minute;
+                        t.tm_sec = second;
                         t.tm_mday = day;
-                        t.tm_mon  = month - 1;
+                        t.tm_mon = month - 1;
                         t.tm_year = year - 1900;
 
                         errno = 0;
                         struct timeval tv;
-                        tv.tv_sec  = mktime(&t);
+                        tv.tv_sec = mktime(&t);
                         tv.tv_usec = 0;
                         if (settimeofday(&tv, NULL) != 0) {
                                 perror(argv[0]);
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
                         errno = 0;
                         struct timezone tz;
                         tz.tz_minuteswest = (diff / 60);
-                        tz.tz_dsttime     = 0;
+                        tz.tz_dsttime = 0;
                         if (settimeofday(NULL, &tz) != 0) {
                                 perror(argv[0]);
                                 return EXIT_FAILURE;
@@ -171,15 +171,15 @@ int main(int argc, char *argv[])
                 }
 
                 if (argv[i][0] == '+') {
-                        char *fmt     = &argv[i][1];
+                        char *fmt = &argv[i][1];
                         char *out_buf = global->buf;
-                        int   out_len = sizeof(global->buf);
+                        int out_len = sizeof(global->buf);
 
                         while ((*fmt != '\0') and (out_len > 0)) {
                                 if (*fmt == '%') {
                                         fmt++;
-                                        char   specifier = *fmt++;
-                                        size_t n         = 0;
+                                        char specifier = *fmt++;
+                                        size_t n = 0;
 
                                         switch (specifier) {
                                         case '\0':

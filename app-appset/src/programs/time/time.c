@@ -46,8 +46,8 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define CWD_LEN         80
-#define CMD_LEN         100
+#define CWD_LEN 80
+#define CMD_LEN 100
 
 /*==============================================================================
   Local types, enums definitions
@@ -102,11 +102,11 @@ int main(int argc, char *argv[])
 
         process_attr_t attr;
         memset(&attr, 0, sizeof(attr));
-        attr.cwd       = global->cwd;
-        attr.fd_stdin  = STDIN_FILENO;
+        attr.cwd = global->cwd;
+        attr.fd_stdin = STDIN_FILENO;
         attr.fd_stdout = STDOUT_FILENO;
         attr.fd_stderr = STDERR_FILENO;
-        attr.detached  = false;
+        attr.detached = false;
 
         pid_t pid = process_create(global->cmd, &attr);
         if (pid) {

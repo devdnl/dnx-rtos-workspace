@@ -62,7 +62,7 @@
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
         time_t current_time_unix;
-        int    current_year;
+        int current_year;
         time_t beginning_of_summer_time;
         time_t end_of_summer_time;
 };
@@ -84,10 +84,10 @@ static void calculate_beginning_of_daylight_saving_time(void)
 {
         struct tm tm;
         tm.tm_hour = 1;
-        tm.tm_min  = 0;
-        tm.tm_sec  = 0;
+        tm.tm_min = 0;
+        tm.tm_sec = 0;
         tm.tm_mday = 31;
-        tm.tm_mon  = 2;
+        tm.tm_mon = 2;
         tm.tm_year = global->current_year;
 
         time_t time = mktime(&tm);
@@ -107,10 +107,10 @@ static void calculate_end_of_daylight_saving_time(void)
 {
         struct tm tm;
         tm.tm_hour = 0;
-        tm.tm_min  = 59;
-        tm.tm_sec  = 59;
+        tm.tm_min = 59;
+        tm.tm_sec = 59;
         tm.tm_mday = 31;
-        tm.tm_mon  = 9;
+        tm.tm_mon = 9;
         tm.tm_year = global->current_year;
 
         time_t time = mktime(&tm);
@@ -164,11 +164,11 @@ int main(int argc, char *argv[])
 
                         if (is_summer_time()) {
                                 tz.tz_minuteswest = TIMEZONE_SUMMER / 60;
-                                tz.tz_dsttime     = 1;
+                                tz.tz_dsttime = 1;
 
                         } else {
                                 tz.tz_minuteswest = TIMEZONE_WINTER / 60;
-                                tz.tz_dsttime     = 1;
+                                tz.tz_dsttime = 1;
                         }
 
                         settimeofday(NULL, &tz);

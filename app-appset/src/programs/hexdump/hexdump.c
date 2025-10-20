@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
         }
 
-        u32_t seek  = 0;
+        u32_t seek = 0;
         u32_t bytes = UINT32_MAX;
 
         if (argc >= 3) {
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
                         }
 
                         u32_t seek = ftell(f);
-                        u32_t len  = min(sizeof(global->buffer), bytes);
+                        u32_t len = min(sizeof(global->buffer), bytes);
 
                         size_t n = fread(global->buffer, 1, len, f);
 
@@ -159,7 +159,9 @@ int main(int argc, char *argv[])
 
                         bytes -= n;
 
-                        if (n == 0) break;
+                        if (n == 0) {
+                                break;
+                        }
 
                 } while ((bytes > 0) && !feof(f));
 
@@ -178,4 +180,3 @@ int main(int argc, char *argv[])
 /*==============================================================================
   End of file
 ==============================================================================*/
-

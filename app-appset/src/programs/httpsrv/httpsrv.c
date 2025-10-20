@@ -1310,7 +1310,7 @@ static int execute_file(httpsrv_thread_t *self, const char *url)
                 int err = httpsrv_interpreter_dofile(self, file_path);
                 if (err) {
                         const char *msg = "<font color='red'><b>SCRIPT ERROR</b></font>";
-                        socket_send(self->socket, msg, strlen(msg), NET_FLAGS__MORE);
+                        socket_send(self->socket, msg, strlen(msg), 0);
                 }
 
                 return err;

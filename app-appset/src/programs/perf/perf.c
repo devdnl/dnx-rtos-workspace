@@ -61,8 +61,8 @@ static int perf_thread(void *arg);
   Local objects
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION_BEGIN
-u8_t  buf[256];
-u8_t  hash[SHA256_BLOCK_SIZE];
+u8_t buf[256];
+u8_t hash[SHA256_BLOCK_SIZE];
 u32_t cpu_freq;
 GLOBAL_VARIABLES_SECTION_END
 
@@ -121,11 +121,9 @@ int main(int argc, char *argv[])
 
         puts("CPU performance test in progress...");
 
-        static const thread_attr_t THREAD_ATTR = {
-                .stack_depth = STACK_DEPTH_LOW,
-                .priority    = PRIORITY_HIGHEST,
-                .detached    = false
-        };
+        static const thread_attr_t THREAD_ATTR = {.stack_depth = STACK_DEPTH_LOW,
+                .priority = PRIORITY_HIGHEST,
+                .detached = false};
 
         thread_join(thread_create(perf_thread, &THREAD_ATTR, NULL), NULL);
 
@@ -157,18 +155,18 @@ static int perf_thread(void *arg)
                 sha256_update(&ctx, global->buf, sizeof(global->buf));
                 sha256_final(&ctx, global->hash);
 
-                snprintf((char*)global->buf, sizeof(global->buf), "HASH: ");
+                snprintf((char *)global->buf, sizeof(global->buf), "HASH: ");
                 for (size_t i = 0; i < SHA256_BLOCK_SIZE; i++) {
-                        snprintf((char*)global->buf, sizeof(global->buf), "%02X", global->hash[i]);
+                        snprintf((char *)global->buf, sizeof(global->buf), "%02X", global->hash[i]);
                 }
 
                 double d1 = (double)global->hash[0];
                 double d2 = (double)global->buf[3];
-                snprintf((char*)global->buf, sizeof(global->buf), "%f", d1 / d2);
+                snprintf((char *)global->buf, sizeof(global->buf), "%f", d1 / d2);
 
                 float f1 = (float)global->hash[2];
                 float f2 = (float)global->buf[5];
-                snprintf((char*)global->buf, sizeof(global->buf), "%f", f1 / f2);
+                snprintf((char *)global->buf, sizeof(global->buf), "%f", f1 / f2);
 
                 n++;
         }
@@ -177,8 +175,7 @@ static int perf_thread(void *arg)
         float dt = (tstop - tstart) / 1000.0;
         float pt = (double)n / dt;
 
-        printf("Result: %.1f pt, %0.3f pt/MHz\n",
-               pt, pt / (float)((double)global->cpu_freq / 1e6));
+        printf("Result: %.1f pt, %0.3f pt/MHz\n", pt, pt / (float)((double)global->cpu_freq / 1e6));
 
         return 0;
 }
@@ -186,4 +183,3 @@ static int perf_thread(void *arg)
 /*==============================================================================
   End of file
 ==============================================================================*/
-

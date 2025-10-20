@@ -58,7 +58,7 @@
 #define APP_BASE_ADDRESS      0x08040000
 #define QSPI_BASE_ADDRESS     0x90000000
 #define PATH_VENDOR           "/sd/vendor"
-#define PATH_UPDATE_FILE      PATH_VENDOR"/project.fpkg"
+#define PATH_UPDATE_FILE      PATH_VENDOR "/project.fpkg"
 #define PATH_APP_FLASH        "/dev/app-flash"
 #define PATH_APP_QSPI         "/dev/app-qspi"
 #define FPKG_SECTION_MANIFEST "/manifest"
@@ -81,98 +81,98 @@ GLOBAL_VARIABLES_SECTION {
 };
 
 static const QSPI_command_t qspi_dread = {
-        .instruction_mode      = QSPI_MODE__SINGLE,
-        .address_mode          = QSPI_MODE__DOUBLE,
-        .alternate_byte_mode   = QSPI_MODE__NONE,
-        .data_mode             = QSPI_MODE__DOUBLE,
-        .address_size          = QSPI_SIZE__24_BITS,
-        .alternate_bytes_size  = QSPI_SIZE__8_BITS,
-        .instruction           = 0xBB,
-        .address               = 0,
-        .alternate_bytes       = 0,
-        .dummy_cycles          = 4,
-        .data_size             = 0,
-        .data                  = NULL,
+        .instruction_mode = QSPI_MODE__SINGLE,
+        .address_mode = QSPI_MODE__DOUBLE,
+        .alternate_byte_mode = QSPI_MODE__NONE,
+        .data_mode = QSPI_MODE__DOUBLE,
+        .address_size = QSPI_SIZE__24_BITS,
+        .alternate_bytes_size = QSPI_SIZE__8_BITS,
+        .instruction = 0xBB,
+        .address = 0,
+        .alternate_bytes = 0,
+        .dummy_cycles = 4,
+        .data_size = 0,
+        .data = NULL,
         .instruction_only_once = false,
-        .ddr                   = false,
-        .ddr_hold_cycle        = QSPI_DDR_HOLD_CYCLE__ANALOG_DELAY,
-        .direction             = QSPI_DIRECTION__READ,
+        .ddr = false,
+        .ddr_hold_cycle = QSPI_DDR_HOLD_CYCLE__ANALOG_DELAY,
+        .direction = QSPI_DIRECTION__READ,
 };
 
 static const QSPI_command_t qspi_pp = {
-        .instruction_mode      = QSPI_MODE__SINGLE,
-        .address_mode          = QSPI_MODE__SINGLE,
-        .alternate_byte_mode   = QSPI_MODE__NONE,
-        .data_mode             = QSPI_MODE__SINGLE,
-        .address_size          = QSPI_SIZE__24_BITS,
-        .alternate_bytes_size  = QSPI_SIZE__8_BITS,
-        .instruction           = 0x02,
-        .address               = 0,
-        .alternate_bytes       = 0,
-        .dummy_cycles          = 0,
-        .data_size             = 0,
-        .data                  = NULL,
+        .instruction_mode = QSPI_MODE__SINGLE,
+        .address_mode = QSPI_MODE__SINGLE,
+        .alternate_byte_mode = QSPI_MODE__NONE,
+        .data_mode = QSPI_MODE__SINGLE,
+        .address_size = QSPI_SIZE__24_BITS,
+        .alternate_bytes_size = QSPI_SIZE__8_BITS,
+        .instruction = 0x02,
+        .address = 0,
+        .alternate_bytes = 0,
+        .dummy_cycles = 0,
+        .data_size = 0,
+        .data = NULL,
         .instruction_only_once = false,
-        .ddr                   = false,
-        .ddr_hold_cycle        = QSPI_DDR_HOLD_CYCLE__ANALOG_DELAY,
-        .direction             = QSPI_DIRECTION__WRITE,
+        .ddr = false,
+        .ddr_hold_cycle = QSPI_DDR_HOLD_CYCLE__ANALOG_DELAY,
+        .direction = QSPI_DIRECTION__WRITE,
 };
 
 static const QSPI_command_t qspi_wren = {
-        .instruction_mode      = QSPI_MODE__SINGLE,
-        .address_mode          = QSPI_MODE__NONE,
-        .alternate_byte_mode   = QSPI_MODE__NONE,
-        .data_mode             = QSPI_MODE__NONE,
-        .address_size          = QSPI_SIZE__8_BITS,
-        .alternate_bytes_size  = QSPI_SIZE__8_BITS,
-        .instruction           = 0x06,
-        .address               = 0,
-        .alternate_bytes       = 0,
-        .dummy_cycles          = 0,
-        .data_size             = 0,
-        .data                  = NULL,
+        .instruction_mode = QSPI_MODE__SINGLE,
+        .address_mode = QSPI_MODE__NONE,
+        .alternate_byte_mode = QSPI_MODE__NONE,
+        .data_mode = QSPI_MODE__NONE,
+        .address_size = QSPI_SIZE__8_BITS,
+        .alternate_bytes_size = QSPI_SIZE__8_BITS,
+        .instruction = 0x06,
+        .address = 0,
+        .alternate_bytes = 0,
+        .dummy_cycles = 0,
+        .data_size = 0,
+        .data = NULL,
         .instruction_only_once = false,
-        .ddr                   = false,
-        .ddr_hold_cycle        = QSPI_DDR_HOLD_CYCLE__ANALOG_DELAY,
-        .direction             = QSPI_DIRECTION__WRITE,
+        .ddr = false,
+        .ddr_hold_cycle = QSPI_DDR_HOLD_CYCLE__ANALOG_DELAY,
+        .direction = QSPI_DIRECTION__WRITE,
 };
 
 static const QSPI_command_t qspi_rdsr = {
-        .instruction_mode      = QSPI_MODE__SINGLE,
-        .address_mode          = QSPI_MODE__NONE,
-        .alternate_byte_mode   = QSPI_MODE__NONE,
-        .data_mode             = QSPI_MODE__SINGLE,
-        .address_size          = QSPI_SIZE__8_BITS,
-        .alternate_bytes_size  = QSPI_SIZE__8_BITS,
-        .instruction           = 0x05,
-        .address               = 0,
-        .alternate_bytes       = 0,
-        .dummy_cycles          = 0,
-        .data_size             = 0,
-        .data                  = NULL,
+        .instruction_mode = QSPI_MODE__SINGLE,
+        .address_mode = QSPI_MODE__NONE,
+        .alternate_byte_mode = QSPI_MODE__NONE,
+        .data_mode = QSPI_MODE__SINGLE,
+        .address_size = QSPI_SIZE__8_BITS,
+        .alternate_bytes_size = QSPI_SIZE__8_BITS,
+        .instruction = 0x05,
+        .address = 0,
+        .alternate_bytes = 0,
+        .dummy_cycles = 0,
+        .data_size = 0,
+        .data = NULL,
         .instruction_only_once = false,
-        .ddr                   = false,
-        .ddr_hold_cycle        = QSPI_DDR_HOLD_CYCLE__ANALOG_DELAY,
-        .direction             = QSPI_DIRECTION__READ,
+        .ddr = false,
+        .ddr_hold_cycle = QSPI_DDR_HOLD_CYCLE__ANALOG_DELAY,
+        .direction = QSPI_DIRECTION__READ,
 };
 
 static const QSPI_command_t qspi_se4k = {
-        .instruction_mode      = QSPI_MODE__SINGLE,
-        .address_mode          = QSPI_MODE__SINGLE,
-        .alternate_byte_mode   = QSPI_MODE__NONE,
-        .data_mode             = QSPI_MODE__NONE,
-        .address_size          = QSPI_SIZE__24_BITS,
-        .alternate_bytes_size  = QSPI_SIZE__8_BITS,
-        .instruction           = 0x20,
-        .address               = 0,
-        .alternate_bytes       = 0,
-        .dummy_cycles          = 0,
-        .data_size             = 0,
-        .data                  = NULL,
+        .instruction_mode = QSPI_MODE__SINGLE,
+        .address_mode = QSPI_MODE__SINGLE,
+        .alternate_byte_mode = QSPI_MODE__NONE,
+        .data_mode = QSPI_MODE__NONE,
+        .address_size = QSPI_SIZE__24_BITS,
+        .alternate_bytes_size = QSPI_SIZE__8_BITS,
+        .instruction = 0x20,
+        .address = 0,
+        .alternate_bytes = 0,
+        .dummy_cycles = 0,
+        .data_size = 0,
+        .data = NULL,
         .instruction_only_once = false,
-        .ddr                   = false,
-        .ddr_hold_cycle        = QSPI_DDR_HOLD_CYCLE__HALF_CLK_DELAY,
-        .direction             = QSPI_DIRECTION__WRITE,
+        .ddr = false,
+        .ddr_hold_cycle = QSPI_DDR_HOLD_CYCLE__HALF_CLK_DELAY,
+        .direction = QSPI_DIRECTION__WRITE,
 };
 
 /*==============================================================================
@@ -243,17 +243,17 @@ static void initialize_basic_drivers(void)
          */
         driver_init2("UART", __CPU_UART_TERM__, 0, "/dev/ttyS0",
                 &(UART_config_t) {
-                        .mode      = UART_MODE__NORMAL,
-                        .parity    = UART_PARITY__OFF,
+                        .mode = UART_MODE__NORMAL,
+                        .parity = UART_PARITY__OFF,
                         .stop_bits = UART_STOP_BIT__1,
                         .tx_enable = true,
                         .rx_enable = true,
-                        .baud      = 460800,
-                        .features  = 0,
+                        .baud = 460800,
+                        .features = 0,
                 });
 
         static const TTY_config_t TTY_config = {
-                .input_file  = "/dev/ttyS0",
+                .input_file = "/dev/ttyS0",
                 .output_file = "/dev/ttyS0",
         };
         driver_init2("TTY", 0, 0, "/dev/tty0", &TTY_config); // first user terminal
@@ -325,25 +325,25 @@ static void initialize_additional_drivers(void)
 
         driver_init2("QSPI", 0, 0, PATH_APP_QSPI,
                 &(const QSPI_config_t) {
-                        .clock_prescaller                = 2,
-                        .sample_shifting                 = QSPI_SAMPLE_SHIFTING__NONE,
-                        .flash_size_bits                 = 24,
-                        .chip_select_high_time           = 5,
-                        .clock_mode                      = QSPI_CLOCK_MODE__0,
-                        .dual_flash                      = false,
-                        .page_size                       = 256,
-                        .write_in_progress_mask          = 0x01,
-                        .write_in_progress_match         = 0x00,
+                        .clock_prescaller = 2,
+                        .sample_shifting = QSPI_SAMPLE_SHIFTING__NONE,
+                        .flash_size_bits = 24,
+                        .chip_select_high_time = 5,
+                        .clock_mode = QSPI_CLOCK_MODE__0,
+                        .dual_flash = false,
+                        .page_size = 256,
+                        .write_in_progress_mask = 0x01,
+                        .write_in_progress_match = 0x00,
                         .write_in_progress_register_size = QSPI_SIZE__8_BITS,
-                        .read_command                    = &qspi_dread,
-                        .page_program_command            = &qspi_pp,
-                        .write_enable_command            = &qspi_wren,
-                        .read_status_register_command    = &qspi_rdsr,
+                        .read_command = &qspi_dread,
+                        .page_program_command = &qspi_pp,
+                        .write_enable_command = &qspi_wren,
+                        .read_status_register_command = &qspi_rdsr,
                 });
 
         driver_init2("NVM", 0, 0, PATH_APP_FLASH,
                 &(const NVM_config_t) {
-                        .start_sector      = 6,
+                        .start_sector = 6,
                         .number_of_sectors = 2,
                 });
 }
@@ -360,8 +360,7 @@ static void mount_file_systems(void)
          */
         driver_init("SDMMC", 0, 0, "/dev/sd0");
 
-        driver_init2("PART", 0, 0, "/dev/sd0p1",
-                &(const PART_config_t) {.path = "/dev/sd0"});
+        driver_init2("PART", 0, 0, "/dev/sd0p1", &(const PART_config_t) {.path = "/dev/sd0"});
 
         scope (int fd = open("/dev/sd0p1", O_RDWR), fd > 0, close(fd)) {
                 ioctl(fd, IOCTL_PART__READ_MBR);
@@ -414,8 +413,8 @@ static int fpkg_extract(fpkg_t *fpkg, const char *file_src, const char *file_des
                 stat.size = 0;
         }
 
-        fpkg_file_t *fsrc  = fpkg__fopen(fpkg, file_src);
-        FILE        *fdest = fopen(file_dest, "w");
+        fpkg_file_t *fsrc = fpkg__fopen(fpkg, file_src);
+        FILE *fdest = fopen(file_dest, "w");
 
         size_t size = 0;
 
@@ -431,14 +430,12 @@ static int fpkg_extract(fpkg_t *fpkg, const char *file_src, const char *file_des
                         }
                 } else {
                         if (stat.size == size) {
-                                printf("Extracting '%s' -> '%s' %u%% (%lu bytes).\n",
-                                        file_src, file_dest, (size * 100) / stat.size,
-                                        size);
+                                printf("Extracting '%s' -> '%s' %u%% (%lu bytes).\n", file_src, file_dest,
+                                        (size * 100) / stat.size, size);
                                 err = 0;
 
                         } else {
-                                printf("Extracting '%s' -> '%s' error.\n", file_src,
-                                        file_dest);
+                                printf("Extracting '%s' -> '%s' error.\n", file_src, file_dest);
                                 err = EIO;
                         }
                         break;
@@ -470,7 +467,7 @@ static int tcl_qspi_flash_erase(struct tcl *tcl, tcl_value_t *args, void *ctx)
         tcl_value_t *tcl_size = tcl_list_at(args, 2);
 
         uint32_t address = strtoul(tcl_addr, NULL, 0);
-        uint32_t size    = strtoul(tcl_size, NULL, 0);
+        uint32_t size = strtoul(tcl_size, NULL, 0);
 
         if (address >= QSPI_BASE_ADDRESS) {
                 address -= QSPI_BASE_ADDRESS;
@@ -485,26 +482,25 @@ static int tcl_qspi_flash_erase(struct tcl *tcl, tcl_value_t *args, void *ctx)
 
         scope (FILE *nor = fopen(PATH_APP_QSPI, "r+"), nor, fclose(nor)) {
 
-                const size_t sector_size      = 4096;
+                const size_t sector_size = 4096;
                 const size_t sectors_to_erase = CEILING(size, sector_size);
 
                 for (size_t n = 0; n < sectors_to_erase; n++) {
 
-                        printf("QSPI flash: erasing %d%%\n",
-                                (n * 100) / sectors_to_erase);
+                        printf("QSPI flash: erasing %d%%\n", (n * 100) / sectors_to_erase);
 
                         errno = 0;
-                        err   = ioctl(fileno(nor), IOCTL_QSPI__COMMAND, &qspi_wren);
+                        err = ioctl(fileno(nor), IOCTL_QSPI__COMMAND, &qspi_wren);
                         if (err) {
                                 err = errno;
                                 break;
                         }
 
                         QSPI_command_t erase = qspi_se4k;
-                        erase.address        = (sector_size * n) + address;
+                        erase.address = (sector_size * n) + address;
 
                         errno = 0;
-                        err   = ioctl(fileno(nor), IOCTL_QSPI__COMMAND, &erase);
+                        err = ioctl(fileno(nor), IOCTL_QSPI__COMMAND, &erase);
                         if (err) {
                                 err = errno;
                                 break;
@@ -546,7 +542,7 @@ static int tcl_qspi_flash_write(struct tcl *tcl, tcl_value_t *args, void *ctx)
         fpkg_t *fpkg = ctx;
 
         tcl_value_t *file_path = tcl_list_at(args, 1);
-        tcl_value_t *tcl_addr  = tcl_list_at(args, 2);
+        tcl_value_t *tcl_addr = tcl_list_at(args, 2);
 
         uint32_t address = strtoul(tcl_addr, NULL, 0);
 
@@ -559,7 +555,7 @@ static int tcl_qspi_flash_write(struct tcl *tcl, tcl_value_t *args, void *ctx)
         int err = ENOENT;
 
         fpkg_file_t *img = fpkg__fopen(fpkg, file_path);
-        FILE        *nor = fopen(PATH_APP_QSPI, "r+");
+        FILE *nor = fopen(PATH_APP_QSPI, "r+");
 
         while (img and nor) {
 
@@ -579,15 +575,14 @@ static int tcl_qspi_flash_write(struct tcl *tcl, tcl_value_t *args, void *ctx)
                 size_t size = 0;
 
                 while (true) {
-                        u8_t   buf[256];
+                        u8_t buf[256];
                         size_t n = fpkg__fread(img, buf, sizeof(buf));
                         if (n > 0) {
                                 if (fwrite(buf, 1, n, nor) == n) {
                                         size += n;
                                         printf("QSPI flash: programming %s... %u%% (%lu "
                                                "bytes).\n",
-                                                file_path, (size * 100) / stat.size,
-                                                size);
+                                                file_path, (size * 100) / stat.size, size);
                                 } else {
                                         puts("QSPI flash: write error.");
                                         break;
@@ -636,7 +631,7 @@ static int tcl_flash_erase(struct tcl *tcl, tcl_value_t *args, void *ctx)
         tcl_value_t *tcl_size = tcl_list_at(args, 2);
 
         uint32_t address = strtoul(tcl_addr, NULL, 0);
-        uint32_t size    = strtoul(tcl_size, NULL, 0);
+        uint32_t size = strtoul(tcl_size, NULL, 0);
 
         if (address >= APP_BASE_ADDRESS) {
                 address -= APP_BASE_ADDRESS;
@@ -651,18 +646,17 @@ static int tcl_flash_erase(struct tcl *tcl, tcl_value_t *args, void *ctx)
 
         scope (FILE *nor = fopen(PATH_APP_FLASH, "r+"), nor, fclose(nor)) {
 
-                const size_t sector_size      = SECTOR_SIZE;
+                const size_t sector_size = SECTOR_SIZE;
                 const size_t sectors_to_erase = CEILING(size, sector_size);
-                const size_t first_sector     = address / sector_size;
-                const size_t last_sector      = first_sector + sectors_to_erase;
+                const size_t first_sector = address / sector_size;
+                const size_t last_sector = first_sector + sectors_to_erase;
 
                 for (size_t n = first_sector; n <= last_sector; n++) {
 
                         printf("Flash: erasing %d%%\n", ((n - first_sector) * 100) / sectors_to_erase);
 
                         errno = 0;
-                        err   = ioctl(fileno(nor), IOCTL_NVM__SECTOR_ERASE,
-                                  &(const size_t) {n});
+                        err = ioctl(fileno(nor), IOCTL_NVM__SECTOR_ERASE, &(const size_t) {n});
                         if (err) {
                                 err = errno;
                                 break;
@@ -697,7 +691,7 @@ static int tcl_flash_write(struct tcl *tcl, tcl_value_t *args, void *ctx)
         fpkg_t *fpkg = ctx;
 
         tcl_value_t *file_path = tcl_list_at(args, 1);
-        tcl_value_t *tcl_addr  = tcl_list_at(args, 2);
+        tcl_value_t *tcl_addr = tcl_list_at(args, 2);
 
         uint32_t address = strtoul(tcl_addr, NULL, 0);
 
@@ -710,7 +704,7 @@ static int tcl_flash_write(struct tcl *tcl, tcl_value_t *args, void *ctx)
         int err = ENOENT;
 
         fpkg_file_t *img = fpkg__fopen(fpkg, file_path);
-        FILE        *nor = fopen(PATH_APP_FLASH, "r+");
+        FILE *nor = fopen(PATH_APP_FLASH, "r+");
 
         while (img and nor) {
 
@@ -730,15 +724,14 @@ static int tcl_flash_write(struct tcl *tcl, tcl_value_t *args, void *ctx)
                 size_t size = 0;
 
                 while (true) {
-                        u8_t   buf[256];
+                        u8_t buf[256];
                         size_t n = fpkg__fread(img, buf, sizeof(buf));
                         if (n > 0) {
                                 if (fwrite(buf, 1, n, nor) == n) {
                                         size += n;
                                         printf("Flash: programming %s... %u%% (%lu "
                                                "bytes).\n",
-                                                file_path, (size * 100) / stat.size,
-                                                size);
+                                                file_path, (size * 100) / stat.size, size);
                                 } else {
                                         puts("Flash: write error.");
                                         break;
@@ -812,7 +805,7 @@ static int tcl_extract(struct tcl *tcl, tcl_value_t *args, void *ctx)
 {
         fpkg_t *fpkg = ctx;
 
-        tcl_value_t *file_src  = tcl_list_at(args, 1);
+        tcl_value_t *file_src = tcl_list_at(args, 1);
         tcl_value_t *file_dest = tcl_list_at(args, 2);
 
         int err = ENOENT;
@@ -822,8 +815,8 @@ static int tcl_extract(struct tcl *tcl, tcl_value_t *args, void *ctx)
                 stat.size = 0;
         }
 
-        fpkg_file_t *fsrc  = fpkg__fopen(fpkg, file_src);
-        FILE        *fdest = fopen(file_dest, "w");
+        fpkg_file_t *fsrc = fpkg__fopen(fpkg, file_src);
+        FILE *fdest = fopen(file_dest, "w");
 
         size_t size = 0;
 
@@ -839,14 +832,12 @@ static int tcl_extract(struct tcl *tcl, tcl_value_t *args, void *ctx)
                         }
                 } else {
                         if (stat.size == size) {
-                                printf("Extracting '%s' -> '%s' %u%% (%lu bytes).\n",
-                                        file_src, file_dest, (size * 100) / stat.size,
-                                        size);
+                                printf("Extracting '%s' -> '%s' %u%% (%lu bytes).\n", file_src, file_dest,
+                                        (size * 100) / stat.size, size);
                                 err = 0;
 
                         } else {
-                                printf("Extracting '%s' -> '%s' error.\n", file_src,
-                                        file_dest);
+                                printf("Extracting '%s' -> '%s' error.\n", file_src, file_dest);
                                 err = EIO;
                         }
                         break;
@@ -991,17 +982,15 @@ int main(int argc, char *argv[])
         mount_file_systems();
         print_system_log_messages();
 
-        struct tcl   tcl;
-        fpkg_t      *fpkg     = fpkg__open(PATH_UPDATE_FILE, true);
+        struct tcl tcl;
+        fpkg_t *fpkg = fpkg__open(PATH_UPDATE_FILE, true);
         fpkg_file_t *manifest = fpkg__fopen(fpkg, FPKG_SECTION_MANIFEST);
 
         if (fpkg and manifest and (tcl_init(&tcl) == TCL_FNORMAL)) {
 
-                tcl_register_const(&tcl, "qspi_flash_erase", tcl_qspi_flash_erase, 3,
-                        fpkg);
+                tcl_register_const(&tcl, "qspi_flash_erase", tcl_qspi_flash_erase, 3, fpkg);
 
-                tcl_register_const(&tcl, "qspi_flash_write", tcl_qspi_flash_write, 3,
-                        fpkg);
+                tcl_register_const(&tcl, "qspi_flash_write", tcl_qspi_flash_write, 3, fpkg);
 
                 tcl_register_const(&tcl, "flash_erase", tcl_flash_erase, 3, fpkg);
 
@@ -1017,9 +1006,9 @@ int main(int argc, char *argv[])
 
                 tcl_register_const(&tcl, "rename", tcl_rename, 3, fpkg);
 
-                fpkg_extract(fpkg, FPKG_SECTION_MANIFEST, PATH_VENDOR"/manifest.tmp");
-                tcl_loadfile(&tcl, PATH_VENDOR"/manifest.tmp");
-                remove(PATH_VENDOR"/manifest.tmp");
+                fpkg_extract(fpkg, FPKG_SECTION_MANIFEST, PATH_VENDOR "/manifest.tmp");
+                tcl_loadfile(&tcl, PATH_VENDOR "/manifest.tmp");
+                remove(PATH_VENDOR "/manifest.tmp");
 
                 tcl_destroy(&tcl);
 

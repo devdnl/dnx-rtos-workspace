@@ -46,8 +46,8 @@ Brief   TCL-like language interpreter.
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define HISTORY_NEXT_KEY                "\033^[A\n"
-#define HISTORY_PREV_KEY                "\033^[B\n"
+#define HISTORY_NEXT_KEY "\033^[A\n"
+#define HISTORY_PREV_KEY "\033^[B\n"
 
 /*==============================================================================
   Local types, enums definitions
@@ -62,10 +62,10 @@ Brief   TCL-like language interpreter.
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
         struct tcl tcl;
-        char       cmd[128];
-        char       history[128];
-        bool       run;
-        char      *args;
+        char cmd[128];
+        char history[128];
+        bool run;
+        char *args;
 };
 
 /*==============================================================================
@@ -108,8 +108,7 @@ static int tcl_cmd_sleep(struct tcl *tcl, tcl_value_t *args, void *arg)
 //==============================================================================
 static bool is_history_request()
 {
-        if (  strcmp(global->cmd, HISTORY_NEXT_KEY) == 0
-           || strcmp(global->cmd, HISTORY_PREV_KEY) == 0) {
+        if (strcmp(global->cmd, HISTORY_NEXT_KEY) == 0 || strcmp(global->cmd, HISTORY_PREV_KEY) == 0) {
 
                 if (strlch(global->history) == '\n') {
                         strlch(global->history) = '\0';
@@ -204,8 +203,8 @@ int main(int argc, char *argv[])
 
                         } while (global->cmd[0] == '\033');
 
-                        if (  tcl_eval(&global->tcl, global->cmd, strlen(global->cmd)) != TCL_FNORMAL
-                           || tcl_eval(&global->tcl, "\n", strlen("\n")) != TCL_FNORMAL) {
+                        if (tcl_eval(&global->tcl, global->cmd, strlen(global->cmd)) != TCL_FNORMAL ||
+                                tcl_eval(&global->tcl, "\n", strlen("\n")) != TCL_FNORMAL) {
 
                                 if (!global->tcl.exit) {
                                         printf("Error: %s", global->cmd);
@@ -214,7 +213,7 @@ int main(int argc, char *argv[])
                 } while (!global->tcl.exit);
         }
 
-        exit:
+exit:
         tcl_destroy(&global->tcl);
 
         return EXIT_SUCCESS;

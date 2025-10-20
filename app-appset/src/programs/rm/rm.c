@@ -45,7 +45,9 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define VERBOSE(...) if (global->verbose) printf(__VA_ARGS__)
+#define VERBOSE(...)         \
+        if (global->verbose) \
+        printf(__VA_ARGS__)
 
 /*==============================================================================
   Local types, enums definitions
@@ -99,8 +101,8 @@ int main(int argc, char *argv[])
                         if (argv[1][1] == '-') {
                                 // no action
                         } else {
-                                global->recursive =  (strchr(argv[1], 'r') != NULL)
-                                                  or (strchr(argv[1], 'R') != NULL);
+                                global->recursive = (strchr(argv[1], 'r') != NULL) or
+                                        (strchr(argv[1], 'R') != NULL);
 
                                 global->force = (strchr(argv[1], 'f') != NULL);
 
@@ -129,7 +131,9 @@ int main(int argc, char *argv[])
 
                                 llist_clear(global->rmlist);
                                 list_nodes(rmall ? "./" : argv[i]);
-                                if (rmall) llist_pop_back(global->rmlist);
+                                if (rmall) {
+                                        llist_pop_back(global->rmlist);
+                                }
 
                                 char *path;
                                 while ((path = llist_take_front(global->rmlist))) {
@@ -155,7 +159,9 @@ int main(int argc, char *argv[])
                                 int err = remove(argv[i]);
                                 if (err) {
                                         perror(argv[i]);
-                                        if (not global->force) break;
+                                        if (not global->force) {
+                                                break;
+                                        }
                                 }
                         }
                 }
@@ -205,20 +211,24 @@ static void list_nodes(const char *path)
                 dirent_t *dirent;
                 while ((dirent = readdir(dir))) {
 
-                        if (  isstreq(dirent->d_name, ".")
-                           or isstreq(dirent->d_name, "..") ) {
+                        if (isstreq(dirent->d_name, ".") or isstreq(dirent->d_name, "..")) {
                                 continue;
                         }
 
                         strlcat(global->path, dirent->d_name, sizeof(global->path));
                         list_nodes(global->path);
                         char *slash = strrchr(global->path, '/');
-                        if (slash) *(slash + 1) = '\0';
+                        if (slash) {
+                                *(slash + 1) = '\0';
+                        }
                 }
 
                 char *slash = strrchr(global->path, '/');
-                if (slash) *slash = '\0';
-                else strcpy(global->path, "");
+                if (slash) {
+                        *slash = '\0';
+                } else {
+                        strcpy(global->path, "");
+                }
 
                 closedir(dir);
         }

@@ -101,14 +101,14 @@ int main(int argc, char *argv[])
 
         bool insert = false;
         bool delete = false;
-        int  line   = 0;
+        int line = 0;
         const char *path = "";
 
         if (argc == 4) {
                 insert = isstreq(argv[1], "-i");
                 delete = isstreq(argv[1], "-d");
-                line   = atoi(argv[2]);
-                path   = argv[3];
+                line = atoi(argv[2]);
+                path = argv[3];
         } else {
                 line = atoi(argv[1]);
                 path = argv[2];
@@ -163,8 +163,8 @@ static int load_file_content(llist_t **content, const char *path)
         FILE *file = fopen(path, "r");
         if (file) {
                 char *str;
-                while ((str = fgets_buffered(global->bufline, sizeof(global->bufline),
-                                             file, global->buf, sizeof(global->buf)))) {
+                while ((str = fgets_buffered(global->bufline, sizeof(global->bufline), file, global->buf,
+                                sizeof(global->buf)))) {
 
                         size_t len = strlen(global->bufline);
 
@@ -205,7 +205,7 @@ static int save_file_content(llist_t **content, const char *path)
 
         FILE *out = fopen(global->buf, "w");
         if (out) {
-                llist_foreach(char *, str, *content) {
+                llist_foreach (char *, str, *content) {
                         // Note: buffer is big enough to modify last byte.
                         // See (A). \n added because removed at read.
                         size_t len = strlen(str);
@@ -334,4 +334,3 @@ static int edit_line(llist_t **content, int line)
 /*==============================================================================
   End of file
 ==============================================================================*/
-

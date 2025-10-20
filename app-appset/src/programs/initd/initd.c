@@ -157,9 +157,9 @@ static void initialize_basic_drivers(void)
         /*
          * 2. Next part of drivers that can be initialized at this early stage.
          */
-        driver_init("AFM", 0, 0, NULL); // alternative function configuration
+        driver_init("AFM", 0, 0, NULL);       // alternative function configuration
         driver_init("CLK", 0, 0, "/dev/clk"); // system clock configuration
-        driver_init("DMA", 0, 0, NULL); // DMA configuration
+        driver_init("DMA", 0, 0, NULL);       // DMA configuration
 
         /*
          * NOTE: make sure that UART1 is used as terminal output!
@@ -169,7 +169,7 @@ static void initialize_basic_drivers(void)
                 "/dev/ttyS0"); // UART1 will be used as TTY I/O
 
         static const TTY_config_t TTY_config = {
-                .input_file  = "/dev/ttyS0",
+                .input_file = "/dev/ttyS0",
                 .output_file = "/dev/ttyS0",
         };
         driver_init2("TTY", 0, 0, "/dev/tty0", &TTY_config); // first user terminal
@@ -258,10 +258,10 @@ static void initialize_additional_drivers(void)
         fd = open("/dev/eth", O_RDWR);
         if (fd >= 0) {
                 ETHIF_config_t conf = {
-                        .MAC              = {0xC2, 0x70, 0x50, 0xFF, 0xFF, 0x78},
+                        .MAC = {0xC2, 0x70, 0x50, 0xFF, 0xFF, 0x78},
                         .auto_negotiation = true,
-                        .speed            = ETHIF_SPEED__100Mbps,
-                        .duplex           = ETHIF_DUPLEX__FULL,
+                        .speed = ETHIF_SPEED__100Mbps,
+                        .duplex = ETHIF_DUPLEX__FULL,
                 };
 
                 ioctl(fd, IOCTL_ETHIF__CONFIGURE, &conf);
@@ -297,21 +297,21 @@ static void mount_file_systems(void)
         /*
          * ROMFS at address 0x08070000
          */
-        const u32_t        romfs_address   = 0x08070000;
-        const u32_t       *romfs_ptr       = cast(typeof(romfs_ptr), romfs_address);
+        const u32_t romfs_address = 0x08070000;
+        const u32_t *romfs_ptr = cast(typeof(romfs_ptr), romfs_address);
         static const char *romfs_signature = "FPKG\n";
 
         if (memcmp(romfs_ptr, romfs_signature, strlen(romfs_signature)) == 0) {
 
                 const u32_t romfs_size_offset_words = 16; // romfs header size
-                u32_t       romfs_size              = *(romfs_ptr + romfs_size_offset_words);
+                u32_t romfs_size = *(romfs_ptr + romfs_size_offset_words);
 
                 if (romfs_size != UINT32_MAX) {
                         driver_init2("MEMBLOCK", 0, 0, "/dev/romfs",
                                 &(MEMBLOCK_config_t) {
                                         .memory_address = romfs_address,
-                                        .block_size     = romfs_size,
-                                        .access         = O_RDONLY,
+                                        .block_size = romfs_size,
+                                        .access = O_RDONLY,
                                 });
 
                         mount("romfs", "/dev/romfs", "/etc", "validate");
@@ -384,15 +384,15 @@ static void start_user_programs(void)
          *    key. Terminal is connected to the tty0.
          */
         static const process_attr_t attr0 = {
-                .cwd       = "/",
+                .cwd = "/",
                 .fd_stderr = -1,
-                .fd_stdin  = -1,
+                .fd_stdin = -1,
                 .fd_stdout = -1,
-                .detached  = true,
-                .p_stderr  = "/dev/tty0",
-                .p_stdin   = "/dev/tty0",
-                .p_stdout  = "/dev/tty0",
-                .priority  = PRIORITY_NORMAL,
+                .detached = true,
+                .p_stderr = "/dev/tty0",
+                .p_stdin = "/dev/tty0",
+                .p_stdout = "/dev/tty0",
+                .priority = PRIORITY_NORMAL,
         };
 
         process_create("dsh", &attr0);
@@ -402,15 +402,15 @@ static void start_user_programs(void)
          *    key. Terminal is connected to the tty1.
          */
         static const process_attr_t attr1 = {
-                .cwd       = "/",
+                .cwd = "/",
                 .fd_stderr = -1,
-                .fd_stdin  = -1,
+                .fd_stdin = -1,
                 .fd_stdout = -1,
-                .detached  = true,
-                .p_stderr  = "/dev/tty1",
-                .p_stdin   = "/dev/tty1",
-                .p_stdout  = "/dev/tty1",
-                .priority  = PRIORITY_NORMAL,
+                .detached = true,
+                .p_stderr = "/dev/tty1",
+                .p_stdin = "/dev/tty1",
+                .p_stdout = "/dev/tty1",
+                .priority = PRIORITY_NORMAL,
         };
 
         process_create("dsh", &attr1);
@@ -420,15 +420,15 @@ static void start_user_programs(void)
          *    key. Application is connected to the tty2.
          */
         static const process_attr_t attr2 = {
-                .cwd       = "/",
+                .cwd = "/",
                 .fd_stderr = -1,
-                .fd_stdin  = -1,
+                .fd_stdin = -1,
                 .fd_stdout = -1,
-                .detached  = true,
-                .p_stderr  = "/dev/tty2",
-                .p_stdin   = "/dev/tty2",
-                .p_stdout  = "/dev/tty2",
-                .priority  = PRIORITY_NORMAL,
+                .detached = true,
+                .p_stderr = "/dev/tty2",
+                .p_stdin = "/dev/tty2",
+                .p_stdout = "/dev/tty2",
+                .priority = PRIORITY_NORMAL,
         };
 
         process_create("netmgr --daemon /netmgr.conf", &attr2);

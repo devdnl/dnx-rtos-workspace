@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
                 }
         }
 
-        exit:
+exit:
         ioctl(fileno(stdout), IOCTL_TTY__ECHO_ON);
         ioctl(fileno(stdout), IOCTL_VFS__DEFAULT_RD_MODE);
 
@@ -144,4 +144,3 @@ int main(int argc, char *argv[])
 /*==============================================================================
   End of file
 ==============================================================================*/
-

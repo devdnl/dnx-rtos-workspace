@@ -70,7 +70,7 @@ PROGRAM_PARAMS(mkfifo, STACK_DEPTH_LOW);
 //==============================================================================
 int main(int argc, char *argv[])
 {
-        (void) argc;
+        (void)argc;
 
         if (mkfifo(argv[1], 0666) != 0) {
                 perror(argv[1]);

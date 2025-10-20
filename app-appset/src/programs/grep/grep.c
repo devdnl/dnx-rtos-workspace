@@ -93,17 +93,17 @@ int main(int argc, char *argv[])
 
                 const char *point = strstr(global->str, argv[1]);
                 if (point) {
-                        size_t begin_len  = point - global->str;
+                        size_t begin_len = point - global->str;
                         size_t middle_len = strlen(argv[1]);
 
-                        printf("%.*s"VT100_FONT_BOLD VT100_FONT_COLOR_RED
-                               "%.*s"VT100_RESET_ATTRIBUTES"%s",
-                               begin_len, global->str, middle_len,
-                               point, point + middle_len);
+                        printf("%.*s" VT100_FONT_BOLD VT100_FONT_COLOR_RED "%.*s" VT100_RESET_ATTRIBUTES "%s",
+                                begin_len, global->str, middle_len, point, point + middle_len);
                 }
         }
 
-        if (input != stdin) fclose(input);
+        if (input != stdin) {
+                fclose(input);
+        }
 
         return EXIT_SUCCESS;
 }
@@ -111,4 +111,3 @@ int main(int argc, char *argv[])
 /*==============================================================================
   End of file
 ==============================================================================*/
-

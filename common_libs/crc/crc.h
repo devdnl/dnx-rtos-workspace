@@ -60,7 +60,7 @@ extern "C" {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-extern const uint8_t  crc8_1wire_init;
+extern const uint8_t crc8_1wire_init;
 extern const uint16_t crc16_ccitt_init;
 extern const uint32_t crc32_ethernet_init;
 

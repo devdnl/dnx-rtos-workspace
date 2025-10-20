@@ -69,7 +69,7 @@ PROGRAM_PARAMS(touch, STACK_DEPTH_LOW);
 //==============================================================================
 int main(int argc, char *argv[])
 {
-        (void) argc;
+        (void)argc;
 
         FILE *file = fopen(argv[1], "a+");
         if (file) {

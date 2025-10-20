@@ -88,8 +88,7 @@ public:
                         this->parser = conf_parser__new(NULL);
                 }
 
-                return this->parser ? conf_parser_status__success
-                                    : conf_parser_status__no_memory;
+                return this->parser ? conf_parser_status__success : conf_parser_status__no_memory;
         }
 
         int create_empty(const char *path)
@@ -103,8 +102,7 @@ public:
                         return err;
                 }
 
-                return this->parser ? conf_parser_status__success
-                                    : conf_parser_status__no_memory;
+                return this->parser ? conf_parser_status__success : conf_parser_status__no_memory;
         }
 
         int load_buffer(const char *buf, size_t bufsz)

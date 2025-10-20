@@ -46,9 +46,11 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define BUFFER_MAX_SIZE                 32768
+#define BUFFER_MAX_SIZE 32768
 
-#define VERBOSE(...) if (global->verbose) printf(__VA_ARGS__)
+#define VERBOSE(...)         \
+        if (global->verbose) \
+        printf(__VA_ARGS__)
 
 /*==============================================================================
   Local types, enums definitions
@@ -103,8 +105,7 @@ int main(int argc, char *argv[])
                 } else if (argv[1][0] == '-') {
                         global->opts = true;
 
-                        global->recursive =  (strchr(argv[1], 'r') != NULL)
-                                          or (strchr(argv[1], 'R') != NULL);
+                        global->recursive = (strchr(argv[1], 'r') != NULL) or (strchr(argv[1], 'R') != NULL);
 
                         global->force = (strchr(argv[1], 'f') != NULL);
 
@@ -166,7 +167,7 @@ static void print_help(char *argv[])
 //==============================================================================
 static int copy_file(const char *src, const char *dst)
 {
-        int   err      = 0;
+        int err = 0;
         FILE *src_file = NULL;
         FILE *dst_file = NULL;
 
@@ -253,8 +254,7 @@ static int copy_recursive(const char *src_path, const char *dst_path)
                 dirent_t *dirent;
                 while (not err and (dirent = readdir(dir))) {
 
-                        if (  isstreq(dirent->d_name, ".")
-                           or isstreq(dirent->d_name, "..") ) {
+                        if (isstreq(dirent->d_name, ".") or isstreq(dirent->d_name, "..")) {
                                 continue;
                         }
 
@@ -269,19 +269,29 @@ static int copy_recursive(const char *src_path, const char *dst_path)
                         }
 
                         slash = strrchr(global->src_path, '/');
-                        if (slash) *(slash + 1) = '\0';
+                        if (slash) {
+                                *(slash + 1) = '\0';
+                        }
 
                         slash = strrchr(global->dst_path, '/');
-                        if (slash) *(slash + 1) = '\0';
+                        if (slash) {
+                                *(slash + 1) = '\0';
+                        }
                 }
 
                 slash = strrchr(global->src_path, '/');
-                if (slash) *(slash) = '\0';
-                else strcpy(global->src_path, "");
+                if (slash) {
+                        *(slash) = '\0';
+                } else {
+                        strcpy(global->src_path, "");
+                }
 
                 slash = strrchr(global->dst_path, '/');
-                if (slash) *(slash) = '\0';
-                else strcpy(global->dst_path, "");
+                if (slash) {
+                        *(slash) = '\0';
+                } else {
+                        strcpy(global->dst_path, "");
+                }
 
                 closedir(dir);
 
@@ -289,7 +299,9 @@ static int copy_recursive(const char *src_path, const char *dst_path)
                 VERBOSE("Coping: '%s' => '%s'\n", src_path, dst_path);
                 err = copy_file(src_path, dst_path);
                 if (err) {
-                        if (global->force) err = 0;
+                        if (global->force) {
+                                err = 0;
+                        }
                 }
         }
 

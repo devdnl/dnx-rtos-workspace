@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
                 printf("Usage: %s <appset-address-1> [appset-address-2] [...]\n", argv[0]);
                 return EXIT_FAILURE;
 
-        } else  {
+        } else {
                 for (int i = 1; i < argc; i++) {
                         const void *appset[] = {cast(void *, strtoul(argv[i], NULL, 0))};
 

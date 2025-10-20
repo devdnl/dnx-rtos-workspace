@@ -85,7 +85,7 @@ PROGRAM_PARAMS(dmesg, STACK_DEPTH_LOW);
 int main(int argc, char *argv[])
 {
         bool clear = false;
-        bool loop  = false;
+        bool loop = false;
 
         for (int i = 1; i < argc; i++) {
                 if (isstreq(argv[i], "-h") || isstreq(argv[i], "--help")) {
@@ -141,4 +141,3 @@ int main(int argc, char *argv[])
 /*==============================================================================
   End of file
 ==============================================================================*/
-

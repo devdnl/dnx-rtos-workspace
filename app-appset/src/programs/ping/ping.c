@@ -65,26 +65,26 @@ Brief   Ping.
   Local object types
 ==============================================================================*/
 typedef struct PACKED {
-        u8_t  version_ihl;
-        u8_t  tos;
+        u8_t version_ihl;
+        u8_t tos;
         u16_t len;
         u16_t id;
         u16_t offset;
-        u8_t  ttl;
-        u8_t  proto;
+        u8_t ttl;
+        u8_t proto;
         u16_t chsum;
         u32_t src;
         u32_t dest;
-        u8_t  data[];
+        u8_t data[];
 } ip_header_t;
 
 typedef struct PACKED {
-        u8_t  type;
-        u8_t  code;
+        u8_t type;
+        u8_t code;
         u16_t chksum;
         u16_t id;
         u16_t seqno;
-        u8_t  data[56];
+        u8_t data[56];
 } icmp_packet_t;
 
 /*==============================================================================
@@ -95,17 +95,17 @@ typedef struct PACKED {
   Local objects
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION_BEGIN
-SOCKET             *socket;
-const char         *hostname;
-const char         *netname;
+SOCKET *socket;
+const char *hostname;
+const char *netname;
 NET_INET_sockaddr_t hostname_addr;
-icmp_packet_t       icmp;
-u32_t               icmp_num;
-u32_t               packets_sent;
-u32_t               packets_received;
-u32_t               tmin;
-u32_t               tmax;
-u32_t               tsum;
+icmp_packet_t icmp;
+u32_t icmp_num;
+u32_t packets_sent;
+u32_t packets_received;
+u32_t tmin;
+u32_t tmax;
+u32_t tsum;
 GLOBAL_VARIABLES_SECTION_END
 
 /*==============================================================================
@@ -133,10 +133,10 @@ PROGRAM_PARAMS(ping, STACK_DEPTH_LOW);
 //==============================================================================
 static u16_t cal_chksum(void *buf, int len)
 {
-        int    nleft  = len;
-        int    sum    = 0;
-        u16_t *w      = buf;
-        u16_t  answer = 0;
+        int nleft = len;
+        int sum = 0;
+        u16_t *w = buf;
+        u16_t answer = 0;
 
         while (nleft > 1) {
                 sum += *w++;
@@ -166,11 +166,11 @@ static void send_icmp_echo_packet(void)
 
         ++global->icmp_num;
 
-        global->icmp.type   = ICMP_ECHO;
-        global->icmp.code   = 0;
+        global->icmp.type = ICMP_ECHO;
+        global->icmp.code = 0;
         global->icmp.chksum = 0;
-        global->icmp.seqno  = global->icmp_num;
-        global->icmp.id     = getpid();
+        global->icmp.seqno = global->icmp_num;
+        global->icmp.id = getpid();
 
         clock_t now = get_uptime_ms();
         memcpy(&global->icmp.data, &now, sizeof(now));
@@ -202,7 +202,7 @@ static void recv_icmp_reply_packet(void)
         errno = 0;
         int n = socket_recvfrom(global->socket, &buf, sizeof(buf), 0, &from, sizeof(from));
         if (n > 0) {
-                ip_header_t   *ip   = cast(typeof(ip), buf);
+                ip_header_t *ip = cast(typeof(ip), buf);
                 icmp_packet_t *icmp = cast(typeof(icmp), ip->data);
 
                 if ((icmp->type == ICMP_ECHOREPLY) and (icmp->id == getpid())) {
@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
         }
 
-        int err          = EXIT_FAILURE;
+        int err = EXIT_FAILURE;
         global->hostname = argv[1];
 
         if (argc == 3) {
@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
         ioctl(fileno(stdin), IOCTL_VFS__DEFAULT_RD_MODE);
 
         u32_t work_time = get_uptime_ms() - start_time;
-        u32_t loss      = ((global->packets_sent - global->packets_received) * 100) / global->packets_sent;
+        u32_t loss = ((global->packets_sent - global->packets_received) * 100) / global->packets_sent;
 
         printf("--- %s ping statistics ---\n", global->hostname);
 

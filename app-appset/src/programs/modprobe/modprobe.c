@@ -90,12 +90,11 @@ int main(int argc, char *argv[])
 {
         int err = EXIT_FAILURE;
 
-        const char *action  = NULL;
+        const char *action = NULL;
         const char *modname = NULL;
-        const char *path    = NULL;
-        int         major   = 0;
-        int         minor   = 0;
-
+        const char *path = NULL;
+        int major = 0;
+        int minor = 0;
 
         if (argc < 2) {
                 show_help(argv[0]);
@@ -105,11 +104,11 @@ int main(int argc, char *argv[])
 
         } else if ((strcmp(argv[1], "-i") == 0) && (argc >= 5)) {
 
-                action  = "initialize";
+                action = "initialize";
                 modname = argv[2];
-                major   = atoi(argv[3]);
-                minor   = atoi(argv[4]);
-                path    = argc >= 6 ? argv[5] : NULL;
+                major = atoi(argv[3]);
+                minor = atoi(argv[4]);
+                path = argc >= 6 ? argv[5] : NULL;
 
                 if (driver_init(modname, major, minor, path) >= 0) {
                         err = EXIT_SUCCESS;
@@ -117,10 +116,10 @@ int main(int argc, char *argv[])
 
         } else if ((strcmp(argv[1], "-r") == 0) && (argc == 5)) {
 
-                action  = "release";
+                action = "release";
                 modname = argv[2];
-                major   = atoi(argv[3]);
-                minor   = atoi(argv[4]);
+                major = atoi(argv[3]);
+                minor = atoi(argv[4]);
 
                 if (driver_release(modname, major, minor) == 0) {
                         err = EXIT_SUCCESS;
@@ -129,7 +128,7 @@ int main(int argc, char *argv[])
         } else if ((strcmp(argv[1], "-R") == 0) && (argc == 3)) {
 
                 action = "release";
-                path   = argv[2];
+                path = argv[2];
 
                 if (driver_release2(path) == 0) {
                         err = EXIT_SUCCESS;
@@ -139,25 +138,22 @@ int main(int argc, char *argv[])
                 show_help(argv[0]);
         }
 
-
         if (action) {
                 if (!err) {
                         if (path) {
                                 printf("Module '%s' %sd.\n", path, action);
 
                         } else {
-                                printf("Module '%s%d-%d' %sd.\n",
-                                       modname, major, minor, action);
+                                printf("Module '%s%d-%d' %sd.\n", modname, major, minor, action);
                         }
 
                 } else {
                         if (path) {
-                                fprintf(stderr, "Module '%s' error: %s.\n",
-                                        path, strerror(errno));
+                                fprintf(stderr, "Module '%s' error: %s.\n", path, strerror(errno));
 
                         } else {
-                                fprintf(stderr, "Module '%s%d-%d' error: %s.\n",
-                                        modname, major, minor, strerror(errno));
+                                fprintf(stderr, "Module '%s%d-%d' error: %s.\n", modname, major, minor,
+                                        strerror(errno));
                         }
                 }
         }

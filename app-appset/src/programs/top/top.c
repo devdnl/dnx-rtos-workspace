@@ -64,10 +64,10 @@
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
-        memstat_t      mem;
+        memstat_t mem;
         process_stat_t pstat;
-        bool           show_threads;
-        uint           refresh_inteval_s;
+        bool show_threads;
+        uint refresh_inteval_s;
 };
 
 /*==============================================================================
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
         ioctl(fileno(stdin), IOCTL_TTY__ECHO_OFF);
         ioctl(fileno(stdout), IOCTL_TTY__CLEAR_SCR);
 
-        int     key   = ' ';
+        int key = ' ';
         clock_t timer = -(clock() + global->refresh_inteval_s);
 
         while ((key != 'q') && (key != '\0') && (key != ETX)) {
@@ -116,9 +116,9 @@ int main(int argc, char *argv[])
                 }
 
                 u32_t uptime = get_uptime_ms() / 1000;
-                u32_t udays  = (uptime / (3600 * 24));
-                u32_t uhrs   = (uptime / 3600) % 24;
-                u32_t umins  = (uptime / 60) % 60;
+                u32_t udays = (uptime / (3600 * 24));
+                u32_t uhrs = (uptime / 3600) % 24;
+                u32_t umins = (uptime / 60) % 60;
 
                 printf(VT100_CLEAR_SCREEN);
 
@@ -154,11 +154,11 @@ int main(int argc, char *argv[])
                         if (global->pstat.threads_count == 0) {
                                 snprintf(cpu_load_str, sizeof(cpu_load_str), "zombie");
                         } else {
-                                snprintf(cpu_load_str, sizeof(cpu_load_str), "%3d.%d", global->pstat.CPU_load / 10,
-                                        global->pstat.CPU_load % 10);
+                                snprintf(cpu_load_str, sizeof(cpu_load_str), "%3d.%d",
+                                        global->pstat.CPU_load / 10, global->pstat.CPU_load % 10);
                         }
 
-                        const char *fmtbegin    = global->show_threads ? VT100_FONT_BOLD : "";
+                        const char *fmtbegin = global->show_threads ? VT100_FONT_BOLD : "";
                         const char *stack_color = "";
 
                         uint stack_max_usage_percent = global->pstat.stack_max_usage * 100 /

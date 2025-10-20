@@ -145,15 +145,15 @@ int main(int argc, char *argv[])
                 getcwd(global->cwd, sizeof(global->cwd));
 
                 process_attr_t attr = {
-                        .cwd       = global->cwd,
+                        .cwd = global->cwd,
                         .fd_stderr = STDERR_FILENO,
-                        .fd_stdin  = STDIN_FILENO,
+                        .fd_stdin = STDIN_FILENO,
                         .fd_stdout = STDOUT_FILENO,
-                        .detached  = true,
-                        .p_stderr  = NULL,
-                        .p_stdin   = NULL,
-                        .p_stdout  = NULL,
-                        .priority  = process_get_priority(getpid()),
+                        .detached = true,
+                        .p_stderr = NULL,
+                        .p_stdin = NULL,
+                        .p_stdout = NULL,
+                        .priority = process_get_priority(getpid()),
                 };
 
                 pid_t pid = process_create(argv[1], &attr);
