@@ -460,7 +460,6 @@
 		["__ETH_PHY_SPEED_STATUS_BM__"]="0x0002";
 		["__ETH_PHY_SR__"]="16";
 		["__ETH_RXBUFNB__"]="3";
-		["__ETH_SPEED__"]="ETH_SPEED_100M";
 		["__ETH_TXBUFNB__"]="3";
 	};
 	["config/app-system/arch/stm32f1/gpio_flags.h"]={
@@ -3327,7 +3326,6 @@
 		["__ETH_PHY_SPEED_STATUS_BM__"]="0x0004";
 		["__ETH_PHY_SR__"]="31";
 		["__ETH_RXBUFNB__"]="10";
-		["__ETH_SPEED__"]="ETH_SPEED_100M";
 		["__ETH_TXBUFNB__"]="10";
 	};
 	["config/app-system/arch/stm32f7/gpio_flags.h"]={
@@ -4581,7 +4579,6 @@
 		["__ETH_PHY_SPEED_STATUS_BM__"]="0x0004";
 		["__ETH_PHY_SR__"]="31";
 		["__ETH_RXBUFNB__"]="10";
-		["__ETH_SPEED__"]="ETH_SPEED_100M";
 		["__ETH_TXBUFNB__"]="10";
 	};
 	["config/app-system/arch/stm32h7/gpio_flags.h"]={
@@ -5744,7 +5741,7 @@
 		["__NETWORK_IP_DEBUG__"]="LWIP_DBG_OFF";
 		["__NETWORK_IP_DEFAULT_TTL__"]="255";
 		["__NETWORK_IP_FORWARD_ALLOW_TX_ON_RX_NETIF__"]="0";
-		["__NETWORK_IP_FORWARD__"]="0";
+		["__NETWORK_IP_FORWARD__"]="1";
 		["__NETWORK_IP_FRAG__"]="1";
 		["__NETWORK_IP_OPTIONS_ALLOWED__"]="1";
 		["__NETWORK_IP_REASSEMBLY__"]="1";
@@ -5772,14 +5769,14 @@
 		["__NETWORK_LWIP_ICMP__"]="1";
 		["__NETWORK_LWIP_IGMP__"]="1";
 		["__NETWORK_LWIP_IPV4__"]="1";
-		["__NETWORK_LWIP_LOOPBACK_MAX_PBUFS__"]="1";
-		["__NETWORK_LWIP_LOOPIF_MULTICAST__"]="0";
+		["__NETWORK_LWIP_LOOPBACK_MAX_PBUFS__"]="16";
+		["__NETWORK_LWIP_LOOPIF_MULTICAST__"]="1";
 		["__NETWORK_LWIP_MULTICAST_PING__"]="0";
 		["__NETWORK_LWIP_NETBUF_RECVINFO__"]="0";
 		["__NETWORK_LWIP_NETIF_HOSTNAME__"]="1";
 		["__NETWORK_LWIP_NETIF_HWADDRHINT__"]="0";
-		["__NETWORK_LWIP_NETIF_LOOPBACK__"]="0";
-		["__NETWORK_LWIP_SINGLE_NETIF__"]="1";
+		["__NETWORK_LWIP_NETIF_LOOPBACK__"]="1";
+		["__NETWORK_LWIP_SINGLE_NETIF__"]="0";
 		["__NETWORK_LWIP_STATS__"]="0";
 		["__NETWORK_LWIP_TCPIP_TIMEOUT__"]="0";
 		["__NETWORK_LWIP_TCP_KEEPALIVE__"]="0";
@@ -6368,7 +6365,6 @@
 		["__ETH_PHY_SPEED_STATUS_BM__"]="0x0002";
 		["__ETH_PHY_SR__"]="16";
 		["__ETH_RXBUFNB__"]="3";
-		["__ETH_SPEED__"]="ETH_SPEED_100M";
 		["__ETH_TXBUFNB__"]="3";
 	};
 	["config/btl-system/arch/stm32f1/gpio_flags.h"]={
@@ -9235,7 +9231,6 @@
 		["__ETH_PHY_SPEED_STATUS_BM__"]="0x0004";
 		["__ETH_PHY_SR__"]="31";
 		["__ETH_RXBUFNB__"]="10";
-		["__ETH_SPEED__"]="ETH_SPEED_100M";
 		["__ETH_TXBUFNB__"]="10";
 	};
 	["config/btl-system/arch/stm32f7/gpio_flags.h"]={
@@ -10489,7 +10484,6 @@
 		["__ETH_PHY_SPEED_STATUS_BM__"]="0x0004";
 		["__ETH_PHY_SR__"]="31";
 		["__ETH_RXBUFNB__"]="10";
-		["__ETH_SPEED__"]="ETH_SPEED_100M";
 		["__ETH_TXBUFNB__"]="10";
 	};
 	["config/btl-system/arch/stm32h7/gpio_flags.h"]={
@@ -11652,7 +11646,7 @@
 		["__NETWORK_IP_DEBUG__"]="LWIP_DBG_OFF";
 		["__NETWORK_IP_DEFAULT_TTL__"]="255";
 		["__NETWORK_IP_FORWARD_ALLOW_TX_ON_RX_NETIF__"]="0";
-		["__NETWORK_IP_FORWARD__"]="0";
+		["__NETWORK_IP_FORWARD__"]="1";
 		["__NETWORK_IP_FRAG__"]="1";
 		["__NETWORK_IP_OPTIONS_ALLOWED__"]="1";
 		["__NETWORK_IP_REASSEMBLY__"]="1";
@@ -11680,14 +11674,14 @@
 		["__NETWORK_LWIP_ICMP__"]="1";
 		["__NETWORK_LWIP_IGMP__"]="1";
 		["__NETWORK_LWIP_IPV4__"]="1";
-		["__NETWORK_LWIP_LOOPBACK_MAX_PBUFS__"]="1";
-		["__NETWORK_LWIP_LOOPIF_MULTICAST__"]="0";
+		["__NETWORK_LWIP_LOOPBACK_MAX_PBUFS__"]="16";
+		["__NETWORK_LWIP_LOOPIF_MULTICAST__"]="1";
 		["__NETWORK_LWIP_MULTICAST_PING__"]="0";
 		["__NETWORK_LWIP_NETBUF_RECVINFO__"]="0";
 		["__NETWORK_LWIP_NETIF_HOSTNAME__"]="1";
 		["__NETWORK_LWIP_NETIF_HWADDRHINT__"]="0";
-		["__NETWORK_LWIP_NETIF_LOOPBACK__"]="0";
-		["__NETWORK_LWIP_SINGLE_NETIF__"]="1";
+		["__NETWORK_LWIP_NETIF_LOOPBACK__"]="1";
+		["__NETWORK_LWIP_SINGLE_NETIF__"]="0";
 		["__NETWORK_LWIP_STATS__"]="0";
 		["__NETWORK_LWIP_TCPIP_TIMEOUT__"]="0";
 		["__NETWORK_LWIP_TCP_KEEPALIVE__"]="0";
