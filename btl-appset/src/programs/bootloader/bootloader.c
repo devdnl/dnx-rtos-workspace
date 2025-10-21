@@ -54,7 +54,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define BOOTLOADER_VERSION    "1.0"
+#define BOOTLOADER_VERSION    "1.1"
 #define APP_BASE_ADDRESS      0x08040000
 #define QSPI_BASE_ADDRESS     0x90000000
 #define PATH_VENDOR           "/sd/vendor"
@@ -507,7 +507,7 @@ static int tcl_qspi_flash_erase(struct tcl *tcl, tcl_value_t *args, void *ctx)
                         }
 
                         errno = 0;
-                        err = ioctl(fileno(nor), IOCTL_QSPI__WAIT_FOR_MEMORY_TO_BE_READY);
+                        err = ioctl(fileno(nor), IOCTL_QSPI__WAIT_FOR_MEMORY_TO_BE_READY, &(u32_t) {1000});
                         if (err) {
                                 err = errno;
                                 break;
@@ -517,7 +517,7 @@ static int tcl_qspi_flash_erase(struct tcl *tcl, tcl_value_t *args, void *ctx)
                 if (not err) {
                         printf("QSPI flash: erasing 100%%\n");
                 } else {
-                        printf("QSPI flash: erase error.\n");
+                        printf("QSPI flash: erase error %d.\n", err);
                 }
         }
 
@@ -651,7 +651,7 @@ static int tcl_flash_erase(struct tcl *tcl, tcl_value_t *args, void *ctx)
                 const size_t first_sector = address / sector_size;
                 const size_t last_sector = first_sector + sectors_to_erase;
 
-                for (size_t n = first_sector; n <= last_sector; n++) {
+                for (size_t n = first_sector; n < last_sector; n++) {
 
                         printf("Flash: erasing %d%%\n", ((n - first_sector) * 100) / sectors_to_erase);
 
@@ -666,7 +666,7 @@ static int tcl_flash_erase(struct tcl *tcl, tcl_value_t *args, void *ctx)
                 if (not err) {
                         printf("Flash: erasing 100%%\n");
                 } else {
-                        printf("Flash: erase error.\n");
+                        printf("Flash: erase error %d.\n", err);
                 }
         }
 
@@ -724,10 +724,9 @@ static int tcl_flash_write(struct tcl *tcl, tcl_value_t *args, void *ctx)
                 size_t size = 0;
 
                 while (true) {
-                        u8_t buf[256];
-                        size_t n = fpkg__fread(img, buf, sizeof(buf));
+                        size_t n = fpkg__fread(img, global->buf, sizeof(global->buf));
                         if (n > 0) {
-                                if (fwrite(buf, 1, n, nor) == n) {
+                                if (fwrite(global->buf, 1, n, nor) == n) {
                                         size += n;
                                         printf("Flash: programming %s... %u%% (%lu "
                                                "bytes).\n",
@@ -801,7 +800,7 @@ static int tcl_get_file_size(struct tcl *tcl, tcl_value_t *args, void *ctx)
  * @return One of F* values.
  */
 //==============================================================================
-static int tcl_extract(struct tcl *tcl, tcl_value_t *args, void *ctx)
+static int tcl_fpkg_extract(struct tcl *tcl, tcl_value_t *args, void *ctx)
 {
         fpkg_t *fpkg = ctx;
 
@@ -899,7 +898,7 @@ static int tcl_mkdir(struct tcl *tcl, tcl_value_t *args, void *ctx)
         tcl_value_t *path = tcl_list_at(args, 1);
         tcl_value_t *perm = tcl_list_at(args, 2);
 
-        printf("Creating '%s'...\n", path);
+        printf("Creating dir '%s'...\n", path);
 
         u32_t mode = strtoul(perm, NULL, 0);
 
@@ -998,7 +997,7 @@ int main(int argc, char *argv[])
 
                 tcl_register_const(&tcl, "get_file_size", tcl_get_file_size, 2, fpkg);
 
-                tcl_register_const(&tcl, "fpkg_extract", tcl_extract, 3, fpkg);
+                tcl_register_const(&tcl, "fpkg_extract", tcl_fpkg_extract, 3, fpkg);
 
                 tcl_register_const(&tcl, "remove", tcl_remove, 2, fpkg);
 
