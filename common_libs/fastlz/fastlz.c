@@ -136,11 +136,12 @@ static uint32_t flz_cmp(const uint8_t* p, const uint8_t* q, const uint8_t* r) {
 #define MAX_L2_DISTANCE 8191
 #define MAX_FARDISTANCE (65535 + MAX_L2_DISTANCE - 1)
 
-#define HASH_SIZE (1 << FASTLZ_HASH_LOG)
+#define HASH_LOG FASTLZ_HASH_LOG
+#define HASH_SIZE (1 << HASH_LOG)
 #define HASH_MASK (HASH_SIZE - 1)
 
 static uint16_t flz_hash(uint32_t v) {
-  uint32_t h = (v * 2654435769LL) >> (32 - FASTLZ_HASH_LOG);
+  uint32_t h = (v * 2654435769LL) >> (32 - HASH_LOG);
   return h & HASH_MASK;
 }
 
@@ -218,7 +219,7 @@ static uint8_t* flz1_match(uint32_t len, uint32_t distance, uint8_t* op) {
 #define FASTLZ_BOUND_CHECK(cond) \
   if (FASTLZ_UNLIKELY(!(cond))) return 0;
 
-int fastlz1_compress(const void* input, int length, void* output) {
+static int fastlz1_compress(const void* input, int length, void* output) {
   const uint8_t* ip = (const uint8_t*)input;
   const uint8_t* ip_start = ip;
   const uint8_t* ip_bound = ip + length - 4; /* because readU32 */
@@ -226,7 +227,7 @@ int fastlz1_compress(const void* input, int length, void* output) {
   uint8_t* op = (uint8_t*)output;
 
 #if FASTLZ_MALLOC_HTAB
-  uint32_t *htab = malloc(HASH_SIZE);
+  uint32_t *htab = malloc(sizeof(uint32_t) * HASH_SIZE);
   if (!htab) {
     return 0;
   }
@@ -291,7 +292,7 @@ int fastlz1_compress(const void* input, int length, void* output) {
   return op - (uint8_t*)output;
 }
 
-int fastlz1_decompress(const void* input, int length, void* output, int maxout) {
+static int fastlz1_decompress(const void* input, int length, void* output, int maxout) {
   const uint8_t* ip = (const uint8_t*)input;
   const uint8_t* ip_limit = ip + length;
   const uint8_t* ip_bound = ip_limit - 2;
@@ -363,7 +364,7 @@ static uint8_t* flz2_match(uint32_t len, uint32_t distance, uint8_t* op) {
   return op;
 }
 
-int fastlz2_compress(const void* input, int length, void* output) {
+static int fastlz2_compress(const void* input, int length, void* output) {
   const uint8_t* ip = (const uint8_t*)input;
   const uint8_t* ip_start = ip;
   const uint8_t* ip_bound = ip + length - 4; /* because readU32 */
@@ -371,7 +372,7 @@ int fastlz2_compress(const void* input, int length, void* output) {
   uint8_t* op = (uint8_t*)output;
 
 #if FASTLZ_MALLOC_HTAB
-  uint32_t *htab = malloc(HASH_SIZE);
+  uint32_t *htab = malloc(sizeof(uint32_t) * HASH_SIZE);
   if (!htab) {
     return 0;
   }
@@ -448,7 +449,7 @@ int fastlz2_compress(const void* input, int length, void* output) {
   return op - (uint8_t*)output;
 }
 
-int fastlz2_decompress(const void* input, int length, void* output, int maxout) {
+static int fastlz2_decompress(const void* input, int length, void* output, int maxout) {
   const uint8_t* ip = (const uint8_t*)input;
   const uint8_t* ip_limit = ip + length;
   const uint8_t* ip_bound = ip_limit - 2;

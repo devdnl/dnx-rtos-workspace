@@ -33,7 +33,7 @@
 #define FASTLZ_VERSION_STRING "0.5.0"
 
 #define FASTLZ_MIN_OUT_BUF_SIZE 66
-#define FASTLZ_OUT_BUF(_size) ((_size < FASTLZ_MIN_OUT_BUF_SIZE) ? FASTLZ_MIN_OUT_BUF_SIZE : (((_size) * 105) / 100))
+#define FASTLZ_OUT_BUF_SIZE(_size) ((_size < FASTLZ_MIN_OUT_BUF_SIZE) ? FASTLZ_MIN_OUT_BUF_SIZE : (((_size) * 106) / 100))
 
 /**
  * Enable (1) hash table allocated dynamically instead of places in stack.
