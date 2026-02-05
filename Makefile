@@ -143,7 +143,7 @@ endef
 # define macro used to configure romfs
 define config_romfs
 	$(eval $@_ROMFS_NAME = $(1))
-	$(CONFIGTOOL) ../../${$@_ROMFS_NAME}/config/config.h
+	$(CONFIGTOOL) ../../config/${$@_ROMFS_NAME}/config.h
 endef
 
 ####################################################################################################
