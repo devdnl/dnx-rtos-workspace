@@ -56,20 +56,21 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define DEBUG_CMD_ENABLE        false
+#define DEBUG_CMD_ENABLE         false
 
-#define CONFIG_KEY_USER         "user"
-#define CONFIG_KEY_PASSWORD     "password"
-#define CONFIG_KEY_PORT         "port"
-#define CONFIG_KEY_DEBUG        "debug"
-#define CONFIG_KEY_ALLOW_ENABLE "allow.enable"
-#define CONFIG_KEY_ALLOW_BASE   "allow."
+#define CONFIG_KEY_USER          "user"
+#define CONFIG_KEY_PASSWORD      "password"
+#define CONFIG_KEY_PORT          "port"
+#define CONFIG_KEY_DEBUG         "debug"
+#define CONFIG_KEY_ALLOW_ENABLE  "allow.enable"
+#define CONFIG_KEY_ALLOW_BASE    "allow."
+#define CONFIG_KEY_STATS_PATH    "runtime_stats_path"
 
-#define MAX_TOPIC_LENGTH        128
-#define MAX_TOPICS              500
-#define MAX_PAYLOAD_SIZE        4096
-#define MAX_RETAIN_TIME_ms      (24 * 60 * 60 * 1000UL)
-#define TOPICDB_MAINTENANCE_ms  (60 * 1000UL)
+#define MAX_TOPIC_LENGTH         128
+#define MAX_TOPICS               500
+#define MAX_PAYLOAD_SIZE         4096
+#define MAX_RETAIN_TIME_ms       (24 * 60 * 60 * 1000UL)
+#define TOPICDB_MAINTENANCE_ms   (60 * 1000UL)
 
 #define DEBUG_SESSION(...)                                                              \
         if (global->debug) {                                                            \
@@ -351,6 +352,7 @@ typedef struct {
         int16_t keep_alive;
         int8_t connect_flags;
         bool close_session;
+        clock_t connection_tref;
 
         struct {
                 char *topic;
@@ -364,12 +366,13 @@ typedef struct {
 ==============================================================================*/
 static uint16_t ntohu16(uint16_t value);
 static uint32_t ntohu32(uint32_t value);
-
+static void runtime_stats(void);
 static session_t *session_new(SOCKET *socket);
 static session_t *session_delete(session_t *session);
 static void llist_session_dtor(void *object);
 static bool session_poll(session_t *session);
 static int session_receive_packet(session_t *session);
+static void session_send_last_will(session_t *session);
 static int session_fetchbuf_read(session_t *session, void *dst, size_t count);
 static int session_pushbuf_write(session_t *session, const void *src, size_t count);
 static int session_pushbuf_flush(session_t *session);
@@ -417,8 +420,8 @@ static void topicsub_destroy(void *a);
 static int topicdb_compare(const void *a, const void *b);
 static void topicdb_destroy(void *a);
 static void topicdb_maintenance(void);
-static mqtt_reason_t topicdb_update_topic(const char *topic, const uint8_t *msg_ref, size_t msg_len,
-        bool retain, topicdb_t **topicdb_ref, bool create_only);
+static mqtt_reason_t topicdb_update_topic(const char *topic, const void *msg_ref, size_t msg_len, bool retain,
+        topicdb_t **topicdb_ref, bool create_only);
 
 /*==============================================================================
   Local objects
@@ -427,6 +430,11 @@ GLOBAL_VARIABLES_SECTION {
         conf_parser_t *conf;
         bool debug;
         bool allow_list_enabled;
+
+        struct {
+                clock_t refresh;
+                const char *path;
+        } runtime_stats;
 
         struct {
                 llist_t *data;
@@ -536,6 +544,11 @@ int main(int argc, char *argv[])
                 printf("[%s, info] allowing connections only from allow list.\n", argv[0]);
         }
 
+        global->runtime_stats.path = conf_parser__get_value(global->conf, CONFIG_KEY_STATS_PATH);
+        if (global->runtime_stats.path) {
+                printf("[%s, info] enabled runtime stats.\n", argv[0]);
+        }
+
         global->topic_db.data = llist_new(topicdb_compare, topicdb_destroy);
         if (not global->topic_db.data) {
                 printf("[%s, info] unable to create topic database list!\n", argv[0]);
@@ -622,6 +635,8 @@ int main(int argc, char *argv[])
                         VERBOSE("connected clients: %u.\n", llist_size(global->sessions));
                 }
 
+                runtime_stats();
+
                 topicdb_maintenance();
         }
 
@@ -632,6 +647,63 @@ cleanup:
         conf_parser__delete(global->conf);
 
         return exit_code;
+}
+
+//==============================================================================
+/**
+ * @brief  Create runtime stats file.
+ */
+//==============================================================================
+static void runtime_stats(void)
+{
+        clock_t now = get_uptime_ms();
+
+        if (not global->runtime_stats.path) {
+                return;
+        }
+
+        if (now - global->runtime_stats.refresh < 5000) {
+                return;
+        }
+
+        global->runtime_stats.refresh = now;
+
+        size_t buf_len = 2048;
+        char *buf = malloc(buf_len);
+        if (not buf) {
+                return;
+        }
+
+        scope (FILE *fp = fopen(global->runtime_stats.path, "w"), fp, fclose(fp)) {
+
+                size_t n = 0;
+                size_t i = 1;
+
+                n += snprintf(&buf[n], buf_len - n, "Currently connected clients:\n");
+
+                llist_foreach (session_t *, s, global->sessions) {
+
+                        static const char *mqtt_ver_str[] = {
+                                [mqtt_protocol_version__3p1] = "v3.1  ",
+                                [mqtt_protocol_version__3p1p1] = "v3.1.1",
+                                [mqtt_protocol_version__5p0] = "v5.0  ",
+                        };
+
+                        u32_t uptime = (now - s->connection_tref) / 1000;
+
+                        char ip_str_aligned[16];
+                        strlcpy(ip_str_aligned, "               ", sizeof(ip_str_aligned));
+                        memcpy(ip_str_aligned, s->client_ip_str, min(strlen(s->client_ip_str), sizeof(ip_str_aligned) - 1));
+
+                        n += snprintf(&buf[n], buf_len - n, "%u: %4u:%02u:%02u %s %s '%s'\n", i++,
+                                uptime / 3600, (uptime / 60) % 60, uptime % 60,
+                                mqtt_ver_str[s->protocol_version], ip_str_aligned, s->client_id);
+                }
+
+                fwrite(buf, 1, n, fp);
+        }
+
+        free(buf);
 }
 
 //==============================================================================
@@ -665,6 +737,8 @@ static session_t *session_new(SOCKET *socket)
         NET_INET_sockaddr_t addr;
         socket_get_address(session->socket, &addr, sizeof(addr));
         session->client_ip = addr.addr;
+
+        session->connection_tref = get_uptime_ms();
 
         snprintf(session->client_ip_str, sizeof(session->client_ip_str), "%u.%u.%u.%u",
                 NET_INET_IPv4_a(addr.addr), NET_INET_IPv4_b(addr.addr), NET_INET_IPv4_c(addr.addr),
@@ -745,8 +819,9 @@ static bool session_poll(session_t *session)
                 return false;
         }
 
-        if ((now - session->alive_tref) >= ((session->keep_alive * 1000) + 60000UL)) {
+        if ((now - session->alive_tref) >= ((session->keep_alive * 1000) + 5000)) {
                 VERBOSE_SESSION_WARNING("closing session because of inactivity.\n");
+                session_send_last_will(session);
                 return false;
         }
 
@@ -839,11 +914,7 @@ static bool session_poll(session_t *session)
 
         if (not connected) {
                 VERBOSE_SESSION("closing session...\n");
-
-                if (session->last_will.topic and session->last_will.payload) {
-                        session_publish_topic(session, 0, session->last_will.topic,
-                                session->last_will.payload, session->last_will.payload_length);
-                }
+                session_send_last_will(session);
         }
 
         return connected;
@@ -958,6 +1029,23 @@ static int session_receive_packet(session_t *session)
         packet->step = packet_step__fixed_header;
 
         return sizeof(packet->fixed_header) + packet->remaining_length_part + packet->received_length;
+}
+
+//==============================================================================
+/**
+ * @brief  Send session last will if set.
+ *
+ * @param  session      session instance
+ */
+//==============================================================================
+static void session_send_last_will(session_t *session)
+{
+        if (session->last_will.topic and session->last_will.payload) {
+                VERBOSE_SESSION("sending last will...\n");
+
+                topicdb_update_topic(session->last_will.topic, session->last_will.payload,
+                        session->last_will.payload_length, false, NULL, false);
+        }
 }
 
 //==============================================================================
@@ -2853,16 +2941,28 @@ static void session_send_subscribed_topics(session_t *session)
         }
 
         llist_foreach (topicsub_t *, sub, session->subscribtion_list) {
+
                 if (sub->topicdb_ref->msg_update_tref > sub->msg_sent_tref) {
 
-                        u8_t qos = sub->flags & mqtt_subscribe_flag__qos_mask;
+                        bool send = false;
 
-                        mqtt_reason_t reason = session_publish_topic(session, qos, sub->topicdb_ref->topic,
-                                sub->topicdb_ref->msg, sub->topicdb_ref->msg_length);
+                        if (session->connection_tref >= sub->topicdb_ref->msg_update_tref) {
+                                send = sub->topicdb_ref->retain;
+                        } else {
+                                send = true;
+                        }
 
-                        if (reason != mqtt_reason__success) {
-                                VERBOSE_SESSION("unable to publish topic.\n");
-                                break;
+                        if (send) {
+                                u8_t qos = sub->flags & mqtt_subscribe_flag__qos_mask;
+
+                                mqtt_reason_t reason = session_publish_topic(session, qos,
+                                        sub->topicdb_ref->topic, sub->topicdb_ref->msg,
+                                        sub->topicdb_ref->msg_length);
+
+                                if (reason != mqtt_reason__success) {
+                                        VERBOSE_SESSION("unable to publish topic.\n");
+                                        break;
+                                }
                         }
 
                         sub->msg_sent_tref = get_uptime_ms();
@@ -3022,8 +3122,8 @@ static void topicsub_destroy(void *a)
  * @return Returns MQTT reason code indicating success or failure in publishing the message.
  */
 //==============================================================================
-static mqtt_reason_t topicdb_update_topic(const char *topic, const uint8_t *msg_ref, size_t msg_len,
-        bool retain, topicdb_t **topicdb_ref, bool create_only)
+static mqtt_reason_t topicdb_update_topic(const char *topic, const void *msg_ref, size_t msg_len, bool retain,
+        topicdb_t **topicdb_ref, bool create_only)
 {
         mqtt_reason_t reason = mqtt_reason__implementation_specific_error;
 
