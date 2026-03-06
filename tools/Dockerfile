@@ -30,6 +30,7 @@ RUN ${ZYPPER} in libusb-1_0-0 libusb-1_0-devel
 RUN ${ZYPPER} in libjaylink libjaylink-devel libjaylink0
 RUN ${ZYPPER} in gawk lua53 lua53-devel lua53-luarocks
 RUN ${ZYPPER} in xorg-x11-fonts xorg-x11-fonts-converted xorg-x11-fonts-core xorg-x11-fonts-legacy
+RUN ${ZYPPER} in wine wine-32bit wine-gecko wine-mono
 
 # post-install operations
 RUN ln -s $(which srec_cat) /bin/srec_cat
@@ -53,11 +54,6 @@ RUN wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/g
 RUN tar -jxf gcc-arm-none-eabi-10.3-2021.10-${ARCHITECTURE}-linux.tar.bz2 -C /home/developer/bin/
 RUN rm gcc-arm-none-eabi-10.3-2021.10-${ARCHITECTURE}-linux.tar.bz2
 RUN echo 'export PATH=$PATH:/home/developer/bin/gcc-arm-none-eabi-10.3-2021.10/bin' >> /home/developer/.bashrc
-
-#RUN wget https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-${ARCHITECTURE}-arm-none-eabi.tar.xz
-#RUN tar -xf arm-gnu-toolchain-14.2.rel1-${ARCHITECTURE}-arm-none-eabi.tar.xz -C /home/developer/bin/
-#RUN rm arm-gnu-toolchain-14.2.rel1-${ARCHITECTURE}-arm-none-eabi.tar.xz
-#RUN echo "export PATH=\$PATH:/home/developer/bin/arm-gnu-toolchain-14.2.rel1-${ARCHITECTURE}-arm-none-eabi/bin" >> /home/developer/.bashrc
 
 # oh-my-zsh
 WORKDIR /home/developer
