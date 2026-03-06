@@ -6,4 +6,5 @@ else
     dev=$1
 fi
 
-minicom -C /tmp/minicom.log -D "$dev" -b 115200
+#minicom -C /tmp/sterownik_domu.log -D "$dev" -b 460800
+screen -L -Logfile /tmp/screen-hmi.log "$dev" 460800

@@ -49,6 +49,7 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#define LIBMQTT_VERSION 20251025
 
 /*==============================================================================
   Exported object types
@@ -116,6 +117,7 @@ typedef struct libmqtt_conf {
         u32_t rx_buf_size;  // MQTT frame receive buffer
         u32_t tx_buf_size;  // MQTT frame transmit buffer
         u32_t out_buf_size; // socket output buffer
+        void *context;
         void *socket;
         int (*socket_recv)(struct libmqtt_conf *conf, void *buf, u16_t len);
         int (*socket_send)(struct libmqtt_conf *conf, const void *buf, u16_t len);
@@ -154,6 +156,13 @@ typedef struct {
         size_t payload_len;
 } libmqtt_publish_t;
 
+typedef struct {
+        const char *topic;
+        libmqtt_qos_t qos;
+        bool retain;
+        const char *path;
+} libmqtt_publish_file_t;
+
 /*==============================================================================
   Exported objects
 ==============================================================================*/
@@ -167,7 +176,8 @@ extern int libmqtt__connect(libmqtt_t *self, const libmqtt_connect_params_t *con
 extern int libmqtt__disconnect(libmqtt_t *self);
 extern int libmqtt__subscribe(libmqtt_t *self, const libmqtt_subscribe_t *topic, size_t topics);
 extern int libmqtt__unsubscribe(libmqtt_t *self, const char *topic[], size_t topics);
-extern int libmqtt__publish(libmqtt_t *self, libmqtt_publish_t *publish);
+extern int libmqtt__publish(libmqtt_t *self, const libmqtt_publish_t *publish);
+extern int libmqtt__publish_file(libmqtt_t *self, const libmqtt_publish_file_t *publish);
 extern int libmqtt__loop_once(libmqtt_t *self);
 
 /*==============================================================================

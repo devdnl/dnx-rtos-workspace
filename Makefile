@@ -41,6 +41,7 @@ ECHO           = /bin/echo -e
 REMOVE         = /bin/rm -rf
 COPY           = /bin/cp -r
 RENAME         = /bin/mv
+MOVE           = /bin/mv
 MKDIR          = /bin/mkdir -p
 CAT            = /bin/cat
 SREC_CAT       = /bin/srec_cat
@@ -98,8 +99,8 @@ define make_romfs
 	$(eval $@_ROMFS_NAME = $(1))
 	$(eval $@_CONFIG_NAME = $(2))
 	$(MAKE) -C ${$@_ROMFS_NAME} -s -j 1 -fMakefile all CONFIG_DIR=../config/${$@_CONFIG_NAME}
-	$(COPY) ${$@_ROMFS_NAME}/build/romfs.bin $(TARGET_DIR_NAME)/${$@_ROMFS_NAME}.bin
-	$(COPY) ${$@_ROMFS_NAME}/build/romfs.hex $(TARGET_DIR_NAME)/${$@_ROMFS_NAME}.hex
+	$(COPY) ${$@_ROMFS_NAME}/build/romfs.bin $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.bin
+	$(COPY) ${$@_ROMFS_NAME}/build/romfs.hex $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.hex
 endef
 
 # define macro to clean appset
@@ -130,20 +131,20 @@ endef
 
 # define macro used to configure system
 define config_system
-	$(eval $@_APP_NAME = $(1))
-	$(CONFIGTOOL) ../../config/${$@_APP_NAME}/config.h
+	$(eval $@_CONFIG_NAME = $(1))
+	$(CONFIGTOOL) ../../config/${$@_CONFIG_NAME}/config.h
 endef
 
 # define macro used to configure appset
 define config_appset
-	$(eval $@_APP_NAME = $(1))
-	$(CONFIGTOOL) ../../config/${$@_APP_NAME}/config.h
+	$(eval $@_CONFIG_NAME = $(1))
+	$(CONFIGTOOL) ../../config/${$@_CONFIG_NAME}/config.h
 endef
 
 # define macro used to configure romfs
 define config_romfs
-	$(eval $@_ROMFS_NAME = $(1))
-	$(CONFIGTOOL) ../../config/${$@_ROMFS_NAME}/config.h
+	$(eval $@_CONFIG_NAME = $(1))
+	$(CONFIGTOOL) ../../config/${$@_CONFIG_NAME}/config.h
 endef
 
 ####################################################################################################

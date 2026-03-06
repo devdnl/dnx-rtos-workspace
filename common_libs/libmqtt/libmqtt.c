@@ -41,6 +41,7 @@ Brief   MQTT library (MQTT v3.1.1).
 #include <time.h>
 #include <errno.h>
 #include <dnx/vt100.h>
+#include <sys/stat.h>
 
 /*==============================================================================
   Local macros
@@ -908,6 +909,7 @@ int libmqtt__connect(libmqtt_t *self, const libmqtt_connect_params_t *conn_param
         i64_t tref = self->conf.get_time_ms();
 
         self->server_response_tref = tref;
+        self->keep_alive_tref = tref;
 
         while (true) {
                 if (self->conf.get_time_ms() - tref >= self->conf.timeout_ms) {
@@ -1176,7 +1178,7 @@ int libmqtt__unsubscribe(libmqtt_t *self, const char *topic[], size_t topics)
  * @return On success 0 returned.
  */
 //==============================================================================
-int libmqtt__publish(libmqtt_t *self, libmqtt_publish_t *publish)
+int libmqtt__publish(libmqtt_t *self, const libmqtt_publish_t *publish)
 {
         if (not self or not publish or not publish->topic or not publish->payload or
                 not publish->payload_len or (publish->qos > libmqtt_qos__QOS2)) {
@@ -1217,9 +1219,9 @@ int libmqtt__publish(libmqtt_t *self, libmqtt_publish_t *publish)
                 return -EIO;
         }
 
-        i64_t tref = self->conf.get_time_ms();
-
         if (publish->qos > libmqtt_qos__QOS0) {
+                i64_t tref = self->conf.get_time_ms();
+
                 while (true) {
                         if (self->conf.get_time_ms() - tref >= self->conf.timeout_ms) {
                                 return -ETIME;
@@ -1255,6 +1257,136 @@ int libmqtt__publish(libmqtt_t *self, libmqtt_publish_t *publish)
         }
 
         return 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Publish message from file.
+ *
+ * @param  self         instance
+ * @param  publish      publish
+ *
+ * @return On success 0 returned.
+ */
+//==============================================================================
+int libmqtt__publish_file(libmqtt_t *self, const libmqtt_publish_file_t *publish)
+{
+        if (not self or not publish or not publish->topic or not publish->path or
+                (publish->qos > libmqtt_qos__QOS2)) {
+                return -EINVAL;
+        }
+
+        if (sizeof(u16_t) + strlen(publish->topic) + sizeof(u16_t) > self->tx_buf.size) {
+                return -ENOSPC;
+        }
+
+        struct stat fp_stat;
+        errno = 0;
+        if (stat(publish->path, &fp_stat) != 0) {
+                return -errno;
+        }
+
+        if (fp_stat.st_size == 0) {
+                return -EAGAIN;
+        }
+
+        errno = 0;
+        FILE *fp = fopen(publish->path, "r");
+        if (not fp) {
+                return -errno;
+        }
+
+        static u8_t QOS[] = {
+                [libmqtt_qos__QOS0] = mqtt_publish_flag__qos_0,
+                [libmqtt_qos__QOS1] = mqtt_publish_flag__qos_1,
+                [libmqtt_qos__QOS2] = mqtt_publish_flag__qos_2,
+        };
+
+        size_t variable_header_len = 0;
+        u8_t *variable_header = self->tx_buf.buf;
+        variable_header_len += copy_mqtt_string(&variable_header[variable_header_len], publish->topic,
+                strlen(publish->topic));
+
+        u16_t packet_id = get_packet_id(self);
+
+        if (publish->qos >= libmqtt_qos__QOS1) {
+                variable_header[variable_header_len++] = (packet_id >> 8);
+                variable_header[variable_header_len++] = (packet_id >> 0);
+        }
+
+        mqtt_control_packet_t packet = {0};
+        packet.type = mqtt_msg_type__publish;
+        packet.fixed_header_flags = QOS[publish->qos] | (publish->retain ? mqtt_publish_flag__retain : 0);
+        packet.variable_header = variable_header;
+        packet.variable_header_length = variable_header_len;
+        packet.payload = NULL;
+        packet.payload_length = fp_stat.st_size;
+
+        int err = session_serialize_packet(self, &packet);
+        if (not err) {
+                while (fp_stat.st_size > 0) {
+                        errno = 0;
+                        size_t n = fread(self->tx_buf.buf, 1, self->tx_buf.size, fp);
+                        if (n > 0) {
+                                errno = 0;
+                                int l = self->conf.socket_send(&self->conf, self->tx_buf.buf, n);
+                                if (l != cast(int, n)) {
+                                        err = -errno;
+                                        VERBOSE_SESSION_WARNING("(file) write error: %s\n", strerror(-err));
+                                        break;
+                                }
+
+                                fp_stat.st_size -= n;
+                        } else {
+                                err = -errno;
+                                VERBOSE_SESSION_WARNING("file read error: %s\n", strerror(-err));
+                                break;
+                        }
+                }
+
+                fclose(fp);
+
+                self->server_response_tref = self->conf.get_time_ms();
+        }
+
+        if (not err and (publish->qos > libmqtt_qos__QOS0)) {
+                i64_t tref = self->conf.get_time_ms();
+
+                while (true) {
+                        if (self->conf.get_time_ms() - tref >= self->conf.timeout_ms) {
+                                return -ETIME;
+                        }
+
+                        mqtt_msg_type_t packet_type;
+                        int n = loop(self, &packet_type);
+                        if (n < 0) {
+                                return -EIO;
+
+                        } else if (n == 0) {
+                                continue;
+
+                        } else if (n > 0) {
+                                u8_t *variable_header = self->rx_packet.variable_header_and_payload;
+
+                                if ((publish->qos == libmqtt_qos__QOS1) and
+                                        (packet_type == mqtt_msg_type__puback)) {
+                                        u16_t ack_packet_id = (variable_header[0] << 8) | variable_header[1];
+                                        if (ack_packet_id == packet_id) {
+                                                break;
+                                        }
+
+                                } else if ((publish->qos == libmqtt_qos__QOS2) and
+                                        (packet_type == mqtt_msg_type__pubcomp)) {
+                                        u16_t ack_packet_id = (variable_header[0] << 8) | variable_header[1];
+                                        if (ack_packet_id == packet_id) {
+                                                break;
+                                        }
+                                }
+                        }
+                }
+        }
+
+        return err;
 }
 
 //==============================================================================
