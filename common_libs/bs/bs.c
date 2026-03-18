@@ -562,8 +562,11 @@ int bs_get_next(bs_t *self, uint8_t **next, const char **key, const void **value
         }
 
         item_t *item = cast(typeof(item), *next);
+        uintptr_t chunk_end = cast(uintptr_t, self->chunk) + self->chunk_len;
 
-        if (cast(uintptr_t, item) < cast(uintptr_t, self->chunk) + self->chunk_len) {
+        if ((cast(uintptr_t, item) < chunk_end) and
+                (cast(uintptr_t, item) + sizeof(item_t) < chunk_end) and
+                ((cast(uintptr_t, item) + sizeof(item_t) + item->data_len + item->key_len) <= chunk_end)) {
 
                 *type = item->type;
                 *key = cast(const char *, &item->key_data[0]);

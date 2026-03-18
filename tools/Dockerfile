@@ -40,6 +40,8 @@ ENV HOME=/home/developer
 ENV LANG="C.UTF-8"
 ENV LC_ALL="C.UTF-8"
 ENV DISPLAY=:0
+ENV PATH="/home/developer/bin/gcc-arm-none-eabi-10.3-2021.10/bin:$PATH"
+ENV PATH="/home/developer/bin:$PATH"
 
 # basic files and directories
 WORKDIR /home/developer
