@@ -4,33 +4,33 @@ ARG ARCHITECTURE=
 ARG PROJECT_NAME=
 
 # packages
-ARG ZYPPER="zypper --non-interactive"
-RUN ${ZYPPER} in opi glibc-locale
-RUN ${ZYPPER} in make makedepend gcc
-RUN ${ZYPPER} in wget
-RUN ${ZYPPER} in tar
-RUN ${ZYPPER} in bzip2
-RUN ${ZYPPER} in python3
-RUN ${ZYPPER} in bash-completion
-RUN ${ZYPPER} in zsh
-RUN ${ZYPPER} in git
-RUN ${ZYPPER} in libncurses5 libncurses6 ncurses-devel
-RUN ${ZYPPER} in libreadline6 libreadline7
-RUN ${ZYPPER} in libgtk-2_0-0
-RUN ${ZYPPER} in libgthread-2_0-0
-RUN ${ZYPPER} in libSM6
-RUN ${ZYPPER} in libGLU1
-RUN ${ZYPPER} in srecord
-RUN ${ZYPPER} in minicom minicom-lang
-RUN ${ZYPPER} in which
-RUN ${ZYPPER} in libtool
-RUN ${ZYPPER} in pkgconf
-RUN ${ZYPPER} in jimtcl jimtcl-devel
-RUN ${ZYPPER} in libusb-1_0-0 libusb-1_0-devel
-RUN ${ZYPPER} in libjaylink libjaylink-devel libjaylink0
-RUN ${ZYPPER} in gawk lua53 lua53-devel lua53-luarocks
-RUN ${ZYPPER} in xorg-x11-fonts xorg-x11-fonts-converted xorg-x11-fonts-core xorg-x11-fonts-legacy
-RUN ${ZYPPER} in wine wine-32bit wine-gecko wine-mono
+RUN zypper --non-interactive install\
+    opi glibc-locale\
+    make makedepend gcc\
+    wget\
+    tar\
+    bzip2\
+    python3\
+    bash-completion\
+    zsh\
+    git\
+    libncurses5 libncurses6 ncurses-devel\
+    libreadline6 libreadline7\
+    libgtk-2_0-0\
+    libgthread-2_0-0\
+    libSM6\
+    libGLU1\
+    srecord\
+    minicom minicom-lang\
+    which\
+    libtool\
+    pkgconf\
+    jimtcl jimtcl-devel\
+    libusb-1_0-0 libusb-1_0-devel\
+    libjaylink libjaylink-devel libjaylink0\
+    gawk lua53 lua53-devel lua53-luarocks\
+    xorg-x11-fonts xorg-x11-fonts-converted xorg-x11-fonts-core xorg-x11-fonts-legacy\
+    wine wine-32bit wine-gecko wine-mono
 
 # post-install operations
 RUN ln -s $(which srec_cat) /bin/srec_cat
