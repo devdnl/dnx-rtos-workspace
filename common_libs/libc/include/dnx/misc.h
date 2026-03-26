@@ -47,6 +47,7 @@ dnx RTOS miscellaneous macros and functions.
 #include <string.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <iso646.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -468,87 +469,6 @@ extern "C" {
  */
 //==============================================================================
 #define strsize(_str) (strlen(_str) + 1)
-
-//==============================================================================
-/**
- * @brief Macro is alias of logical \b AND operator: &&
- *
- * The macro @ref and is an logical AND (&&) in C++11 style.
- *
- * @b Example
- * @code
-        // ...
-
-        #include <dnx/misc.h>
-
-        if (1 == 1 and 2 == 2) {
-             // ...
-        }
-
-        // ...
-
-   @endcode
- *
- * @see or, not
- */
-//==============================================================================
-#ifndef __cplusplus
-#define and &&
-#endif
-
-//==============================================================================
-/**
- * @brief Macro is alias of logical \b OR operator: ||
- *
- * The macro @ref or is an logical OR (||) in C++11 style.
- *
- * @b Example
- * @code
-        // ...
-
-        #include <dnx/misc.h>
-
-        if (1 == 1 or 2 == 2) {
-             // ...
-        }
-
-        // ...
-
-   @endcode
- *
- * @see and, not
- */
-//==============================================================================
-#ifndef __cplusplus
-#define or ||
-#endif
-
-//==============================================================================
-/**
- * @brief Macro is alias of logical \b NOT operator: !
- *
- * The macro @ref not is an logical NOT (!) in C++11 style.
- *
- * @b Example
- * @code
-        // ...
-
-        #include <dnx/misc.h>
-
-        if (not (1 == 1 and 2 == 2)) {
-             // ...
-        }
-
-        // ...
-
-   @endcode
- *
- * @see and, or
- */
-//==============================================================================
-#ifndef __cplusplus
-#define not !
-#endif
 
 //==============================================================================
 /**
