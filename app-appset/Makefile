@@ -42,7 +42,7 @@ endif
 ####################################################################################################
 # project name
 PROJECT = $(__PROJECT_NAME__)
-COPTS =
+CC_WRAPPER =
 
 #---------------------------------------------------------------------------------------------------
 # DEFAULT COMPILER FLAGS
@@ -170,8 +170,8 @@ SIZEOF     = /usr/bin/stat -c %s
 MKDEP      = /usr/bin/makedepend
 WC         = /usr/bin/wc
 PYTHON3    = /usr/bin/python3
-CC         = $(COPTS) $(TOOLCHAIN)gcc
-CXX        = $(COPTS) $(TOOLCHAIN)g++
+CC         = $(CC_WRAPPER) $(TOOLCHAIN)gcc
+CXX        = $(CC_WRAPPER) $(TOOLCHAIN)g++
 LD         = $(TOOLCHAIN)g++
 AS         = $(TOOLCHAIN)gcc -x assembler-with-cpp
 AR         = $(TOOLCHAIN)ar
