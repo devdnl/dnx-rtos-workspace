@@ -42,6 +42,7 @@ endif
 ####################################################################################################
 # project name
 PROJECT = $(__PROJECT_NAME__)
+COPTS =
 
 #---------------------------------------------------------------------------------------------------
 # DEFAULT COMPILER FLAGS
@@ -85,7 +86,6 @@ CFLAGS   = -c \
            -I./build\
            -I$(CONFIG_DIR)\
            -Wno-main\
-           -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
            $(CPUCONFIG_CFLAGS)
 
 CXXFLAGS = -c \
@@ -112,7 +112,6 @@ CXXFLAGS = -c \
            -Werror=overflow \
            -Werror=array-bounds \
            -include $(CONFIG) \
-           -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
            -include ./build/defs.h \
            -I./build\
            -I$(CONFIG_DIR)\
@@ -171,8 +170,8 @@ SIZEOF     = /usr/bin/stat -c %s
 MKDEP      = /usr/bin/makedepend
 WC         = /usr/bin/wc
 PYTHON3    = /usr/bin/python3
-CC         = $(TOOLCHAIN)gcc
-CXX        = $(TOOLCHAIN)g++
+CC         = $(COPTS) $(TOOLCHAIN)gcc
+CXX        = $(COPTS) $(TOOLCHAIN)g++
 LD         = $(TOOLCHAIN)g++
 AS         = $(TOOLCHAIN)gcc -x assembler-with-cpp
 AR         = $(TOOLCHAIN)ar
@@ -375,7 +374,6 @@ generate :
 	@$(ECHO) "Obtaining git hash..."
 	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" > build/defs.h
 	@$(ECHO) "#define BRANCH_NAME \"$(shell git symbolic-ref --short HEAD 2>/dev/null)"\" >> build/defs.h
-	@$(ECHO) "#define BUILD_TIME \"$(shell date '+%F, %T')\"" >> build/defs.h
 	@$(ECHO) "#define BOARD_NAME \"$(BOARD_NAME)\"" >> build/defs.h
 	@$(ECHO) "#define board_name_$(BOARD_NAME)" >> build/defs.h
 	@$(ECHO) "#define PROJECT_OPTS \"$(PROJECT_OPTS)\"" >> build/defs.h
