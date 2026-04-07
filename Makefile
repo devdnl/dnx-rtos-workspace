@@ -49,20 +49,22 @@ GREP           = /bin/grep
 SIZEOF         = /usr/bin/stat -c %s
 WC             = /usr/bin/wc
 PYTHON3        = /usr/bin/python3
+MD5SUM         = /usr/bin/md5sum
 OBJCOPY        = $(TOOLCHAIN)objcopy
 OBJDUMP        = $(TOOLCHAIN)objdump
 SIZE           = $(TOOLCHAIN)size
-CONFIGTOOL     = ./tools/configtool.sh
-FLASH_CPU      = ./tools/flash.sh
+CONFIGTOOL     = $(SHELL) ./tools/configtool.sh
+FLASH_CPU      = $(SHELL) ./tools/flash.sh
 MKFPKG         = $(PYTHON3) ./system/tools/mkfpkg.py
-MKLINKERSCRIPT = ./tools/create_linker_script.sh
-MD5SUM         = /usr/bin/md5sum
+MKLINKERSCRIPT = $(SHELL) ./tools/create_linker_script.sh
+SYNCDIR        = $(PYTHON3) ./system/tools/syncdir.py
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
 #---------------------------------------------------------------------------------------------------
 # defines VALUES
-EMPTY =
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
 
 # defines this makefile name
 THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
@@ -73,12 +75,12 @@ define make_system
 	$(ECHO) "Start building dnx RTOS image..."
 	$(MKLINKERSCRIPT) ../../config/${$@_APP_NAME}/custom_linker_script.h ../config/${$@_APP_NAME}/custom_linker_script.ld
 	$(REMOVE) system/build/ioctl
-	$(MAKE) -C system -s -j 1 -fMakefile clean all CONFIG_DIR=../config/${$@_APP_NAME}
+	$(MAKE) -C system -s -j 1 -fMakefile all CONFIG_DIR=../config/${$@_APP_NAME}
 	$(COPY) system/build/output/dnx.hex $(TARGET_DIR_NAME)/${$@_APP_NAME}.hex
 	$(COPY) system/build/output/dnx.elf $(TARGET_DIR_NAME)/${$@_APP_NAME}.elf
 	$(COPY) system/build/output/dnx.bin $(TARGET_DIR_NAME)/${$@_APP_NAME}.bin
-	$(REMOVE) $(TARGET_DIR_NAME)/ioctl
-	$(COPY) system/build/ioctl $(TARGET_DIR_NAME)
+	$(MKDIR) $(TARGET_DIR_NAME)/ioctl
+	$(SYNCDIR) system/build/ioctl/ $(TARGET_DIR_NAME)/ioctl/
 	$(REMOVE) system/build/ioctl
 endef
 
@@ -238,6 +240,7 @@ clean-app-appset : _build_prepare
 
 .PHONY : build-btl-system
 build-btl-system : _build_prepare
+	@$(call clean_system)
 	@$(call make_system, btl-system)
 
 .PHONY : build-btl-appset

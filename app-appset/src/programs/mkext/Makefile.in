@@ -19,7 +19,6 @@ CSRC_PROGRAMS   += $(PROG_ROOT_MKEXT)mkext/lwext4/src/ext4_mkfs.c
 CSRC_PROGRAMS   += $(PROG_ROOT_MKEXT)mkext/lwext4/src/ext4_super.c
 CSRC_PROGRAMS   += $(PROG_ROOT_MKEXT)mkext/lwext4/src/ext4_trans.c
 CSRC_PROGRAMS   += $(PROG_ROOT_MKEXT)mkext/lwext4/src/ext4_xattr.c
-CSRC_PROGRAMS   += $(PROG_ROOT_MKEXT)mkext/lwext4/src/ext4_mkfs.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += $(PROG_ROOT_MKEXT)mkext/
 HDRLOC_PROGRAMS += $(PROG_ROOT_MKEXT)mkext/lwext4/include

@@ -3,7 +3,7 @@
 #
 # MIT License
 #
-# Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
+# Copyright (C) 2026 Daniel Zorychta <daniel.zorychta@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -42,20 +42,20 @@ endif
 ####################################################################################################
 # project name
 PROJECT = $(__PROJECT_NAME__)
-CC_WRAPPER = 
 
 #---------------------------------------------------------------------------------------------------
 # DEFAULT COMPILER FLAGS
 #---------------------------------------------------------------------------------------------------
 TOOLCHAIN = $(__PROJECT_TOOLCHAIN__)
+CC_WRAPPER = 
 
-AFLAGS   = -c \
+AFLAGS   = -c -MMD -MP \
            -g \
            -ggdb3 \
-           -include ./build/defs.h \
+           -include $(CONFIG) \
            $(CPUCONFIG_AFLAGS)
 
-CFLAGS   = -c \
+CFLAGS   = -c -MMD -MP \
            -g \
            -ggdb3  \
            -Os \
@@ -82,13 +82,12 @@ CFLAGS   = -c \
            -Werror=array-bounds \
            -Wno-enum-conversion \
            -include $(CONFIG) \
-           -include ./build/defs.h \
            -I./build\
            -I$(CONFIG_DIR)\
            -Wno-main\
            $(CPUCONFIG_CFLAGS)
 
-CXXFLAGS = -c \
+CXXFLAGS = -c -MMD -MP \
            -g \
            -ggdb3 \
            -Os \
@@ -112,7 +111,6 @@ CXXFLAGS = -c \
            -Werror=overflow \
            -Werror=array-bounds \
            -include $(CONFIG) \
-           -include ./build/defs.h \
            -I./build\
            -I$(CONFIG_DIR)\
            $(CPUCONFIG_CXXFLAGS)
@@ -167,9 +165,10 @@ CAT        = /bin/cat
 GREP       = /bin/grep
 UNAME      = /bin/uname -s
 SIZEOF     = /usr/bin/stat -c %s
-MKDEP      = /usr/bin/makedepend
 WC         = /usr/bin/wc
 PYTHON3    = /usr/bin/python3
+SREC_CAT   = /bin/srec_cat
+CODECHECK  = cppcheck
 CC         = $(CC_WRAPPER) $(TOOLCHAIN)gcc
 CXX        = $(CC_WRAPPER) $(TOOLCHAIN)g++
 LD         = $(TOOLCHAIN)g++
@@ -178,24 +177,23 @@ AR         = $(TOOLCHAIN)ar
 OBJCOPY    = $(TOOLCHAIN)objcopy
 OBJDUMP    = $(TOOLCHAIN)objdump
 SIZE       = $(TOOLCHAIN)size
-CONFIGTOOL = ./tools/configtool.sh
-CODECHECK  = cppcheck
-ADDAPPS    = ./tools/addapps.sh
-FLASH_CPU  = ./tools/flash.sh
-RESET_CPU  = ./tools/reset.sh
-GIT_HOOKS  = ./tools/apply_git_hooks.sh
-DOXYGEN    = ./tools/doxygen.sh
-RELEASEPKG = ./tools/releasepkg.sh
-RUNGENS    = ./tools/rungens.sh
-FINDGVAR   = ./tools/find_global_vars.sh
-SREC_CAT   = /bin/srec_cat
+SYNCDIR    = $(PYTHON3) ./tools/syncdir.py
+CONFIGTOOL = $(SHELL) ./tools/configtool.sh
+ADDAPPS    = $(SHELL) ./tools/addapps.sh
+FLASH_CPU  = $(SHELL) ./tools/flash.sh
+RESET_CPU  = $(SHELL) ./tools/reset.sh
+GIT_HOOKS  = $(SHELL) ./tools/apply_git_hooks.sh
+DOXYGEN    = $(SHELL) ./tools/doxygen.sh
+RUNGENS    = $(SHELL) ./tools/rungens.sh
+FINDGVAR   = $(SHELL) ./tools/find_global_vars.sh
 MKFPKG     = $(PYTHON3) ../system/tools/mkfpkg.py
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
 #---------------------------------------------------------------------------------------------------
 # defines VALUES
-EMPTY =
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
 
 # defines this makefile name
 THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
@@ -261,6 +259,8 @@ OBJECTS_ALL            = $(OBJECTS_ASRC) $(OBJECTS_CSRC) $(OBJECTS_CXXSRC)
 # functions
 FIND_GLOBAL_VARS_LIBS_PROGS = if [[ "$@" =~ $(APP_PRG_LOC) ]] || [[ "$@" =~ $(APP_LIB_LOC) ]]; then $(FINDGVAR) $@ || ($(RM) $@; exit 1); fi
 
+.DELETE_ON_ERROR:
+
 ####################################################################################################
 # targets
 ####################################################################################################
@@ -270,7 +270,7 @@ all : generate apply_git_hooks
 	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) build_start
 
 .PHONY : build_start
-build_start : dependencies buildobjects buildarchive linkobjects hex status
+build_start : buildobjects linkobjects hex status
 
 ####################################################################################################
 # help
@@ -337,14 +337,14 @@ hex :
 	@$(ECHO) 'Creating binary image...'
 	@$(OBJCOPY) $(TARGET_PATH)/$(PROJECT).elf -O binary $(TARGET_PATH)/$(PROJECT).bin
 
-	@$(ECHO) 'Creating memory dump...'
-	@$(OBJDUMP) -x --syms $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).dmp
+	#@$(ECHO) 'Creating memory dump...'
+	#@$(OBJDUMP) -x --syms $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).dmp
 
-	@$(ECHO) 'Creating extended listing....'
-	@$(OBJDUMP) -S $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).lst
+	#@$(ECHO) 'Creating extended listing....'
+	#@$(OBJDUMP) -S $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).lst
 
-	@$(ECHO) 'Creating objects size list...'
-	@$(SIZE) -B -t --common $(TARGET_PATH)/$(PROJECT).a > $(TARGET_PATH)/$(PROJECT).size
+	#@$(ECHO) 'Creating objects size list...'
+	#@$(SIZE) -B -t --common $(TARGET_PATH)/$(PROJECT).a > $(TARGET_PATH)/$(PROJECT).size
 
 ####################################################################################################
 # show compile status
@@ -365,18 +365,23 @@ status :
 .PHONY : generate
 generate :
 	@$(MKDIR) $(TARGET_PATH)
-	@$(RM) $(TARGET_PATH)/*.*
 
 	@$(MKDIR) $(GEN_PROG_DIR)
+	@$(MKDIR) $(GEN_PROG_DIR)-tmp
 	@$(ECHO) "Adding user's programs and libraries to the project..."
-	@$(SHELL) $(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR) $(__PROGRAMS_LIST__) $(__PROGRAMS_EXCLUDE_LIST__) $(CONFIG_DIR)
+	@$(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR)-tmp $(__PROGRAMS_LIST__) $(__PROGRAMS_EXCLUDE_LIST__) $(CONFIG_DIR)
+	@$(SYNCDIR) $(GEN_PROG_DIR)-tmp/ $(GEN_PROG_DIR)/
 
 	@$(ECHO) "Obtaining git hash..."
-	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" > build/defs.h
-	@$(ECHO) "#define BRANCH_NAME \"$(shell git symbolic-ref --short HEAD 2>/dev/null)"\" >> build/defs.h
-	@$(ECHO) "#define BOARD_NAME \"$(BOARD_NAME)\"" >> build/defs.h
-	@$(ECHO) "#define board_name_$(BOARD_NAME)" >> build/defs.h
-	@$(ECHO) "#define PROJECT_OPTS \"$(PROJECT_OPTS)\"" >> build/defs.h
+	@$(MKDIR) $(TARGET_DIR_NAME)/build
+	@$(MKDIR) $(TARGET_DIR_NAME)/build-tmp
+	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" > $(TARGET_DIR_NAME)/build-tmp/defs.h
+	@$(ECHO) "#define BRANCH_NAME \"$(shell git symbolic-ref --short HEAD 2>/dev/null)"\" >> $(TARGET_DIR_NAME)/build-tmp/defs.h
+	@$(ECHO) "#define BOARD_NAME \"$(BOARD_NAME)\"" >> $(TARGET_DIR_NAME)/build-tmp/defs.h
+	@$(ECHO) "#define board_name_$(BOARD_NAME)" >> $(TARGET_DIR_NAME)/build-tmp/defs.h
+	@$(ECHO) "#define PROJECT_OPTS \"$(PROJECT_OPTS)\"" >> $(TARGET_DIR_NAME)/build-tmp/defs.h
+	@$(ECHO) "#define COMPILE_EPOCH_TIME $(shell $(DATE) "+%s")" > $(TARGET_DIR_NAME)/build-tmp/vars.h
+	@$(SYNCDIR) $(TARGET_DIR_NAME)/build-tmp/ $(TARGET_DIR_NAME)/build/
 
 ####################################################################################################
 # Start all generators
@@ -393,48 +398,16 @@ apply_git_hooks :
 	@$(GIT_HOOKS)
 
 ####################################################################################################
-# makes dependences
-####################################################################################################
-.PHONY : dependencies
-dependencies :
-	@$(ECHO) "Creating dependencies for '$(TARGET)' target..."
-	@$(MKDIR) $(TARGET_PATH)
-	@$(ECHO) "" > $(TARGET_PATH)/$(DEP_FILE_NAME)
-	@$(MKDEP)    -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH_TARGET) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1
-	@$(MKDEP) -a -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH_PROGRAMS) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1
-	@$(MKDEP) -a -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH_LIB) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1
-	@$(MKDEP) -a -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH_CORE) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1
-	@$(MKDEP) -a -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH_NOARCH) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1
-	@$(MKDEP) -a -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH_ARCH) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1
-	@$(ECHO) "$(foreach var,$(CSRC),\n$(OBJ_PATH)/$(var:.$(C_EXT)=.$(OBJ_EXT)) : $(var))" >> $(TARGET_PATH)/$(DEP_FILE_NAME)
-	@$(ECHO) "$(foreach var,$(CXXSRC),\n$(OBJ_PATH)/$(var:.$(CXX_EXT)=.$(OBJ_EXT)) : $(var))" >> $(TARGET_PATH)/$(DEP_FILE_NAME)
-	@$(ECHO) "$(foreach var,$(ASRC),\n$(OBJ_PATH)/$(var:.$(AS_EXT)=.$(OBJ_EXT)) : $(var))" >> $(TARGET_PATH)/$(DEP_FILE_NAME)
-
-####################################################################################################
 # linking rules
 ####################################################################################################
-.PHONY : linkobjects
-linkobjects :
-	@$(ECHO) "Linking..."
-	@$(LD) $(TARGET_PATH)/$(PROJECT).a $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
-	@#$(LD) $(OBJECTS_ALL) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
+$(TARGET_PATH)/objects.list : $(OBJECTS_ALL)
+	$(file >$@)
+	$(foreach f,$(OBJECTS_ALL),$(file >>$@,$(f)))
 
-####################################################################################################
-# create objects archive
-####################################################################################################
-buildarchive :
-	@$(ECHO) "Archiving..."
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_ASRC)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CSRC_PROGRAMS)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CSRC_LIB)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CSRC_CORE)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CSRC_NOARCH)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CSRC_ARCH)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CXXSRC_PROGRAMS)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CXXSRC_LIB)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CXXSRC_CORE)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CXXSRC_NOARCH)
-	@$(AR) rTPcs $(TARGET_PATH)/$(PROJECT).a $(OBJECTS_CXXSRC_ARCH)
+.PHONY : linkobjects
+linkobjects : $(TARGET_PATH)/objects.list
+	@$(ECHO) "Linking..."
+	@$(LD) @$(TARGET_PATH)/objects.list $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
 
 ####################################################################################################
 # build objects
@@ -473,45 +446,12 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(AS_EXT) $(THIS_MAKEFILE)
 	@$(AS) $(AFLAGS) $(SEARCHPATH) $< -o $@
 
 ####################################################################################################
-# clean target
-####################################################################################################
-.PHONY : cleantarget
-cleantarget :
-	@$(ECHO) "Cleaning target..."
-	-@$(RM) -r $(OBJ_PATH) $(LST_PATH)
-	-@$(RM) $(TARGET_DIR_NAME)/*.*
-
-####################################################################################################
 # clean all targets
 ####################################################################################################
 .PHONY : clean
 clean :
 	@$(ECHO) "Deleting all build files..."
 	-@$(RM) -r $(TARGET_DIR_NAME) ./doc/doxygen/html/ ./doc/doxygen/latex ./$(APP_LOC)/Makefile ./$(APP_LOC)/program_registration.c
-
-####################################################################################################
-# flash target CPU by using ./tools/flash.sh script
-####################################################################################################
-.PHONY : flash
-flash:
-	@$(FLASH_CPU) ../$(TARGET_PATH)/appset.hex
-
-.PHONY : install
-install : flash
-
-####################################################################################################
-# reset target CPU by using ./tools/flash.sh script
-####################################################################################################
-.PHONY : reset
-reset:
-	@$(RESET_CPU)
-
-####################################################################################################
-# target used to create Release archive
-####################################################################################################
-.PHONY : release
-release: clean
-	@$(SHELL) $(RELEASEPKG)
 
 ####################################################################################################
 # target used to Doxygen documentation
@@ -523,4 +463,4 @@ doc:
 ####################################################################################################
 # include all dependencies
 ####################################################################################################
--include $(TARGET_PATH)/$(DEP_FILE_NAME)
+-include $(OBJECTS_ALL:.o=.d)
