@@ -30,8 +30,8 @@ RUN zypper --non-interactive install\
     libjaylink libjaylink-devel libjaylink0\
     gawk lua53 lua53-devel lua53-luarocks\
     xorg-x11-fonts xorg-x11-fonts-converted xorg-x11-fonts-core xorg-x11-fonts-legacy\
-    wine wine-32bit wine-gecko wine-mono\
-    ccache distcc
+    wine wine-gecko wine-mono\
+    ccache distcc rsync libxml2-tools
 
 # post-install operations
 RUN ln -s $(which srec_cat) /bin/srec_cat
