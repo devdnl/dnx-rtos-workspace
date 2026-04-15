@@ -706,7 +706,7 @@ static int loop(libmqtt_t *self, mqtt_msg_type_t *recv_type)
 
                                 self->subfilter[i].callback(&msg);
 
-                                if (self->subfilter[i].qos == libmqtt_qos__QOS1) {
+                                if ((flags & mqtt_publish_flag__qos_mask) == mqtt_publish_flag__qos_1) {
                                         u16_t variable_header = ntohu16(packet_id);
 
                                         mqtt_control_packet_t packet = {0};
@@ -717,7 +717,7 @@ static int loop(libmqtt_t *self, mqtt_msg_type_t *recv_type)
                                                 return -EIO;
                                         }
 
-                                } else if (self->subfilter[i].qos == libmqtt_qos__QOS2) {
+                                } else if ((flags & mqtt_publish_flag__qos_mask) == mqtt_publish_flag__qos_2) {
                                         u16_t variable_header = ntohu16(packet_id);
 
                                         mqtt_control_packet_t packet = {0};
