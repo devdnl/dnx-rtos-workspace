@@ -100,7 +100,7 @@ CXXFLAGS = -c -MMD -MP \
            -Wall \
            -Wextra \
            -Wparentheses \
-           -Wno-nonnull-compare  \
+           -Wno-nonnull-compare \
            -Werror=parentheses \
            -Werror=type-limits \
            -Werror=return-type \
@@ -332,10 +332,10 @@ quickcheck :
 .PHONY : hex
 hex :
 	@$(ECHO) 'Creating IHEX image...'
-	@$(OBJCOPY) $(TARGET_PATH)/$(PROJECT).elf -O ihex $(TARGET_PATH)/$(PROJECT).hex
+	@$(OBJCOPY) $(TARGET_PATH)/$(PROJECT).elf -R .bss -O ihex $(TARGET_PATH)/$(PROJECT).hex
 
 	@$(ECHO) 'Creating binary image...'
-	@$(OBJCOPY) $(TARGET_PATH)/$(PROJECT).elf -O binary $(TARGET_PATH)/$(PROJECT).bin
+	@$(OBJCOPY) $(TARGET_PATH)/$(PROJECT).elf -R .bss -O binary $(TARGET_PATH)/$(PROJECT).bin
 
 	#@$(ECHO) 'Creating memory dump...'
 	#@$(OBJDUMP) -x --syms $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).dmp

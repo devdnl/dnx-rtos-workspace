@@ -31,7 +31,8 @@ RUN zypper --non-interactive install\
     gawk lua53 lua53-devel lua53-luarocks\
     xorg-x11-fonts xorg-x11-fonts-converted xorg-x11-fonts-core xorg-x11-fonts-legacy\
     wine wine-gecko wine-mono\
-    ccache distcc rsync libxml2-tools
+    ccache distcc rsync libxml2-tools\
+    clang clang-tools
 
 # post-install operations
 RUN ln -s $(which srec_cat) /bin/srec_cat
@@ -62,6 +63,7 @@ RUN echo 'export PATH=$PATH:/home/developer/bin/gcc-arm-none-eabi-10.3-2021.10/b
 WORKDIR /home/developer
 RUN ZSH=/home/developer/.oh-my-zsh sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 RUN echo 'export ZSH="/home/developer/.oh-my-zsh"' > .zshrc
+RUN echo 'ZSH_DISABLE_COMPFIX="true"' >> .zshrc
 RUN echo 'ZSH_THEME="fwalch"' >> .zshrc
 RUN echo 'plugins=(git)' >> .zshrc
 RUN echo 'source $ZSH/oh-my-zsh.sh' >> .zshrc

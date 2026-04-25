@@ -112,16 +112,28 @@ __CPU_ARCH__=stm32f1
 # this:AddExtraWidget("Void", "VoidAppset")
 #++*/
 #/*--
-# this:AddWidget("Editline", false, "Appset address")
-# this:SetToolTip("Start address of application section.")
+# this:AddWidget("Editline", false, "Appset executable address")
+# this:SetToolTip("Start address of application executable section.")
 #--*/
 #define __PROJ_APPSET_TABLE_ADDRESS__ 0x08010000
 
 #/*--
-# this:AddWidget("Editline", false, "Appset size")
-# this:SetToolTip("Size of application section.")
+# this:AddWidget("Editline", false, "Appset executable size")
+# this:SetToolTip("Size of application executable section.")
 #--*/
 #define __PROJ_APPSET_TABLE_SIZE__ 1024k
+
+#/*--
+# this:AddWidget("Editline", false, "Appset RAM address")
+# this:SetToolTip("Start address of application RAM section (normally not used).")
+#--*/
+#define __PROJ_APPSET_RAM_ADDRESS__ 0
+
+#/*--
+# this:AddWidget("Editline", false, "Appset RAM size")
+# this:SetToolTip("Size of application RAM section (normally not used).")
+#--*/
+#define __PROJ_APPSET_RAM_SIZE__ 1024
 
 #/*--
 #this:AddWidget("Editline", false, "dnx RTOS section address")

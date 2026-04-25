@@ -107,6 +107,38 @@ SECTIONS
       PROVIDE(__text_end = __text_end);
    } > rom AT > rom
 
+   .data :
+   {
+      . = ALIGN(4);
+      __data_init_start = LOADADDR (.data);
+      PROVIDE(__data_init_start = __data_init_start);
+      __data_start = .;
+      PROVIDE(__data_start = __data_start);
+
+      . = ALIGN(4);
+      *(.data .data.* .gnu.linkonce.d.*)
+
+      . = ALIGN(4);
+      __data_end = .;
+      PROVIDE(__data_end = __data_end);
+   } > ram AT > rom
+
+   .bss :
+   {
+      . = ALIGN(4);
+      __bss_start = .;
+      PROVIDE(__bss_start = __bss_start);
+
+      . = ALIGN(4);
+      *(.bss .bss.* .gnu.linkonce.b.*)
+      . = ALIGN(4);
+      *(COMMON);
+
+      . = ALIGN(4);
+      __bss_end = .;
+      PROVIDE(__bss_end = __bss_end);
+   } > ram
+
    . = ALIGN(4);
    __exidx_start = .;
    PROVIDE(__exidx_start = __exidx_start);
@@ -160,6 +192,8 @@ SECTIONS
 
 PROVIDE(__text_size  = __text_end  - __text_start);
 PROVIDE(__exidx_size = __exidx_end - __exidx_start);
+PROVIDE(__data_size  = __data_end  - __data_start);
+PROVIDE(__bss_size   = __bss_end   - __bss_start);
 
 /*******************************************************************************
 END OF FILE

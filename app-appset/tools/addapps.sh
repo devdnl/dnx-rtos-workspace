@@ -10,16 +10,28 @@ Makefile_name="Makefile"
 program_registration_file_name="program_registration.c"
 linker_script_file_name="layout.ld"
 project_flags_file="$5/project/project_flags.h"
-appset_section_address=$(cat $project_flags_file | grep __PROJ_APPSET_TABLE_ADDRESS__ | sed  's/.*__PROJ_APPSET_TABLE_ADDRESS__\s*//')
-appset_section_size=$(cat $project_flags_file | grep __PROJ_APPSET_TABLE_SIZE__ | sed  's/.*__PROJ_APPSET_TABLE_SIZE__\s*//')
+appset_rom_section_address=$(cat $project_flags_file | grep __PROJ_APPSET_TABLE_ADDRESS__ | sed  's/.*__PROJ_APPSET_TABLE_ADDRESS__\s*//')
+appset_rom_section_size=$(cat $project_flags_file | grep __PROJ_APPSET_TABLE_SIZE__ | sed  's/.*__PROJ_APPSET_TABLE_SIZE__\s*//')
+appset_ram_section_address=$(cat $project_flags_file | grep __PROJ_APPSET_RAM_ADDRESS__ | sed  's/.*__PROJ_APPSET_RAM_ADDRESS__\s*//')
+appset_ram_section_size=$(cat $project_flags_file | grep __PROJ_APPSET_RAM_SIZE__ | sed  's/.*__PROJ_APPSET_RAM_SIZE__\s*//')
 
-if [ "$appset_section_address" = "" ]; then
+if [ "$appset_rom_section_address" = "" ]; then
     echo "Unable to get appset section address! Error in $project_flags_file: __PROJ_APPSET_TABLE_ADDRESS__"
     exit 1
 fi
 
-if [ "$appset_section_size" = "" ]; then
+if [ "$appset_rom_section_size" = "" ]; then
     echo "Unable to get appset section size! Error in $project_flags_file: __PROJ_APPSET_TABLE_SIZE__"
+    exit 1
+fi
+
+if [ "$appset_ram_section_address" = "" ]; then
+    echo "Unable to get appset RAM address! Error in $project_flags_file: __PROJ_APPSET_RAM_ADDRESS__"
+    exit 1
+fi
+
+if [ "$appset_ram_section_size" = "" ]; then
+    echo "Unable to get appset RAM size! Error in $project_flags_file: __PROJ_APPSET_RAM_SIZE__"
     exit 1
 fi
 
@@ -53,7 +65,9 @@ filter_list() {
     for item in $input; do
         skip=0
         for remove in $exclude; do
-            [[ "$item" == "$remove" ]] && skip=1 && break
+            i="${item##*/}"
+            i="${i%%.*}"
+            [[ "$i" == "$remove" ]] && skip=1 && break
         done
         [[ $skip -eq 0 ]] && result="$result $item"
     done
@@ -65,17 +79,22 @@ filter_list() {
 # @brief  Gets program list in the current directory. Folders are interpreted as
 #         programs. Files are ignored.
 # @param  $1    path to scan
-# @param  $2    manual program list (* for any)
-# @param  $3    exclude list (can be empty)
 # @return program list
 #-------------------------------------------------------------------------------
 function get_program_list()
 {
-    if [ "$2" == "*" ]; then
-        echo $(filter_list "$(ls -F "$1/programs" | grep -P '/|@' | grep -Pv '#' | sed 's/\///g' | sed 's/@//g')" "$3")
-    else
-        echo $(filter_list "$2" "$3")
-    fi
+    shopt -s nullglob
+
+    for d in $1/programs/*/; do
+        name="${d%/}"
+        [[ "$name" == \#* ]] && continue
+        [ -f "$d/Makefile.in" ] && echo "${name}"
+    done
+
+    for f in $1/programs/*.mk; do
+        [[ "$f" == \#* ]] && continue
+        echo "${f}"
+    done
 }
 
 #-------------------------------------------------------------------------------
@@ -86,7 +105,18 @@ function get_program_list()
 #-------------------------------------------------------------------------------
 function get_library_list()
 {
-    echo $(ls -F "$1/libs" | grep -P '/|@' | grep -Pv '#' | sed 's/\///g' | sed 's/@//g')
+    shopt -s nullglob
+
+    for d in $1/libs/*/; do
+        name="${d%/}"
+        [[ "$name" == \#* ]] && continue
+        [ -f "$d/Makefile.in" ] && echo "${name}"
+    done
+
+    for f in $1/libs/*.mk; do
+        [[ "$f" == \#* ]] && continue
+        echo "${f}"
+    done
 }
 
 #-------------------------------------------------------------------------------
@@ -103,7 +133,11 @@ function create_makefile_programs()
 
     echo 'HDRLOC_PROGRAMS += ../programs'
     for prog in $program_list; do
-        echo '-include $(APP_PRG_LOC)/'"$prog"'/Makefile.in'
+        if [ -d "$prog" ]; then
+            echo '-include $(APP_PRG_LOC)/'"${prog##*/}"'/Makefile.in'
+        else
+            echo '-include $(APP_PRG_LOC)/'"${prog##*/}"
+        fi
     done
 }
 
@@ -119,7 +153,11 @@ function create_makefile_libs()
     echo 'HDRLOC_LIB += ../libs'
 
     for lib in $library_list; do
-        echo '-include $(APP_LIB_LOC)/'"$lib"'/Makefile.in'
+        if [ -d "$lib" ]; then
+            echo '-include $(APP_LIB_LOC)/'"${lib##*/}"'/Makefile.in'
+        else
+            echo '-include $(APP_LIB_LOC)/'"${lib##*/}"
+        fi
     done
 }
 
@@ -140,45 +178,68 @@ function create_program_registration_file()
     echo ''
 
     echo '#define _IMPORT_PROGRAM(_name_)\'
-    echo '    _PROGMAN_EXTERN_C const size_t __builtin_app_##_name_##_gs__;\'
-    echo '    _PROGMAN_EXTERN_C const size_t __builtin_app_##_name_##_ss__;\'
-    echo '    _PROGMAN_EXTERN_C const char *const *const __builtin_app_##_name_##_pref_ram__;\'
-    echo '    _PROGMAN_EXTERN_C int __builtin_app_##_name_##_main(int, char**);'
+    echo '        _PROGMAN_EXTERN_C const size_t __builtin_app_##_name_##_gs__;\'
+    echo '        _PROGMAN_EXTERN_C const size_t __builtin_app_##_name_##_ss__;\'
+    echo '        _PROGMAN_EXTERN_C const char *const *const __builtin_app_##_name_##_pref_ram__;\'
+    echo '        _PROGMAN_EXTERN_C int __builtin_app_##_name_##_main(int, char**);'
     echo ''
 
     echo '#define _PROGRAM_ENTRY(_name_)\'
-    echo '    {.name          = #_name_,\'
-    echo '     .main          = __builtin_app_##_name_##_main,\'
-    echo '     .globals_size  = &__builtin_app_##_name_##_gs__,\'
-    echo '     .stack_depth   = &__builtin_app_##_name_##_ss__,\'
-    echo '     .pref_ram      = &__builtin_app_##_name_##_pref_ram__}'
-    echo ''
+    echo '{\'
+    echo '        .name = #_name_,\'
+    echo '        .main = __builtin_app_##_name_##_main,\'
+    echo '        .globals_size = &__builtin_app_##_name_##_gs__,\'
+    echo '        .stack_depth = &__builtin_app_##_name_##_ss__,\'
+    echo '        .pref_ram = &__builtin_app_##_name_##_pref_ram__,\'
+    echo '}'
+    echo ''        
 
     echo 'typedef struct {'
-    echo '    const char     *name;'
-    echo '    const size_t   *globals_size;'
-    echo '    const size_t   *stack_depth;'
-    echo '    const char     *const *const *pref_ram;'
-    echo '    int (*main)(int, char**);'
+    echo '        const char *name;'
+    echo '        const size_t *globals_size;'
+    echo '        const size_t *stack_depth;'
+    echo '        const char *const *const *pref_ram;'
+    echo '        int (*main)(int, char**);'
     echo '} _program_entry_t;'
     echo ''
     echo 'typedef struct {'
-    echo '        uint32_t magic;'
-    echo '        uint32_t number_of_programs;'
+    echo '        const uint32_t magic;'
+    echo '        const uint32_t number_of_programs;'
+    echo '        const void *data_init_start;'
+    echo '        void *data_start;'
+    echo '        const uint32_t data_size;'
+    echo '        void *bss_start;'
+    echo '        const uint32_t bss_size;'
     echo '        const _program_entry_t program_entry[];'
     echo '} _program_table_desc_t;'
     echo ''
 
     for prog in $program_list; do
+        prog="${prog##*/}"
+        prog="${prog%%.*}"
         echo "_IMPORT_PROGRAM($prog);"
     done
     echo ''
 
+    echo 'extern void *__data_init_start;'
+    echo 'extern void *__data_start;'
+    echo 'extern void *__data_size;'
+    echo 'extern void *__bss_start;'
+    echo 'extern void *__bss_size;'
+    echo ''
+
     echo 'const _program_table_desc_t _program_table_desc __attribute__((section (".program_descriptor_table"))) = {'
-    echo "        .magic = 0,"
+    echo "        .magic = 0x32565341, // ASV2"
     echo "        .number_of_programs = $(echo $program_list | wc -w),"
+    echo "        .data_init_start = ((void *)&__data_init_start),"
+    echo "        .data_start = ((void *)&__data_start),"
+    echo "        .data_size = ((size_t)&__data_size),"
+    echo "        .bss_start = ((void *)&__bss_start),"
+    echo "        .bss_size = ((size_t)&__bss_size),"
     echo "        .program_entry = {"
     for prog in $program_list; do
+        prog="${prog##*/}"
+        prog="${prog%%.*}"
         echo "                _PROGRAM_ENTRY($prog),"
     done
     echo "        }"
@@ -204,7 +265,8 @@ function create_linker_scirpt_file()
 
     echo "MEMORY"
     echo "{"
-    echo "   rom (rx)  : org = $appset_section_address, len = $appset_section_size"
+    echo "   rom (rx)  : org = $appset_rom_section_address, len = $appset_rom_section_size"
+    echo "   ram (rwx) : org = $appset_ram_section_address, len = $appset_ram_section_size"
     echo "}"
 
     echo "INCLUDE memory_layout.ld"
@@ -219,7 +281,12 @@ function main()
 {
     check_args "$1" "$2" "$3" "$4" "$5"
 
-    program_list=$(get_program_list "$1" "$3" "$4")
+    if [ "$3" == "*" ]; then
+        program_list=$(get_program_list "$1")
+        program_list=$(filter_list "${program_list}" "$4")
+    else
+        program_list=$(filter_list "$3" "$4")
+    fi
 
     create_makefile_programs "$3" > "$2/$Makefile_name"
     create_program_registration_file "$3" > "$2/$program_registration_file_name"
