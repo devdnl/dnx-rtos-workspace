@@ -1,5 +1,0 @@
-/*--
-this:SetLayout("TitledGridBack", 2, "Home")
-
-this:AddExtraWidget("Label", "LabelInfo", "Select config/config.h in appset or system directories to configure project.", -1, "normal")
-++*/

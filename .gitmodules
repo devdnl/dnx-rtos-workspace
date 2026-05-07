@@ -1,6 +1,3 @@
-[submodule "system"]
-	path = system
-	url = https://devdnl@bitbucket.org/devdnl/dnx-rtos-os.git
-[submodule "tools/configtool"]
-	path = tools/configtool
-	url = https://devdnl@bitbucket.org/devdnl/configtool.git
+[submodule "dnx-rtos-kernel"]
+	path = dnx-rtos-kernel
+	url = https://devdnl@bitbucket.org/devdnl/dnx-rtos-kernel.git
