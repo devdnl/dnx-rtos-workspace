@@ -7,4 +7,4 @@ if [ "$#" == "0" ]; then
     exit
 fi
 
-./configtool/configtool import="../../$1":"../../"
+sh ../kernel/tools/configtool.sh import="../$1":"../"

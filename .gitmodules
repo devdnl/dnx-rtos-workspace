@@ -1,3 +1,3 @@
-[submodule "dnx-rtos-kernel"]
-	path = dnx-rtos-kernel
-	url = https://devdnl@bitbucket.org/devdnl/dnx-rtos-kernel.git
+[submodule "kernel"]
+	path = kernel
+	url = git@bitbucket.org:devdnl/dnx-rtos-kernel.git

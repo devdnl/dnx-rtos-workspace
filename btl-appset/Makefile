@@ -178,7 +178,7 @@ OBJCOPY    = $(TOOLCHAIN)objcopy
 OBJDUMP    = $(TOOLCHAIN)objdump
 SIZE       = $(TOOLCHAIN)size
 SYNCDIR    = $(PYTHON3) ./tools/syncdir.py
-CONFIGTOOL = $(SHELL) ./tools/configtool.sh
+CONFIGTOOL = $(SHELL) ../kernel/tools/configtool.sh
 ADDAPPS    = $(SHELL) ./tools/addapps.sh
 FLASH_CPU  = $(SHELL) ./tools/flash.sh
 RESET_CPU  = $(SHELL) ./tools/reset.sh
@@ -186,7 +186,7 @@ GIT_HOOKS  = $(SHELL) ./tools/apply_git_hooks.sh
 DOXYGEN    = $(SHELL) ./tools/doxygen.sh
 RUNGENS    = $(SHELL) ./tools/rungens.sh
 FINDGVAR   = $(SHELL) ./tools/find_global_vars.sh
-MKFPKG     = $(PYTHON3) ../system/tools/mkfpkg.py
+MKFPKG     = $(PYTHON3) ../kernel/tools/mkfpkg.py
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -298,7 +298,7 @@ help :
 .PHONY : config
 config : clean apply_git_hooks
 	@$(ECHO) "Starting configtool..."
-	@$(CONFIGTOOL)
+	@$(CONFIGTOOL) ./config/config.h
 
 ####################################################################################################
 # analisis

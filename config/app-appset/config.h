@@ -61,39 +61,11 @@ include $(CONFIG_DIR)/programs/programs_flags.h
 
 #/*--
 # this:SetKeyRegExp("__.*__")
-# this:SetLayout("TitledGridBack", 2, "Home")
-#++*/
-
-#/*--
-# -- import event used to disables all modules
-# -- this flags must exists in the arch/arch_flags.h file
-# this:SetEvent("ConfigImport",
-#     function()
+# this:SetTitle("Home", "Appset configuration menu.")
 #
-#         modules = this:GetFlagsList("arch/arch_flags.h", "__ENABLE_.*__")
-#
-#         for f, v in pairs(modules) do
-#             this:SetFlagValue(f, "_NO_", "arch/arch_flags.h")
-#         end
-#     end)
-#++*/
-
-#/*--
-# this:AddExtraWidget("Label", "LabelProject", "Project", -1, "bold")
-# this:AddExtraWidget("Hyperlink", "HL_Project", "Configure")
-# this:SetEvent("clicked", "HL_Project", function() this:LoadFile("project/project_flags.h") end)
-#++*/
-
-#/*--
-# this:AddExtraWidget("Label", "LabelOS", "Standard Library  ", -1, "bold")
-# this:AddExtraWidget("Hyperlink", "HL_LIBC", "Configure")
-# this:SetEvent("clicked", "HL_LIBC", function() this:LoadFile("libc/libc_flags.h") end)
-#++*/
-
-#/*--
-# this:AddExtraWidget("Label", "LabelProgs", "Programs  ", -1, "bold")
-# this:AddExtraWidget("Hyperlink", "HL_PROGS", "Configure")
-# this:SetEvent("clicked", "HL_PROGS", function() this:LoadFile("programs/programs_flags.h") end)
+# this:AddExtraWidget("Submenu", "HL_Project", "Project", "project/project_flags.h")
+# this:AddExtraWidget("Submenu", "HL_LIBC", "Standard Library", "libc/libc_flags.h")
+# this:AddExtraWidget("Submenu", "HL_PROGS", "Programs", "programs/programs_flags.h")
 #++*/
 
 #endif /* _CONFIG_CONFIG_H_ */

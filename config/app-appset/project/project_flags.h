@@ -43,13 +43,7 @@
 #define _PROJECT_FLAGS_H_
 
 #/*--
-# this:SetLayout("TitledGridBack", 2, "Home > Project",
-#                function() this:LoadFile("config.h") end)
-#++*/
-
-#/*--
-# this:AddExtraWidget("Label", "LabelBasic", "Basic", -1, "bold")
-# this:AddExtraWidget("Void", "VoidBasic")
+# this:SetTitle("Home > Project", "Project general settings.")
 #++*/
 
 #/*--
@@ -64,7 +58,7 @@ __PROJECT_NAME__=appset
 #/*--
 # this:AddWidget("Editline", false, "Toolchain prefix")
 # this:SetToolTip("Enter a name of first part of your toolchain's name, example:\n"..
-#                 " - Linaro, CodeSourcery: arm-none-eabi-\n"..
+#                 " - arm-none-eabi-\n"..
 #                 " - GCC: $(none)")
 #--*/
 #define __PROJECT_TOOLCHAIN__ arm-none-eabi-
@@ -73,11 +67,6 @@ none=
 __PROJECT_TOOLCHAIN__=arm-none-eabi-
 #*/
 
-
-#/*--
-# this:AddExtraWidget("Label", "LabelBoard", "\nBoard", -1, "bold")
-# this:AddExtraWidget("Void", "VoidBoard")
-#++*/
 #// Existing architectures
 #define stm32f1 0x16F54349
 #define stm32f2 0x2f31e2fc
@@ -106,11 +95,6 @@ __CPU_ARCH__=stm32f1
 #--*/
 #define __CPU_UART_TERM__ 0
 
-
-#/*--
-# this:AddExtraWidget("Label", "LabelAppset", "\nAppset configuration", -1, "bold")
-# this:AddExtraWidget("Void", "VoidAppset")
-#++*/
 #/*--
 # this:AddWidget("Editline", false, "Appset executable address")
 # this:SetToolTip("Start address of application executable section.")

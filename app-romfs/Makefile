@@ -44,7 +44,7 @@ RM              = /bin/rm -rf
 MKDIR           = /bin/mkdir -p
 SIZEOF          = /usr/bin/stat -c %s
 SREC_CAT        = /bin/srec_cat
-MKFPKG          = $(PYTHON3) ../system/tools/mkfpkg.py
+MKFPKG          = $(PYTHON3) ../kernel/tools/mkfpkg.py
 
 ####################################################################################################
 # targets

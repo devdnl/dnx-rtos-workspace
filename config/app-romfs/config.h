@@ -51,17 +51,12 @@ _YES_ = 1
 
 #/*--
 # this:SetKeyRegExp("__.*__")
-# this:SetLayout("TitledGridBack", 2, "Home")
-#++*/
-
-#/*--
-# this:AddExtraWidget("Label", "LabelROMFS", "\nROMFS configuration", -1, "bold")
-# this:AddExtraWidget("Label", "LabelADDR", "\t\t\t\t\t\t\t\t\t\t\t")
+# this:SetTitle("Home", "The romfs configuration.")
 #++*/
 
 #/*--
 # this:AddWidget("Editline", true, "ROMFS name")
-# this:SetToolTip("ROMFS name.")
+# this:SetToolTip("ROMFS name. That variable is changing output file name.")
 #--*/
 #define __ROMFS_NAME__ "romfs"
 #/*

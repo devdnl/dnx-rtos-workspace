@@ -23,7 +23,7 @@
 		["__ROMFS_ADDRESS__"]="0x080C0000";
 		["__ROMFS_NAME__"]="\"romfs\"";
 	};
-	["config/app-system/arch/arch_flags.h"]={
+	["config/app-kernel/arch/arch_flags.h"]={
 		["__ENABLE_ADC__"]="_NO_";
 		["__ENABLE_AFM__"]="_NO_";
 		["__ENABLE_CAN__"]="_NO_";
@@ -62,13 +62,13 @@
 		["__ENABLE_WDG__"]="_NO_";
 		["__ENABLE_ZERO__"]="_NO_";
 	};
-	["config/app-system/arch/noarch/tty_flags.h"]={
+	["config/app-kernel/arch/noarch/tty_flags.h"]={
 		["__TTY_NUMBER_OF_TERM__"]="2";
 		["__TTY_OUT_STREAM_LEN__"]="80";
 		["__TTY_TERM_COLS__"]="80";
 		["__TTY_TERM_ROWS__"]="24";
 	};
-	["config/app-system/arch/rpcm0/clk_flags.h"]={
+	["config/app-kernel/arch/rpcm0/clk_flags.h"]={
 		["__CLK_ADC_CLK_DIV__"]="1";
 		["__CLK_ADC_CLK_SRC__"]="_CLK_ADC_CLK_AUXSRC_PLL_USB";
 		["__CLK_GPCLK0_FREQ__"]="1000000";
@@ -106,7 +106,7 @@
 		["__CLK_USB_PLL_REFDIV__"]="1";
 		["__CLK_XOSC_ENABLE__"]="_YES_";
 	};
-	["config/app-system/arch/rpcm0/cpu_flags.h"]={
+	["config/app-kernel/arch/rpcm0/cpu_flags.h"]={
 		["__CPU_BOOT2_FILE__"]="boot2_w25q080.c";
 		["__CPU_DEFAULT_IRQ_PRIORITY__"]="2";
 		["__CPU_FAMILY__"]="_RP2040_";
@@ -123,7 +123,7 @@
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="RPxx40";
 	};
-	["config/app-system/arch/rpcm0/gpio_flags.h"]={
+	["config/app-kernel/arch/rpcm0/gpio_flags.h"]={
 		["__GPIO_BANK0_PIN_0_AF__"]="2";
 		["__GPIO_BANK0_PIN_0_MODE__"]="_GPIO_MODE_PP";
 		["__GPIO_BANK0_PIN_0_NAME__"]="UART0_TX";
@@ -341,7 +341,7 @@
 		["__GPIO_QSPI_PIN_5_STATE__"]="0";
 		["__GPIO_QSPI_PIN_5_STRENGTH__"]="_GPIO_STRENGTH_12mA_SLEW_RATE_FAST";
 	};
-	["config/app-system/arch/rpcm0/uart_flags.h"]={
+	["config/app-kernel/arch/rpcm0/uart_flags.h"]={
 		["__UART_DEFAULT_BAUD__"]="115200";
 		["__UART_DEFAULT_PARITY__"]="UART_PARITY__OFF";
 		["__UART_DEFAULT_RX_ENABLE__"]="_YES_";
@@ -354,10 +354,10 @@
 		["__UART_UART0_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 		["__UART_UART1_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 	};
-	["config/app-system/arch/stm32f1/adc_flags.h"]={
+	["config/app-kernel/arch/stm32f1/adc_flags.h"]={
 		["__ADC_CFG_EXAMPLE__"]="_NO_";
 	};
-	["config/app-system/arch/stm32f1/afm_flags.h"]={
+	["config/app-kernel/arch/stm32f1/afm_flags.h"]={
 		["__AFM_EVENT_OUT_ENABLE__"]="_NO_";
 		["__AFM_EVENT_OUT_PIN__"]="0";
 		["__AFM_EVENT_OUT_PORT__"]="0";
@@ -399,11 +399,11 @@
 		["__AFM_REMAP_USART2__"]="0";
 		["__AFM_REMAP_USART3__"]="0";
 	};
-	["config/app-system/arch/stm32f1/can_flags.h"]={
+	["config/app-kernel/arch/stm32f1/can_flags.h"]={
 		["__CAN_CFG_DEBUG_FREEZE__"]="_YES_";
 		["__CAN_CFG_RX_FIFO_SIZE__"]="16";
 	};
-	["config/app-system/arch/stm32f1/clk_flags.h"]={
+	["config/app-kernel/arch/stm32f1/clk_flags.h"]={
 		["__CLK_ADC_PRE__"]="RCC_PCLK2_Div4";
 		["__CLK_AHB_PRE__"]="RCC_SYSCLK_Div1";
 		["__CLK_APB1_PRE__"]="RCC_HCLK_Div2";
@@ -433,7 +433,7 @@
 		["__CLK_USB_DIV_CL__"]="RCC_OTGFSCLKSource_PLLVCO_Div3";
 		["__CLK_USB_DIV__"]="RCC_USBCLKSource_PLLCLK_Div1";
 	};
-	["config/app-system/arch/stm32f1/cpu_flags.h"]={
+	["config/app-kernel/arch/stm32f1/cpu_flags.h"]={
 		["__CPU_DEFAULT_IRQ_PRIORITY__"]="14";
 		["__CPU_DISABLE_INTER_OF_MCYCLE_INSTR__"]="_NO_";
 		["__CPU_FAMILY__"]="_STM32F10X_MD_";
@@ -448,9 +448,9 @@
 		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./custom_linker_script.ld\"";
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 	};
-	["config/app-system/arch/stm32f1/crc_flags.h"]={
+	["config/app-kernel/arch/stm32f1/crc_flags.h"]={
 	};
-	["config/app-system/arch/stm32f1/eth_flags.h"]={
+	["config/app-kernel/arch/stm32f1/eth_flags.h"]={
 		["__ETH_DEVICE__"]="DP83848";
 		["__ETH_PHY_ADDRESS__"]="0";
 		["__ETH_PHY_AUTONEGOTIATION__"]="ETH_AUTONEGOTIATION_ENABLE";
@@ -462,7 +462,7 @@
 		["__ETH_RXBUFNB__"]="3";
 		["__ETH_TXBUFNB__"]="3";
 	};
-	["config/app-system/arch/stm32f1/gpio_flags.h"]={
+	["config/app-kernel/arch/stm32f1/gpio_flags.h"]={
 		["__GPIO_PA_PIN_0_MODE__"]="_GPIO_ANALOG";
 		["__GPIO_PA_PIN_0_NAME__"]="PA0_NC";
 		["__GPIO_PA_PIN_0_STATE__"]="_LOW";
@@ -800,7 +800,7 @@
 		["__GPIO_PG_PIN_9_NAME__"]="NC_GPIOG_9";
 		["__GPIO_PG_PIN_9_STATE__"]="_FLOAT";
 	};
-	["config/app-system/arch/stm32f1/i2c_flags.h"]={
+	["config/app-kernel/arch/stm32f1/i2c_flags.h"]={
 		["__I2C1_DUTY_CYCLE__"]="_I2C_DUTY_CYCLE_1_2";
 		["__I2C1_SCL_FREQ__"]="100000";
 		["__I2C1_USE_DMA__"]="_YES_";
@@ -808,7 +808,7 @@
 		["__I2C2_SCL_FREQ__"]="100000";
 		["__I2C2_USE_DMA__"]="_YES_";
 	};
-	["config/app-system/arch/stm32f1/irq_flags.h"]={
+	["config/app-kernel/arch/stm32f1/irq_flags.h"]={
 		["__IRQ_EXTI0_PORT__"]="(0 << 0)";
 		["__IRQ_EXTI10_PORT__"]="(0 << 8)";
 		["__IRQ_EXTI11_PORT__"]="(0 << 12)";
@@ -842,13 +842,13 @@
 		["__IRQ_LINE_8_MODE__"]="_IRQ_MODE_DISABLED";
 		["__IRQ_LINE_9_MODE__"]="_IRQ_MODE_DISABLED";
 	};
-	["config/app-system/arch/stm32f1/nvm_flags.h"]={
+	["config/app-kernel/arch/stm32f1/nvm_flags.h"]={
 	};
-	["config/app-system/arch/stm32f1/pwm_flags.h"]={
+	["config/app-kernel/arch/stm32f1/pwm_flags.h"]={
 	};
-	["config/app-system/arch/stm32f1/rtc_flags.h"]={
+	["config/app-kernel/arch/stm32f1/rtc_flags.h"]={
 	};
-	["config/app-system/arch/stm32f1/spi_flags.h"]={
+	["config/app-kernel/arch/stm32f1/spi_flags.h"]={
 		["__SPI_DEFAULT_CLK_DIV__"]="SPI_CLK_DIV__4";
 		["__SPI_DEFAULT_MODE__"]="SPI_MODE__0";
 		["__SPI_DEFAULT_MSB_FIRST__"]="_YES_";
@@ -856,7 +856,7 @@
 		["__SPI_SPI2_USE_DMA__"]="_NO_";
 		["__SPI_SPI3_USE_DMA__"]="_NO_";
 	};
-	["config/app-system/arch/stm32f1/uart_flags.h"]={
+	["config/app-kernel/arch/stm32f1/uart_flags.h"]={
 		["__UART_DEFAULT_BAUD__"]="115200";
 		["__UART_DEFAULT_PARITY__"]="UART_PARITY__OFF";
 		["__UART_DEFAULT_RX_ENABLE__"]="_YES_";
@@ -888,23 +888,23 @@
 		["__UART_UART5_DMA_MODE__"]="_NO_";
 		["__UART_UART5_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 	};
-	["config/app-system/arch/stm32f1/usbd_flags.h"]={
+	["config/app-kernel/arch/stm32f1/usbd_flags.h"]={
 		["__USBD_ENDPOINT0_SIZE__"]="8";
 		["__USBD_PULLUP_NEGATIVE__"]="_YES_";
 		["__USBD_PULLUP_PIN_INDEX__"]="0";
 		["__USBD_PULLUP_PORT_INDEX__"]="0";
 	};
-	["config/app-system/arch/stm32f1/wdg_flags.h"]={
+	["config/app-kernel/arch/stm32f1/wdg_flags.h"]={
 		["__WDG_CLK_DIVIDER__"]="256";
 		["__WDG_DEVICE_LOCK_AT_OPEN__"]="_YES_";
 		["__WDG_DISABLE_ON_DEBUG__"]="_YES_";
 		["__WDG_RELOAD_VALUE__"]="1563";
 	};
-	["config/app-system/arch/stm32f3/can_flags.h"]={
+	["config/app-kernel/arch/stm32f3/can_flags.h"]={
 		["__CAN_CFG_DEBUG_FREEZE__"]="_YES_";
 		["__CAN_CFG_RX_FIFO_SIZE__"]="16";
 	};
-	["config/app-system/arch/stm32f3/clk_flags.h"]={
+	["config/app-kernel/arch/stm32f3/clk_flags.h"]={
 		["__CLK_ADC12_SRC__"]="LL_RCC_ADC12_CLKSRC_PLL_DIV_2";
 		["__CLK_ADC34_SRC__"]="LL_RCC_ADC34_CLKSRC_PLL_DIV_2";
 		["__CLK_AHB_PRE__"]="LL_RCC_SYSCLK_DIV_1";
@@ -934,7 +934,7 @@
 		["__CLK_USART3_SRC__"]="LL_RCC_USART3_CLKSOURCE_PCLK1";
 		["__CLK_USB_DIV__"]="LL_RCC_USB_CLKSOURCE_PLL_DIV_1_5";
 	};
-	["config/app-system/arch/stm32f3/cpu_flags.h"]={
+	["config/app-kernel/arch/stm32f3/cpu_flags.h"]={
 		["__CPU_DEFAULT_IRQ_PRIORITY__"]="14";
 		["__CPU_DISABLE_INTER_OF_MCYCLE_INSTR__"]="_YES_";
 		["__CPU_FAMILY__"]="_STM32F3XX_";
@@ -951,7 +951,7 @@
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="STM32F3xx_512_64_16";
 	};
-	["config/app-system/arch/stm32f3/gpio_flags.h"]={
+	["config/app-kernel/arch/stm32f3/gpio_flags.h"]={
 		["__GPIO_PA_PIN_0_AF__"]="0";
 		["__GPIO_PA_PIN_0_MODE__"]="_GPIO_MODE_IN";
 		["__GPIO_PA_PIN_0_NAME__"]="PA0_NC";
@@ -1833,7 +1833,7 @@
 		["__GPIO_PK_PIN_9_SPEED__"]="_GPIO_SPEED_LOW";
 		["__GPIO_PK_PIN_9_STATE__"]="_LOW";
 	};
-	["config/app-system/arch/stm32f3/i2c_flags.h"]={
+	["config/app-kernel/arch/stm32f3/i2c_flags.h"]={
 		["__I2C1_ANALOG_FILTER_DISABLE__"]="0";
 		["__I2C1_DATA_HOLD_TIME_ns__"]="10";
 		["__I2C1_DATA_SETUP_TIME_ns__"]="10";
@@ -1859,7 +1859,7 @@
 		["__I2C3_SCL_FREQ__"]="100000";
 		["__I2C3_SCL_RISE_TIME_ns__"]="100";
 	};
-	["config/app-system/arch/stm32f3/irq_flags.h"]={
+	["config/app-kernel/arch/stm32f3/irq_flags.h"]={
 		["__IRQ_EXTI0_PORT__"]="(0 << 0)";
 		["__IRQ_EXTI10_PORT__"]="(0 << 8)";
 		["__IRQ_EXTI11_PORT__"]="(0 << 12)";
@@ -1893,9 +1893,9 @@
 		["__IRQ_LINE_8_MODE__"]="_IRQ_MODE_DISABLED";
 		["__IRQ_LINE_9_MODE__"]="_IRQ_MODE_DISABLED";
 	};
-	["config/app-system/arch/stm32f3/pwm_flags.h"]={
+	["config/app-kernel/arch/stm32f3/pwm_flags.h"]={
 	};
-	["config/app-system/arch/stm32f3/uart_flags.h"]={
+	["config/app-kernel/arch/stm32f3/uart_flags.h"]={
 		["__UART_DEFAULT_BAUD__"]="115200";
 		["__UART_DEFAULT_PARITY__"]="UART_PARITY__OFF";
 		["__UART_DEFAULT_RX_ENABLE__"]="_YES_";
@@ -1927,7 +1927,7 @@
 		["__UART_UART5_DMA_MODE__"]="_NO_";
 		["__UART_UART5_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 	};
-	["config/app-system/arch/stm32f4/afm_flags.h"]={
+	["config/app-kernel/arch/stm32f4/afm_flags.h"]={
 		["__AFM_BKPRAM_ENABLE__"]="_NO_";
 		["__AFM_CMP_PD__"]="(0 << SYSCFG_CMPCR_CMP_PD_Pos)";
 		["__AFM_FB_MODE__"]="(0 << 8)";
@@ -1935,11 +1935,11 @@
 		["__AFM_MII_RMII_SEL__"]="(1 << 23)";
 		["__AFM_SWP_FMC__"]="(0 << 10)";
 	};
-	["config/app-system/arch/stm32f4/can_flags.h"]={
+	["config/app-kernel/arch/stm32f4/can_flags.h"]={
 		["__CAN_CFG_DEBUG_FREEZE__"]="_YES_";
 		["__CAN_CFG_RX_FIFO_SIZE__"]="16";
 	};
-	["config/app-system/arch/stm32f4/clk_flags.h"]={
+	["config/app-kernel/arch/stm32f4/clk_flags.h"]={
 		["__CLK_48MHZ_SRC__"]="RCC_48MHZCLKSource_PLL";
 		["__CLK_AHB_PRE__"]="RCC_SYSCLK_Div1";
 		["__CLK_APB1_PRE__"]="RCC_HCLK_Div2";
@@ -1994,7 +1994,7 @@
 		["__CLK_SPDIF_SRC__"]="RCC_SPDIFRXCLKSource_PLLR";
 		["__CLK_SYS_CLK_SRC__"]="RCC_SYSCLKSource_PLLCLK";
 	};
-	["config/app-system/arch/stm32f4/cpu_flags.h"]={
+	["config/app-kernel/arch/stm32f4/cpu_flags.h"]={
 		["__CPU_DEFAULT_IRQ_PRIORITY__"]="14";
 		["__CPU_DISABLE_INTER_OF_MCYCLE_INSTR__"]="_YES_";
 		["__CPU_FAMILY__"]="_STM32F4XX_ADVANCEDLINE_";
@@ -2011,9 +2011,9 @@
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="STM32F42xxIxx";
 	};
-	["config/app-system/arch/stm32f4/crc_flags.h"]={
+	["config/app-kernel/arch/stm32f4/crc_flags.h"]={
 	};
-	["config/app-system/arch/stm32f4/dci_flags.h"]={
+	["config/app-kernel/arch/stm32f4/dci_flags.h"]={
 		["__DCI_BYTES_PER_PIXEL__"]="2";
 		["__DCI_CAM_RES_X__"]="800";
 		["__DCI_CAM_RES_Y__"]="600";
@@ -2039,7 +2039,7 @@
 		["__DCI_PCKPOL__"]="(1 << 5)";
 		["__DCI_VSPOL__"]="(0 << 7)";
 	};
-	["config/app-system/arch/stm32f4/emi_flags.h"]={
+	["config/app-kernel/arch/stm32f4/emi_flags.h"]={
 		["__EMI_SDRAM_1_ENABLE__"]="0";
 		["__EMI_SDRAM_1_MWID__"]="1";
 		["__EMI_SDRAM_1_NB__"]="1";
@@ -2067,7 +2067,7 @@
 		["__EMI_SDRAM_TWR__"]="2";
 		["__EMI_SDRAM_TXSR__"]="7";
 	};
-	["config/app-system/arch/stm32f4/eth_flags.h"]={
+	["config/app-kernel/arch/stm32f4/eth_flags.h"]={
 		["__ETH_DEVICE__"]="LAN8742A";
 		["__ETH_PHY_ADDRESS__"]="0";
 		["__ETH_PHY_AUTONEGOTIATION__"]="ETH_AUTONEGOTIATION_ENABLE";
@@ -2079,7 +2079,7 @@
 		["__ETH_RXBUFNB__"]="10";
 		["__ETH_TXBUFNB__"]="3";
 	};
-	["config/app-system/arch/stm32f4/gpio_flags.h"]={
+	["config/app-kernel/arch/stm32f4/gpio_flags.h"]={
 		["__GPIO_PA_PIN_0_AF__"]="0";
 		["__GPIO_PA_PIN_0_MODE__"]="_GPIO_MODE_IN";
 		["__GPIO_PA_PIN_0_NAME__"]="PA0_NC";
@@ -2961,7 +2961,7 @@
 		["__GPIO_PK_PIN_9_SPEED__"]="_GPIO_SPEED_LOW";
 		["__GPIO_PK_PIN_9_STATE__"]="_LOW";
 	};
-	["config/app-system/arch/stm32f4/i2c_flags.h"]={
+	["config/app-kernel/arch/stm32f4/i2c_flags.h"]={
 		["__I2C1_DUTY_CYCLE__"]="_I2C_DUTY_CYCLE_1_2";
 		["__I2C1_SCL_FREQ__"]="100000";
 		["__I2C1_USE_DMA__"]="_NO_";
@@ -2972,7 +2972,7 @@
 		["__I2C3_SCL_FREQ__"]="100000";
 		["__I2C3_USE_DMA__"]="_YES_";
 	};
-	["config/app-system/arch/stm32f4/irq_flags.h"]={
+	["config/app-kernel/arch/stm32f4/irq_flags.h"]={
 		["__IRQ_EXTI0_PORT__"]="(0 << 0)";
 		["__IRQ_EXTI10_PORT__"]="(0 << 8)";
 		["__IRQ_EXTI11_PORT__"]="(0 << 12)";
@@ -3006,11 +3006,11 @@
 		["__IRQ_LINE_8_MODE__"]="_IRQ_MODE_DISABLED";
 		["__IRQ_LINE_9_MODE__"]="_IRQ_MODE_DISABLED";
 	};
-	["config/app-system/arch/stm32f4/nvm_flags.h"]={
+	["config/app-kernel/arch/stm32f4/nvm_flags.h"]={
 	};
-	["config/app-system/arch/stm32f4/pwm_flags.h"]={
+	["config/app-kernel/arch/stm32f4/pwm_flags.h"]={
 	};
-	["config/app-system/arch/stm32f4/qspi_flags.h"]={
+	["config/app-kernel/arch/stm32f4/qspi_flags.h"]={
 		["__QSPI_CFG_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 		["__QSPI_CFG_MMM_TIMEOUT_CYCLES__"]="128";
 		["__QSPI_CFG_MMM_TIMOUT_COUNTER__"]="QSPI_TIMEOUT_COUNTER_DISABLE";
@@ -3018,9 +3018,9 @@
 		["__QSPI_CFG_POLLING_INTERVAL_CLKS__"]="128";
 		["__QSPI_CFG_TIMEOUT__"]="500";
 	};
-	["config/app-system/arch/stm32f4/rtc_flags.h"]={
+	["config/app-kernel/arch/stm32f4/rtc_flags.h"]={
 	};
-	["config/app-system/arch/stm32f4/sdmmc_flags.h"]={
+	["config/app-kernel/arch/stm32f4/sdmmc_flags.h"]={
 		["__SDMMC_CFG_SDMMC1_BUS_WIDE__"]="SDIO_BUS_WIDE_4B";
 		["__SDMMC_CFG_SDMMC1_CARD_TIMEOUT__"]="5000";
 		["__SDMMC_CFG_SDMMC1_CKDIV__"]="3";
@@ -3031,7 +3031,7 @@
 		["__SDMMC_CFG_SDMMC1_PWRSAVE__"]="SDIO_CLOCK_POWER_SAVE_DISABLE";
 		["__SDMMC_CFG_SDMMC1_TYPE__"]="_SDMMC_TYPE_SDCARD";
 	};
-	["config/app-system/arch/stm32f4/snd_flags.h"]={
+	["config/app-kernel/arch/stm32f4/snd_flags.h"]={
 		["__SND_CFG_SAI1_BLKA_CKSTR__"]="SAI_xCR1_CKSTR";
 		["__SND_CFG_SAI1_BLKA_COMP__"]="0";
 		["__SND_CFG_SAI1_BLKA_CPL__"]="0";
@@ -3101,7 +3101,7 @@
 		["__SND_CFG_SAI2_BLKB_SLOTSZ__"]="1";
 		["__SND_CFG_SAI2_BLKB_TRIS__"]="0";
 	};
-	["config/app-system/arch/stm32f4/spi_flags.h"]={
+	["config/app-kernel/arch/stm32f4/spi_flags.h"]={
 		["__SPI_DEFAULT_CLK_DIV__"]="SPI_CLK_DIV__4";
 		["__SPI_DEFAULT_MODE__"]="SPI_MODE__0";
 		["__SPI_DEFAULT_MSB_FIRST__"]="_YES_";
@@ -3112,7 +3112,7 @@
 		["__SPI_SPI5_USE_DMA__"]="_NO_";
 		["__SPI_SPI6_USE_DMA__"]="_NO_";
 	};
-	["config/app-system/arch/stm32f4/uart_flags.h"]={
+	["config/app-kernel/arch/stm32f4/uart_flags.h"]={
 		["__UART_DEFAULT_BAUD__"]="115200";
 		["__UART_DEFAULT_PARITY__"]="UART_PARITY__OFF";
 		["__UART_DEFAULT_RX_ENABLE__"]="_YES_";
@@ -3169,19 +3169,19 @@
 		["__UART_UART9_DMA_MODE__"]="_NO_";
 		["__UART_UART9_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 	};
-	["config/app-system/arch/stm32f4/usbh_flags.h"]={
+	["config/app-kernel/arch/stm32f4/usbh_flags.h"]={
 		["__USBH_DEBUG_MSG__"]="_NO_";
 		["__USBH_ENABLE_DMA_TRANSFER__"]="_YES_";
 		["__USBH_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 		["__USBH_PHY_RESET_PIN__"]="NONE";
 	};
-	["config/app-system/arch/stm32f4/wdg_flags.h"]={
+	["config/app-kernel/arch/stm32f4/wdg_flags.h"]={
 		["__WDG_CLK_DIVIDER__"]="256";
 		["__WDG_DEVICE_LOCK_AT_OPEN__"]="_YES_";
 		["__WDG_DISABLE_ON_DEBUG__"]="_YES_";
 		["__WDG_RELOAD_VALUE__"]="625";
 	};
-	["config/app-system/arch/stm32f7/afm_flags.h"]={
+	["config/app-kernel/arch/stm32f7/afm_flags.h"]={
 		["__AFM_ADCxDC2__"]="0";
 		["__AFM_CLL__"]="(0 << SYSCFG_CBR_CLL_Pos)";
 		["__AFM_CMP_PD__"]="(0 << SYSCFG_CMPCR_CMP_PD_Pos)";
@@ -3199,11 +3199,11 @@
 		["__AFM_SWP_FB__"]="(0 << SYSCFG_MEMRMP_SWP_FB_Pos)";
 		["__AFM_SWP_FMC__"]="(0 << SYSCFG_MEMRMP_SWP_FMC_Pos)";
 	};
-	["config/app-system/arch/stm32f7/can_flags.h"]={
+	["config/app-kernel/arch/stm32f7/can_flags.h"]={
 		["__CAN_CFG_DEBUG_FREEZE__"]="_YES_";
 		["__CAN_CFG_RX_FIFO_SIZE__"]="16";
 	};
-	["config/app-system/arch/stm32f7/clk_flags.h"]={
+	["config/app-kernel/arch/stm32f7/clk_flags.h"]={
 		["__CLK_AHB_PRE__"]="LL_RCC_SYSCLK_DIV_1";
 		["__CLK_APB1_PRE__"]="LL_RCC_APB1_DIV_4";
 		["__CLK_APB2_PRE__"]="LL_RCC_APB2_DIV_2";
@@ -3264,7 +3264,7 @@
 		["__CLK_USART6_SRC__"]="LL_RCC_USART6_CLKSOURCE_PCLK2";
 		["__CLK_USB_SRC__"]="LL_RCC_USB_CLKSOURCE_PLLQ";
 	};
-	["config/app-system/arch/stm32f7/cpu_flags.h"]={
+	["config/app-kernel/arch/stm32f7/cpu_flags.h"]={
 		["__CPU_DCACHE_ENABLE__"]="_NO_";
 		["__CPU_DEFAULT_IRQ_PRIORITY__"]="14";
 		["__CPU_DISABLE_INTER_OF_MCYCLE_INSTR__"]="_YES_";
@@ -3288,7 +3288,7 @@
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="STM32F75xxGxx";
 	};
-	["config/app-system/arch/stm32f7/emi_flags.h"]={
+	["config/app-kernel/arch/stm32f7/emi_flags.h"]={
 		["__EMI_SDRAM_1_ENABLE__"]="0";
 		["__EMI_SDRAM_1_MWID__"]="1";
 		["__EMI_SDRAM_1_NB__"]="1";
@@ -3316,7 +3316,7 @@
 		["__EMI_SDRAM_TWR__"]="2";
 		["__EMI_SDRAM_TXSR__"]="7";
 	};
-	["config/app-system/arch/stm32f7/eth_flags.h"]={
+	["config/app-kernel/arch/stm32f7/eth_flags.h"]={
 		["__ETH_DEVICE__"]="LAN8742A";
 		["__ETH_PHY_ADDRESS__"]="0";
 		["__ETH_PHY_AUTONEGOTIATION__"]="ETH_AUTONEGOTIATION_ENABLE";
@@ -3328,7 +3328,7 @@
 		["__ETH_RXBUFNB__"]="10";
 		["__ETH_TXBUFNB__"]="10";
 	};
-	["config/app-system/arch/stm32f7/gpio_flags.h"]={
+	["config/app-kernel/arch/stm32f7/gpio_flags.h"]={
 		["__GPIO_PA_PIN_0_AF__"]="0";
 		["__GPIO_PA_PIN_0_MODE__"]="_GPIO_MODE_IN";
 		["__GPIO_PA_PIN_0_NAME__"]="PA0_NC";
@@ -4210,7 +4210,7 @@
 		["__GPIO_PK_PIN_9_SPEED__"]="_GPIO_SPEED_LOW";
 		["__GPIO_PK_PIN_9_STATE__"]="_LOW";
 	};
-	["config/app-system/arch/stm32f7/i2c_flags.h"]={
+	["config/app-kernel/arch/stm32f7/i2c_flags.h"]={
 		["__I2C1_ANALOG_FILTER_DISABLE__"]="0";
 		["__I2C1_DATA_HOLD_TIME_ns__"]="10";
 		["__I2C1_DATA_SETUP_TIME_ns__"]="10";
@@ -4244,7 +4244,7 @@
 		["__I2C4_SCL_FREQ__"]="100000";
 		["__I2C4_SCL_RISE_TIME_ns__"]="100";
 	};
-	["config/app-system/arch/stm32f7/irq_flags.h"]={
+	["config/app-kernel/arch/stm32f7/irq_flags.h"]={
 		["__IRQ_EXTI0_PORT__"]="(0 << 0)";
 		["__IRQ_EXTI10_PORT__"]="(0 << 8)";
 		["__IRQ_EXTI11_PORT__"]="(0 << 12)";
@@ -4278,7 +4278,7 @@
 		["__IRQ_LINE_8_MODE__"]="_IRQ_MODE_DISABLED";
 		["__IRQ_LINE_9_MODE__"]="_IRQ_MODE_DISABLED";
 	};
-	["config/app-system/arch/stm32f7/ltdc_flags.h"]={
+	["config/app-kernel/arch/stm32f7/ltdc_flags.h"]={
 		["__LTDC_DEPOLARITY__"]="LTDC_DEPOLARITY_AL";
 		["__LTDC_HBP__"]="13";
 		["__LTDC_HEIGHT__"]="272";
@@ -4292,13 +4292,13 @@
 		["__LTDC_VSYNC__"]="10";
 		["__LTDC_WIDTH__"]="480";
 	};
-	["config/app-system/arch/stm32f7/nvm_flags.h"]={
+	["config/app-kernel/arch/stm32f7/nvm_flags.h"]={
 	};
-	["config/app-system/arch/stm32f7/pwm_flags.h"]={
+	["config/app-kernel/arch/stm32f7/pwm_flags.h"]={
 	};
-	["config/app-system/arch/stm32f7/rtc_flags.h"]={
+	["config/app-kernel/arch/stm32f7/rtc_flags.h"]={
 	};
-	["config/app-system/arch/stm32f7/sdmmc_flags.h"]={
+	["config/app-kernel/arch/stm32f7/sdmmc_flags.h"]={
 		["__SDMMC_CFG_SDMMC1_BUS_WIDE__"]="SDMMC_BUS_WIDE_4B";
 		["__SDMMC_CFG_SDMMC1_CARD_TIMEOUT__"]="5000";
 		["__SDMMC_CFG_SDMMC1_CKDIV__"]="4";
@@ -4318,7 +4318,7 @@
 		["__SDMMC_CFG_SDMMC2_PWRSAVE__"]="SDMMC_CLOCK_POWER_SAVE_DISABLE";
 		["__SDMMC_CFG_SDMMC2_TYPE__"]="_SDMMC_TYPE_SDCARD";
 	};
-	["config/app-system/arch/stm32f7/spi_flags.h"]={
+	["config/app-kernel/arch/stm32f7/spi_flags.h"]={
 		["__SPI_DEFAULT_CLK_DIV__"]="SPI_CLK_DIV__4";
 		["__SPI_DEFAULT_MODE__"]="SPI_MODE__0";
 		["__SPI_DEFAULT_MSB_FIRST__"]="_YES_";
@@ -4329,11 +4329,11 @@
 		["__SPI_SPI5_USE_DMA__"]="_NO_";
 		["__SPI_SPI6_USE_DMA__"]="_NO_";
 	};
-	["config/app-system/arch/stm32f7/timenc_flags.h"]={
+	["config/app-kernel/arch/stm32f7/timenc_flags.h"]={
 		["__TIMENC_FREQ_HZ__"]="500";
 		["__TIMENC_MAX_ENCODERS__"]="8";
 	};
-	["config/app-system/arch/stm32f7/uart_flags.h"]={
+	["config/app-kernel/arch/stm32f7/uart_flags.h"]={
 		["__UART_DEFAULT_BAUD__"]="115200";
 		["__UART_DEFAULT_PARITY__"]="UART_PARITY__OFF";
 		["__UART_DEFAULT_RX_ENABLE__"]="_YES_";
@@ -4380,13 +4380,13 @@
 		["__UART_UART8_DMA_MODE__"]="_NO_";
 		["__UART_UART8_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 	};
-	["config/app-system/arch/stm32f7/wdg_flags.h"]={
+	["config/app-kernel/arch/stm32f7/wdg_flags.h"]={
 		["__WDG_CLK_DIVIDER__"]="256";
 		["__WDG_DEVICE_LOCK_AT_OPEN__"]="_YES_";
 		["__WDG_DISABLE_ON_DEBUG__"]="_YES_";
 		["__WDG_RELOAD_VALUE__"]="625";
 	};
-	["config/app-system/arch/stm32h7/afm_flags.h"]={
+	["config/app-kernel/arch/stm32h7/afm_flags.h"]={
 		["__AFM_AXISRAML__"]="(0 << SYSCFG_CFGR_AXISRAML_Pos)";
 		["__AFM_AXI_IN1_READ_QOS__"]="0";
 		["__AFM_AXI_IN1_WRITE_QOS__"]="0";
@@ -4435,11 +4435,11 @@
 		["__AFM_SRAM3L__"]="(0 << SYSCFG_CFGR_SRAM3L_Pos)";
 		["__AFM_SRAM4L__"]="(0 << SYSCFG_CFGR_SRAM4L_Pos)";
 	};
-	["config/app-system/arch/stm32h7/can_flags.h"]={
+	["config/app-kernel/arch/stm32h7/can_flags.h"]={
 		["__CAN_CFG_DEBUG_FREEZE__"]="_YES_";
 		["__CAN_CFG_RX_FIFO_SIZE__"]="16";
 	};
-	["config/app-system/arch/stm32h7/clk_flags.h"]={
+	["config/app-kernel/arch/stm32h7/clk_flags.h"]={
 		["__CLK_AHB_DIV__"]="LL_RCC_AHB_DIV_2";
 		["__CLK_APB1_DIV__"]="LL_RCC_APB1_DIV_2";
 		["__CLK_APB2_DIV__"]="LL_RCC_APB2_DIV_2";
@@ -4518,7 +4518,7 @@
 		["__CLK_SYSCLK_SRC_STATUS__"]="LL_RCC_SYS_CLKSOURCE_STATUS_PLL1";
 		["__CLK_SYSCLK_SRC__"]="LL_RCC_SYS_CLKSOURCE_PLL1";
 	};
-	["config/app-system/arch/stm32h7/cpu_flags.h"]={
+	["config/app-kernel/arch/stm32h7/cpu_flags.h"]={
 		["__CPU_DCACHE_ENABLE__"]="_NO_";
 		["__CPU_DEFAULT_IRQ_PRIORITY__"]="14";
 		["__CPU_DISABLE_INTER_OF_MCYCLE_INSTR__"]="_YES_";
@@ -4541,7 +4541,7 @@
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="STM32H753xIxx";
 	};
-	["config/app-system/arch/stm32h7/emi_flags.h"]={
+	["config/app-kernel/arch/stm32h7/emi_flags.h"]={
 		["__EMI_SDRAM_1_ENABLE__"]="0";
 		["__EMI_SDRAM_1_MWID__"]="1";
 		["__EMI_SDRAM_1_NB__"]="1";
@@ -4569,7 +4569,7 @@
 		["__EMI_SDRAM_TWR__"]="2";
 		["__EMI_SDRAM_TXSR__"]="7";
 	};
-	["config/app-system/arch/stm32h7/eth_flags.h"]={
+	["config/app-kernel/arch/stm32h7/eth_flags.h"]={
 		["__ETH_DEVICE__"]="LAN8742A";
 		["__ETH_PHY_ADDRESS__"]="0";
 		["__ETH_PHY_AUTONEGOTIATION__"]="ETH_AUTONEGOTIATION_ENABLE";
@@ -4581,7 +4581,7 @@
 		["__ETH_RXBUFNB__"]="10";
 		["__ETH_TXBUFNB__"]="10";
 	};
-	["config/app-system/arch/stm32h7/gpio_flags.h"]={
+	["config/app-kernel/arch/stm32h7/gpio_flags.h"]={
 		["__GPIO_PA_PIN_0_AF__"]="0";
 		["__GPIO_PA_PIN_0_MODE__"]="_GPIO_MODE_IN";
 		["__GPIO_PA_PIN_0_NAME__"]="PA0_NC";
@@ -5463,7 +5463,7 @@
 		["__GPIO_PK_PIN_9_SPEED__"]="_GPIO_SPEED_LOW";
 		["__GPIO_PK_PIN_9_STATE__"]="_LOW";
 	};
-	["config/app-system/arch/stm32h7/i2c_flags.h"]={
+	["config/app-kernel/arch/stm32h7/i2c_flags.h"]={
 		["__I2C1_ANALOG_FILTER_DISABLE__"]="0";
 		["__I2C1_DATA_HOLD_TIME_ns__"]="10";
 		["__I2C1_DATA_SETUP_TIME_ns__"]="10";
@@ -5505,7 +5505,7 @@
 		["__I2C5_SCL_FREQ__"]="100000";
 		["__I2C5_SCL_RISE_TIME_ns__"]="100";
 	};
-	["config/app-system/arch/stm32h7/ltdc_flags.h"]={
+	["config/app-kernel/arch/stm32h7/ltdc_flags.h"]={
 		["__LTDC_DEPOLARITY__"]="LTDC_DEPOLARITY_AL";
 		["__LTDC_HBP__"]="13";
 		["__LTDC_HEIGHT__"]="272";
@@ -5519,9 +5519,9 @@
 		["__LTDC_VSYNC__"]="10";
 		["__LTDC_WIDTH__"]="480";
 	};
-	["config/app-system/arch/stm32h7/nvm_flags.h"]={
+	["config/app-kernel/arch/stm32h7/nvm_flags.h"]={
 	};
-	["config/app-system/arch/stm32h7/qspi_flags.h"]={
+	["config/app-kernel/arch/stm32h7/qspi_flags.h"]={
 		["__QSPI_CFG_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 		["__QSPI_CFG_MMM_TIMEOUT_CYCLES__"]="128";
 		["__QSPI_CFG_MMM_TIMOUT_COUNTER__"]="QSPI_TIMEOUT_COUNTER_DISABLE";
@@ -5529,9 +5529,9 @@
 		["__QSPI_CFG_POLLING_INTERVAL_CLKS__"]="128";
 		["__QSPI_CFG_TIMEOUT__"]="500";
 	};
-	["config/app-system/arch/stm32h7/rtc_flags.h"]={
+	["config/app-kernel/arch/stm32h7/rtc_flags.h"]={
 	};
-	["config/app-system/arch/stm32h7/sdmmc_flags.h"]={
+	["config/app-kernel/arch/stm32h7/sdmmc_flags.h"]={
 		["__SDMMC_CFG_SDMMC1_BUS_WIDE__"]="SDMMC_BUS_WIDE_1B";
 		["__SDMMC_CFG_SDMMC1_CARD_TIMEOUT__"]="500";
 		["__SDMMC_CFG_SDMMC1_CKDIV__"]="1";
@@ -5553,7 +5553,7 @@
 		["__SDMMC_CFG_SDMMC2_SPEED_MODE__"]="SDMMC_SPEED_MODE_DEFAULT";
 		["__SDMMC_CFG_SDMMC2_TYPE__"]="_SDMMC_TYPE_SDCARD";
 	};
-	["config/app-system/arch/stm32h7/spi_flags.h"]={
+	["config/app-kernel/arch/stm32h7/spi_flags.h"]={
 		["__SPI_DEFAULT_CLK_DIV__"]="SPI_CLK_DIV__4";
 		["__SPI_DEFAULT_MODE__"]="SPI_MODE__0";
 		["__SPI_DEFAULT_MSB_FIRST__"]="_YES_";
@@ -5564,7 +5564,7 @@
 		["__SPI_SPI5_MODE__"]="_SPI_MODE_POLLING";
 		["__SPI_SPI6_MODE__"]="_SPI_MODE_POLLING";
 	};
-	["config/app-system/arch/stm32h7/uart_flags.h"]={
+	["config/app-kernel/arch/stm32h7/uart_flags.h"]={
 		["__UART_DEFAULT_BAUD__"]="115200";
 		["__UART_DEFAULT_PARITY__"]="UART_PARITY__OFF";
 		["__UART_DEFAULT_RX_ENABLE__"]="_YES_";
@@ -5621,9 +5621,9 @@
 		["__UART_UART9_DMA_MODE__"]="_NO_";
 		["__UART_UART9_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 	};
-	["config/app-system/config.h"]={
+	["config/app-kernel/config.h"]={
 	};
-	["config/app-system/custom_linker_script.h"]={
+	["config/app-kernel/custom_linker_script.h"]={
 		["__ARCH__"]="stm32f1";
 		["__MEMORY_10__"]="\"\"";
 		["__MEMORY_11__"]="\"\"";
@@ -5642,22 +5642,22 @@
 		["__MEMORY_8__"]="\"\"";
 		["__MEMORY_9__"]="\"\"";
 	};
-	["config/app-system/filesystems/eefs_flags.h"]={
+	["config/app-kernel/filesystems/eefs_flags.h"]={
 		["__EEFS_CACHE_SIZE__"]="8";
 		["__EEFS_LOG_ENABLE__"]="_NO_";
 	};
-	["config/app-system/filesystems/ext4fs_flags.h"]={
+	["config/app-kernel/filesystems/ext4fs_flags.h"]={
 		["__EXT4FS_CFG_BLK_CACHE_SIZE__"]="1";
 		["__EXT4FS_CFG_DIR_INDEXING__"]="1";
 		["__EXT4FS_CFG_FEATURE__"]="4";
 		["__EXT4FS_CFG_JOURNALING__"]="1";
 		["__EXT4FS_CFG_WR_BUF_STRATEGY__"]="1";
 	};
-	["config/app-system/filesystems/fatfs_flags.h"]={
+	["config/app-kernel/filesystems/fatfs_flags.h"]={
 		["__FATFS_BUFFERED_FILE_ENABLE__"]="_YES_";
 		["__FATFS_LFN_CODEPAGE__"]="852";
 	};
-	["config/app-system/filesystems/filesystems_flags.h"]={
+	["config/app-kernel/filesystems/filesystems_flags.h"]={
 		["__ENABLE_EEFS__"]="_NO_";
 		["__ENABLE_EXT4FS__"]="_NO_";
 		["__ENABLE_FATFS__"]="_NO_";
@@ -5666,17 +5666,17 @@
 		["__ENABLE_RAMFS__"]="_YES_";
 		["__ENABLE_ROMFS__"]="_YES_";
 	};
-	["config/app-system/filesystems/flatfs_flags.h"]={
+	["config/app-kernel/filesystems/flatfs_flags.h"]={
 		["__FLATFS_INDEX_SIZE__"]="0";
 		["__FLATFS_LOG_ENABLE__"]="_NO_";
 	};
-	["config/app-system/filesystems/ramfs_flags.h"]={
+	["config/app-kernel/filesystems/ramfs_flags.h"]={
 		["__RAMFS_FILE_CHAIN_SIZE__"]="32";
 	};
-	["config/app-system/filesystems/romfs_flags.h"]={
+	["config/app-kernel/filesystems/romfs_flags.h"]={
 		["__ROMFS_CFG_EXEC_FILES__"]="_YES_";
 	};
-	["config/app-system/network/cannet_flags.h"]={
+	["config/app-kernel/network/cannet_flags.h"]={
 		["__NETWORK_CANNET_DEBUG_ON__"]="_NO_";
 		["__NETWORK_CANNET_MAX_SOCKETS__"]="16";
 		["__NETWORK_CANNET_MAX_SOCKET_BUFFER_LENGTH__"]="256";
@@ -5684,17 +5684,17 @@
 		["__NETWORK_CANNET_SEND_REPETITIONS_INTERVAL_MIN__"]="3";
 		["__NETWORK_CANNET_SEND_REPETITIONS__"]="3";
 	};
-	["config/app-system/network/network_flags.h"]={
+	["config/app-kernel/network/network_flags.h"]={
 		["__ENABLE_CANNET_STACK__"]="_NO_";
 		["__ENABLE_SIPC_STACK__"]="_NO_";
 		["__ENABLE_TCPIP_STACK__"]="_NO_";
 		["__ENABLE_UDS_STACK__"]="_NO_";
 	};
-	["config/app-system/network/sipc_flags.h"]={
+	["config/app-kernel/network/sipc_flags.h"]={
 		["__NETWORK_SIPC_DEBUG_ON__"]="_NO_";
 		["__NETWORK_SIPC_RECV_BUF_SIZE__"]="2048";
 	};
-	["config/app-system/network/tcpip_flags.h"]={
+	["config/app-kernel/network/tcpip_flags.h"]={
 		["__NETWORK_API_LIB_DEBUG__"]="LWIP_DBG_OFF";
 		["__NETWORK_API_MSG_DEBUG__"]="LWIP_DBG_OFF";
 		["__NETWORK_ARP_MAXAGE__"]="300";
@@ -5855,13 +5855,13 @@
 		["__NETWORK_UDP_DEBUG__"]="LWIP_DBG_OFF";
 		["__NETWORK_UDP_TTL__"]="255";
 	};
-	["config/app-system/network/uds_flags.h"]={
+	["config/app-kernel/network/uds_flags.h"]={
 		["__NETWORK_UDS_BUF_SIZE__"]="2048";
 		["__NETWORK_UDS_DATAGRAM_BUFFERS_SIZE__"]="16";
 		["__NETWORK_UDS_DATAGRAM_MAX_SIZE__"]="1500";
 		["__NETWORK_UDS_DEBUG_ON__"]="_NO_";
 	};
-	["config/app-system/os/os_flags.h"]={
+	["config/app-kernel/os/os_flags.h"]={
 		["__HEAP_BLOCK_SIZE__"]="4";
 		["__OS_COLOR_TERMINAL_ENABLE__"]="_YES_";
 		["__OS_ENABLE_CHMOD__"]="_NO_";
@@ -5900,7 +5900,7 @@
 		["__OS_TASK_MIN_STACK_DEPTH__"]="64";
 		["__OS_TASK_SCHED_FREQ__"]="1000";
 	};
-	["config/app-system/project/project_flags.h"]={
+	["config/app-kernel/project/project_flags.h"]={
 		["__CPU_ARCH__"]="stm32f1";
 		["__CPU_OSC_FREQ__"]="8000000";
 		["__CPU_UART_TERM__"]="0";
@@ -5928,7 +5928,7 @@
 		["__PROJ_APPSET_TABLE_ADDRESS__"]="0x08010000";
 		["__PROJ_APPSET_TABLE_SIZE__"]="1024k";
 	};
-	["config/btl-system/arch/arch_flags.h"]={
+	["config/btl-kernel/arch/arch_flags.h"]={
 		["__ENABLE_ADC__"]="_NO_";
 		["__ENABLE_AFM__"]="_NO_";
 		["__ENABLE_CAN__"]="_NO_";
@@ -5967,13 +5967,13 @@
 		["__ENABLE_WDG__"]="_NO_";
 		["__ENABLE_ZERO__"]="_NO_";
 	};
-	["config/btl-system/arch/noarch/tty_flags.h"]={
+	["config/btl-kernel/arch/noarch/tty_flags.h"]={
 		["__TTY_NUMBER_OF_TERM__"]="2";
 		["__TTY_OUT_STREAM_LEN__"]="80";
 		["__TTY_TERM_COLS__"]="80";
 		["__TTY_TERM_ROWS__"]="24";
 	};
-	["config/btl-system/arch/rpcm0/clk_flags.h"]={
+	["config/btl-kernel/arch/rpcm0/clk_flags.h"]={
 		["__CLK_ADC_CLK_DIV__"]="1";
 		["__CLK_ADC_CLK_SRC__"]="_CLK_ADC_CLK_AUXSRC_PLL_USB";
 		["__CLK_GPCLK0_FREQ__"]="1000000";
@@ -6011,7 +6011,7 @@
 		["__CLK_USB_PLL_REFDIV__"]="1";
 		["__CLK_XOSC_ENABLE__"]="_YES_";
 	};
-	["config/btl-system/arch/rpcm0/cpu_flags.h"]={
+	["config/btl-kernel/arch/rpcm0/cpu_flags.h"]={
 		["__CPU_BOOT2_FILE__"]="boot2_w25q080.c";
 		["__CPU_DEFAULT_IRQ_PRIORITY__"]="2";
 		["__CPU_FAMILY__"]="_RP2040_";
@@ -6028,7 +6028,7 @@
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="RPxx40";
 	};
-	["config/btl-system/arch/rpcm0/gpio_flags.h"]={
+	["config/btl-kernel/arch/rpcm0/gpio_flags.h"]={
 		["__GPIO_BANK0_PIN_0_AF__"]="2";
 		["__GPIO_BANK0_PIN_0_MODE__"]="_GPIO_MODE_PP";
 		["__GPIO_BANK0_PIN_0_NAME__"]="UART0_TX";
@@ -6246,7 +6246,7 @@
 		["__GPIO_QSPI_PIN_5_STATE__"]="0";
 		["__GPIO_QSPI_PIN_5_STRENGTH__"]="_GPIO_STRENGTH_12mA_SLEW_RATE_FAST";
 	};
-	["config/btl-system/arch/rpcm0/uart_flags.h"]={
+	["config/btl-kernel/arch/rpcm0/uart_flags.h"]={
 		["__UART_DEFAULT_BAUD__"]="115200";
 		["__UART_DEFAULT_PARITY__"]="UART_PARITY__OFF";
 		["__UART_DEFAULT_RX_ENABLE__"]="_YES_";
@@ -6259,10 +6259,10 @@
 		["__UART_UART0_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 		["__UART_UART1_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 	};
-	["config/btl-system/arch/stm32f1/adc_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/adc_flags.h"]={
 		["__ADC_CFG_EXAMPLE__"]="_NO_";
 	};
-	["config/btl-system/arch/stm32f1/afm_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/afm_flags.h"]={
 		["__AFM_EVENT_OUT_ENABLE__"]="_NO_";
 		["__AFM_EVENT_OUT_PIN__"]="0";
 		["__AFM_EVENT_OUT_PORT__"]="0";
@@ -6304,11 +6304,11 @@
 		["__AFM_REMAP_USART2__"]="0";
 		["__AFM_REMAP_USART3__"]="0";
 	};
-	["config/btl-system/arch/stm32f1/can_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/can_flags.h"]={
 		["__CAN_CFG_DEBUG_FREEZE__"]="_YES_";
 		["__CAN_CFG_RX_FIFO_SIZE__"]="16";
 	};
-	["config/btl-system/arch/stm32f1/clk_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/clk_flags.h"]={
 		["__CLK_ADC_PRE__"]="RCC_PCLK2_Div4";
 		["__CLK_AHB_PRE__"]="RCC_SYSCLK_Div1";
 		["__CLK_APB1_PRE__"]="RCC_HCLK_Div2";
@@ -6338,7 +6338,7 @@
 		["__CLK_USB_DIV_CL__"]="RCC_OTGFSCLKSource_PLLVCO_Div3";
 		["__CLK_USB_DIV__"]="RCC_USBCLKSource_PLLCLK_Div1";
 	};
-	["config/btl-system/arch/stm32f1/cpu_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/cpu_flags.h"]={
 		["__CPU_DEFAULT_IRQ_PRIORITY__"]="14";
 		["__CPU_DISABLE_INTER_OF_MCYCLE_INSTR__"]="_NO_";
 		["__CPU_FAMILY__"]="_STM32F10X_MD_";
@@ -6353,9 +6353,9 @@
 		["__CUSTOM_LD_SCRIPT_FILE__"]="\"./custom_linker_script.ld\"";
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 	};
-	["config/btl-system/arch/stm32f1/crc_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/crc_flags.h"]={
 	};
-	["config/btl-system/arch/stm32f1/eth_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/eth_flags.h"]={
 		["__ETH_DEVICE__"]="DP83848";
 		["__ETH_PHY_ADDRESS__"]="0";
 		["__ETH_PHY_AUTONEGOTIATION__"]="ETH_AUTONEGOTIATION_ENABLE";
@@ -6367,7 +6367,7 @@
 		["__ETH_RXBUFNB__"]="3";
 		["__ETH_TXBUFNB__"]="3";
 	};
-	["config/btl-system/arch/stm32f1/gpio_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/gpio_flags.h"]={
 		["__GPIO_PA_PIN_0_MODE__"]="_GPIO_ANALOG";
 		["__GPIO_PA_PIN_0_NAME__"]="PA0_NC";
 		["__GPIO_PA_PIN_0_STATE__"]="_LOW";
@@ -6705,7 +6705,7 @@
 		["__GPIO_PG_PIN_9_NAME__"]="NC_GPIOG_9";
 		["__GPIO_PG_PIN_9_STATE__"]="_FLOAT";
 	};
-	["config/btl-system/arch/stm32f1/i2c_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/i2c_flags.h"]={
 		["__I2C1_DUTY_CYCLE__"]="_I2C_DUTY_CYCLE_1_2";
 		["__I2C1_SCL_FREQ__"]="100000";
 		["__I2C1_USE_DMA__"]="_YES_";
@@ -6713,7 +6713,7 @@
 		["__I2C2_SCL_FREQ__"]="100000";
 		["__I2C2_USE_DMA__"]="_YES_";
 	};
-	["config/btl-system/arch/stm32f1/irq_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/irq_flags.h"]={
 		["__IRQ_EXTI0_PORT__"]="(0 << 0)";
 		["__IRQ_EXTI10_PORT__"]="(0 << 8)";
 		["__IRQ_EXTI11_PORT__"]="(0 << 12)";
@@ -6747,13 +6747,13 @@
 		["__IRQ_LINE_8_MODE__"]="_IRQ_MODE_DISABLED";
 		["__IRQ_LINE_9_MODE__"]="_IRQ_MODE_DISABLED";
 	};
-	["config/btl-system/arch/stm32f1/nvm_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/nvm_flags.h"]={
 	};
-	["config/btl-system/arch/stm32f1/pwm_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/pwm_flags.h"]={
 	};
-	["config/btl-system/arch/stm32f1/rtc_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/rtc_flags.h"]={
 	};
-	["config/btl-system/arch/stm32f1/spi_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/spi_flags.h"]={
 		["__SPI_DEFAULT_CLK_DIV__"]="SPI_CLK_DIV__4";
 		["__SPI_DEFAULT_MODE__"]="SPI_MODE__0";
 		["__SPI_DEFAULT_MSB_FIRST__"]="_YES_";
@@ -6761,7 +6761,7 @@
 		["__SPI_SPI2_USE_DMA__"]="_NO_";
 		["__SPI_SPI3_USE_DMA__"]="_NO_";
 	};
-	["config/btl-system/arch/stm32f1/uart_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/uart_flags.h"]={
 		["__UART_DEFAULT_BAUD__"]="115200";
 		["__UART_DEFAULT_PARITY__"]="UART_PARITY__OFF";
 		["__UART_DEFAULT_RX_ENABLE__"]="_YES_";
@@ -6793,23 +6793,23 @@
 		["__UART_UART5_DMA_MODE__"]="_NO_";
 		["__UART_UART5_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 	};
-	["config/btl-system/arch/stm32f1/usbd_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/usbd_flags.h"]={
 		["__USBD_ENDPOINT0_SIZE__"]="8";
 		["__USBD_PULLUP_NEGATIVE__"]="_YES_";
 		["__USBD_PULLUP_PIN_INDEX__"]="0";
 		["__USBD_PULLUP_PORT_INDEX__"]="0";
 	};
-	["config/btl-system/arch/stm32f1/wdg_flags.h"]={
+	["config/btl-kernel/arch/stm32f1/wdg_flags.h"]={
 		["__WDG_CLK_DIVIDER__"]="256";
 		["__WDG_DEVICE_LOCK_AT_OPEN__"]="_YES_";
 		["__WDG_DISABLE_ON_DEBUG__"]="_YES_";
 		["__WDG_RELOAD_VALUE__"]="1563";
 	};
-	["config/btl-system/arch/stm32f3/can_flags.h"]={
+	["config/btl-kernel/arch/stm32f3/can_flags.h"]={
 		["__CAN_CFG_DEBUG_FREEZE__"]="_YES_";
 		["__CAN_CFG_RX_FIFO_SIZE__"]="16";
 	};
-	["config/btl-system/arch/stm32f3/clk_flags.h"]={
+	["config/btl-kernel/arch/stm32f3/clk_flags.h"]={
 		["__CLK_ADC12_SRC__"]="LL_RCC_ADC12_CLKSRC_PLL_DIV_2";
 		["__CLK_ADC34_SRC__"]="LL_RCC_ADC34_CLKSRC_PLL_DIV_2";
 		["__CLK_AHB_PRE__"]="LL_RCC_SYSCLK_DIV_1";
@@ -6839,7 +6839,7 @@
 		["__CLK_USART3_SRC__"]="LL_RCC_USART3_CLKSOURCE_PCLK1";
 		["__CLK_USB_DIV__"]="LL_RCC_USB_CLKSOURCE_PLL_DIV_1_5";
 	};
-	["config/btl-system/arch/stm32f3/cpu_flags.h"]={
+	["config/btl-kernel/arch/stm32f3/cpu_flags.h"]={
 		["__CPU_DEFAULT_IRQ_PRIORITY__"]="14";
 		["__CPU_DISABLE_INTER_OF_MCYCLE_INSTR__"]="_YES_";
 		["__CPU_FAMILY__"]="_STM32F3XX_";
@@ -6856,7 +6856,7 @@
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="STM32F3xx_512_64_16";
 	};
-	["config/btl-system/arch/stm32f3/gpio_flags.h"]={
+	["config/btl-kernel/arch/stm32f3/gpio_flags.h"]={
 		["__GPIO_PA_PIN_0_AF__"]="0";
 		["__GPIO_PA_PIN_0_MODE__"]="_GPIO_MODE_IN";
 		["__GPIO_PA_PIN_0_NAME__"]="PA0_NC";
@@ -7738,7 +7738,7 @@
 		["__GPIO_PK_PIN_9_SPEED__"]="_GPIO_SPEED_LOW";
 		["__GPIO_PK_PIN_9_STATE__"]="_LOW";
 	};
-	["config/btl-system/arch/stm32f3/i2c_flags.h"]={
+	["config/btl-kernel/arch/stm32f3/i2c_flags.h"]={
 		["__I2C1_ANALOG_FILTER_DISABLE__"]="0";
 		["__I2C1_DATA_HOLD_TIME_ns__"]="10";
 		["__I2C1_DATA_SETUP_TIME_ns__"]="10";
@@ -7764,7 +7764,7 @@
 		["__I2C3_SCL_FREQ__"]="100000";
 		["__I2C3_SCL_RISE_TIME_ns__"]="100";
 	};
-	["config/btl-system/arch/stm32f3/irq_flags.h"]={
+	["config/btl-kernel/arch/stm32f3/irq_flags.h"]={
 		["__IRQ_EXTI0_PORT__"]="(0 << 0)";
 		["__IRQ_EXTI10_PORT__"]="(0 << 8)";
 		["__IRQ_EXTI11_PORT__"]="(0 << 12)";
@@ -7798,9 +7798,9 @@
 		["__IRQ_LINE_8_MODE__"]="_IRQ_MODE_DISABLED";
 		["__IRQ_LINE_9_MODE__"]="_IRQ_MODE_DISABLED";
 	};
-	["config/btl-system/arch/stm32f3/pwm_flags.h"]={
+	["config/btl-kernel/arch/stm32f3/pwm_flags.h"]={
 	};
-	["config/btl-system/arch/stm32f3/uart_flags.h"]={
+	["config/btl-kernel/arch/stm32f3/uart_flags.h"]={
 		["__UART_DEFAULT_BAUD__"]="115200";
 		["__UART_DEFAULT_PARITY__"]="UART_PARITY__OFF";
 		["__UART_DEFAULT_RX_ENABLE__"]="_YES_";
@@ -7832,7 +7832,7 @@
 		["__UART_UART5_DMA_MODE__"]="_NO_";
 		["__UART_UART5_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 	};
-	["config/btl-system/arch/stm32f4/afm_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/afm_flags.h"]={
 		["__AFM_BKPRAM_ENABLE__"]="_NO_";
 		["__AFM_CMP_PD__"]="(0 << SYSCFG_CMPCR_CMP_PD_Pos)";
 		["__AFM_FB_MODE__"]="(0 << 8)";
@@ -7840,11 +7840,11 @@
 		["__AFM_MII_RMII_SEL__"]="(1 << 23)";
 		["__AFM_SWP_FMC__"]="(0 << 10)";
 	};
-	["config/btl-system/arch/stm32f4/can_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/can_flags.h"]={
 		["__CAN_CFG_DEBUG_FREEZE__"]="_YES_";
 		["__CAN_CFG_RX_FIFO_SIZE__"]="16";
 	};
-	["config/btl-system/arch/stm32f4/clk_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/clk_flags.h"]={
 		["__CLK_48MHZ_SRC__"]="RCC_48MHZCLKSource_PLL";
 		["__CLK_AHB_PRE__"]="RCC_SYSCLK_Div1";
 		["__CLK_APB1_PRE__"]="RCC_HCLK_Div2";
@@ -7899,7 +7899,7 @@
 		["__CLK_SPDIF_SRC__"]="RCC_SPDIFRXCLKSource_PLLR";
 		["__CLK_SYS_CLK_SRC__"]="RCC_SYSCLKSource_PLLCLK";
 	};
-	["config/btl-system/arch/stm32f4/cpu_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/cpu_flags.h"]={
 		["__CPU_DEFAULT_IRQ_PRIORITY__"]="14";
 		["__CPU_DISABLE_INTER_OF_MCYCLE_INSTR__"]="_YES_";
 		["__CPU_FAMILY__"]="_STM32F4XX_ADVANCEDLINE_";
@@ -7916,9 +7916,9 @@
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="STM32F42xxIxx";
 	};
-	["config/btl-system/arch/stm32f4/crc_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/crc_flags.h"]={
 	};
-	["config/btl-system/arch/stm32f4/dci_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/dci_flags.h"]={
 		["__DCI_BYTES_PER_PIXEL__"]="2";
 		["__DCI_CAM_RES_X__"]="800";
 		["__DCI_CAM_RES_Y__"]="600";
@@ -7944,7 +7944,7 @@
 		["__DCI_PCKPOL__"]="(1 << 5)";
 		["__DCI_VSPOL__"]="(0 << 7)";
 	};
-	["config/btl-system/arch/stm32f4/emi_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/emi_flags.h"]={
 		["__EMI_SDRAM_1_ENABLE__"]="0";
 		["__EMI_SDRAM_1_MWID__"]="1";
 		["__EMI_SDRAM_1_NB__"]="1";
@@ -7972,7 +7972,7 @@
 		["__EMI_SDRAM_TWR__"]="2";
 		["__EMI_SDRAM_TXSR__"]="7";
 	};
-	["config/btl-system/arch/stm32f4/eth_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/eth_flags.h"]={
 		["__ETH_DEVICE__"]="LAN8742A";
 		["__ETH_PHY_ADDRESS__"]="0";
 		["__ETH_PHY_AUTONEGOTIATION__"]="ETH_AUTONEGOTIATION_ENABLE";
@@ -7984,7 +7984,7 @@
 		["__ETH_RXBUFNB__"]="10";
 		["__ETH_TXBUFNB__"]="3";
 	};
-	["config/btl-system/arch/stm32f4/gpio_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/gpio_flags.h"]={
 		["__GPIO_PA_PIN_0_AF__"]="0";
 		["__GPIO_PA_PIN_0_MODE__"]="_GPIO_MODE_IN";
 		["__GPIO_PA_PIN_0_NAME__"]="PA0_NC";
@@ -8866,7 +8866,7 @@
 		["__GPIO_PK_PIN_9_SPEED__"]="_GPIO_SPEED_LOW";
 		["__GPIO_PK_PIN_9_STATE__"]="_LOW";
 	};
-	["config/btl-system/arch/stm32f4/i2c_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/i2c_flags.h"]={
 		["__I2C1_DUTY_CYCLE__"]="_I2C_DUTY_CYCLE_1_2";
 		["__I2C1_SCL_FREQ__"]="100000";
 		["__I2C1_USE_DMA__"]="_NO_";
@@ -8877,7 +8877,7 @@
 		["__I2C3_SCL_FREQ__"]="100000";
 		["__I2C3_USE_DMA__"]="_YES_";
 	};
-	["config/btl-system/arch/stm32f4/irq_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/irq_flags.h"]={
 		["__IRQ_EXTI0_PORT__"]="(0 << 0)";
 		["__IRQ_EXTI10_PORT__"]="(0 << 8)";
 		["__IRQ_EXTI11_PORT__"]="(0 << 12)";
@@ -8911,11 +8911,11 @@
 		["__IRQ_LINE_8_MODE__"]="_IRQ_MODE_DISABLED";
 		["__IRQ_LINE_9_MODE__"]="_IRQ_MODE_DISABLED";
 	};
-	["config/btl-system/arch/stm32f4/nvm_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/nvm_flags.h"]={
 	};
-	["config/btl-system/arch/stm32f4/pwm_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/pwm_flags.h"]={
 	};
-	["config/btl-system/arch/stm32f4/qspi_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/qspi_flags.h"]={
 		["__QSPI_CFG_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 		["__QSPI_CFG_MMM_TIMEOUT_CYCLES__"]="128";
 		["__QSPI_CFG_MMM_TIMOUT_COUNTER__"]="QSPI_TIMEOUT_COUNTER_DISABLE";
@@ -8923,9 +8923,9 @@
 		["__QSPI_CFG_POLLING_INTERVAL_CLKS__"]="128";
 		["__QSPI_CFG_TIMEOUT__"]="500";
 	};
-	["config/btl-system/arch/stm32f4/rtc_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/rtc_flags.h"]={
 	};
-	["config/btl-system/arch/stm32f4/sdmmc_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/sdmmc_flags.h"]={
 		["__SDMMC_CFG_SDMMC1_BUS_WIDE__"]="SDIO_BUS_WIDE_4B";
 		["__SDMMC_CFG_SDMMC1_CARD_TIMEOUT__"]="5000";
 		["__SDMMC_CFG_SDMMC1_CKDIV__"]="3";
@@ -8936,7 +8936,7 @@
 		["__SDMMC_CFG_SDMMC1_PWRSAVE__"]="SDIO_CLOCK_POWER_SAVE_DISABLE";
 		["__SDMMC_CFG_SDMMC1_TYPE__"]="_SDMMC_TYPE_SDCARD";
 	};
-	["config/btl-system/arch/stm32f4/snd_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/snd_flags.h"]={
 		["__SND_CFG_SAI1_BLKA_CKSTR__"]="SAI_xCR1_CKSTR";
 		["__SND_CFG_SAI1_BLKA_COMP__"]="0";
 		["__SND_CFG_SAI1_BLKA_CPL__"]="0";
@@ -9006,7 +9006,7 @@
 		["__SND_CFG_SAI2_BLKB_SLOTSZ__"]="1";
 		["__SND_CFG_SAI2_BLKB_TRIS__"]="0";
 	};
-	["config/btl-system/arch/stm32f4/spi_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/spi_flags.h"]={
 		["__SPI_DEFAULT_CLK_DIV__"]="SPI_CLK_DIV__4";
 		["__SPI_DEFAULT_MODE__"]="SPI_MODE__0";
 		["__SPI_DEFAULT_MSB_FIRST__"]="_YES_";
@@ -9017,7 +9017,7 @@
 		["__SPI_SPI5_USE_DMA__"]="_NO_";
 		["__SPI_SPI6_USE_DMA__"]="_NO_";
 	};
-	["config/btl-system/arch/stm32f4/uart_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/uart_flags.h"]={
 		["__UART_DEFAULT_BAUD__"]="115200";
 		["__UART_DEFAULT_PARITY__"]="UART_PARITY__OFF";
 		["__UART_DEFAULT_RX_ENABLE__"]="_YES_";
@@ -9074,19 +9074,19 @@
 		["__UART_UART9_DMA_MODE__"]="_NO_";
 		["__UART_UART9_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 	};
-	["config/btl-system/arch/stm32f4/usbh_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/usbh_flags.h"]={
 		["__USBH_DEBUG_MSG__"]="_NO_";
 		["__USBH_ENABLE_DMA_TRANSFER__"]="_YES_";
 		["__USBH_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 		["__USBH_PHY_RESET_PIN__"]="NONE";
 	};
-	["config/btl-system/arch/stm32f4/wdg_flags.h"]={
+	["config/btl-kernel/arch/stm32f4/wdg_flags.h"]={
 		["__WDG_CLK_DIVIDER__"]="256";
 		["__WDG_DEVICE_LOCK_AT_OPEN__"]="_YES_";
 		["__WDG_DISABLE_ON_DEBUG__"]="_YES_";
 		["__WDG_RELOAD_VALUE__"]="625";
 	};
-	["config/btl-system/arch/stm32f7/afm_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/afm_flags.h"]={
 		["__AFM_ADCxDC2__"]="0";
 		["__AFM_CLL__"]="(0 << SYSCFG_CBR_CLL_Pos)";
 		["__AFM_CMP_PD__"]="(0 << SYSCFG_CMPCR_CMP_PD_Pos)";
@@ -9104,11 +9104,11 @@
 		["__AFM_SWP_FB__"]="(0 << SYSCFG_MEMRMP_SWP_FB_Pos)";
 		["__AFM_SWP_FMC__"]="(0 << SYSCFG_MEMRMP_SWP_FMC_Pos)";
 	};
-	["config/btl-system/arch/stm32f7/can_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/can_flags.h"]={
 		["__CAN_CFG_DEBUG_FREEZE__"]="_YES_";
 		["__CAN_CFG_RX_FIFO_SIZE__"]="16";
 	};
-	["config/btl-system/arch/stm32f7/clk_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/clk_flags.h"]={
 		["__CLK_AHB_PRE__"]="LL_RCC_SYSCLK_DIV_1";
 		["__CLK_APB1_PRE__"]="LL_RCC_APB1_DIV_4";
 		["__CLK_APB2_PRE__"]="LL_RCC_APB2_DIV_2";
@@ -9169,7 +9169,7 @@
 		["__CLK_USART6_SRC__"]="LL_RCC_USART6_CLKSOURCE_PCLK2";
 		["__CLK_USB_SRC__"]="LL_RCC_USB_CLKSOURCE_PLLQ";
 	};
-	["config/btl-system/arch/stm32f7/cpu_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/cpu_flags.h"]={
 		["__CPU_DCACHE_ENABLE__"]="_NO_";
 		["__CPU_DEFAULT_IRQ_PRIORITY__"]="14";
 		["__CPU_DISABLE_INTER_OF_MCYCLE_INSTR__"]="_YES_";
@@ -9193,7 +9193,7 @@
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="STM32F75xxGxx";
 	};
-	["config/btl-system/arch/stm32f7/emi_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/emi_flags.h"]={
 		["__EMI_SDRAM_1_ENABLE__"]="0";
 		["__EMI_SDRAM_1_MWID__"]="1";
 		["__EMI_SDRAM_1_NB__"]="1";
@@ -9221,7 +9221,7 @@
 		["__EMI_SDRAM_TWR__"]="2";
 		["__EMI_SDRAM_TXSR__"]="7";
 	};
-	["config/btl-system/arch/stm32f7/eth_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/eth_flags.h"]={
 		["__ETH_DEVICE__"]="LAN8742A";
 		["__ETH_PHY_ADDRESS__"]="0";
 		["__ETH_PHY_AUTONEGOTIATION__"]="ETH_AUTONEGOTIATION_ENABLE";
@@ -9233,7 +9233,7 @@
 		["__ETH_RXBUFNB__"]="10";
 		["__ETH_TXBUFNB__"]="10";
 	};
-	["config/btl-system/arch/stm32f7/gpio_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/gpio_flags.h"]={
 		["__GPIO_PA_PIN_0_AF__"]="0";
 		["__GPIO_PA_PIN_0_MODE__"]="_GPIO_MODE_IN";
 		["__GPIO_PA_PIN_0_NAME__"]="PA0_NC";
@@ -10115,7 +10115,7 @@
 		["__GPIO_PK_PIN_9_SPEED__"]="_GPIO_SPEED_LOW";
 		["__GPIO_PK_PIN_9_STATE__"]="_LOW";
 	};
-	["config/btl-system/arch/stm32f7/i2c_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/i2c_flags.h"]={
 		["__I2C1_ANALOG_FILTER_DISABLE__"]="0";
 		["__I2C1_DATA_HOLD_TIME_ns__"]="10";
 		["__I2C1_DATA_SETUP_TIME_ns__"]="10";
@@ -10149,7 +10149,7 @@
 		["__I2C4_SCL_FREQ__"]="100000";
 		["__I2C4_SCL_RISE_TIME_ns__"]="100";
 	};
-	["config/btl-system/arch/stm32f7/irq_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/irq_flags.h"]={
 		["__IRQ_EXTI0_PORT__"]="(0 << 0)";
 		["__IRQ_EXTI10_PORT__"]="(0 << 8)";
 		["__IRQ_EXTI11_PORT__"]="(0 << 12)";
@@ -10183,7 +10183,7 @@
 		["__IRQ_LINE_8_MODE__"]="_IRQ_MODE_DISABLED";
 		["__IRQ_LINE_9_MODE__"]="_IRQ_MODE_DISABLED";
 	};
-	["config/btl-system/arch/stm32f7/ltdc_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/ltdc_flags.h"]={
 		["__LTDC_DEPOLARITY__"]="LTDC_DEPOLARITY_AL";
 		["__LTDC_HBP__"]="13";
 		["__LTDC_HEIGHT__"]="272";
@@ -10197,13 +10197,13 @@
 		["__LTDC_VSYNC__"]="10";
 		["__LTDC_WIDTH__"]="480";
 	};
-	["config/btl-system/arch/stm32f7/nvm_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/nvm_flags.h"]={
 	};
-	["config/btl-system/arch/stm32f7/pwm_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/pwm_flags.h"]={
 	};
-	["config/btl-system/arch/stm32f7/rtc_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/rtc_flags.h"]={
 	};
-	["config/btl-system/arch/stm32f7/sdmmc_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/sdmmc_flags.h"]={
 		["__SDMMC_CFG_SDMMC1_BUS_WIDE__"]="SDMMC_BUS_WIDE_4B";
 		["__SDMMC_CFG_SDMMC1_CARD_TIMEOUT__"]="5000";
 		["__SDMMC_CFG_SDMMC1_CKDIV__"]="4";
@@ -10223,7 +10223,7 @@
 		["__SDMMC_CFG_SDMMC2_PWRSAVE__"]="SDMMC_CLOCK_POWER_SAVE_DISABLE";
 		["__SDMMC_CFG_SDMMC2_TYPE__"]="_SDMMC_TYPE_SDCARD";
 	};
-	["config/btl-system/arch/stm32f7/spi_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/spi_flags.h"]={
 		["__SPI_DEFAULT_CLK_DIV__"]="SPI_CLK_DIV__4";
 		["__SPI_DEFAULT_MODE__"]="SPI_MODE__0";
 		["__SPI_DEFAULT_MSB_FIRST__"]="_YES_";
@@ -10234,11 +10234,11 @@
 		["__SPI_SPI5_USE_DMA__"]="_NO_";
 		["__SPI_SPI6_USE_DMA__"]="_NO_";
 	};
-	["config/btl-system/arch/stm32f7/timenc_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/timenc_flags.h"]={
 		["__TIMENC_FREQ_HZ__"]="500";
 		["__TIMENC_MAX_ENCODERS__"]="8";
 	};
-	["config/btl-system/arch/stm32f7/uart_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/uart_flags.h"]={
 		["__UART_DEFAULT_BAUD__"]="115200";
 		["__UART_DEFAULT_PARITY__"]="UART_PARITY__OFF";
 		["__UART_DEFAULT_RX_ENABLE__"]="_YES_";
@@ -10285,13 +10285,13 @@
 		["__UART_UART8_DMA_MODE__"]="_NO_";
 		["__UART_UART8_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 	};
-	["config/btl-system/arch/stm32f7/wdg_flags.h"]={
+	["config/btl-kernel/arch/stm32f7/wdg_flags.h"]={
 		["__WDG_CLK_DIVIDER__"]="256";
 		["__WDG_DEVICE_LOCK_AT_OPEN__"]="_YES_";
 		["__WDG_DISABLE_ON_DEBUG__"]="_YES_";
 		["__WDG_RELOAD_VALUE__"]="625";
 	};
-	["config/btl-system/arch/stm32h7/afm_flags.h"]={
+	["config/btl-kernel/arch/stm32h7/afm_flags.h"]={
 		["__AFM_AXISRAML__"]="(0 << SYSCFG_CFGR_AXISRAML_Pos)";
 		["__AFM_AXI_IN1_READ_QOS__"]="0";
 		["__AFM_AXI_IN1_WRITE_QOS__"]="0";
@@ -10340,11 +10340,11 @@
 		["__AFM_SRAM3L__"]="(0 << SYSCFG_CFGR_SRAM3L_Pos)";
 		["__AFM_SRAM4L__"]="(0 << SYSCFG_CFGR_SRAM4L_Pos)";
 	};
-	["config/btl-system/arch/stm32h7/can_flags.h"]={
+	["config/btl-kernel/arch/stm32h7/can_flags.h"]={
 		["__CAN_CFG_DEBUG_FREEZE__"]="_YES_";
 		["__CAN_CFG_RX_FIFO_SIZE__"]="16";
 	};
-	["config/btl-system/arch/stm32h7/clk_flags.h"]={
+	["config/btl-kernel/arch/stm32h7/clk_flags.h"]={
 		["__CLK_AHB_DIV__"]="LL_RCC_AHB_DIV_2";
 		["__CLK_APB1_DIV__"]="LL_RCC_APB1_DIV_2";
 		["__CLK_APB2_DIV__"]="LL_RCC_APB2_DIV_2";
@@ -10423,7 +10423,7 @@
 		["__CLK_SYSCLK_SRC_STATUS__"]="LL_RCC_SYS_CLKSOURCE_STATUS_PLL1";
 		["__CLK_SYSCLK_SRC__"]="LL_RCC_SYS_CLKSOURCE_PLL1";
 	};
-	["config/btl-system/arch/stm32h7/cpu_flags.h"]={
+	["config/btl-kernel/arch/stm32h7/cpu_flags.h"]={
 		["__CPU_DCACHE_ENABLE__"]="_NO_";
 		["__CPU_DEFAULT_IRQ_PRIORITY__"]="14";
 		["__CPU_DISABLE_INTER_OF_MCYCLE_INSTR__"]="_YES_";
@@ -10446,7 +10446,7 @@
 		["__CUSTOM_LD_SCRIPT__"]="_NO_";
 		["__LD_SCRIPT__"]="STM32H753xIxx";
 	};
-	["config/btl-system/arch/stm32h7/emi_flags.h"]={
+	["config/btl-kernel/arch/stm32h7/emi_flags.h"]={
 		["__EMI_SDRAM_1_ENABLE__"]="0";
 		["__EMI_SDRAM_1_MWID__"]="1";
 		["__EMI_SDRAM_1_NB__"]="1";
@@ -10474,7 +10474,7 @@
 		["__EMI_SDRAM_TWR__"]="2";
 		["__EMI_SDRAM_TXSR__"]="7";
 	};
-	["config/btl-system/arch/stm32h7/eth_flags.h"]={
+	["config/btl-kernel/arch/stm32h7/eth_flags.h"]={
 		["__ETH_DEVICE__"]="LAN8742A";
 		["__ETH_PHY_ADDRESS__"]="0";
 		["__ETH_PHY_AUTONEGOTIATION__"]="ETH_AUTONEGOTIATION_ENABLE";
@@ -10486,7 +10486,7 @@
 		["__ETH_RXBUFNB__"]="10";
 		["__ETH_TXBUFNB__"]="10";
 	};
-	["config/btl-system/arch/stm32h7/gpio_flags.h"]={
+	["config/btl-kernel/arch/stm32h7/gpio_flags.h"]={
 		["__GPIO_PA_PIN_0_AF__"]="0";
 		["__GPIO_PA_PIN_0_MODE__"]="_GPIO_MODE_IN";
 		["__GPIO_PA_PIN_0_NAME__"]="PA0_NC";
@@ -11368,7 +11368,7 @@
 		["__GPIO_PK_PIN_9_SPEED__"]="_GPIO_SPEED_LOW";
 		["__GPIO_PK_PIN_9_STATE__"]="_LOW";
 	};
-	["config/btl-system/arch/stm32h7/i2c_flags.h"]={
+	["config/btl-kernel/arch/stm32h7/i2c_flags.h"]={
 		["__I2C1_ANALOG_FILTER_DISABLE__"]="0";
 		["__I2C1_DATA_HOLD_TIME_ns__"]="10";
 		["__I2C1_DATA_SETUP_TIME_ns__"]="10";
@@ -11410,7 +11410,7 @@
 		["__I2C5_SCL_FREQ__"]="100000";
 		["__I2C5_SCL_RISE_TIME_ns__"]="100";
 	};
-	["config/btl-system/arch/stm32h7/ltdc_flags.h"]={
+	["config/btl-kernel/arch/stm32h7/ltdc_flags.h"]={
 		["__LTDC_DEPOLARITY__"]="LTDC_DEPOLARITY_AL";
 		["__LTDC_HBP__"]="13";
 		["__LTDC_HEIGHT__"]="272";
@@ -11424,9 +11424,9 @@
 		["__LTDC_VSYNC__"]="10";
 		["__LTDC_WIDTH__"]="480";
 	};
-	["config/btl-system/arch/stm32h7/nvm_flags.h"]={
+	["config/btl-kernel/arch/stm32h7/nvm_flags.h"]={
 	};
-	["config/btl-system/arch/stm32h7/qspi_flags.h"]={
+	["config/btl-kernel/arch/stm32h7/qspi_flags.h"]={
 		["__QSPI_CFG_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 		["__QSPI_CFG_MMM_TIMEOUT_CYCLES__"]="128";
 		["__QSPI_CFG_MMM_TIMOUT_COUNTER__"]="QSPI_TIMEOUT_COUNTER_DISABLE";
@@ -11434,9 +11434,9 @@
 		["__QSPI_CFG_POLLING_INTERVAL_CLKS__"]="128";
 		["__QSPI_CFG_TIMEOUT__"]="500";
 	};
-	["config/btl-system/arch/stm32h7/rtc_flags.h"]={
+	["config/btl-kernel/arch/stm32h7/rtc_flags.h"]={
 	};
-	["config/btl-system/arch/stm32h7/sdmmc_flags.h"]={
+	["config/btl-kernel/arch/stm32h7/sdmmc_flags.h"]={
 		["__SDMMC_CFG_SDMMC1_BUS_WIDE__"]="SDMMC_BUS_WIDE_1B";
 		["__SDMMC_CFG_SDMMC1_CARD_TIMEOUT__"]="500";
 		["__SDMMC_CFG_SDMMC1_CKDIV__"]="1";
@@ -11458,7 +11458,7 @@
 		["__SDMMC_CFG_SDMMC2_SPEED_MODE__"]="SDMMC_SPEED_MODE_DEFAULT";
 		["__SDMMC_CFG_SDMMC2_TYPE__"]="_SDMMC_TYPE_SDCARD";
 	};
-	["config/btl-system/arch/stm32h7/spi_flags.h"]={
+	["config/btl-kernel/arch/stm32h7/spi_flags.h"]={
 		["__SPI_DEFAULT_CLK_DIV__"]="SPI_CLK_DIV__4";
 		["__SPI_DEFAULT_MODE__"]="SPI_MODE__0";
 		["__SPI_DEFAULT_MSB_FIRST__"]="_YES_";
@@ -11469,7 +11469,7 @@
 		["__SPI_SPI5_MODE__"]="_SPI_MODE_POLLING";
 		["__SPI_SPI6_MODE__"]="_SPI_MODE_POLLING";
 	};
-	["config/btl-system/arch/stm32h7/uart_flags.h"]={
+	["config/btl-kernel/arch/stm32h7/uart_flags.h"]={
 		["__UART_DEFAULT_BAUD__"]="115200";
 		["__UART_DEFAULT_PARITY__"]="UART_PARITY__OFF";
 		["__UART_DEFAULT_RX_ENABLE__"]="_YES_";
@@ -11526,9 +11526,9 @@
 		["__UART_UART9_DMA_MODE__"]="_NO_";
 		["__UART_UART9_IRQ_PRIORITY__"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 	};
-	["config/btl-system/config.h"]={
+	["config/btl-kernel/config.h"]={
 	};
-	["config/btl-system/custom_linker_script.h"]={
+	["config/btl-kernel/custom_linker_script.h"]={
 		["__ARCH__"]="stm32f1";
 		["__MEMORY_10__"]="\"\"";
 		["__MEMORY_11__"]="\"\"";
@@ -11547,22 +11547,22 @@
 		["__MEMORY_8__"]="\"\"";
 		["__MEMORY_9__"]="\"\"";
 	};
-	["config/btl-system/filesystems/eefs_flags.h"]={
+	["config/btl-kernel/filesystems/eefs_flags.h"]={
 		["__EEFS_CACHE_SIZE__"]="8";
 		["__EEFS_LOG_ENABLE__"]="_NO_";
 	};
-	["config/btl-system/filesystems/ext4fs_flags.h"]={
+	["config/btl-kernel/filesystems/ext4fs_flags.h"]={
 		["__EXT4FS_CFG_BLK_CACHE_SIZE__"]="1";
 		["__EXT4FS_CFG_DIR_INDEXING__"]="1";
 		["__EXT4FS_CFG_FEATURE__"]="4";
 		["__EXT4FS_CFG_JOURNALING__"]="1";
 		["__EXT4FS_CFG_WR_BUF_STRATEGY__"]="1";
 	};
-	["config/btl-system/filesystems/fatfs_flags.h"]={
+	["config/btl-kernel/filesystems/fatfs_flags.h"]={
 		["__FATFS_BUFFERED_FILE_ENABLE__"]="_YES_";
 		["__FATFS_LFN_CODEPAGE__"]="852";
 	};
-	["config/btl-system/filesystems/filesystems_flags.h"]={
+	["config/btl-kernel/filesystems/filesystems_flags.h"]={
 		["__ENABLE_EEFS__"]="_NO_";
 		["__ENABLE_EXT4FS__"]="_NO_";
 		["__ENABLE_FATFS__"]="_NO_";
@@ -11571,17 +11571,17 @@
 		["__ENABLE_RAMFS__"]="_YES_";
 		["__ENABLE_ROMFS__"]="_YES_";
 	};
-	["config/btl-system/filesystems/flatfs_flags.h"]={
+	["config/btl-kernel/filesystems/flatfs_flags.h"]={
 		["__FLATFS_INDEX_SIZE__"]="0";
 		["__FLATFS_LOG_ENABLE__"]="_NO_";
 	};
-	["config/btl-system/filesystems/ramfs_flags.h"]={
+	["config/btl-kernel/filesystems/ramfs_flags.h"]={
 		["__RAMFS_FILE_CHAIN_SIZE__"]="32";
 	};
-	["config/btl-system/filesystems/romfs_flags.h"]={
+	["config/btl-kernel/filesystems/romfs_flags.h"]={
 		["__ROMFS_CFG_EXEC_FILES__"]="_YES_";
 	};
-	["config/btl-system/network/cannet_flags.h"]={
+	["config/btl-kernel/network/cannet_flags.h"]={
 		["__NETWORK_CANNET_DEBUG_ON__"]="_NO_";
 		["__NETWORK_CANNET_MAX_SOCKETS__"]="16";
 		["__NETWORK_CANNET_MAX_SOCKET_BUFFER_LENGTH__"]="256";
@@ -11589,17 +11589,17 @@
 		["__NETWORK_CANNET_SEND_REPETITIONS_INTERVAL_MIN__"]="3";
 		["__NETWORK_CANNET_SEND_REPETITIONS__"]="3";
 	};
-	["config/btl-system/network/network_flags.h"]={
+	["config/btl-kernel/network/network_flags.h"]={
 		["__ENABLE_CANNET_STACK__"]="_NO_";
 		["__ENABLE_SIPC_STACK__"]="_NO_";
 		["__ENABLE_TCPIP_STACK__"]="_NO_";
 		["__ENABLE_UDS_STACK__"]="_NO_";
 	};
-	["config/btl-system/network/sipc_flags.h"]={
+	["config/btl-kernel/network/sipc_flags.h"]={
 		["__NETWORK_SIPC_DEBUG_ON__"]="_NO_";
 		["__NETWORK_SIPC_RECV_BUF_SIZE__"]="2048";
 	};
-	["config/btl-system/network/tcpip_flags.h"]={
+	["config/btl-kernel/network/tcpip_flags.h"]={
 		["__NETWORK_API_LIB_DEBUG__"]="LWIP_DBG_OFF";
 		["__NETWORK_API_MSG_DEBUG__"]="LWIP_DBG_OFF";
 		["__NETWORK_ARP_MAXAGE__"]="300";
@@ -11760,13 +11760,13 @@
 		["__NETWORK_UDP_DEBUG__"]="LWIP_DBG_OFF";
 		["__NETWORK_UDP_TTL__"]="255";
 	};
-	["config/btl-system/network/uds_flags.h"]={
+	["config/btl-kernel/network/uds_flags.h"]={
 		["__NETWORK_UDS_BUF_SIZE__"]="2048";
 		["__NETWORK_UDS_DATAGRAM_BUFFERS_SIZE__"]="16";
 		["__NETWORK_UDS_DATAGRAM_MAX_SIZE__"]="1500";
 		["__NETWORK_UDS_DEBUG_ON__"]="_NO_";
 	};
-	["config/btl-system/os/os_flags.h"]={
+	["config/btl-kernel/os/os_flags.h"]={
 		["__HEAP_BLOCK_SIZE__"]="4";
 		["__OS_COLOR_TERMINAL_ENABLE__"]="_YES_";
 		["__OS_ENABLE_CHMOD__"]="_NO_";
@@ -11805,7 +11805,7 @@
 		["__OS_TASK_MIN_STACK_DEPTH__"]="64";
 		["__OS_TASK_SCHED_FREQ__"]="1000";
 	};
-	["config/btl-system/project/project_flags.h"]={
+	["config/btl-kernel/project/project_flags.h"]={
 		["__CPU_ARCH__"]="stm32f1";
 		["__CPU_OSC_FREQ__"]="8000000";
 		["__CPU_UART_TERM__"]="0";
