@@ -1,41 +1,38 @@
-FROM opensuse/leap:15.6
+FROM opensuse/tumbleweed:latest
 
 ARG ARCHITECTURE=
 ARG PROJECT_NAME=
 
 # packages
-RUN zypper --non-interactive install\
+RUN zypper --non-interactive refresh &&\
+    zypper --non-interactive install\
     opi glibc-locale\
-    make makedepend gcc\
+    make makedepend gcc15 gcc15-c++\
     wget\
     tar\
     bzip2\
-    python3\
+    python315\
     bash-completion\
     zsh\
     git\
-    libncurses5 libncurses6 ncurses-devel\
-    libreadline6 libreadline7\
-    libgtk-2_0-0\
-    libgthread-2_0-0\
-    libSM6\
-    libGLU1\
+    libncurses5 libncurses6\
+    libreadline6 libreadline8\
+    libgtk-2_0-0 libgthread-2_0-0 libSM6 libGLU1\
+    dialog\
     srecord\
     minicom minicom-lang\
     which\
     libtool\
-    pkgconf\
+    pkgconf gawk\
     jimtcl jimtcl-devel\
     libusb-1_0-0 libusb-1_0-devel\
     libjaylink libjaylink-devel libjaylink0\
-    gawk lua53 lua53-devel lua53-luarocks\
-    xorg-x11-fonts xorg-x11-fonts-converted xorg-x11-fonts-core xorg-x11-fonts-legacy\
+    xorg-x11-fonts xorg-x11-fonts-core xorg-x11-fonts-legacy\
     wine wine-gecko wine-mono\
     ccache distcc rsync libxml2-tools\
-    clang clang-tools
-
-# post-install operations
-RUN ln -s $(which srec_cat) /bin/srec_cat
+    clang clang-tools\
+    lua55 lua55-devel lua55-luarocks lua55-luafilesystem
+RUN zypper clean -a
 
 # environment variables
 ENV HOME=/home/developer
@@ -77,7 +74,7 @@ WORKDIR /home/developer/bin/openocd-code
 RUN chmod +x ./bootstrap
 RUN ./bootstrap
 RUN ./configure --enable-ftdi --enable-jlink --enable-stlink --enable-picoprobe
-RUN make -j all
+RUN make CFLAGS="-Wno-error" -j all
 RUN mkdir -p /home/developer/bin/openOCD
 RUN cp /home/developer/bin/openocd-code/src/openocd /home/developer/bin/openOCD/openocd
 RUN cp -R /home/developer/bin/openocd-code/tcl/* /home/developer/bin/openOCD/.
