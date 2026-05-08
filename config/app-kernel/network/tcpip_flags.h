@@ -124,7 +124,7 @@ this:SetToolTip("MEMP_NUM_PBUF: the number of memp struct pbufs. If the applicat
                 "sends a lot of data out of ROM (or other static memory), this "..
                 "should be set high.")
 --*/
-#define __NETWORK_MEMP_NUM_PBUF__ 48
+#define __NETWORK_MEMP_NUM_PBUF__ 256
 /*--
 this:AddWidget("Spinbox", 0, 100, "MEMP_NUM_RAW_PCB")
 this:SetToolTip("MEMP_NUM_RAW_PCB: Number of raw connection PCBs")
@@ -134,17 +134,17 @@ this:SetToolTip("MEMP_NUM_RAW_PCB: Number of raw connection PCBs")
 this:AddWidget("Spinbox", 0, 100, "MEMP_NUM_UDP_PCB")
 this:SetToolTip("MEMP_NUM_UDP_PCB: the number of UDP protocol control blocks. One per active UDP \"connection\".")
 --*/
-#define __NETWORK_MEMP_NUM_UDP_PCB__ 16
+#define __NETWORK_MEMP_NUM_UDP_PCB__ 32
 /*--
 this:AddWidget("Spinbox", 0, 100, "MEMP_NUM_TCP_PCB")
 this:SetToolTip("MEMP_NUM_TCP_PCB: the number of simulatenously active TCP connections.")
 --*/
-#define __NETWORK_MEMP_NUM_TCP_PCB__ 16
+#define __NETWORK_MEMP_NUM_TCP_PCB__ 32
 /*--
 this:AddWidget("Spinbox", 0, 100, "MEMP_NUM_TCP_PCB_LISTEN")
 this:SetToolTip("MEMP_NUM_TCP_PCB_LISTEN: the number of listening TCP connections.")
 --*/
-#define __NETWORK_MEMP_NUM_TCP_PCB_LISTEN__ 8
+#define __NETWORK_MEMP_NUM_TCP_PCB_LISTEN__ 16
 /*--
 this:AddWidget("Spinbox", 0, 100, "MEMP_NUM_TCP_SEG")
 this:SetToolTip("MEMP_NUM_TCP_SEG: the number of simultaneously queued TCP segments.")
@@ -179,12 +179,12 @@ this:SetToolTip("MEMP_NUM_IGMP_GROUP: The number of multicast groups whose netwo
 this:AddWidget("Spinbox", 0, 100, "MEMP_NUM_NETBUF")
 this:SetToolTip("MEMP_NUM_NETBUF: the number of struct netbufs.")
 --*/
-#define __NETWORK_MEMP_NUM_NETBUF__ 32
+#define __NETWORK_MEMP_NUM_NETBUF__ 100
 /*--
 this:AddWidget("Spinbox", 0, 100, "MEMP_NUM_NETCONN")
 this:SetToolTip("MEMP_NUM_NETCONN: the number of struct netconns.")
 --*/
-#define __NETWORK_MEMP_NUM_NETCONN__ 16
+#define __NETWORK_MEMP_NUM_NETCONN__ 64
 /*--
 this:AddWidget("Spinbox", 0, 100, "MEMP_NUM_SELECT_CB")
 this:SetToolTip("MEMP_NUM_SELECT_CB: the number of struct lwip_select_cb.")
@@ -493,12 +493,12 @@ this:AddItem("Disable (0)", "0")
 this:AddItem("Enable (1)", "1")
 this:SetToolTip("Set this to 1 to enable querying \".local\" names via mDNS using a One-Shot Multicast DNS Query.")
 --*/
-#define __NETWORK_LWIP_DNS_SUPPORT_MDNS_QUERIES__ 0
+#define __NETWORK_LWIP_DNS_SUPPORT_MDNS_QUERIES__ 1
 /*--
 this:AddWidget("Editline", true, "LWIP_DNS_LIST_PATH")
 this:SetToolTip("Set path to DNS server list. Each DNS IP address should be added in seperated line.")
 --*/
-#define __NETWORK_LWIP_DNS_LIST_PATH__ "/conf/dns.conf"
+#define __NETWORK_LWIP_DNS_LIST_PATH__ "/sd/conf/dns.conf"
 
 /*--
 this:AddWidget("Combobox", "LWIP_UDP")
@@ -539,12 +539,12 @@ this:SetToolTip("TCP_MSL: Maximum segment lifetime is the time a TCP segment can
                 "The Maximum Segment Lifetime value is used to determine the TIME_WAIT "..
                 "interval (2*MSL). Interval in seconds.")
 --*/
-#define __NETWORK_TCP_MSL__ 60
+#define __NETWORK_TCP_MSL__ 15
 /*--
 this:AddWidget("Spinbox", 1, 255, "TCP_WND")
 this:SetToolTip("TCP_WND: The size of a TCP window (n * TCP_MSS).")
 --*/
-#define __NETWORK_TCP_WND__ 3
+#define __NETWORK_TCP_WND__ 6
 /*--
 this:AddWidget("Spinbox", 1, 50, "TCP_MAXRTX")
 this:SetToolTip("TCP_MAXRTX: Maximum number of retransmissions of data segments.")
@@ -554,7 +554,7 @@ this:SetToolTip("TCP_MAXRTX: Maximum number of retransmissions of data segments.
 this:AddWidget("Spinbox", 1, 50, "TCP_SYNMAXRTX")
 this:SetToolTip("TCP_SYNMAXRTX: Maximum number of retransmissions of SYN segments.")
 --*/
-#define __NETWORK_TCP_SYNMAXRTX__ 6
+#define __NETWORK_TCP_SYNMAXRTX__ 1
 /*--
 this:AddWidget("Combobox", "LWIP_TCP_SACK_OUT")
 this:AddItem("Disable (0)", "0")
@@ -588,7 +588,7 @@ this:SetToolTip("TCP_CALCULATE_EFF_SEND_MSS: \"The maximum size of a segment tha
 this:AddWidget("Spinbox", 2, 65535, "TCP_SND_BUF")
 this:SetToolTip("TCP_SND_BUF: TCP sender buffer space (n * TCP_MSS).)")
 --*/
-#define __NETWORK_TCP_SND_BUF__ 4
+#define __NETWORK_TCP_SND_BUF__ 6
 /*--
 this:AddWidget("Spinbox", 0, 65536, "TCP_OOSEQ_MAX_BYTES")
 this:SetToolTip("TCP_OOSEQ_MAX_BYTES: The maximum number of bytes queued on ooseq per pcb.\n"..
@@ -691,7 +691,7 @@ this:AddItem("Disable (0)", "0")
 this:AddItem("Enable (1)", "1")
 this:SetToolTip("LWIP_LOOPIF_MULTICAST==1: Support multicast/IGMP on loop interface (127.0.0.1).")
 --*/
-#define __NETWORK_LWIP_LOOPIF_MULTICAST__ 1
+#define __NETWORK_LWIP_LOOPIF_MULTICAST__ 0
 /*--
 this:AddWidget("Combobox", "LWIP_NETIF_LOOPBACK")
 this:AddItem("Disable (0)", "0")
@@ -704,7 +704,7 @@ this:SetToolTip("LWIP_NETIF_LOOPBACK==1: Support sending packets with a destinat
 this:AddWidget("Spinbox", 1, 1024, "LWIP_LOOPBACK_MAX_PBUFS")
 this:SetToolTip("LWIP_LOOPBACK_MAX_PBUFS: Maximum number of pbufs on queue for loopback sending for each netif.")
 --*/
-#define __NETWORK_LWIP_LOOPBACK_MAX_PBUFS__ 16
+#define __NETWORK_LWIP_LOOPBACK_MAX_PBUFS__ 64
 
 
 /*--
@@ -738,7 +738,7 @@ this:SetToolTip("TCPIP_MBOX_SIZE: The mailbox size for the tcpip thread messages
                 "The queue size value itself is platform-dependent, but is passed "..
                 "to sys_mbox_new() when tcpip_init is called.")
 --*/
-#define __NETWORK_TCPIP_MBOX_SIZE__ 8
+#define __NETWORK_TCPIP_MBOX_SIZE__ 16
 /*--
 this:AddWidget("Editline", true, "SLIPIF_THREAD_NAME")
 this:SetToolTip("SLIPIF_THREAD_NAME: The name assigned to the slipif_loop thread.")
@@ -795,21 +795,21 @@ this:SetToolTip("DEFAULT_RAW_RECVMBOX_SIZE: The mailbox size for the incoming pa
                 "NETCONN_RAW. The queue size value itself is platform-dependent, but is passed "..
                 "to sys_mbox_new() when the recvmbox is created.")
 --*/
-#define __NETWORK_DEFAULT_RAW_RECVMBOX_SIZE__ 8
+#define __NETWORK_DEFAULT_RAW_RECVMBOX_SIZE__ 128
 /*--
 this:AddWidget("Spinbox", 1, 128, "UDP_RECVMBOX_SIZE")
 this:SetToolTip("DEFAULT_UDP_RECVMBOX_SIZE: The mailbox size for the incoming packets on a "..
                 "NETCONN_UDP. The queue size value itself is platform-dependent, but is passed "..
                 "to sys_mbox_new() when the recvmbox is created.")
 --*/
-#define __NETWORK_DEFAULT_UDP_RECVMBOX_SIZE__ 8
+#define __NETWORK_DEFAULT_UDP_RECVMBOX_SIZE__ 128
 /*--
 this:AddWidget("Spinbox", 1, 128, "TCP_RECVMBOX_SIZE")
 this:SetToolTip("DEFAULT_TCP_RECVMBOX_SIZE: The mailbox size for the incoming packets on a "..
                 "NETCONN_TCP. The queue size value itself is platform-dependent, but is passed "..
                 "to sys_mbox_new() when the recvmbox is created.")
 --*/
-#define __NETWORK_DEFAULT_TCP_RECVMBOX_SIZE__ 8
+#define __NETWORK_DEFAULT_TCP_RECVMBOX_SIZE__ 128
 /*--
 this:AddWidget("Spinbox", 5, 1000, "TCP_TMR_INTERVAL")
 this:SetToolTip("TCP_TMR_INTERVAL: The TCP thread check interval in milliseconds. "..
@@ -822,7 +822,7 @@ this:SetToolTip("DEFAULT_ACCEPTMBOX_SIZE: The mailbox size for the incoming conn
                 "The queue size value itself is platform-dependent, but is passed to "..
                 "sys_mbox_new() when the acceptmbox is created.")
 --*/
-#define __NETWORK_DEFAULT_ACCEPTMBOX_SIZE__ 8
+#define __NETWORK_DEFAULT_ACCEPTMBOX_SIZE__ 32
 
 /*--
 this:AddWidget("Combobox", "LWIP_TCPIP_TIMEOUT")

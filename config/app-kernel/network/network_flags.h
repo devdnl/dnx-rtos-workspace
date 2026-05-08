@@ -49,9 +49,9 @@
 #                 "be used as IPC.")
 # this:AddExtraWidget("Submenu", "UDSConfigure", "Unix Domain Socket: configure", "network/uds_flags.h")
 #--*/
-#define __ENABLE_UDS_STACK__ _NO_
+#define __ENABLE_UDS_STACK__ _YES_
 #/*
-__ENABLE_UDS_STACK__=_NO_
+__ENABLE_UDS_STACK__=_YES_
 #*/
 
 #/*--
@@ -62,9 +62,9 @@ __ENABLE_UDS_STACK__=_NO_
 #                 "Can be used in localhost domain as IPC.")
 # this:AddExtraWidget("Submenu", "TCPIPConfigure", "TCP/IP: configure", "network/tcpip_flags.h")
 #--*/
-#define __ENABLE_TCPIP_STACK__ _NO_
+#define __ENABLE_TCPIP_STACK__ _YES_
 #/*
-__ENABLE_TCPIP_STACK__=_NO_
+__ENABLE_TCPIP_STACK__=_YES_
 #*/
 
 #/*--

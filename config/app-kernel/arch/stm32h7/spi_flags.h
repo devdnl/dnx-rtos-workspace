@@ -75,7 +75,7 @@ this:AddItem("Polling", "_SPI_MODE_POLLING")
 this:AddItem("IRQ", "_SPI_MODE_IRQ")
 this:AddItem("DMA", "_SPI_MODE_DMA")
 --*/
-#define __SPI_SPI1_MODE__ _SPI_MODE_POLLING
+#define __SPI_SPI1_MODE__ _SPI_MODE_DMA
 
 /*--
 this:AddWidget("Combobox", "SPI2 mode")
@@ -83,7 +83,7 @@ this:AddItem("Polling", "_SPI_MODE_POLLING")
 this:AddItem("IRQ", "_SPI_MODE_IRQ")
 this:AddItem("DMA", "_SPI_MODE_DMA")
 --*/
-#define __SPI_SPI2_MODE__ _SPI_MODE_POLLING
+#define __SPI_SPI2_MODE__ _SPI_MODE_DMA
 
 /*--
 this:AddWidget("Combobox", "SPI3 mode")
@@ -91,7 +91,7 @@ this:AddItem("Polling", "_SPI_MODE_POLLING")
 this:AddItem("IRQ", "_SPI_MODE_IRQ")
 this:AddItem("DMA", "_SPI_MODE_DMA")
 --*/
-#define __SPI_SPI3_MODE__ _SPI_MODE_POLLING
+#define __SPI_SPI3_MODE__ _SPI_MODE_DMA
 
 /*--
 this:AddWidget("Combobox", "SPI4 mode")
@@ -99,7 +99,7 @@ this:AddItem("Polling", "_SPI_MODE_POLLING")
 this:AddItem("IRQ", "_SPI_MODE_IRQ")
 this:AddItem("DMA", "_SPI_MODE_DMA")
 --*/
-#define __SPI_SPI4_MODE__ _SPI_MODE_POLLING
+#define __SPI_SPI4_MODE__ _SPI_MODE_DMA
 
 /*--
 this:AddWidget("Combobox", "SPI5 mode")
@@ -107,7 +107,7 @@ this:AddItem("Polling", "_SPI_MODE_POLLING")
 this:AddItem("IRQ", "_SPI_MODE_IRQ")
 this:AddItem("DMA", "_SPI_MODE_DMA")
 --*/
-#define __SPI_SPI5_MODE__ _SPI_MODE_POLLING
+#define __SPI_SPI5_MODE__ _SPI_MODE_DMA
 
 /*--
 this:AddWidget("Combobox", "SPI6 mode")
@@ -115,7 +115,7 @@ this:AddItem("Polling", "_SPI_MODE_POLLING")
 this:AddItem("IRQ", "_SPI_MODE_IRQ")
 this:AddItem("DMA", "_SPI_MODE_DMA")
 --*/
-#define __SPI_SPI6_MODE__ _SPI_MODE_POLLING
+#define __SPI_SPI6_MODE__ _SPI_MODE_DMA
 
 #endif /* _SPI_FLAGS_H_ */
 /*==============================================================================

@@ -69,9 +69,9 @@ __ENABLE_RAMFS__=_YES_
 #                 "not need to read special information, then probably you do not\n"..
 #                 "need this file system.")
 #--*/
-#define __ENABLE_PROCFS__ _NO_
+#define __ENABLE_PROCFS__ _YES_
 #/*
-__ENABLE_PROCFS__=_NO_
+__ENABLE_PROCFS__=_YES_
 #*/
 
 #/*--
@@ -115,9 +115,9 @@ __ENABLE_EEFS__=_NO_
 # this:AddExtraWidget("Submenu", "EXT4FS_CONFIGURE", "ext4fs: configure", "filesystems/ext4fs_flags.h")
 #--*/
 #include "../filesystems/ext4fs_flags.h"
-#define __ENABLE_EXT4FS__ _NO_
+#define __ENABLE_EXT4FS__ _YES_
 #/*
-__ENABLE_EXT4FS__=_NO_
+__ENABLE_EXT4FS__=_YES_
 #*/
 
 #/*--
@@ -141,9 +141,9 @@ __ENABLE_ROMFS__=_YES_
 # this:AddExtraWidget("Submenu", "FLATFS_CONFIGURE", "flatfs: configure", "filesystems/flatfs_flags.h")
 #--*/
 #include "../filesystems/flatfs_flags.h"
-#define __ENABLE_FLATFS__ _NO_
+#define __ENABLE_FLATFS__ _YES_
 #/*
-__ENABLE_FLATFS__=_NO_
+__ENABLE_FLATFS__=_YES_
 #*/
 
 #endif /* _FILE_SYSTEMS_FLAGS_H_ */

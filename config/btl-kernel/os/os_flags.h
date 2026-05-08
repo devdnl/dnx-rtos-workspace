@@ -51,13 +51,13 @@ this:SetToolTip("This value determines the lowest possible stack size that can b
 this:AddWidget("Spinbox", 48, 8192, "Size of I/O threads stack [levels]")
 this:SetToolTip("This value determines the size of stack that is used by the file systems, network, etc.")
 --*/
-#define __OS_IO_STACK_DEPTH__ 240
+#define __OS_IO_STACK_DEPTH__ 320
 
 /*--
 this:AddWidget("Spinbox", 16, 8192, "Size of interrupt stack [levels]")
 this:SetToolTip("This value determines the size of stack that is used by interrupts. The value is a part of entire stack size.")
 --*/
-#define __OS_IRQ_STACK_DEPTH__ 16
+#define __OS_IRQ_STACK_DEPTH__ 64
 
 /*--
 this:AddWidget("Spinbox", 10, 1000, "Context switch frequency [Hz]")
@@ -71,7 +71,7 @@ this:SetToolTip("Context switch frequency has influence to system response for e
 this:AddWidget("Spinbox", 8, 24, "Maximum number of process threads")
 this:SetToolTip("Number of threads that can be started by process.")
 --*/
-#define __OS_PROCESS_MAX_THREADS__ 16
+#define __OS_PROCESS_MAX_THREADS__ 24
 
 /*--
 this:AddWidget("Combobox", "Sleep on idle")
@@ -79,7 +79,7 @@ this:AddItem("Yes", "_YES_")
 this:AddItem("No", "_NO_")
 this:SetToolTip("If this option is selected then system is halted in the idle task (CPU goes to sleep mode). This option can prevent debugging.")
 --*/
-#define __OS_SLEEP_ON_IDLE__ _NO_
+#define __OS_SLEEP_ON_IDLE__ _YES_
 
 /*--
 this:AddWidget("Combobox", "Color terminal")
@@ -143,7 +143,7 @@ this:AddItem("Yes", "_YES_")
 this:AddItem("No", "_NO_")
 this:SetToolTip("This function enables file rename functionality.")
 --*/
-#define __OS_ENABLE_RENAME__ _NO_
+#define __OS_ENABLE_RENAME__ _YES_
 
 /*--
 this:AddWidget("Combobox", "Enable chmod() function")
@@ -151,7 +151,7 @@ this:AddItem("Yes", "_YES_")
 this:AddItem("No", "_NO_")
 this:SetToolTip("This function enables changing of file mode.")
 --*/
-#define __OS_ENABLE_CHMOD__ _NO_
+#define __OS_ENABLE_CHMOD__ _YES_
 
 /*--
 this:AddWidget("Combobox", "Enable chown() function")
@@ -159,7 +159,7 @@ this:AddItem("Yes", "_YES_")
 this:AddItem("No", "_NO_")
 this:SetToolTip("This function enables changing of file owner.")
 --*/
-#define __OS_ENABLE_CHOWN__ _NO_
+#define __OS_ENABLE_CHOWN__ _YES_
 
 /*--
 this:AddWidget("Combobox", "Enable statfs() and getmntentry() functions")
@@ -191,7 +191,7 @@ this:AddItem("Yes", "_YES_")
 this:AddItem("No", "_NO_")
 this:SetToolTip("This option enables assert system assert function. Use only for debug purposes!")
 --*/
-#define __OS_ENABLE_SYS_ASSERT__ _NO_
+#define __OS_ENABLE_SYS_ASSERT__ _YES_
 
 /*--
 this:AddWidget("Combobox", "Enable IPC Shared memory")
@@ -199,7 +199,7 @@ this:AddItem("Yes", "_YES_")
 this:AddItem("No", "_NO_")
 this:SetToolTip("This option enables IPC shared memory.")
 --*/
-#define __OS_ENABLE_SHARED_MEMORY__ _NO_
+#define __OS_ENABLE_SHARED_MEMORY__ _YES_
 
 /*--
 this:AddWidget("Combobox", "Enable System log function")
@@ -215,19 +215,19 @@ this:AddItem("Yes", "_YES_")
 this:AddItem("No", "_NO_")
 this:SetToolTip("If this option is enabled then system is able to run scripts with shebang (#!).")
 --*/
-#define __OS_SYSTEM_SHEBANG_ENABLE__ _NO_
+#define __OS_SYSTEM_SHEBANG_ENABLE__ _YES_
 
 /*--
 this:AddWidget("Spinbox", 8, 1024, "Length of stream buffer [bytes]")
 this:SetToolTip("This value determines a size of buffer used in the particular streams.")
 --*/
-#define __OS_STREAM_BUFFER_LENGTH__ 100
+#define __OS_STREAM_BUFFER_LENGTH__ 256
 
 /*--
 this:AddWidget("Spinbox", 8, 1024, "Length of pipe buffer [bytes]")
 this:SetToolTip("This value determines a size of buffer used in the each pipe (FIFO file).")
 --*/
-#define __OS_PIPE_LENGTH__ 8
+#define __OS_PIPE_LENGTH__ 256
 
 /*--
 this:AddWidget("Spinbox", 4, 1024, "Memory allocation size [bytes]")
@@ -240,14 +240,14 @@ this:AddWidget("Spinbox", 1, 250, "System log columns")
 this:SetToolTip("This option determine how many characters in row can be stored. " ..
                 "Option is active when system log function is enabled.")
 --*/
-#define __OS_SYSTEM_MSG_COLS__ 64
+#define __OS_SYSTEM_MSG_COLS__ 80
 
 /*--
 this:AddWidget("Spinbox", 1, 65536, "System log size [bytes]")
 this:SetToolTip("This option determine how many bytes are reserved for log buffer. " ..
                 "Option is active when system log function is enabled.")
 --*/
-#define __OS_SYSTEM_LOG_SIZE__ 2048
+#define __OS_SYSTEM_LOG_SIZE__ 16384
 
 /*--
 this:AddWidget("Spinbox", 10, 600, "Cache synchronization interval [s]")
@@ -292,7 +292,7 @@ this:SetToolTip("Enable/Disable block overflow check of heap memory.")
 this:AddWidget("Editline", true, "Host name")
 this:SetToolTip("This string configures host name in the e.g. network.")
 --*/
-#define __OS_HOSTNAME__ "dnxboard"
+#define __OS_HOSTNAME__ "stm32h747i-disc1"
 
 /*--
 this:AddWidget("Editline", true, "RTC device path")
@@ -304,7 +304,7 @@ this:SetToolTip("This is RTC device path. By using this file (device) the system
 this:AddWidget("Editline", true, "Initialization program")
 this:SetToolTip("This is the first program started after system startup.")
 --*/
-#define __OS_INIT_PROG__ "initd"
+#define __OS_INIT_PROG__ "bootloader"
 
 /*--
 this:AddWidget("Editline", true, "system() shell program")

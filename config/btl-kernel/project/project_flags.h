@@ -80,16 +80,16 @@ __PROJECT_TOOLCHAIN__=arm-none-eabi-
 # this:AddItem("STMicroelectronics STM32H7", "stm32h7")
 # this:AddItem("Raspberry Pi", "rpcm0")
 #--*/
-#define __CPU_ARCH__ stm32f1
+#define __CPU_ARCH__ stm32h7
 #/*
-__CPU_ARCH__=stm32f1
+__CPU_ARCH__=stm32h7
 #*/
 
 #/*--
 # this:AddWidget("Editline", false, "Oscillator frequency [Hz]")
 # this:SetToolTip("This is a frequency of a connected to the microcontroller external generator or crystal.")
 #--*/
-#define __CPU_OSC_FREQ__ 8000000
+#define __CPU_OSC_FREQ__ 25000000
 
 #/*--
 # this:AddWidget("Editline", false, "Terminal UART")
@@ -101,7 +101,7 @@ __CPU_ARCH__=stm32f1
 # this:AddWidget("Editline", false, "Appset address")
 # this:SetToolTip("Address to appset table.\nThe UINT32_MAX (or 0xFFFFFFFF) value means that application table is localized just after OS section.")
 #--*/
-#define __PROJ_APPSET_TABLE_ADDRESS__ 0x08010000
+#define __PROJ_APPSET_TABLE_ADDRESS__ 0x08040000
 
 #endif /* _PROJECT_FLAGS_H_ */
 #/*=============================================================================

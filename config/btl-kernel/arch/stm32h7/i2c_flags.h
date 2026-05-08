@@ -40,7 +40,7 @@
 this:SetTitle("Home > Microcontroller > I²C", "The I²C module configuration.")
 ++*/
 
-/*------------------------------------------------------------------------------
+/*----------------------------------------------------------------------------*/
 /*--
 this:AddWidget("Editline", false, "I2C1 SCL frequency [Hz]")
 --*/
@@ -63,22 +63,22 @@ for i=1,15 do this:AddItem(tostring(i).." clock periods", tostring(i)) end
 /*--
 this:AddWidget("Spinbox", 0, 1000, "I2C1 SCL rising time [ns]")
 --*/
-#define __I2C1_SCL_RISE_TIME_ns__ 100
+#define __I2C1_SCL_RISE_TIME_ns__ 300
 
 /*--
 this:AddWidget("Spinbox", 0, 1000, "I2C1 SCL falling time [ns]")
 --*/
-#define __I2C1_SCL_FALL_TIME_ns__ 100
+#define __I2C1_SCL_FALL_TIME_ns__ 300
 
 /*--
 this:AddWidget("Spinbox", 10, 1000, "I2C1 Data hold time SCL-SDA [ns]")
 --*/
-#define __I2C1_DATA_HOLD_TIME_ns__ 10
+#define __I2C1_DATA_HOLD_TIME_ns__ 50
 
 /*--
 this:AddWidget("Spinbox", 10, 1000, "I2C1 Data setup time SCL-SDA [ns]")
 --*/
-#define __I2C1_DATA_SETUP_TIME_ns__ 10
+#define __I2C1_DATA_SETUP_TIME_ns__ 50
 
 /*--
 this:AddWidget("Combobox", "I2C1 IRQ priority")
@@ -86,7 +86,7 @@ uC.AddPriorityItems(this, false)
 --*/
 #define __I2C1_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
-/*------------------------------------------------------------------------------
+/*----------------------------------------------------------------------------*/
 /*--
 this:AddExtraWidget("Label", "I2C2_GAP", "")
 this:AddWidget("Editline", false, "I2C2 SCL frequency [Hz]")
@@ -133,7 +133,7 @@ uC.AddPriorityItems(this, false)
 --*/
 #define __I2C2_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
-/*------------------------------------------------------------------------------
+/*----------------------------------------------------------------------------*/
 /*--
 this:AddExtraWidget("Label", "I2C3_GAP", "")
 this:AddWidget("Editline", false, "I2C3 SCL frequency [Hz]")
@@ -182,7 +182,7 @@ uC.AddPriorityItems(this, false)
 #define __I2C3_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 
-/*------------------------------------------------------------------------------
+/*----------------------------------------------------------------------------*/
 /*--
 this:AddExtraWidget("Label", "I2C4_GAP", "")
 this:AddWidget("Editline", false, "I2C4 SCL frequency [Hz]")
@@ -231,7 +231,7 @@ uC.AddPriorityItems(this, false)
 #define __I2C4_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 
-/*------------------------------------------------------------------------------
+/*----------------------------------------------------------------------------*/
 /*--
 this:AddExtraWidget("Label", "I2C5_GAP", "")
 this:AddWidget("Editline", false, "I2C5 SCL frequency [Hz]")

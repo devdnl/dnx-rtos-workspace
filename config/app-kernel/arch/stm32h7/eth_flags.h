@@ -44,13 +44,13 @@ this:SetTitle("Home > Microcontroller > ETH", "The ETH module configuration.")
 this:AddWidget("Spinbox", 3, 256, "Number of RX buffers")
 this:SetToolTip("Each buffer is 1524 bytes long.")
 --*/
-#define __ETH_RXBUFNB__ 10
+#define __ETH_RXBUFNB__ 48
 
 /*--
 this:AddWidget("Spinbox", 2, 256, "Number of Tx buffers")
 this:SetToolTip("Each buffer is 1524 bytes long.")
 --*/
-#define __ETH_TXBUFNB__ 10
+#define __ETH_TXBUFNB__ 16
 
 #define DP83848 0
 #define LAN8700 1

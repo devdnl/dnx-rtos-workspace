@@ -208,7 +208,7 @@ _GPIO_PIN_NAME(IOCTL_GPIO_PORTNONE_IDX, 17, NONE);
 /*--
 this:AddPinNameWidget("A", 0)
 --*/
-#define __GPIO_PA_PIN_0_NAME__ PA0_NC
+#define __GPIO_PA_PIN_0_NAME__ PMOD1_CTS
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 0, __GPIO_PA_PIN_0_NAME__);
 
 /*--
@@ -219,7 +219,7 @@ this:AddPinSpeedWidget("A", 0)
 /*--
 this:AddPinModeWidget("A", 0)
 --*/
-#define __GPIO_PA_PIN_0_MODE__ _GPIO_MODE_IN
+#define __GPIO_PA_PIN_0_MODE__ _GPIO_MODE_IN_PD
 
 /*--
 this:AddPinAltFuncWidget("A", 0)
@@ -234,23 +234,23 @@ this:AddPinStateWidget("A", 0)
 /*--
 this:AddPinNameWidget("A", 1)
 --*/
-#define __GPIO_PA_PIN_1_NAME__ PA1_NC
+#define __GPIO_PA_PIN_1_NAME__ RMII_REF_CLK
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 1, __GPIO_PA_PIN_1_NAME__);
 
 /*--
 this:AddPinSpeedWidget("A", 1)
 --*/
-#define __GPIO_PA_PIN_1_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PA_PIN_1_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("A", 1)
 --*/
-#define __GPIO_PA_PIN_1_MODE__ _GPIO_MODE_IN
+#define __GPIO_PA_PIN_1_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("A", 1)
 --*/
-#define __GPIO_PA_PIN_1_AF__ 0
+#define __GPIO_PA_PIN_1_AF__ 11
 
 /*--
 this:AddPinStateWidget("A", 1)
@@ -260,23 +260,23 @@ this:AddPinStateWidget("A", 1)
 /*--
 this:AddPinNameWidget("A", 2)
 --*/
-#define __GPIO_PA_PIN_2_NAME__ PA2_NC
+#define __GPIO_PA_PIN_2_NAME__ ETH_MDIO
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 2, __GPIO_PA_PIN_2_NAME__);
 
 /*--
 this:AddPinSpeedWidget("A", 2)
 --*/
-#define __GPIO_PA_PIN_2_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PA_PIN_2_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("A", 2)
 --*/
-#define __GPIO_PA_PIN_2_MODE__ _GPIO_MODE_IN
+#define __GPIO_PA_PIN_2_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("A", 2)
 --*/
-#define __GPIO_PA_PIN_2_AF__ 0
+#define __GPIO_PA_PIN_2_AF__ 11
 
 /*--
 this:AddPinStateWidget("A", 2)
@@ -286,23 +286,23 @@ this:AddPinStateWidget("A", 2)
 /*--
 this:AddPinNameWidget("A", 3)
 --*/
-#define __GPIO_PA_PIN_3_NAME__ PA3_NC
+#define __GPIO_PA_PIN_3_NAME__ ULPI_D0
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 3, __GPIO_PA_PIN_3_NAME__);
 
 /*--
 this:AddPinSpeedWidget("A", 3)
 --*/
-#define __GPIO_PA_PIN_3_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PA_PIN_3_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("A", 3)
 --*/
-#define __GPIO_PA_PIN_3_MODE__ _GPIO_MODE_IN
+#define __GPIO_PA_PIN_3_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("A", 3)
 --*/
-#define __GPIO_PA_PIN_3_AF__ 0
+#define __GPIO_PA_PIN_3_AF__ 10
 
 /*--
 this:AddPinStateWidget("A", 3)
@@ -312,7 +312,7 @@ this:AddPinStateWidget("A", 3)
 /*--
 this:AddPinNameWidget("A", 4)
 --*/
-#define __GPIO_PA_PIN_4_NAME__ PA4_NC
+#define __GPIO_PA_PIN_4_NAME__ PMOD13_IOEXP_IRQ
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 4, __GPIO_PA_PIN_4_NAME__);
 
 /*--
@@ -323,7 +323,7 @@ this:AddPinSpeedWidget("A", 4)
 /*--
 this:AddPinModeWidget("A", 4)
 --*/
-#define __GPIO_PA_PIN_4_MODE__ _GPIO_MODE_IN
+#define __GPIO_PA_PIN_4_MODE__ _GPIO_MODE_IN_PU
 
 /*--
 this:AddPinAltFuncWidget("A", 4)
@@ -338,23 +338,23 @@ this:AddPinStateWidget("A", 4)
 /*--
 this:AddPinNameWidget("A", 5)
 --*/
-#define __GPIO_PA_PIN_5_NAME__ PA5_NC
+#define __GPIO_PA_PIN_5_NAME__ ULPI_CK
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 5, __GPIO_PA_PIN_5_NAME__);
 
 /*--
 this:AddPinSpeedWidget("A", 5)
 --*/
-#define __GPIO_PA_PIN_5_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PA_PIN_5_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("A", 5)
 --*/
-#define __GPIO_PA_PIN_5_MODE__ _GPIO_MODE_IN
+#define __GPIO_PA_PIN_5_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("A", 5)
 --*/
-#define __GPIO_PA_PIN_5_AF__ 0
+#define __GPIO_PA_PIN_5_AF__ 10
 
 /*--
 this:AddPinStateWidget("A", 5)
@@ -364,7 +364,7 @@ this:AddPinStateWidget("A", 5)
 /*--
 this:AddPinNameWidget("A", 6)
 --*/
-#define __GPIO_PA_PIN_6_NAME__ PA6_NC
+#define __GPIO_PA_PIN_6_NAME__ ARD_D5
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 6, __GPIO_PA_PIN_6_NAME__);
 
 /*--
@@ -390,23 +390,23 @@ this:AddPinStateWidget("A", 6)
 /*--
 this:AddPinNameWidget("A", 7)
 --*/
-#define __GPIO_PA_PIN_7_NAME__ PA7_NC
+#define __GPIO_PA_PIN_7_NAME__ ETH_RMII_CRS_DV
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 7, __GPIO_PA_PIN_7_NAME__);
 
 /*--
 this:AddPinSpeedWidget("A", 7)
 --*/
-#define __GPIO_PA_PIN_7_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PA_PIN_7_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("A", 7)
 --*/
-#define __GPIO_PA_PIN_7_MODE__ _GPIO_MODE_IN
+#define __GPIO_PA_PIN_7_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("A", 7)
 --*/
-#define __GPIO_PA_PIN_7_AF__ 0
+#define __GPIO_PA_PIN_7_AF__ 11
 
 /*--
 this:AddPinStateWidget("A", 7)
@@ -416,7 +416,7 @@ this:AddPinStateWidget("A", 7)
 /*--
 this:AddPinNameWidget("A", 8)
 --*/
-#define __GPIO_PA_PIN_8_NAME__ PA8_NC
+#define __GPIO_PA_PIN_8_NAME__ CEC_CLK
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 8, __GPIO_PA_PIN_8_NAME__);
 
 /*--
@@ -427,7 +427,7 @@ this:AddPinSpeedWidget("A", 8)
 /*--
 this:AddPinModeWidget("A", 8)
 --*/
-#define __GPIO_PA_PIN_8_MODE__ _GPIO_MODE_IN
+#define __GPIO_PA_PIN_8_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("A", 8)
@@ -442,23 +442,23 @@ this:AddPinStateWidget("A", 8)
 /*--
 this:AddPinNameWidget("A", 9)
 --*/
-#define __GPIO_PA_PIN_9_NAME__ PA9_NC
+#define __GPIO_PA_PIN_9_NAME__ USART1_TX
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 9, __GPIO_PA_PIN_9_NAME__);
 
 /*--
 this:AddPinSpeedWidget("A", 9)
 --*/
-#define __GPIO_PA_PIN_9_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PA_PIN_9_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("A", 9)
 --*/
-#define __GPIO_PA_PIN_9_MODE__ _GPIO_MODE_IN
+#define __GPIO_PA_PIN_9_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("A", 9)
 --*/
-#define __GPIO_PA_PIN_9_AF__ 0
+#define __GPIO_PA_PIN_9_AF__ 7
 
 /*--
 this:AddPinStateWidget("A", 9)
@@ -468,23 +468,23 @@ this:AddPinStateWidget("A", 9)
 /*--
 this:AddPinNameWidget("A", 10)
 --*/
-#define __GPIO_PA_PIN_10_NAME__ PA10_NC
+#define __GPIO_PA_PIN_10_NAME__ USART1_RX
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 10, __GPIO_PA_PIN_10_NAME__);
 
 /*--
 this:AddPinSpeedWidget("A", 10)
 --*/
-#define __GPIO_PA_PIN_10_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PA_PIN_10_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("A", 10)
 --*/
-#define __GPIO_PA_PIN_10_MODE__ _GPIO_MODE_IN
+#define __GPIO_PA_PIN_10_MODE__ _GPIO_MODE_AF_PP_PU
 
 /*--
 this:AddPinAltFuncWidget("A", 10)
 --*/
-#define __GPIO_PA_PIN_10_AF__ 0
+#define __GPIO_PA_PIN_10_AF__ 7
 
 /*--
 this:AddPinStateWidget("A", 10)
@@ -494,7 +494,7 @@ this:AddPinStateWidget("A", 10)
 /*--
 this:AddPinNameWidget("A", 11)
 --*/
-#define __GPIO_PA_PIN_11_NAME__ PA11_NC
+#define __GPIO_PA_PIN_11_NAME__ PMOD1_RS485_IRQ_1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 11, __GPIO_PA_PIN_11_NAME__);
 
 /*--
@@ -505,7 +505,7 @@ this:AddPinSpeedWidget("A", 11)
 /*--
 this:AddPinModeWidget("A", 11)
 --*/
-#define __GPIO_PA_PIN_11_MODE__ _GPIO_MODE_IN
+#define __GPIO_PA_PIN_11_MODE__ _GPIO_MODE_IN_PU
 
 /*--
 this:AddPinAltFuncWidget("A", 11)
@@ -520,23 +520,23 @@ this:AddPinStateWidget("A", 11)
 /*--
 this:AddPinNameWidget("A", 12)
 --*/
-#define __GPIO_PA_PIN_12_NAME__ PA12_NC
+#define __GPIO_PA_PIN_12_NAME__ PMOD4_SPI2_SCK
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTA_IDX, 12, __GPIO_PA_PIN_12_NAME__);
 
 /*--
 this:AddPinSpeedWidget("A", 12)
 --*/
-#define __GPIO_PA_PIN_12_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PA_PIN_12_SPEED__ _GPIO_SPEED_HIGH
 
 /*--
 this:AddPinModeWidget("A", 12)
 --*/
-#define __GPIO_PA_PIN_12_MODE__ _GPIO_MODE_IN
+#define __GPIO_PA_PIN_12_MODE__ _GPIO_MODE_AF_PP_PD
 
 /*--
 this:AddPinAltFuncWidget("A", 12)
 --*/
-#define __GPIO_PA_PIN_12_AF__ 0
+#define __GPIO_PA_PIN_12_AF__ 5
 
 /*--
 this:AddPinStateWidget("A", 12)
@@ -624,23 +624,23 @@ this:AddPinStateWidget("A", 15)
 /*--
 this:AddPinNameWidget("B", 0)
 --*/
-#define __GPIO_PB_PIN_0_NAME__ PB0_NC
+#define __GPIO_PB_PIN_0_NAME__ ULPI_D1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 0, __GPIO_PB_PIN_0_NAME__);
 
 /*--
 this:AddPinSpeedWidget("B", 0)
 --*/
-#define __GPIO_PB_PIN_0_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PB_PIN_0_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("B", 0)
 --*/
-#define __GPIO_PB_PIN_0_MODE__ _GPIO_MODE_IN
+#define __GPIO_PB_PIN_0_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("B", 0)
 --*/
-#define __GPIO_PB_PIN_0_AF__ 0
+#define __GPIO_PB_PIN_0_AF__ 10
 
 /*--
 this:AddPinStateWidget("B", 0)
@@ -650,23 +650,23 @@ this:AddPinStateWidget("B", 0)
 /*--
 this:AddPinNameWidget("B", 1)
 --*/
-#define __GPIO_PB_PIN_1_NAME__ PB1_NC
+#define __GPIO_PB_PIN_1_NAME__ ULPI_D2
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 1, __GPIO_PB_PIN_1_NAME__);
 
 /*--
 this:AddPinSpeedWidget("B", 1)
 --*/
-#define __GPIO_PB_PIN_1_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PB_PIN_1_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("B", 1)
 --*/
-#define __GPIO_PB_PIN_1_MODE__ _GPIO_MODE_IN
+#define __GPIO_PB_PIN_1_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("B", 1)
 --*/
-#define __GPIO_PB_PIN_1_AF__ 0
+#define __GPIO_PB_PIN_1_AF__ 10
 
 /*--
 this:AddPinStateWidget("B", 1)
@@ -676,23 +676,23 @@ this:AddPinStateWidget("B", 1)
 /*--
 this:AddPinNameWidget("B", 2)
 --*/
-#define __GPIO_PB_PIN_2_NAME__ PB2_NC
+#define __GPIO_PB_PIN_2_NAME__ QSPI_CLK
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 2, __GPIO_PB_PIN_2_NAME__);
 
 /*--
 this:AddPinSpeedWidget("B", 2)
 --*/
-#define __GPIO_PB_PIN_2_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PB_PIN_2_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("B", 2)
 --*/
-#define __GPIO_PB_PIN_2_MODE__ _GPIO_MODE_IN
+#define __GPIO_PB_PIN_2_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("B", 2)
 --*/
-#define __GPIO_PB_PIN_2_AF__ 0
+#define __GPIO_PB_PIN_2_AF__ 9
 
 /*--
 this:AddPinStateWidget("B", 2)
@@ -702,7 +702,7 @@ this:AddPinStateWidget("B", 2)
 /*--
 this:AddPinNameWidget("B", 3)
 --*/
-#define __GPIO_PB_PIN_3_NAME__ PB3_NC
+#define __GPIO_PB_PIN_3_NAME__ JTDO_SWO
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 3, __GPIO_PB_PIN_3_NAME__);
 
 /*--
@@ -713,7 +713,7 @@ this:AddPinSpeedWidget("B", 3)
 /*--
 this:AddPinModeWidget("B", 3)
 --*/
-#define __GPIO_PB_PIN_3_MODE__ _GPIO_MODE_IN
+#define __GPIO_PB_PIN_3_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("B", 3)
@@ -728,7 +728,7 @@ this:AddPinStateWidget("B", 3)
 /*--
 this:AddPinNameWidget("B", 4)
 --*/
-#define __GPIO_PB_PIN_4_NAME__ PB4_NC
+#define __GPIO_PB_PIN_4_NAME__ NJTRST
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 4, __GPIO_PB_PIN_4_NAME__);
 
 /*--
@@ -739,7 +739,7 @@ this:AddPinSpeedWidget("B", 4)
 /*--
 this:AddPinModeWidget("B", 4)
 --*/
-#define __GPIO_PB_PIN_4_MODE__ _GPIO_MODE_IN
+#define __GPIO_PB_PIN_4_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("B", 4)
@@ -754,23 +754,23 @@ this:AddPinStateWidget("B", 4)
 /*--
 this:AddPinNameWidget("B", 5)
 --*/
-#define __GPIO_PB_PIN_5_NAME__ PB5_NC
+#define __GPIO_PB_PIN_5_NAME__ ULPI_D7
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 5, __GPIO_PB_PIN_5_NAME__);
 
 /*--
 this:AddPinSpeedWidget("B", 5)
 --*/
-#define __GPIO_PB_PIN_5_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PB_PIN_5_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("B", 5)
 --*/
-#define __GPIO_PB_PIN_5_MODE__ _GPIO_MODE_IN
+#define __GPIO_PB_PIN_5_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("B", 5)
 --*/
-#define __GPIO_PB_PIN_5_AF__ 0
+#define __GPIO_PB_PIN_5_AF__ 10
 
 /*--
 this:AddPinStateWidget("B", 5)
@@ -780,23 +780,23 @@ this:AddPinStateWidget("B", 5)
 /*--
 this:AddPinNameWidget("B", 6)
 --*/
-#define __GPIO_PB_PIN_6_NAME__ PB6_NC
+#define __GPIO_PB_PIN_6_NAME__ CEC
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 6, __GPIO_PB_PIN_6_NAME__);
 
 /*--
 this:AddPinSpeedWidget("B", 6)
 --*/
-#define __GPIO_PB_PIN_6_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PB_PIN_6_SPEED__ _GPIO_SPEED_MEDIUM
 
 /*--
 this:AddPinModeWidget("B", 6)
 --*/
-#define __GPIO_PB_PIN_6_MODE__ _GPIO_MODE_IN
+#define __GPIO_PB_PIN_6_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("B", 6)
 --*/
-#define __GPIO_PB_PIN_6_AF__ 0
+#define __GPIO_PB_PIN_6_AF__ 5
 
 /*--
 this:AddPinStateWidget("B", 6)
@@ -806,23 +806,23 @@ this:AddPinStateWidget("B", 6)
 /*--
 this:AddPinNameWidget("B", 7)
 --*/
-#define __GPIO_PB_PIN_7_NAME__ PB7_NC
+#define __GPIO_PB_PIN_7_NAME__ DCMI_VSYNC
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 7, __GPIO_PB_PIN_7_NAME__);
 
 /*--
 this:AddPinSpeedWidget("B", 7)
 --*/
-#define __GPIO_PB_PIN_7_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PB_PIN_7_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("B", 7)
 --*/
-#define __GPIO_PB_PIN_7_MODE__ _GPIO_MODE_IN
+#define __GPIO_PB_PIN_7_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("B", 7)
 --*/
-#define __GPIO_PB_PIN_7_AF__ 0
+#define __GPIO_PB_PIN_7_AF__ 13
 
 /*--
 this:AddPinStateWidget("B", 7)
@@ -832,7 +832,7 @@ this:AddPinStateWidget("B", 7)
 /*--
 this:AddPinNameWidget("B", 8)
 --*/
-#define __GPIO_PB_PIN_8_NAME__ PB8_NC
+#define __GPIO_PB_PIN_8_NAME__ PMOD20_I2C1_SCL
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 8, __GPIO_PB_PIN_8_NAME__);
 
 /*--
@@ -843,12 +843,12 @@ this:AddPinSpeedWidget("B", 8)
 /*--
 this:AddPinModeWidget("B", 8)
 --*/
-#define __GPIO_PB_PIN_8_MODE__ _GPIO_MODE_IN
+#define __GPIO_PB_PIN_8_MODE__ _GPIO_MODE_AF_OD_PU
 
 /*--
 this:AddPinAltFuncWidget("B", 8)
 --*/
-#define __GPIO_PB_PIN_8_AF__ 0
+#define __GPIO_PB_PIN_8_AF__ 4
 
 /*--
 this:AddPinStateWidget("B", 8)
@@ -858,7 +858,7 @@ this:AddPinStateWidget("B", 8)
 /*--
 this:AddPinNameWidget("B", 9)
 --*/
-#define __GPIO_PB_PIN_9_NAME__ PB9_NC
+#define __GPIO_PB_PIN_9_NAME__ PMOD19_I2C1_SDA
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 9, __GPIO_PB_PIN_9_NAME__);
 
 /*--
@@ -869,12 +869,12 @@ this:AddPinSpeedWidget("B", 9)
 /*--
 this:AddPinModeWidget("B", 9)
 --*/
-#define __GPIO_PB_PIN_9_MODE__ _GPIO_MODE_IN
+#define __GPIO_PB_PIN_9_MODE__ _GPIO_MODE_AF_OD_PU
 
 /*--
 this:AddPinAltFuncWidget("B", 9)
 --*/
-#define __GPIO_PB_PIN_9_AF__ 0
+#define __GPIO_PB_PIN_9_AF__ 4
 
 /*--
 this:AddPinStateWidget("B", 9)
@@ -884,23 +884,23 @@ this:AddPinStateWidget("B", 9)
 /*--
 this:AddPinNameWidget("B", 10)
 --*/
-#define __GPIO_PB_PIN_10_NAME__ PB10_NC
+#define __GPIO_PB_PIN_10_NAME__ ULPI_D3
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 10, __GPIO_PB_PIN_10_NAME__);
 
 /*--
 this:AddPinSpeedWidget("B", 10)
 --*/
-#define __GPIO_PB_PIN_10_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PB_PIN_10_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("B", 10)
 --*/
-#define __GPIO_PB_PIN_10_MODE__ _GPIO_MODE_IN
+#define __GPIO_PB_PIN_10_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("B", 10)
 --*/
-#define __GPIO_PB_PIN_10_AF__ 0
+#define __GPIO_PB_PIN_10_AF__ 10
 
 /*--
 this:AddPinStateWidget("B", 10)
@@ -910,23 +910,23 @@ this:AddPinStateWidget("B", 10)
 /*--
 this:AddPinNameWidget("B", 11)
 --*/
-#define __GPIO_PB_PIN_11_NAME__ PB11_NC
+#define __GPIO_PB_PIN_11_NAME__ ULPI_D4
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 11, __GPIO_PB_PIN_11_NAME__);
 
 /*--
 this:AddPinSpeedWidget("B", 11)
 --*/
-#define __GPIO_PB_PIN_11_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PB_PIN_11_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("B", 11)
 --*/
-#define __GPIO_PB_PIN_11_MODE__ _GPIO_MODE_IN
+#define __GPIO_PB_PIN_11_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("B", 11)
 --*/
-#define __GPIO_PB_PIN_11_AF__ 0
+#define __GPIO_PB_PIN_11_AF__ 10
 
 /*--
 this:AddPinStateWidget("B", 11)
@@ -936,23 +936,23 @@ this:AddPinStateWidget("B", 11)
 /*--
 this:AddPinNameWidget("B", 12)
 --*/
-#define __GPIO_PB_PIN_12_NAME__ PB12_NC
+#define __GPIO_PB_PIN_12_NAME__ ULPI_D5
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 12, __GPIO_PB_PIN_12_NAME__);
 
 /*--
 this:AddPinSpeedWidget("B", 12)
 --*/
-#define __GPIO_PB_PIN_12_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PB_PIN_12_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("B", 12)
 --*/
-#define __GPIO_PB_PIN_12_MODE__ _GPIO_MODE_IN
+#define __GPIO_PB_PIN_12_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("B", 12)
 --*/
-#define __GPIO_PB_PIN_12_AF__ 0
+#define __GPIO_PB_PIN_12_AF__ 10
 
 /*--
 this:AddPinStateWidget("B", 12)
@@ -962,23 +962,23 @@ this:AddPinStateWidget("B", 12)
 /*--
 this:AddPinNameWidget("B", 13)
 --*/
-#define __GPIO_PB_PIN_13_NAME__ PB13_NC
+#define __GPIO_PB_PIN_13_NAME__ ULPI_D6
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 13, __GPIO_PB_PIN_13_NAME__);
 
 /*--
 this:AddPinSpeedWidget("B", 13)
 --*/
-#define __GPIO_PB_PIN_13_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PB_PIN_13_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("B", 13)
 --*/
-#define __GPIO_PB_PIN_13_MODE__ _GPIO_MODE_IN
+#define __GPIO_PB_PIN_13_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("B", 13)
 --*/
-#define __GPIO_PB_PIN_13_AF__ 0
+#define __GPIO_PB_PIN_13_AF__ 10
 
 /*--
 this:AddPinStateWidget("B", 13)
@@ -988,23 +988,23 @@ this:AddPinStateWidget("B", 13)
 /*--
 this:AddPinNameWidget("B", 14)
 --*/
-#define __GPIO_PB_PIN_14_NAME__ PB14_NC
+#define __GPIO_PB_PIN_14_NAME__ PMOD8_SPI2_MISO
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 14, __GPIO_PB_PIN_14_NAME__);
 
 /*--
 this:AddPinSpeedWidget("B", 14)
 --*/
-#define __GPIO_PB_PIN_14_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PB_PIN_14_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("B", 14)
 --*/
-#define __GPIO_PB_PIN_14_MODE__ _GPIO_MODE_IN
+#define __GPIO_PB_PIN_14_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("B", 14)
 --*/
-#define __GPIO_PB_PIN_14_AF__ 0
+#define __GPIO_PB_PIN_14_AF__ 5
 
 /*--
 this:AddPinStateWidget("B", 14)
@@ -1014,23 +1014,23 @@ this:AddPinStateWidget("B", 14)
 /*--
 this:AddPinNameWidget("B", 15)
 --*/
-#define __GPIO_PB_PIN_15_NAME__ PB15_NC
+#define __GPIO_PB_PIN_15_NAME__ PMOD9_SPI2_MOSI
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTB_IDX, 15, __GPIO_PB_PIN_15_NAME__);
 
 /*--
 this:AddPinSpeedWidget("B", 15)
 --*/
-#define __GPIO_PB_PIN_15_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PB_PIN_15_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("B", 15)
 --*/
-#define __GPIO_PB_PIN_15_MODE__ _GPIO_MODE_IN
+#define __GPIO_PB_PIN_15_MODE__ _GPIO_MODE_AF_PP_PD
 
 /*--
 this:AddPinAltFuncWidget("B", 15)
 --*/
-#define __GPIO_PB_PIN_15_AF__ 0
+#define __GPIO_PB_PIN_15_AF__ 5
 
 /*--
 this:AddPinStateWidget("B", 15)
@@ -1040,23 +1040,23 @@ this:AddPinStateWidget("B", 15)
 /*--
 this:AddPinNameWidget("C", 0)
 --*/
-#define __GPIO_PC_PIN_0_NAME__ PC0_NC
+#define __GPIO_PC_PIN_0_NAME__ ULPI_STP
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 0, __GPIO_PC_PIN_0_NAME__);
 
 /*--
 this:AddPinSpeedWidget("C", 0)
 --*/
-#define __GPIO_PC_PIN_0_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PC_PIN_0_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("C", 0)
 --*/
-#define __GPIO_PC_PIN_0_MODE__ _GPIO_MODE_IN
+#define __GPIO_PC_PIN_0_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("C", 0)
 --*/
-#define __GPIO_PC_PIN_0_AF__ 0
+#define __GPIO_PC_PIN_0_AF__ 10
 
 /*--
 this:AddPinStateWidget("C", 0)
@@ -1066,23 +1066,23 @@ this:AddPinStateWidget("C", 0)
 /*--
 this:AddPinNameWidget("C", 1)
 --*/
-#define __GPIO_PC_PIN_1_NAME__ PC1_NC
+#define __GPIO_PC_PIN_1_NAME__ ETH_MDC
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 1, __GPIO_PC_PIN_1_NAME__);
 
 /*--
 this:AddPinSpeedWidget("C", 1)
 --*/
-#define __GPIO_PC_PIN_1_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PC_PIN_1_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("C", 1)
 --*/
-#define __GPIO_PC_PIN_1_MODE__ _GPIO_MODE_IN
+#define __GPIO_PC_PIN_1_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("C", 1)
 --*/
-#define __GPIO_PC_PIN_1_AF__ 0
+#define __GPIO_PC_PIN_1_AF__ 11
 
 /*--
 this:AddPinStateWidget("C", 1)
@@ -1092,18 +1092,18 @@ this:AddPinStateWidget("C", 1)
 /*--
 this:AddPinNameWidget("C", 2)
 --*/
-#define __GPIO_PC_PIN_2_NAME__ PC2_NC
+#define __GPIO_PC_PIN_2_NAME__ PMOD3_IOEXP_CS
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 2, __GPIO_PC_PIN_2_NAME__);
 
 /*--
 this:AddPinSpeedWidget("C", 2)
 --*/
-#define __GPIO_PC_PIN_2_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PC_PIN_2_SPEED__ _GPIO_SPEED_MEDIUM
 
 /*--
 this:AddPinModeWidget("C", 2)
 --*/
-#define __GPIO_PC_PIN_2_MODE__ _GPIO_MODE_IN
+#define __GPIO_PC_PIN_2_MODE__ _GPIO_MODE_PP
 
 /*--
 this:AddPinAltFuncWidget("C", 2)
@@ -1113,12 +1113,12 @@ this:AddPinAltFuncWidget("C", 2)
 /*--
 this:AddPinStateWidget("C", 2)
 --*/
-#define __GPIO_PC_PIN_2_STATE__ _LOW
+#define __GPIO_PC_PIN_2_STATE__ _HIGH
 
 /*--
 this:AddPinNameWidget("C", 3)
 --*/
-#define __GPIO_PC_PIN_3_NAME__ PC3_NC
+#define __GPIO_PC_PIN_3_NAME__ PMOD2_RS485_IRQ_2
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 3, __GPIO_PC_PIN_3_NAME__);
 
 /*--
@@ -1129,7 +1129,7 @@ this:AddPinSpeedWidget("C", 3)
 /*--
 this:AddPinModeWidget("C", 3)
 --*/
-#define __GPIO_PC_PIN_3_MODE__ _GPIO_MODE_IN
+#define __GPIO_PC_PIN_3_MODE__ _GPIO_MODE_IN_PU
 
 /*--
 this:AddPinAltFuncWidget("C", 3)
@@ -1144,23 +1144,23 @@ this:AddPinStateWidget("C", 3)
 /*--
 this:AddPinNameWidget("C", 4)
 --*/
-#define __GPIO_PC_PIN_4_NAME__ PC4_NC
+#define __GPIO_PC_PIN_4_NAME__ RMII_RXD0
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 4, __GPIO_PC_PIN_4_NAME__);
 
 /*--
 this:AddPinSpeedWidget("C", 4)
 --*/
-#define __GPIO_PC_PIN_4_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PC_PIN_4_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("C", 4)
 --*/
-#define __GPIO_PC_PIN_4_MODE__ _GPIO_MODE_IN
+#define __GPIO_PC_PIN_4_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("C", 4)
 --*/
-#define __GPIO_PC_PIN_4_AF__ 0
+#define __GPIO_PC_PIN_4_AF__ 11
 
 /*--
 this:AddPinStateWidget("C", 4)
@@ -1170,23 +1170,23 @@ this:AddPinStateWidget("C", 4)
 /*--
 this:AddPinNameWidget("C", 5)
 --*/
-#define __GPIO_PC_PIN_5_NAME__ PC5_NC
+#define __GPIO_PC_PIN_5_NAME__ RMII_RXD1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 5, __GPIO_PC_PIN_5_NAME__);
 
 /*--
 this:AddPinSpeedWidget("C", 5)
 --*/
-#define __GPIO_PC_PIN_5_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PC_PIN_5_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("C", 5)
 --*/
-#define __GPIO_PC_PIN_5_MODE__ _GPIO_MODE_IN
+#define __GPIO_PC_PIN_5_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("C", 5)
 --*/
-#define __GPIO_PC_PIN_5_AF__ 0
+#define __GPIO_PC_PIN_5_AF__ 11
 
 /*--
 this:AddPinStateWidget("C", 5)
@@ -1196,23 +1196,23 @@ this:AddPinStateWidget("C", 5)
 /*--
 this:AddPinNameWidget("C", 6)
 --*/
-#define __GPIO_PC_PIN_6_NAME__ PC6_NC
+#define __GPIO_PC_PIN_6_NAME__ PMOD11_TIM3_CH1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 6, __GPIO_PC_PIN_6_NAME__);
 
 /*--
 this:AddPinSpeedWidget("C", 6)
 --*/
-#define __GPIO_PC_PIN_6_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PC_PIN_6_SPEED__ _GPIO_SPEED_MEDIUM
 
 /*--
 this:AddPinModeWidget("C", 6)
 --*/
-#define __GPIO_PC_PIN_6_MODE__ _GPIO_MODE_IN
+#define __GPIO_PC_PIN_6_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("C", 6)
 --*/
-#define __GPIO_PC_PIN_6_AF__ 0
+#define __GPIO_PC_PIN_6_AF__ 2
 
 /*--
 this:AddPinStateWidget("C", 6)
@@ -1222,23 +1222,23 @@ this:AddPinStateWidget("C", 6)
 /*--
 this:AddPinNameWidget("C", 7)
 --*/
-#define __GPIO_PC_PIN_7_NAME__ PC7_NC
+#define __GPIO_PC_PIN_7_NAME__ PMOD17_USART6_RX
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 7, __GPIO_PC_PIN_7_NAME__);
 
 /*--
 this:AddPinSpeedWidget("C", 7)
 --*/
-#define __GPIO_PC_PIN_7_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PC_PIN_7_SPEED__ _GPIO_SPEED_MEDIUM
 
 /*--
 this:AddPinModeWidget("C", 7)
 --*/
-#define __GPIO_PC_PIN_7_MODE__ _GPIO_MODE_IN
+#define __GPIO_PC_PIN_7_MODE__ _GPIO_MODE_AF_PP_PU
 
 /*--
 this:AddPinAltFuncWidget("C", 7)
 --*/
-#define __GPIO_PC_PIN_7_AF__ 0
+#define __GPIO_PC_PIN_7_AF__ 7
 
 /*--
 this:AddPinStateWidget("C", 7)
@@ -1248,23 +1248,23 @@ this:AddPinStateWidget("C", 7)
 /*--
 this:AddPinNameWidget("C", 8)
 --*/
-#define __GPIO_PC_PIN_8_NAME__ PC8_NC
+#define __GPIO_PC_PIN_8_NAME__ SDIO_D0
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 8, __GPIO_PC_PIN_8_NAME__);
 
 /*--
 this:AddPinSpeedWidget("C", 8)
 --*/
-#define __GPIO_PC_PIN_8_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PC_PIN_8_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("C", 8)
 --*/
-#define __GPIO_PC_PIN_8_MODE__ _GPIO_MODE_IN
+#define __GPIO_PC_PIN_8_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("C", 8)
 --*/
-#define __GPIO_PC_PIN_8_AF__ 0
+#define __GPIO_PC_PIN_8_AF__ 12
 
 /*--
 this:AddPinStateWidget("C", 8)
@@ -1274,23 +1274,23 @@ this:AddPinStateWidget("C", 8)
 /*--
 this:AddPinNameWidget("C", 9)
 --*/
-#define __GPIO_PC_PIN_9_NAME__ PC9_NC
+#define __GPIO_PC_PIN_9_NAME__ SDIO_D1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 9, __GPIO_PC_PIN_9_NAME__);
 
 /*--
 this:AddPinSpeedWidget("C", 9)
 --*/
-#define __GPIO_PC_PIN_9_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PC_PIN_9_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("C", 9)
 --*/
-#define __GPIO_PC_PIN_9_MODE__ _GPIO_MODE_IN
+#define __GPIO_PC_PIN_9_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("C", 9)
 --*/
-#define __GPIO_PC_PIN_9_AF__ 0
+#define __GPIO_PC_PIN_9_AF__ 12
 
 /*--
 this:AddPinStateWidget("C", 9)
@@ -1300,23 +1300,23 @@ this:AddPinStateWidget("C", 9)
 /*--
 this:AddPinNameWidget("C", 10)
 --*/
-#define __GPIO_PC_PIN_10_NAME__ PC10_NC
+#define __GPIO_PC_PIN_10_NAME__ SDIO_D2
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 10, __GPIO_PC_PIN_10_NAME__);
 
 /*--
 this:AddPinSpeedWidget("C", 10)
 --*/
-#define __GPIO_PC_PIN_10_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PC_PIN_10_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("C", 10)
 --*/
-#define __GPIO_PC_PIN_10_MODE__ _GPIO_MODE_IN
+#define __GPIO_PC_PIN_10_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("C", 10)
 --*/
-#define __GPIO_PC_PIN_10_AF__ 0
+#define __GPIO_PC_PIN_10_AF__ 12
 
 /*--
 this:AddPinStateWidget("C", 10)
@@ -1326,23 +1326,23 @@ this:AddPinStateWidget("C", 10)
 /*--
 this:AddPinNameWidget("C", 11)
 --*/
-#define __GPIO_PC_PIN_11_NAME__ PC11_NC
+#define __GPIO_PC_PIN_11_NAME__ SDIO_D3
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 11, __GPIO_PC_PIN_11_NAME__);
 
 /*--
 this:AddPinSpeedWidget("C", 11)
 --*/
-#define __GPIO_PC_PIN_11_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PC_PIN_11_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("C", 11)
 --*/
-#define __GPIO_PC_PIN_11_MODE__ _GPIO_MODE_IN
+#define __GPIO_PC_PIN_11_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("C", 11)
 --*/
-#define __GPIO_PC_PIN_11_AF__ 0
+#define __GPIO_PC_PIN_11_AF__ 12
 
 /*--
 this:AddPinStateWidget("C", 11)
@@ -1352,23 +1352,23 @@ this:AddPinStateWidget("C", 11)
 /*--
 this:AddPinNameWidget("C", 12)
 --*/
-#define __GPIO_PC_PIN_12_NAME__ PC12_NC
+#define __GPIO_PC_PIN_12_NAME__ SDIO_CK
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 12, __GPIO_PC_PIN_12_NAME__);
 
 /*--
 this:AddPinSpeedWidget("C", 12)
 --*/
-#define __GPIO_PC_PIN_12_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PC_PIN_12_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("C", 12)
 --*/
-#define __GPIO_PC_PIN_12_MODE__ _GPIO_MODE_IN
+#define __GPIO_PC_PIN_12_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("C", 12)
 --*/
-#define __GPIO_PC_PIN_12_AF__ 0
+#define __GPIO_PC_PIN_12_AF__ 12
 
 /*--
 this:AddPinStateWidget("C", 12)
@@ -1378,7 +1378,7 @@ this:AddPinStateWidget("C", 12)
 /*--
 this:AddPinNameWidget("C", 13)
 --*/
-#define __GPIO_PC_PIN_13_NAME__ PC13_NC
+#define __GPIO_PC_PIN_13_NAME__ WAKEUP
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 13, __GPIO_PC_PIN_13_NAME__);
 
 /*--
@@ -1404,7 +1404,7 @@ this:AddPinStateWidget("C", 13)
 /*--
 this:AddPinNameWidget("C", 14)
 --*/
-#define __GPIO_PC_PIN_14_NAME__ PC14_NC
+#define __GPIO_PC_PIN_14_NAME__ OSC32IN
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 14, __GPIO_PC_PIN_14_NAME__);
 
 /*--
@@ -1430,7 +1430,7 @@ this:AddPinStateWidget("C", 14)
 /*--
 this:AddPinNameWidget("C", 15)
 --*/
-#define __GPIO_PC_PIN_15_NAME__ PC15_NC
+#define __GPIO_PC_PIN_15_NAME__ OSC32OUT
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTC_IDX, 15, __GPIO_PC_PIN_15_NAME__);
 
 /*--
@@ -1456,23 +1456,23 @@ this:AddPinStateWidget("C", 15)
 /*--
 this:AddPinNameWidget("D", 0)
 --*/
-#define __GPIO_PD_PIN_0_NAME__ PD0_NC
+#define __GPIO_PD_PIN_0_NAME__ FMC_D2
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 0, __GPIO_PD_PIN_0_NAME__);
 
 /*--
 this:AddPinSpeedWidget("D", 0)
 --*/
-#define __GPIO_PD_PIN_0_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PD_PIN_0_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("D", 0)
 --*/
-#define __GPIO_PD_PIN_0_MODE__ _GPIO_MODE_IN
+#define __GPIO_PD_PIN_0_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("D", 0)
 --*/
-#define __GPIO_PD_PIN_0_AF__ 0
+#define __GPIO_PD_PIN_0_AF__ 12
 
 /*--
 this:AddPinStateWidget("D", 0)
@@ -1482,23 +1482,23 @@ this:AddPinStateWidget("D", 0)
 /*--
 this:AddPinNameWidget("D", 1)
 --*/
-#define __GPIO_PD_PIN_1_NAME__ PD1_NC
+#define __GPIO_PD_PIN_1_NAME__ FMC_D3
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 1, __GPIO_PD_PIN_1_NAME__);
 
 /*--
 this:AddPinSpeedWidget("D", 1)
 --*/
-#define __GPIO_PD_PIN_1_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PD_PIN_1_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("D", 1)
 --*/
-#define __GPIO_PD_PIN_1_MODE__ _GPIO_MODE_IN
+#define __GPIO_PD_PIN_1_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("D", 1)
 --*/
-#define __GPIO_PD_PIN_1_AF__ 0
+#define __GPIO_PD_PIN_1_AF__ 12
 
 /*--
 this:AddPinStateWidget("D", 1)
@@ -1508,23 +1508,23 @@ this:AddPinStateWidget("D", 1)
 /*--
 this:AddPinNameWidget("D", 2)
 --*/
-#define __GPIO_PD_PIN_2_NAME__ PD2_NC
+#define __GPIO_PD_PIN_2_NAME__ SDIO_CMD
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 2, __GPIO_PD_PIN_2_NAME__);
 
 /*--
 this:AddPinSpeedWidget("D", 2)
 --*/
-#define __GPIO_PD_PIN_2_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PD_PIN_2_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("D", 2)
 --*/
-#define __GPIO_PD_PIN_2_MODE__ _GPIO_MODE_IN
+#define __GPIO_PD_PIN_2_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("D", 2)
 --*/
-#define __GPIO_PD_PIN_2_AF__ 0
+#define __GPIO_PD_PIN_2_AF__ 12
 
 /*--
 this:AddPinStateWidget("D", 2)
@@ -1534,7 +1534,7 @@ this:AddPinStateWidget("D", 2)
 /*--
 this:AddPinNameWidget("D", 3)
 --*/
-#define __GPIO_PD_PIN_3_NAME__ PD3_NC
+#define __GPIO_PD_PIN_3_NAME__ PMOD18_TP2
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 3, __GPIO_PD_PIN_3_NAME__);
 
 /*--
@@ -1545,7 +1545,7 @@ this:AddPinSpeedWidget("D", 3)
 /*--
 this:AddPinModeWidget("D", 3)
 --*/
-#define __GPIO_PD_PIN_3_MODE__ _GPIO_MODE_IN
+#define __GPIO_PD_PIN_3_MODE__ _GPIO_MODE_PP
 
 /*--
 this:AddPinAltFuncWidget("D", 3)
@@ -1560,7 +1560,7 @@ this:AddPinStateWidget("D", 3)
 /*--
 this:AddPinNameWidget("D", 4)
 --*/
-#define __GPIO_PD_PIN_4_NAME__ PD4_NC
+#define __GPIO_PD_PIN_4_NAME__ PMOD4_RTS
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 4, __GPIO_PD_PIN_4_NAME__);
 
 /*--
@@ -1586,7 +1586,7 @@ this:AddPinStateWidget("D", 4)
 /*--
 this:AddPinNameWidget("D", 5)
 --*/
-#define __GPIO_PD_PIN_5_NAME__ PD5_NC
+#define __GPIO_PD_PIN_5_NAME__ PMOD2_TX
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 5, __GPIO_PD_PIN_5_NAME__);
 
 /*--
@@ -1612,7 +1612,7 @@ this:AddPinStateWidget("D", 5)
 /*--
 this:AddPinNameWidget("D", 6)
 --*/
-#define __GPIO_PD_PIN_6_NAME__ PD6_NC
+#define __GPIO_PD_PIN_6_NAME__ PMOD3_RX
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 6, __GPIO_PD_PIN_6_NAME__);
 
 /*--
@@ -1638,7 +1638,7 @@ this:AddPinStateWidget("D", 6)
 /*--
 this:AddPinNameWidget("D", 7)
 --*/
-#define __GPIO_PD_PIN_7_NAME__ PD7_NC
+#define __GPIO_PD_PIN_7_NAME__ SPDIF_RX0
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 7, __GPIO_PD_PIN_7_NAME__);
 
 /*--
@@ -1664,23 +1664,23 @@ this:AddPinStateWidget("D", 7)
 /*--
 this:AddPinNameWidget("D", 8)
 --*/
-#define __GPIO_PD_PIN_8_NAME__ PD8_NC
+#define __GPIO_PD_PIN_8_NAME__ FMC_D13
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 8, __GPIO_PD_PIN_8_NAME__);
 
 /*--
 this:AddPinSpeedWidget("D", 8)
 --*/
-#define __GPIO_PD_PIN_8_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PD_PIN_8_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("D", 8)
 --*/
-#define __GPIO_PD_PIN_8_MODE__ _GPIO_MODE_IN
+#define __GPIO_PD_PIN_8_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("D", 8)
 --*/
-#define __GPIO_PD_PIN_8_AF__ 0
+#define __GPIO_PD_PIN_8_AF__ 12
 
 /*--
 this:AddPinStateWidget("D", 8)
@@ -1690,23 +1690,23 @@ this:AddPinStateWidget("D", 8)
 /*--
 this:AddPinNameWidget("D", 9)
 --*/
-#define __GPIO_PD_PIN_9_NAME__ PD9_NC
+#define __GPIO_PD_PIN_9_NAME__ FMC_D14
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 9, __GPIO_PD_PIN_9_NAME__);
 
 /*--
 this:AddPinSpeedWidget("D", 9)
 --*/
-#define __GPIO_PD_PIN_9_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PD_PIN_9_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("D", 9)
 --*/
-#define __GPIO_PD_PIN_9_MODE__ _GPIO_MODE_IN
+#define __GPIO_PD_PIN_9_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("D", 9)
 --*/
-#define __GPIO_PD_PIN_9_AF__ 0
+#define __GPIO_PD_PIN_9_AF__ 12
 
 /*--
 this:AddPinStateWidget("D", 9)
@@ -1716,23 +1716,23 @@ this:AddPinStateWidget("D", 9)
 /*--
 this:AddPinNameWidget("D", 10)
 --*/
-#define __GPIO_PD_PIN_10_NAME__ PD10_NC
+#define __GPIO_PD_PIN_10_NAME__ FMC_D15
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 10, __GPIO_PD_PIN_10_NAME__);
 
 /*--
 this:AddPinSpeedWidget("D", 10)
 --*/
-#define __GPIO_PD_PIN_10_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PD_PIN_10_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("D", 10)
 --*/
-#define __GPIO_PD_PIN_10_MODE__ _GPIO_MODE_IN
+#define __GPIO_PD_PIN_10_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("D", 10)
 --*/
-#define __GPIO_PD_PIN_10_AF__ 0
+#define __GPIO_PD_PIN_10_AF__ 12
 
 /*--
 this:AddPinStateWidget("D", 10)
@@ -1742,23 +1742,23 @@ this:AddPinStateWidget("D", 10)
 /*--
 this:AddPinNameWidget("D", 11)
 --*/
-#define __GPIO_PD_PIN_11_NAME__ PD11_NC
+#define __GPIO_PD_PIN_11_NAME__ QSPI_BK1_IO0
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 11, __GPIO_PD_PIN_11_NAME__);
 
 /*--
 this:AddPinSpeedWidget("D", 11)
 --*/
-#define __GPIO_PD_PIN_11_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PD_PIN_11_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("D", 11)
 --*/
-#define __GPIO_PD_PIN_11_MODE__ _GPIO_MODE_IN
+#define __GPIO_PD_PIN_11_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("D", 11)
 --*/
-#define __GPIO_PD_PIN_11_AF__ 0
+#define __GPIO_PD_PIN_11_AF__ 9
 
 /*--
 this:AddPinStateWidget("D", 11)
@@ -1768,75 +1768,75 @@ this:AddPinStateWidget("D", 11)
 /*--
 this:AddPinNameWidget("D", 12)
 --*/
-#define __GPIO_PD_PIN_12_NAME__ PD12_NC
+#define __GPIO_PD_PIN_12_NAME__ PMOD7_RS485_CS_1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 12, __GPIO_PD_PIN_12_NAME__);
 
 /*--
 this:AddPinSpeedWidget("D", 12)
 --*/
-#define __GPIO_PD_PIN_12_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PD_PIN_12_SPEED__ _GPIO_SPEED_MEDIUM
 
 /*--
 this:AddPinModeWidget("D", 12)
 --*/
-#define __GPIO_PD_PIN_12_MODE__ _GPIO_MODE_IN
+#define __GPIO_PD_PIN_12_MODE__ _GPIO_MODE_PP
 
 /*--
 this:AddPinAltFuncWidget("D", 12)
 --*/
-#define __GPIO_PD_PIN_12_AF__ 0
+#define __GPIO_PD_PIN_12_AF__ 4
 
 /*--
 this:AddPinStateWidget("D", 12)
 --*/
-#define __GPIO_PD_PIN_12_STATE__ _LOW
+#define __GPIO_PD_PIN_12_STATE__ _HIGH
 
 /*--
 this:AddPinNameWidget("D", 13)
 --*/
-#define __GPIO_PD_PIN_13_NAME__ PD13_NC
+#define __GPIO_PD_PIN_13_NAME__ PMOD10_RS485_CS_2
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 13, __GPIO_PD_PIN_13_NAME__);
 
 /*--
 this:AddPinSpeedWidget("D", 13)
 --*/
-#define __GPIO_PD_PIN_13_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PD_PIN_13_SPEED__ _GPIO_SPEED_MEDIUM
 
 /*--
 this:AddPinModeWidget("D", 13)
 --*/
-#define __GPIO_PD_PIN_13_MODE__ _GPIO_MODE_IN
+#define __GPIO_PD_PIN_13_MODE__ _GPIO_MODE_PP
 
 /*--
 this:AddPinAltFuncWidget("D", 13)
 --*/
-#define __GPIO_PD_PIN_13_AF__ 0
+#define __GPIO_PD_PIN_13_AF__ 4
 
 /*--
 this:AddPinStateWidget("D", 13)
 --*/
-#define __GPIO_PD_PIN_13_STATE__ _LOW
+#define __GPIO_PD_PIN_13_STATE__ _HIGH
 
 /*--
 this:AddPinNameWidget("D", 14)
 --*/
-#define __GPIO_PD_PIN_14_NAME__ PD14_NC
+#define __GPIO_PD_PIN_14_NAME__ FMC_D0
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 14, __GPIO_PD_PIN_14_NAME__);
 
 /*--
 this:AddPinSpeedWidget("D", 14)
 --*/
-#define __GPIO_PD_PIN_14_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PD_PIN_14_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("D", 14)
 --*/
-#define __GPIO_PD_PIN_14_MODE__ _GPIO_MODE_IN
+#define __GPIO_PD_PIN_14_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("D", 14)
 --*/
-#define __GPIO_PD_PIN_14_AF__ 0
+#define __GPIO_PD_PIN_14_AF__ 12
 
 /*--
 this:AddPinStateWidget("D", 14)
@@ -1846,23 +1846,23 @@ this:AddPinStateWidget("D", 14)
 /*--
 this:AddPinNameWidget("D", 15)
 --*/
-#define __GPIO_PD_PIN_15_NAME__ PD15_NC
+#define __GPIO_PD_PIN_15_NAME__ FMC_D1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTD_IDX, 15, __GPIO_PD_PIN_15_NAME__);
 
 /*--
 this:AddPinSpeedWidget("D", 15)
 --*/
-#define __GPIO_PD_PIN_15_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PD_PIN_15_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("D", 15)
 --*/
-#define __GPIO_PD_PIN_15_MODE__ _GPIO_MODE_IN
+#define __GPIO_PD_PIN_15_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("D", 15)
 --*/
-#define __GPIO_PD_PIN_15_AF__ 0
+#define __GPIO_PD_PIN_15_AF__ 12
 
 /*--
 this:AddPinStateWidget("D", 15)
@@ -1872,23 +1872,23 @@ this:AddPinStateWidget("D", 15)
 /*--
 this:AddPinNameWidget("E", 0)
 --*/
-#define __GPIO_PE_PIN_0_NAME__ PE0_NC
+#define __GPIO_PE_PIN_0_NAME__ FMC_NBL0
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 0, __GPIO_PE_PIN_0_NAME__);
 
 /*--
 this:AddPinSpeedWidget("E", 0)
 --*/
-#define __GPIO_PE_PIN_0_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PE_PIN_0_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("E", 0)
 --*/
-#define __GPIO_PE_PIN_0_MODE__ _GPIO_MODE_IN
+#define __GPIO_PE_PIN_0_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("E", 0)
 --*/
-#define __GPIO_PE_PIN_0_AF__ 0
+#define __GPIO_PE_PIN_0_AF__ 12
 
 /*--
 this:AddPinStateWidget("E", 0)
@@ -1898,23 +1898,23 @@ this:AddPinStateWidget("E", 0)
 /*--
 this:AddPinNameWidget("E", 1)
 --*/
-#define __GPIO_PE_PIN_1_NAME__ PE1_NC
+#define __GPIO_PE_PIN_1_NAME__ FMC_NBL1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 1, __GPIO_PE_PIN_1_NAME__);
 
 /*--
 this:AddPinSpeedWidget("E", 1)
 --*/
-#define __GPIO_PE_PIN_1_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PE_PIN_1_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("E", 1)
 --*/
-#define __GPIO_PE_PIN_1_MODE__ _GPIO_MODE_IN
+#define __GPIO_PE_PIN_1_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("E", 1)
 --*/
-#define __GPIO_PE_PIN_1_AF__ 0
+#define __GPIO_PE_PIN_1_AF__ 12
 
 /*--
 this:AddPinStateWidget("E", 1)
@@ -1924,7 +1924,7 @@ this:AddPinStateWidget("E", 1)
 /*--
 this:AddPinNameWidget("E", 2)
 --*/
-#define __GPIO_PE_PIN_2_NAME__ PE2_NC
+#define __GPIO_PE_PIN_2_NAME__ SAI4_CK1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 2, __GPIO_PE_PIN_2_NAME__);
 
 /*--
@@ -1950,23 +1950,23 @@ this:AddPinStateWidget("E", 2)
 /*--
 this:AddPinNameWidget("E", 3)
 --*/
-#define __GPIO_PE_PIN_3_NAME__ PE3_NC
+#define __GPIO_PE_PIN_3_NAME__ SAI1_SDB
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 3, __GPIO_PE_PIN_3_NAME__);
 
 /*--
 this:AddPinSpeedWidget("E", 3)
 --*/
-#define __GPIO_PE_PIN_3_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PE_PIN_3_SPEED__ _GPIO_SPEED_MEDIUM
 
 /*--
 this:AddPinModeWidget("E", 3)
 --*/
-#define __GPIO_PE_PIN_3_MODE__ _GPIO_MODE_IN
+#define __GPIO_PE_PIN_3_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("E", 3)
 --*/
-#define __GPIO_PE_PIN_3_AF__ 0
+#define __GPIO_PE_PIN_3_AF__ 6
 
 /*--
 this:AddPinStateWidget("E", 3)
@@ -1976,23 +1976,23 @@ this:AddPinStateWidget("E", 3)
 /*--
 this:AddPinNameWidget("E", 4)
 --*/
-#define __GPIO_PE_PIN_4_NAME__ PE4_NC
+#define __GPIO_PE_PIN_4_NAME__ SAI1_FSA
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 4, __GPIO_PE_PIN_4_NAME__);
 
 /*--
 this:AddPinSpeedWidget("E", 4)
 --*/
-#define __GPIO_PE_PIN_4_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PE_PIN_4_SPEED__ _GPIO_SPEED_MEDIUM
 
 /*--
 this:AddPinModeWidget("E", 4)
 --*/
-#define __GPIO_PE_PIN_4_MODE__ _GPIO_MODE_IN
+#define __GPIO_PE_PIN_4_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("E", 4)
 --*/
-#define __GPIO_PE_PIN_4_AF__ 0
+#define __GPIO_PE_PIN_4_AF__ 6
 
 /*--
 this:AddPinStateWidget("E", 4)
@@ -2002,23 +2002,23 @@ this:AddPinStateWidget("E", 4)
 /*--
 this:AddPinNameWidget("E", 5)
 --*/
-#define __GPIO_PE_PIN_5_NAME__ PE5_NC
+#define __GPIO_PE_PIN_5_NAME__ SAI1_SCKA
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 5, __GPIO_PE_PIN_5_NAME__);
 
 /*--
 this:AddPinSpeedWidget("E", 5)
 --*/
-#define __GPIO_PE_PIN_5_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PE_PIN_5_SPEED__ _GPIO_SPEED_MEDIUM
 
 /*--
 this:AddPinModeWidget("E", 5)
 --*/
-#define __GPIO_PE_PIN_5_MODE__ _GPIO_MODE_IN
+#define __GPIO_PE_PIN_5_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("E", 5)
 --*/
-#define __GPIO_PE_PIN_5_AF__ 0
+#define __GPIO_PE_PIN_5_AF__ 6
 
 /*--
 this:AddPinStateWidget("E", 5)
@@ -2028,23 +2028,23 @@ this:AddPinStateWidget("E", 5)
 /*--
 this:AddPinNameWidget("E", 6)
 --*/
-#define __GPIO_PE_PIN_6_NAME__ PE6_NC
+#define __GPIO_PE_PIN_6_NAME__ SAI1_SDA
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 6, __GPIO_PE_PIN_6_NAME__);
 
 /*--
 this:AddPinSpeedWidget("E", 6)
 --*/
-#define __GPIO_PE_PIN_6_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PE_PIN_6_SPEED__ _GPIO_SPEED_MEDIUM
 
 /*--
 this:AddPinModeWidget("E", 6)
 --*/
-#define __GPIO_PE_PIN_6_MODE__ _GPIO_MODE_IN
+#define __GPIO_PE_PIN_6_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("E", 6)
 --*/
-#define __GPIO_PE_PIN_6_AF__ 0
+#define __GPIO_PE_PIN_6_AF__ 6
 
 /*--
 this:AddPinStateWidget("E", 6)
@@ -2054,23 +2054,23 @@ this:AddPinStateWidget("E", 6)
 /*--
 this:AddPinNameWidget("E", 7)
 --*/
-#define __GPIO_PE_PIN_7_NAME__ PE7_NC
+#define __GPIO_PE_PIN_7_NAME__ FMC_D4
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 7, __GPIO_PE_PIN_7_NAME__);
 
 /*--
 this:AddPinSpeedWidget("E", 7)
 --*/
-#define __GPIO_PE_PIN_7_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PE_PIN_7_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("E", 7)
 --*/
-#define __GPIO_PE_PIN_7_MODE__ _GPIO_MODE_IN
+#define __GPIO_PE_PIN_7_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("E", 7)
 --*/
-#define __GPIO_PE_PIN_7_AF__ 0
+#define __GPIO_PE_PIN_7_AF__ 12
 
 /*--
 this:AddPinStateWidget("E", 7)
@@ -2080,23 +2080,23 @@ this:AddPinStateWidget("E", 7)
 /*--
 this:AddPinNameWidget("E", 8)
 --*/
-#define __GPIO_PE_PIN_8_NAME__ PE8_NC
+#define __GPIO_PE_PIN_8_NAME__ FMC_D5
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 8, __GPIO_PE_PIN_8_NAME__);
 
 /*--
 this:AddPinSpeedWidget("E", 8)
 --*/
-#define __GPIO_PE_PIN_8_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PE_PIN_8_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("E", 8)
 --*/
-#define __GPIO_PE_PIN_8_MODE__ _GPIO_MODE_IN
+#define __GPIO_PE_PIN_8_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("E", 8)
 --*/
-#define __GPIO_PE_PIN_8_AF__ 0
+#define __GPIO_PE_PIN_8_AF__ 12
 
 /*--
 this:AddPinStateWidget("E", 8)
@@ -2106,23 +2106,23 @@ this:AddPinStateWidget("E", 8)
 /*--
 this:AddPinNameWidget("E", 9)
 --*/
-#define __GPIO_PE_PIN_9_NAME__ PE9_NC
+#define __GPIO_PE_PIN_9_NAME__ FMC_D6
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 9, __GPIO_PE_PIN_9_NAME__);
 
 /*--
 this:AddPinSpeedWidget("E", 9)
 --*/
-#define __GPIO_PE_PIN_9_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PE_PIN_9_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("E", 9)
 --*/
-#define __GPIO_PE_PIN_9_MODE__ _GPIO_MODE_IN
+#define __GPIO_PE_PIN_9_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("E", 9)
 --*/
-#define __GPIO_PE_PIN_9_AF__ 0
+#define __GPIO_PE_PIN_9_AF__ 12
 
 /*--
 this:AddPinStateWidget("E", 9)
@@ -2132,23 +2132,23 @@ this:AddPinStateWidget("E", 9)
 /*--
 this:AddPinNameWidget("E", 10)
 --*/
-#define __GPIO_PE_PIN_10_NAME__ PE10_NC
+#define __GPIO_PE_PIN_10_NAME__ FMC_D7
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 10, __GPIO_PE_PIN_10_NAME__);
 
 /*--
 this:AddPinSpeedWidget("E", 10)
 --*/
-#define __GPIO_PE_PIN_10_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PE_PIN_10_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("E", 10)
 --*/
-#define __GPIO_PE_PIN_10_MODE__ _GPIO_MODE_IN
+#define __GPIO_PE_PIN_10_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("E", 10)
 --*/
-#define __GPIO_PE_PIN_10_AF__ 0
+#define __GPIO_PE_PIN_10_AF__ 12
 
 /*--
 this:AddPinStateWidget("E", 10)
@@ -2158,23 +2158,23 @@ this:AddPinStateWidget("E", 10)
 /*--
 this:AddPinNameWidget("E", 11)
 --*/
-#define __GPIO_PE_PIN_11_NAME__ PE11_NC
+#define __GPIO_PE_PIN_11_NAME__ FMC_D8
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 11, __GPIO_PE_PIN_11_NAME__);
 
 /*--
 this:AddPinSpeedWidget("E", 11)
 --*/
-#define __GPIO_PE_PIN_11_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PE_PIN_11_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("E", 11)
 --*/
-#define __GPIO_PE_PIN_11_MODE__ _GPIO_MODE_IN
+#define __GPIO_PE_PIN_11_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("E", 11)
 --*/
-#define __GPIO_PE_PIN_11_AF__ 0
+#define __GPIO_PE_PIN_11_AF__ 12
 
 /*--
 this:AddPinStateWidget("E", 11)
@@ -2184,23 +2184,23 @@ this:AddPinStateWidget("E", 11)
 /*--
 this:AddPinNameWidget("E", 12)
 --*/
-#define __GPIO_PE_PIN_12_NAME__ PE12_NC
+#define __GPIO_PE_PIN_12_NAME__ FMC_D9
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 12, __GPIO_PE_PIN_12_NAME__);
 
 /*--
 this:AddPinSpeedWidget("E", 12)
 --*/
-#define __GPIO_PE_PIN_12_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PE_PIN_12_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("E", 12)
 --*/
-#define __GPIO_PE_PIN_12_MODE__ _GPIO_MODE_IN
+#define __GPIO_PE_PIN_12_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("E", 12)
 --*/
-#define __GPIO_PE_PIN_12_AF__ 0
+#define __GPIO_PE_PIN_12_AF__ 12
 
 /*--
 this:AddPinStateWidget("E", 12)
@@ -2210,23 +2210,23 @@ this:AddPinStateWidget("E", 12)
 /*--
 this:AddPinNameWidget("E", 13)
 --*/
-#define __GPIO_PE_PIN_13_NAME__ PE13_NC
+#define __GPIO_PE_PIN_13_NAME__ FMC_D10
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 13, __GPIO_PE_PIN_13_NAME__);
 
 /*--
 this:AddPinSpeedWidget("E", 13)
 --*/
-#define __GPIO_PE_PIN_13_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PE_PIN_13_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("E", 13)
 --*/
-#define __GPIO_PE_PIN_13_MODE__ _GPIO_MODE_IN
+#define __GPIO_PE_PIN_13_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("E", 13)
 --*/
-#define __GPIO_PE_PIN_13_AF__ 0
+#define __GPIO_PE_PIN_13_AF__ 12
 
 /*--
 this:AddPinStateWidget("E", 13)
@@ -2236,23 +2236,23 @@ this:AddPinStateWidget("E", 13)
 /*--
 this:AddPinNameWidget("E", 14)
 --*/
-#define __GPIO_PE_PIN_14_NAME__ PE14_NC
+#define __GPIO_PE_PIN_14_NAME__ FMC_D11
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 14, __GPIO_PE_PIN_14_NAME__);
 
 /*--
 this:AddPinSpeedWidget("E", 14)
 --*/
-#define __GPIO_PE_PIN_14_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PE_PIN_14_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("E", 14)
 --*/
-#define __GPIO_PE_PIN_14_MODE__ _GPIO_MODE_IN
+#define __GPIO_PE_PIN_14_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("E", 14)
 --*/
-#define __GPIO_PE_PIN_14_AF__ 0
+#define __GPIO_PE_PIN_14_AF__ 12
 
 /*--
 this:AddPinStateWidget("E", 14)
@@ -2262,23 +2262,23 @@ this:AddPinStateWidget("E", 14)
 /*--
 this:AddPinNameWidget("E", 15)
 --*/
-#define __GPIO_PE_PIN_15_NAME__ PE15_NC
+#define __GPIO_PE_PIN_15_NAME__ FMC_D12
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTE_IDX, 15, __GPIO_PE_PIN_15_NAME__);
 
 /*--
 this:AddPinSpeedWidget("E", 15)
 --*/
-#define __GPIO_PE_PIN_15_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PE_PIN_15_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("E", 15)
 --*/
-#define __GPIO_PE_PIN_15_MODE__ _GPIO_MODE_IN
+#define __GPIO_PE_PIN_15_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("E", 15)
 --*/
-#define __GPIO_PE_PIN_15_AF__ 0
+#define __GPIO_PE_PIN_15_AF__ 12
 
 /*--
 this:AddPinStateWidget("E", 15)
@@ -2288,23 +2288,23 @@ this:AddPinStateWidget("E", 15)
 /*--
 this:AddPinNameWidget("F", 0)
 --*/
-#define __GPIO_PF_PIN_0_NAME__ PF0_NC
+#define __GPIO_PF_PIN_0_NAME__ FMC_A0
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 0, __GPIO_PF_PIN_0_NAME__);
 
 /*--
 this:AddPinSpeedWidget("F", 0)
 --*/
-#define __GPIO_PF_PIN_0_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PF_PIN_0_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("F", 0)
 --*/
-#define __GPIO_PF_PIN_0_MODE__ _GPIO_MODE_IN
+#define __GPIO_PF_PIN_0_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("F", 0)
 --*/
-#define __GPIO_PF_PIN_0_AF__ 0
+#define __GPIO_PF_PIN_0_AF__ 12
 
 /*--
 this:AddPinStateWidget("F", 0)
@@ -2314,23 +2314,23 @@ this:AddPinStateWidget("F", 0)
 /*--
 this:AddPinNameWidget("F", 1)
 --*/
-#define __GPIO_PF_PIN_1_NAME__ PF1_NC
+#define __GPIO_PF_PIN_1_NAME__ FMC_A1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 1, __GPIO_PF_PIN_1_NAME__);
 
 /*--
 this:AddPinSpeedWidget("F", 1)
 --*/
-#define __GPIO_PF_PIN_1_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PF_PIN_1_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("F", 1)
 --*/
-#define __GPIO_PF_PIN_1_MODE__ _GPIO_MODE_IN
+#define __GPIO_PF_PIN_1_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("F", 1)
 --*/
-#define __GPIO_PF_PIN_1_AF__ 0
+#define __GPIO_PF_PIN_1_AF__ 12
 
 /*--
 this:AddPinStateWidget("F", 1)
@@ -2340,23 +2340,23 @@ this:AddPinStateWidget("F", 1)
 /*--
 this:AddPinNameWidget("F", 2)
 --*/
-#define __GPIO_PF_PIN_2_NAME__ PF2_NC
+#define __GPIO_PF_PIN_2_NAME__ FMC_A2
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 2, __GPIO_PF_PIN_2_NAME__);
 
 /*--
 this:AddPinSpeedWidget("F", 2)
 --*/
-#define __GPIO_PF_PIN_2_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PF_PIN_2_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("F", 2)
 --*/
-#define __GPIO_PF_PIN_2_MODE__ _GPIO_MODE_IN
+#define __GPIO_PF_PIN_2_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("F", 2)
 --*/
-#define __GPIO_PF_PIN_2_AF__ 0
+#define __GPIO_PF_PIN_2_AF__ 12
 
 /*--
 this:AddPinStateWidget("F", 2)
@@ -2366,23 +2366,23 @@ this:AddPinStateWidget("F", 2)
 /*--
 this:AddPinNameWidget("F", 3)
 --*/
-#define __GPIO_PF_PIN_3_NAME__ PF3_NC
+#define __GPIO_PF_PIN_3_NAME__ FMC_A3
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 3, __GPIO_PF_PIN_3_NAME__);
 
 /*--
 this:AddPinSpeedWidget("F", 3)
 --*/
-#define __GPIO_PF_PIN_3_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PF_PIN_3_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("F", 3)
 --*/
-#define __GPIO_PF_PIN_3_MODE__ _GPIO_MODE_IN
+#define __GPIO_PF_PIN_3_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("F", 3)
 --*/
-#define __GPIO_PF_PIN_3_AF__ 0
+#define __GPIO_PF_PIN_3_AF__ 12
 
 /*--
 this:AddPinStateWidget("F", 3)
@@ -2392,23 +2392,23 @@ this:AddPinStateWidget("F", 3)
 /*--
 this:AddPinNameWidget("F", 4)
 --*/
-#define __GPIO_PF_PIN_4_NAME__ PF4_NC
+#define __GPIO_PF_PIN_4_NAME__ FMC_A4
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 4, __GPIO_PF_PIN_4_NAME__);
 
 /*--
 this:AddPinSpeedWidget("F", 4)
 --*/
-#define __GPIO_PF_PIN_4_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PF_PIN_4_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("F", 4)
 --*/
-#define __GPIO_PF_PIN_4_MODE__ _GPIO_MODE_IN
+#define __GPIO_PF_PIN_4_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("F", 4)
 --*/
-#define __GPIO_PF_PIN_4_AF__ 0
+#define __GPIO_PF_PIN_4_AF__ 12
 
 /*--
 this:AddPinStateWidget("F", 4)
@@ -2418,23 +2418,23 @@ this:AddPinStateWidget("F", 4)
 /*--
 this:AddPinNameWidget("F", 5)
 --*/
-#define __GPIO_PF_PIN_5_NAME__ PF5_NC
+#define __GPIO_PF_PIN_5_NAME__ FMC_A5
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 5, __GPIO_PF_PIN_5_NAME__);
 
 /*--
 this:AddPinSpeedWidget("F", 5)
 --*/
-#define __GPIO_PF_PIN_5_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PF_PIN_5_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("F", 5)
 --*/
-#define __GPIO_PF_PIN_5_MODE__ _GPIO_MODE_IN
+#define __GPIO_PF_PIN_5_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("F", 5)
 --*/
-#define __GPIO_PF_PIN_5_AF__ 0
+#define __GPIO_PF_PIN_5_AF__ 12
 
 /*--
 this:AddPinStateWidget("F", 5)
@@ -2444,23 +2444,23 @@ this:AddPinStateWidget("F", 5)
 /*--
 this:AddPinNameWidget("F", 6)
 --*/
-#define __GPIO_PF_PIN_6_NAME__ PF6_NC
+#define __GPIO_PF_PIN_6_NAME__ QSPI_BK1_IO3
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 6, __GPIO_PF_PIN_6_NAME__);
 
 /*--
 this:AddPinSpeedWidget("F", 6)
 --*/
-#define __GPIO_PF_PIN_6_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PF_PIN_6_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("F", 6)
 --*/
-#define __GPIO_PF_PIN_6_MODE__ _GPIO_MODE_IN
+#define __GPIO_PF_PIN_6_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("F", 6)
 --*/
-#define __GPIO_PF_PIN_6_AF__ 0
+#define __GPIO_PF_PIN_6_AF__ 9
 
 /*--
 this:AddPinStateWidget("F", 6)
@@ -2470,23 +2470,23 @@ this:AddPinStateWidget("F", 6)
 /*--
 this:AddPinNameWidget("F", 7)
 --*/
-#define __GPIO_PF_PIN_7_NAME__ PF7_NC
+#define __GPIO_PF_PIN_7_NAME__ QSPI_BK1_IO2
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 7, __GPIO_PF_PIN_7_NAME__);
 
 /*--
 this:AddPinSpeedWidget("F", 7)
 --*/
-#define __GPIO_PF_PIN_7_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PF_PIN_7_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("F", 7)
 --*/
-#define __GPIO_PF_PIN_7_MODE__ _GPIO_MODE_IN
+#define __GPIO_PF_PIN_7_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("F", 7)
 --*/
-#define __GPIO_PF_PIN_7_AF__ 0
+#define __GPIO_PF_PIN_7_AF__ 9
 
 /*--
 this:AddPinStateWidget("F", 7)
@@ -2496,7 +2496,7 @@ this:AddPinStateWidget("F", 7)
 /*--
 this:AddPinNameWidget("F", 8)
 --*/
-#define __GPIO_PF_PIN_8_NAME__ PF8_NC
+#define __GPIO_PF_PIN_8_NAME__ PMOD14_EM_PULSE_IN
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 8, __GPIO_PF_PIN_8_NAME__);
 
 /*--
@@ -2507,7 +2507,7 @@ this:AddPinSpeedWidget("F", 8)
 /*--
 this:AddPinModeWidget("F", 8)
 --*/
-#define __GPIO_PF_PIN_8_MODE__ _GPIO_MODE_IN
+#define __GPIO_PF_PIN_8_MODE__ _GPIO_MODE_IN_PU
 
 /*--
 this:AddPinAltFuncWidget("F", 8)
@@ -2522,23 +2522,23 @@ this:AddPinStateWidget("F", 8)
 /*--
 this:AddPinNameWidget("F", 9)
 --*/
-#define __GPIO_PF_PIN_9_NAME__ PF9_NC
+#define __GPIO_PF_PIN_9_NAME__ QSPI_BK1_IO1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 9, __GPIO_PF_PIN_9_NAME__);
 
 /*--
 this:AddPinSpeedWidget("F", 9)
 --*/
-#define __GPIO_PF_PIN_9_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PF_PIN_9_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("F", 9)
 --*/
-#define __GPIO_PF_PIN_9_MODE__ _GPIO_MODE_IN
+#define __GPIO_PF_PIN_9_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("F", 9)
 --*/
-#define __GPIO_PF_PIN_9_AF__ 0
+#define __GPIO_PF_PIN_9_AF__ 10
 
 /*--
 this:AddPinStateWidget("F", 9)
@@ -2548,7 +2548,7 @@ this:AddPinStateWidget("F", 9)
 /*--
 this:AddPinNameWidget("F", 10)
 --*/
-#define __GPIO_PF_PIN_10_NAME__ PF10_NC
+#define __GPIO_PF_PIN_10_NAME__ ARD_A1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 10, __GPIO_PF_PIN_10_NAME__);
 
 /*--
@@ -2574,23 +2574,23 @@ this:AddPinStateWidget("F", 10)
 /*--
 this:AddPinNameWidget("F", 11)
 --*/
-#define __GPIO_PF_PIN_11_NAME__ PF11_NC
+#define __GPIO_PF_PIN_11_NAME__ FMC_SDNRAS
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 11, __GPIO_PF_PIN_11_NAME__);
 
 /*--
 this:AddPinSpeedWidget("F", 11)
 --*/
-#define __GPIO_PF_PIN_11_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PF_PIN_11_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("F", 11)
 --*/
-#define __GPIO_PF_PIN_11_MODE__ _GPIO_MODE_IN
+#define __GPIO_PF_PIN_11_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("F", 11)
 --*/
-#define __GPIO_PF_PIN_11_AF__ 0
+#define __GPIO_PF_PIN_11_AF__ 12
 
 /*--
 this:AddPinStateWidget("F", 11)
@@ -2600,23 +2600,23 @@ this:AddPinStateWidget("F", 11)
 /*--
 this:AddPinNameWidget("F", 12)
 --*/
-#define __GPIO_PF_PIN_12_NAME__ PF12_NC
+#define __GPIO_PF_PIN_12_NAME__ FMC_A6
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 12, __GPIO_PF_PIN_12_NAME__);
 
 /*--
 this:AddPinSpeedWidget("F", 12)
 --*/
-#define __GPIO_PF_PIN_12_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PF_PIN_12_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("F", 12)
 --*/
-#define __GPIO_PF_PIN_12_MODE__ _GPIO_MODE_IN
+#define __GPIO_PF_PIN_12_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("F", 12)
 --*/
-#define __GPIO_PF_PIN_12_AF__ 0
+#define __GPIO_PF_PIN_12_AF__ 12
 
 /*--
 this:AddPinStateWidget("F", 12)
@@ -2626,23 +2626,23 @@ this:AddPinStateWidget("F", 12)
 /*--
 this:AddPinNameWidget("F", 13)
 --*/
-#define __GPIO_PF_PIN_13_NAME__ PF13_NC
+#define __GPIO_PF_PIN_13_NAME__ FMC_A7
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 13, __GPIO_PF_PIN_13_NAME__);
 
 /*--
 this:AddPinSpeedWidget("F", 13)
 --*/
-#define __GPIO_PF_PIN_13_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PF_PIN_13_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("F", 13)
 --*/
-#define __GPIO_PF_PIN_13_MODE__ _GPIO_MODE_IN
+#define __GPIO_PF_PIN_13_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("F", 13)
 --*/
-#define __GPIO_PF_PIN_13_AF__ 0
+#define __GPIO_PF_PIN_13_AF__ 12
 
 /*--
 this:AddPinStateWidget("F", 13)
@@ -2652,23 +2652,23 @@ this:AddPinStateWidget("F", 13)
 /*--
 this:AddPinNameWidget("F", 14)
 --*/
-#define __GPIO_PF_PIN_14_NAME__ PF14_NC
+#define __GPIO_PF_PIN_14_NAME__ FMC_A8
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 14, __GPIO_PF_PIN_14_NAME__);
 
 /*--
 this:AddPinSpeedWidget("F", 14)
 --*/
-#define __GPIO_PF_PIN_14_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PF_PIN_14_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("F", 14)
 --*/
-#define __GPIO_PF_PIN_14_MODE__ _GPIO_MODE_IN
+#define __GPIO_PF_PIN_14_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("F", 14)
 --*/
-#define __GPIO_PF_PIN_14_AF__ 0
+#define __GPIO_PF_PIN_14_AF__ 12
 
 /*--
 this:AddPinStateWidget("F", 14)
@@ -2678,23 +2678,23 @@ this:AddPinStateWidget("F", 14)
 /*--
 this:AddPinNameWidget("F", 15)
 --*/
-#define __GPIO_PF_PIN_15_NAME__ PF15_NC
+#define __GPIO_PF_PIN_15_NAME__ FMC_A9
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTF_IDX, 15, __GPIO_PF_PIN_15_NAME__);
 
 /*--
 this:AddPinSpeedWidget("F", 15)
 --*/
-#define __GPIO_PF_PIN_15_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PF_PIN_15_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("F", 15)
 --*/
-#define __GPIO_PF_PIN_15_MODE__ _GPIO_MODE_IN
+#define __GPIO_PF_PIN_15_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("F", 15)
 --*/
-#define __GPIO_PF_PIN_15_AF__ 0
+#define __GPIO_PF_PIN_15_AF__ 12
 
 /*--
 this:AddPinStateWidget("F", 15)
@@ -2704,23 +2704,23 @@ this:AddPinStateWidget("F", 15)
 /*--
 this:AddPinNameWidget("G", 0)
 --*/
-#define __GPIO_PG_PIN_0_NAME__ PG0_NC
+#define __GPIO_PG_PIN_0_NAME__ FMC_A10
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 0, __GPIO_PG_PIN_0_NAME__);
 
 /*--
 this:AddPinSpeedWidget("G", 0)
 --*/
-#define __GPIO_PG_PIN_0_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PG_PIN_0_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("G", 0)
 --*/
-#define __GPIO_PG_PIN_0_MODE__ _GPIO_MODE_IN
+#define __GPIO_PG_PIN_0_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("G", 0)
 --*/
-#define __GPIO_PG_PIN_0_AF__ 0
+#define __GPIO_PG_PIN_0_AF__ 12
 
 /*--
 this:AddPinStateWidget("G", 0)
@@ -2730,23 +2730,23 @@ this:AddPinStateWidget("G", 0)
 /*--
 this:AddPinNameWidget("G", 1)
 --*/
-#define __GPIO_PG_PIN_1_NAME__ PG1_NC
+#define __GPIO_PG_PIN_1_NAME__ FMC_A11
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 1, __GPIO_PG_PIN_1_NAME__);
 
 /*--
 this:AddPinSpeedWidget("G", 1)
 --*/
-#define __GPIO_PG_PIN_1_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PG_PIN_1_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("G", 1)
 --*/
-#define __GPIO_PG_PIN_1_MODE__ _GPIO_MODE_IN
+#define __GPIO_PG_PIN_1_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("G", 1)
 --*/
-#define __GPIO_PG_PIN_1_AF__ 0
+#define __GPIO_PG_PIN_1_AF__ 12
 
 /*--
 this:AddPinStateWidget("G", 1)
@@ -2756,23 +2756,23 @@ this:AddPinStateWidget("G", 1)
 /*--
 this:AddPinNameWidget("G", 2)
 --*/
-#define __GPIO_PG_PIN_2_NAME__ PG2_NC
+#define __GPIO_PG_PIN_2_NAME__ FMC_A12
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 2, __GPIO_PG_PIN_2_NAME__);
 
 /*--
 this:AddPinSpeedWidget("G", 2)
 --*/
-#define __GPIO_PG_PIN_2_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PG_PIN_2_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("G", 2)
 --*/
-#define __GPIO_PG_PIN_2_MODE__ _GPIO_MODE_IN
+#define __GPIO_PG_PIN_2_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("G", 2)
 --*/
-#define __GPIO_PG_PIN_2_AF__ 0
+#define __GPIO_PG_PIN_2_AF__ 12
 
 /*--
 this:AddPinStateWidget("G", 2)
@@ -2782,7 +2782,7 @@ this:AddPinStateWidget("G", 2)
 /*--
 this:AddPinNameWidget("G", 3)
 --*/
-#define __GPIO_PG_PIN_3_NAME__ PG3_NC
+#define __GPIO_PG_PIN_3_NAME__ DSI_RESET
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 3, __GPIO_PG_PIN_3_NAME__);
 
 /*--
@@ -2808,23 +2808,23 @@ this:AddPinStateWidget("G", 3)
 /*--
 this:AddPinNameWidget("G", 4)
 --*/
-#define __GPIO_PG_PIN_4_NAME__ PG4_NC
+#define __GPIO_PG_PIN_4_NAME__ FMC_A14
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 4, __GPIO_PG_PIN_4_NAME__);
 
 /*--
 this:AddPinSpeedWidget("G", 4)
 --*/
-#define __GPIO_PG_PIN_4_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PG_PIN_4_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("G", 4)
 --*/
-#define __GPIO_PG_PIN_4_MODE__ _GPIO_MODE_IN
+#define __GPIO_PG_PIN_4_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("G", 4)
 --*/
-#define __GPIO_PG_PIN_4_AF__ 0
+#define __GPIO_PG_PIN_4_AF__ 12
 
 /*--
 this:AddPinStateWidget("G", 4)
@@ -2834,23 +2834,23 @@ this:AddPinStateWidget("G", 4)
 /*--
 this:AddPinNameWidget("G", 5)
 --*/
-#define __GPIO_PG_PIN_5_NAME__ PG5_NC
+#define __GPIO_PG_PIN_5_NAME__ FMC_A15
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 5, __GPIO_PG_PIN_5_NAME__);
 
 /*--
 this:AddPinSpeedWidget("G", 5)
 --*/
-#define __GPIO_PG_PIN_5_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PG_PIN_5_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("G", 5)
 --*/
-#define __GPIO_PG_PIN_5_MODE__ _GPIO_MODE_IN
+#define __GPIO_PG_PIN_5_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("G", 5)
 --*/
-#define __GPIO_PG_PIN_5_AF__ 0
+#define __GPIO_PG_PIN_5_AF__ 12
 
 /*--
 this:AddPinStateWidget("G", 5)
@@ -2860,23 +2860,23 @@ this:AddPinStateWidget("G", 5)
 /*--
 this:AddPinNameWidget("G", 6)
 --*/
-#define __GPIO_PG_PIN_6_NAME__ PG6_NC
+#define __GPIO_PG_PIN_6_NAME__ QSPI_BK1_NCS
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 6, __GPIO_PG_PIN_6_NAME__);
 
 /*--
 this:AddPinSpeedWidget("G", 6)
 --*/
-#define __GPIO_PG_PIN_6_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PG_PIN_6_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("G", 6)
 --*/
-#define __GPIO_PG_PIN_6_MODE__ _GPIO_MODE_IN
+#define __GPIO_PG_PIN_6_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("G", 6)
 --*/
-#define __GPIO_PG_PIN_6_AF__ 0
+#define __GPIO_PG_PIN_6_AF__ 10
 
 /*--
 this:AddPinStateWidget("G", 6)
@@ -2886,23 +2886,23 @@ this:AddPinStateWidget("G", 6)
 /*--
 this:AddPinNameWidget("G", 7)
 --*/
-#define __GPIO_PG_PIN_7_NAME__ PG7_NC
+#define __GPIO_PG_PIN_7_NAME__ SAI_1_MCLKA
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 7, __GPIO_PG_PIN_7_NAME__);
 
 /*--
 this:AddPinSpeedWidget("G", 7)
 --*/
-#define __GPIO_PG_PIN_7_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PG_PIN_7_SPEED__ _GPIO_SPEED_MEDIUM
 
 /*--
 this:AddPinModeWidget("G", 7)
 --*/
-#define __GPIO_PG_PIN_7_MODE__ _GPIO_MODE_IN
+#define __GPIO_PG_PIN_7_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("G", 7)
 --*/
-#define __GPIO_PG_PIN_7_AF__ 0
+#define __GPIO_PG_PIN_7_AF__ 6
 
 /*--
 this:AddPinStateWidget("G", 7)
@@ -2912,23 +2912,23 @@ this:AddPinStateWidget("G", 7)
 /*--
 this:AddPinNameWidget("G", 8)
 --*/
-#define __GPIO_PG_PIN_8_NAME__ PG8_NC
+#define __GPIO_PG_PIN_8_NAME__ FMC_SDCLK
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 8, __GPIO_PG_PIN_8_NAME__);
 
 /*--
 this:AddPinSpeedWidget("G", 8)
 --*/
-#define __GPIO_PG_PIN_8_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PG_PIN_8_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("G", 8)
 --*/
-#define __GPIO_PG_PIN_8_MODE__ _GPIO_MODE_IN
+#define __GPIO_PG_PIN_8_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("G", 8)
 --*/
-#define __GPIO_PG_PIN_8_AF__ 0
+#define __GPIO_PG_PIN_8_AF__ 12
 
 /*--
 this:AddPinStateWidget("G", 8)
@@ -2938,23 +2938,23 @@ this:AddPinStateWidget("G", 8)
 /*--
 this:AddPinNameWidget("G", 9)
 --*/
-#define __GPIO_PG_PIN_9_NAME__ PG9_NC
+#define __GPIO_PG_PIN_9_NAME__ QSPI_BK2_IO2
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 9, __GPIO_PG_PIN_9_NAME__);
 
 /*--
 this:AddPinSpeedWidget("G", 9)
 --*/
-#define __GPIO_PG_PIN_9_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PG_PIN_9_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("G", 9)
 --*/
-#define __GPIO_PG_PIN_9_MODE__ _GPIO_MODE_IN
+#define __GPIO_PG_PIN_9_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("G", 9)
 --*/
-#define __GPIO_PG_PIN_9_AF__ 0
+#define __GPIO_PG_PIN_9_AF__ 9
 
 /*--
 this:AddPinStateWidget("G", 9)
@@ -2964,7 +2964,7 @@ this:AddPinStateWidget("G", 9)
 /*--
 this:AddPinNameWidget("G", 10)
 --*/
-#define __GPIO_PG_PIN_10_NAME__ PG10_NC
+#define __GPIO_PG_PIN_10_NAME__ DCMI_D2
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 10, __GPIO_PG_PIN_10_NAME__);
 
 /*--
@@ -2990,23 +2990,23 @@ this:AddPinStateWidget("G", 10)
 /*--
 this:AddPinNameWidget("G", 11)
 --*/
-#define __GPIO_PG_PIN_11_NAME__ PG11_NC
+#define __GPIO_PG_PIN_11_NAME__ RMII_TX_EN
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 11, __GPIO_PG_PIN_11_NAME__);
 
 /*--
 this:AddPinSpeedWidget("G", 11)
 --*/
-#define __GPIO_PG_PIN_11_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PG_PIN_11_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("G", 11)
 --*/
-#define __GPIO_PG_PIN_11_MODE__ _GPIO_MODE_IN
+#define __GPIO_PG_PIN_11_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("G", 11)
 --*/
-#define __GPIO_PG_PIN_11_AF__ 0
+#define __GPIO_PG_PIN_11_AF__ 11
 
 /*--
 this:AddPinStateWidget("G", 11)
@@ -3016,23 +3016,23 @@ this:AddPinStateWidget("G", 11)
 /*--
 this:AddPinNameWidget("G", 12)
 --*/
-#define __GPIO_PG_PIN_12_NAME__ PG12_NC
+#define __GPIO_PG_PIN_12_NAME__ RMII_TXD1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 12, __GPIO_PG_PIN_12_NAME__);
 
 /*--
 this:AddPinSpeedWidget("G", 12)
 --*/
-#define __GPIO_PG_PIN_12_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PG_PIN_12_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("G", 12)
 --*/
-#define __GPIO_PG_PIN_12_MODE__ _GPIO_MODE_IN
+#define __GPIO_PG_PIN_12_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("G", 12)
 --*/
-#define __GPIO_PG_PIN_12_AF__ 0
+#define __GPIO_PG_PIN_12_AF__ 11
 
 /*--
 this:AddPinStateWidget("G", 12)
@@ -3042,23 +3042,23 @@ this:AddPinStateWidget("G", 12)
 /*--
 this:AddPinNameWidget("G", 13)
 --*/
-#define __GPIO_PG_PIN_13_NAME__ PG13_NC
+#define __GPIO_PG_PIN_13_NAME__ RMII_TXD0
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 13, __GPIO_PG_PIN_13_NAME__);
 
 /*--
 this:AddPinSpeedWidget("G", 13)
 --*/
-#define __GPIO_PG_PIN_13_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PG_PIN_13_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("G", 13)
 --*/
-#define __GPIO_PG_PIN_13_MODE__ _GPIO_MODE_IN
+#define __GPIO_PG_PIN_13_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("G", 13)
 --*/
-#define __GPIO_PG_PIN_13_AF__ 0
+#define __GPIO_PG_PIN_13_AF__ 11
 
 /*--
 this:AddPinStateWidget("G", 13)
@@ -3068,49 +3068,49 @@ this:AddPinStateWidget("G", 13)
 /*--
 this:AddPinNameWidget("G", 14)
 --*/
-#define __GPIO_PG_PIN_14_NAME__ PG14_NC
+#define __GPIO_PG_PIN_14_NAME__ QSPI_BK2_IO3
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 14, __GPIO_PG_PIN_14_NAME__);
 
 /*--
 this:AddPinSpeedWidget("G", 14)
 --*/
-#define __GPIO_PG_PIN_14_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PG_PIN_14_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("G", 14)
 --*/
-#define __GPIO_PG_PIN_14_MODE__ _GPIO_MODE_IN
+#define __GPIO_PG_PIN_14_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("G", 14)
 --*/
-#define __GPIO_PG_PIN_14_AF__ 0
+#define __GPIO_PG_PIN_14_AF__ 9
 
 /*--
 this:AddPinStateWidget("G", 14)
 --*/
-#define __GPIO_PG_PIN_14_STATE__ _HIGH
+#define __GPIO_PG_PIN_14_STATE__ _LOW
 
 /*--
 this:AddPinNameWidget("G", 15)
 --*/
-#define __GPIO_PG_PIN_15_NAME__ PG15_NC
+#define __GPIO_PG_PIN_15_NAME__ FMC_SDNCAS
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTG_IDX, 15, __GPIO_PG_PIN_15_NAME__);
 
 /*--
 this:AddPinSpeedWidget("G", 15)
 --*/
-#define __GPIO_PG_PIN_15_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PG_PIN_15_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("G", 15)
 --*/
-#define __GPIO_PG_PIN_15_MODE__ _GPIO_MODE_IN
+#define __GPIO_PG_PIN_15_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("G", 15)
 --*/
-#define __GPIO_PG_PIN_15_AF__ 0
+#define __GPIO_PG_PIN_15_AF__ 12
 
 /*--
 this:AddPinStateWidget("G", 15)
@@ -3120,13 +3120,13 @@ this:AddPinStateWidget("G", 15)
 /*--
 this:AddPinNameWidget("H", 0)
 --*/
-#define __GPIO_PH_PIN_0_NAME__ PH0_NC
+#define __GPIO_PH_PIN_0_NAME__ OSCIN
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 0, __GPIO_PH_PIN_0_NAME__);
 
 /*--
 this:AddPinSpeedWidget("H", 0)
 --*/
-#define __GPIO_PH_PIN_0_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PH_PIN_0_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("H", 0)
@@ -3146,13 +3146,13 @@ this:AddPinStateWidget("H", 0)
 /*--
 this:AddPinNameWidget("H", 1)
 --*/
-#define __GPIO_PH_PIN_1_NAME__ PH1_NC
+#define __GPIO_PH_PIN_1_NAME__ OSCOUT
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 1, __GPIO_PH_PIN_1_NAME__);
 
 /*--
 this:AddPinSpeedWidget("H", 1)
 --*/
-#define __GPIO_PH_PIN_1_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PH_PIN_1_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("H", 1)
@@ -3172,23 +3172,23 @@ this:AddPinStateWidget("H", 1)
 /*--
 this:AddPinNameWidget("H", 2)
 --*/
-#define __GPIO_PH_PIN_2_NAME__ PH2_NC
+#define __GPIO_PH_PIN_2_NAME__ QSPI_BK2_IO0
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 2, __GPIO_PH_PIN_2_NAME__);
 
 /*--
 this:AddPinSpeedWidget("H", 2)
 --*/
-#define __GPIO_PH_PIN_2_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PH_PIN_2_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("H", 2)
 --*/
-#define __GPIO_PH_PIN_2_MODE__ _GPIO_MODE_IN
+#define __GPIO_PH_PIN_2_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("H", 2)
 --*/
-#define __GPIO_PH_PIN_2_AF__ 0
+#define __GPIO_PH_PIN_2_AF__ 9
 
 /*--
 this:AddPinStateWidget("H", 2)
@@ -3198,23 +3198,23 @@ this:AddPinStateWidget("H", 2)
 /*--
 this:AddPinNameWidget("H", 3)
 --*/
-#define __GPIO_PH_PIN_3_NAME__ PH3_NC
+#define __GPIO_PH_PIN_3_NAME__ QSPI_BK2_IO1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 3, __GPIO_PH_PIN_3_NAME__);
 
 /*--
 this:AddPinSpeedWidget("H", 3)
 --*/
-#define __GPIO_PH_PIN_3_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PH_PIN_3_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("H", 3)
 --*/
-#define __GPIO_PH_PIN_3_MODE__ _GPIO_MODE_IN
+#define __GPIO_PH_PIN_3_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("H", 3)
 --*/
-#define __GPIO_PH_PIN_3_AF__ 0
+#define __GPIO_PH_PIN_3_AF__ 9
 
 /*--
 this:AddPinStateWidget("H", 3)
@@ -3224,23 +3224,23 @@ this:AddPinStateWidget("H", 3)
 /*--
 this:AddPinNameWidget("H", 4)
 --*/
-#define __GPIO_PH_PIN_4_NAME__ PH4_NC
+#define __GPIO_PH_PIN_4_NAME__ ULPI_NXT
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 4, __GPIO_PH_PIN_4_NAME__);
 
 /*--
 this:AddPinSpeedWidget("H", 4)
 --*/
-#define __GPIO_PH_PIN_4_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PH_PIN_4_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("H", 4)
 --*/
-#define __GPIO_PH_PIN_4_MODE__ _GPIO_MODE_IN
+#define __GPIO_PH_PIN_4_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("H", 4)
 --*/
-#define __GPIO_PH_PIN_4_AF__ 0
+#define __GPIO_PH_PIN_4_AF__ 10
 
 /*--
 this:AddPinStateWidget("H", 4)
@@ -3250,23 +3250,23 @@ this:AddPinStateWidget("H", 4)
 /*--
 this:AddPinNameWidget("H", 5)
 --*/
-#define __GPIO_PH_PIN_5_NAME__ PH5_NC
+#define __GPIO_PH_PIN_5_NAME__ FMC_SDNWE
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 5, __GPIO_PH_PIN_5_NAME__);
 
 /*--
 this:AddPinSpeedWidget("H", 5)
 --*/
-#define __GPIO_PH_PIN_5_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PH_PIN_5_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("H", 5)
 --*/
-#define __GPIO_PH_PIN_5_MODE__ _GPIO_MODE_IN
+#define __GPIO_PH_PIN_5_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("H", 5)
 --*/
-#define __GPIO_PH_PIN_5_AF__ 0
+#define __GPIO_PH_PIN_5_AF__ 12
 
 /*--
 this:AddPinStateWidget("H", 5)
@@ -3276,23 +3276,23 @@ this:AddPinStateWidget("H", 5)
 /*--
 this:AddPinNameWidget("H", 6)
 --*/
-#define __GPIO_PH_PIN_6_NAME__ PH6_NC
+#define __GPIO_PH_PIN_6_NAME__ FMC_SDNE1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 6, __GPIO_PH_PIN_6_NAME__);
 
 /*--
 this:AddPinSpeedWidget("H", 6)
 --*/
-#define __GPIO_PH_PIN_6_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PH_PIN_6_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("H", 6)
 --*/
-#define __GPIO_PH_PIN_6_MODE__ _GPIO_MODE_IN
+#define __GPIO_PH_PIN_6_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("H", 6)
 --*/
-#define __GPIO_PH_PIN_6_AF__ 0
+#define __GPIO_PH_PIN_6_AF__ 12
 
 /*--
 this:AddPinStateWidget("H", 6)
@@ -3302,23 +3302,23 @@ this:AddPinStateWidget("H", 6)
 /*--
 this:AddPinNameWidget("H", 7)
 --*/
-#define __GPIO_PH_PIN_7_NAME__ PH7_NC
+#define __GPIO_PH_PIN_7_NAME__ FMC_SDCKE1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 7, __GPIO_PH_PIN_7_NAME__);
 
 /*--
 this:AddPinSpeedWidget("H", 7)
 --*/
-#define __GPIO_PH_PIN_7_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PH_PIN_7_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("H", 7)
 --*/
-#define __GPIO_PH_PIN_7_MODE__ _GPIO_MODE_IN
+#define __GPIO_PH_PIN_7_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("H", 7)
 --*/
-#define __GPIO_PH_PIN_7_AF__ 0
+#define __GPIO_PH_PIN_7_AF__ 12
 
 /*--
 this:AddPinStateWidget("H", 7)
@@ -3328,23 +3328,23 @@ this:AddPinStateWidget("H", 7)
 /*--
 this:AddPinNameWidget("H", 8)
 --*/
-#define __GPIO_PH_PIN_8_NAME__ PH8_NC
+#define __GPIO_PH_PIN_8_NAME__ FMC_D16
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 8, __GPIO_PH_PIN_8_NAME__);
 
 /*--
 this:AddPinSpeedWidget("H", 8)
 --*/
-#define __GPIO_PH_PIN_8_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PH_PIN_8_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("H", 8)
 --*/
-#define __GPIO_PH_PIN_8_MODE__ _GPIO_MODE_IN
+#define __GPIO_PH_PIN_8_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("H", 8)
 --*/
-#define __GPIO_PH_PIN_8_AF__ 0
+#define __GPIO_PH_PIN_8_AF__ 12
 
 /*--
 this:AddPinStateWidget("H", 8)
@@ -3354,23 +3354,23 @@ this:AddPinStateWidget("H", 8)
 /*--
 this:AddPinNameWidget("H", 9)
 --*/
-#define __GPIO_PH_PIN_9_NAME__ PH9_NC
+#define __GPIO_PH_PIN_9_NAME__ FMC_D17
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 9, __GPIO_PH_PIN_9_NAME__);
 
 /*--
 this:AddPinSpeedWidget("H", 9)
 --*/
-#define __GPIO_PH_PIN_9_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PH_PIN_9_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("H", 9)
 --*/
-#define __GPIO_PH_PIN_9_MODE__ _GPIO_MODE_IN
+#define __GPIO_PH_PIN_9_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("H", 9)
 --*/
-#define __GPIO_PH_PIN_9_AF__ 0
+#define __GPIO_PH_PIN_9_AF__ 12
 
 /*--
 this:AddPinStateWidget("H", 9)
@@ -3380,23 +3380,23 @@ this:AddPinStateWidget("H", 9)
 /*--
 this:AddPinNameWidget("H", 10)
 --*/
-#define __GPIO_PH_PIN_10_NAME__ PH10_NC
+#define __GPIO_PH_PIN_10_NAME__ FMC_D18
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 10, __GPIO_PH_PIN_10_NAME__);
 
 /*--
 this:AddPinSpeedWidget("H", 10)
 --*/
-#define __GPIO_PH_PIN_10_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PH_PIN_10_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("H", 10)
 --*/
-#define __GPIO_PH_PIN_10_MODE__ _GPIO_MODE_IN
+#define __GPIO_PH_PIN_10_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("H", 10)
 --*/
-#define __GPIO_PH_PIN_10_AF__ 0
+#define __GPIO_PH_PIN_10_AF__ 12
 
 /*--
 this:AddPinStateWidget("H", 10)
@@ -3406,23 +3406,23 @@ this:AddPinStateWidget("H", 10)
 /*--
 this:AddPinNameWidget("H", 11)
 --*/
-#define __GPIO_PH_PIN_11_NAME__ PH11_NC
+#define __GPIO_PH_PIN_11_NAME__ FMC_D19
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 11, __GPIO_PH_PIN_11_NAME__);
 
 /*--
 this:AddPinSpeedWidget("H", 11)
 --*/
-#define __GPIO_PH_PIN_11_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PH_PIN_11_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("H", 11)
 --*/
-#define __GPIO_PH_PIN_11_MODE__ _GPIO_MODE_IN
+#define __GPIO_PH_PIN_11_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("H", 11)
 --*/
-#define __GPIO_PH_PIN_11_AF__ 0
+#define __GPIO_PH_PIN_11_AF__ 12
 
 /*--
 this:AddPinStateWidget("H", 11)
@@ -3432,23 +3432,23 @@ this:AddPinStateWidget("H", 11)
 /*--
 this:AddPinNameWidget("H", 12)
 --*/
-#define __GPIO_PH_PIN_12_NAME__ PH12_NC
+#define __GPIO_PH_PIN_12_NAME__ FMC_D20
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 12, __GPIO_PH_PIN_12_NAME__);
 
 /*--
 this:AddPinSpeedWidget("H", 12)
 --*/
-#define __GPIO_PH_PIN_12_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PH_PIN_12_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("H", 12)
 --*/
-#define __GPIO_PH_PIN_12_MODE__ _GPIO_MODE_IN
+#define __GPIO_PH_PIN_12_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("H", 12)
 --*/
-#define __GPIO_PH_PIN_12_AF__ 0
+#define __GPIO_PH_PIN_12_AF__ 12
 
 /*--
 this:AddPinStateWidget("H", 12)
@@ -3458,23 +3458,23 @@ this:AddPinStateWidget("H", 12)
 /*--
 this:AddPinNameWidget("H", 13)
 --*/
-#define __GPIO_PH_PIN_13_NAME__ PH13_NC
+#define __GPIO_PH_PIN_13_NAME__ FMC_D21
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 13, __GPIO_PH_PIN_13_NAME__);
 
 /*--
 this:AddPinSpeedWidget("H", 13)
 --*/
-#define __GPIO_PH_PIN_13_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PH_PIN_13_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("H", 13)
 --*/
-#define __GPIO_PH_PIN_13_MODE__ _GPIO_MODE_IN
+#define __GPIO_PH_PIN_13_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("H", 13)
 --*/
-#define __GPIO_PH_PIN_13_AF__ 0
+#define __GPIO_PH_PIN_13_AF__ 12
 
 /*--
 this:AddPinStateWidget("H", 13)
@@ -3484,23 +3484,23 @@ this:AddPinStateWidget("H", 13)
 /*--
 this:AddPinNameWidget("H", 14)
 --*/
-#define __GPIO_PH_PIN_14_NAME__ PH14_NC
+#define __GPIO_PH_PIN_14_NAME__ FMC_D22
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 14, __GPIO_PH_PIN_14_NAME__);
 
 /*--
 this:AddPinSpeedWidget("H", 14)
 --*/
-#define __GPIO_PH_PIN_14_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PH_PIN_14_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("H", 14)
 --*/
-#define __GPIO_PH_PIN_14_MODE__ _GPIO_MODE_IN
+#define __GPIO_PH_PIN_14_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("H", 14)
 --*/
-#define __GPIO_PH_PIN_14_AF__ 0
+#define __GPIO_PH_PIN_14_AF__ 12
 
 /*--
 this:AddPinStateWidget("H", 14)
@@ -3510,23 +3510,23 @@ this:AddPinStateWidget("H", 14)
 /*--
 this:AddPinNameWidget("H", 15)
 --*/
-#define __GPIO_PH_PIN_15_NAME__ PH15_NC
+#define __GPIO_PH_PIN_15_NAME__ FMC_D23
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTH_IDX, 15, __GPIO_PH_PIN_15_NAME__);
 
 /*--
 this:AddPinSpeedWidget("H", 15)
 --*/
-#define __GPIO_PH_PIN_15_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PH_PIN_15_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("H", 15)
 --*/
-#define __GPIO_PH_PIN_15_MODE__ _GPIO_MODE_IN
+#define __GPIO_PH_PIN_15_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("H", 15)
 --*/
-#define __GPIO_PH_PIN_15_AF__ 0
+#define __GPIO_PH_PIN_15_AF__ 12
 
 /*--
 this:AddPinStateWidget("H", 15)
@@ -3536,23 +3536,23 @@ this:AddPinStateWidget("H", 15)
 /*--
 this:AddPinNameWidget("I", 0)
 --*/
-#define __GPIO_PI_PIN_0_NAME__ PI0_NC
+#define __GPIO_PI_PIN_0_NAME__ FMC_D24
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 0, __GPIO_PI_PIN_0_NAME__);
 
 /*--
 this:AddPinSpeedWidget("I", 0)
 --*/
-#define __GPIO_PI_PIN_0_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PI_PIN_0_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("I", 0)
 --*/
-#define __GPIO_PI_PIN_0_MODE__ _GPIO_MODE_IN
+#define __GPIO_PI_PIN_0_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("I", 0)
 --*/
-#define __GPIO_PI_PIN_0_AF__ 0
+#define __GPIO_PI_PIN_0_AF__ 12
 
 /*--
 this:AddPinStateWidget("I", 0)
@@ -3562,23 +3562,23 @@ this:AddPinStateWidget("I", 0)
 /*--
 this:AddPinNameWidget("I", 1)
 --*/
-#define __GPIO_PI_PIN_1_NAME__ PI1_NC
+#define __GPIO_PI_PIN_1_NAME__ FMC_D25
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 1, __GPIO_PI_PIN_1_NAME__);
 
 /*--
 this:AddPinSpeedWidget("I", 1)
 --*/
-#define __GPIO_PI_PIN_1_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PI_PIN_1_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("I", 1)
 --*/
-#define __GPIO_PI_PIN_1_MODE__ _GPIO_MODE_IN
+#define __GPIO_PI_PIN_1_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("I", 1)
 --*/
-#define __GPIO_PI_PIN_1_AF__ 0
+#define __GPIO_PI_PIN_1_AF__ 12
 
 /*--
 this:AddPinStateWidget("I", 1)
@@ -3588,23 +3588,23 @@ this:AddPinStateWidget("I", 1)
 /*--
 this:AddPinNameWidget("I", 2)
 --*/
-#define __GPIO_PI_PIN_2_NAME__ PI2_NC
+#define __GPIO_PI_PIN_2_NAME__ FMC_D26
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 2, __GPIO_PI_PIN_2_NAME__);
 
 /*--
 this:AddPinSpeedWidget("I", 2)
 --*/
-#define __GPIO_PI_PIN_2_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PI_PIN_2_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("I", 2)
 --*/
-#define __GPIO_PI_PIN_2_MODE__ _GPIO_MODE_IN
+#define __GPIO_PI_PIN_2_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("I", 2)
 --*/
-#define __GPIO_PI_PIN_2_AF__ 0
+#define __GPIO_PI_PIN_2_AF__ 12
 
 /*--
 this:AddPinStateWidget("I", 2)
@@ -3614,23 +3614,23 @@ this:AddPinStateWidget("I", 2)
 /*--
 this:AddPinNameWidget("I", 3)
 --*/
-#define __GPIO_PI_PIN_3_NAME__ PI3_NC
+#define __GPIO_PI_PIN_3_NAME__ FMC_D27
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 3, __GPIO_PI_PIN_3_NAME__);
 
 /*--
 this:AddPinSpeedWidget("I", 3)
 --*/
-#define __GPIO_PI_PIN_3_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PI_PIN_3_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("I", 3)
 --*/
-#define __GPIO_PI_PIN_3_MODE__ _GPIO_MODE_IN
+#define __GPIO_PI_PIN_3_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("I", 3)
 --*/
-#define __GPIO_PI_PIN_3_AF__ 0
+#define __GPIO_PI_PIN_3_AF__ 12
 
 /*--
 this:AddPinStateWidget("I", 3)
@@ -3640,23 +3640,23 @@ this:AddPinStateWidget("I", 3)
 /*--
 this:AddPinNameWidget("I", 4)
 --*/
-#define __GPIO_PI_PIN_4_NAME__ PI4_NC
+#define __GPIO_PI_PIN_4_NAME__ FMC_NBL2
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 4, __GPIO_PI_PIN_4_NAME__);
 
 /*--
 this:AddPinSpeedWidget("I", 4)
 --*/
-#define __GPIO_PI_PIN_4_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PI_PIN_4_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("I", 4)
 --*/
-#define __GPIO_PI_PIN_4_MODE__ _GPIO_MODE_IN
+#define __GPIO_PI_PIN_4_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("I", 4)
 --*/
-#define __GPIO_PI_PIN_4_AF__ 0
+#define __GPIO_PI_PIN_4_AF__ 12
 
 /*--
 this:AddPinStateWidget("I", 4)
@@ -3666,23 +3666,23 @@ this:AddPinStateWidget("I", 4)
 /*--
 this:AddPinNameWidget("I", 5)
 --*/
-#define __GPIO_PI_PIN_5_NAME__ PI5_NC
+#define __GPIO_PI_PIN_5_NAME__ FMC_NBL3
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 5, __GPIO_PI_PIN_5_NAME__);
 
 /*--
 this:AddPinSpeedWidget("I", 5)
 --*/
-#define __GPIO_PI_PIN_5_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PI_PIN_5_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("I", 5)
 --*/
-#define __GPIO_PI_PIN_5_MODE__ _GPIO_MODE_IN
+#define __GPIO_PI_PIN_5_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("I", 5)
 --*/
-#define __GPIO_PI_PIN_5_AF__ 0
+#define __GPIO_PI_PIN_5_AF__ 12
 
 /*--
 this:AddPinStateWidget("I", 5)
@@ -3692,23 +3692,23 @@ this:AddPinStateWidget("I", 5)
 /*--
 this:AddPinNameWidget("I", 6)
 --*/
-#define __GPIO_PI_PIN_6_NAME__ PI6_NC
+#define __GPIO_PI_PIN_6_NAME__ FMC_D28
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 6, __GPIO_PI_PIN_6_NAME__);
 
 /*--
 this:AddPinSpeedWidget("I", 6)
 --*/
-#define __GPIO_PI_PIN_6_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PI_PIN_6_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("I", 6)
 --*/
-#define __GPIO_PI_PIN_6_MODE__ _GPIO_MODE_IN
+#define __GPIO_PI_PIN_6_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("I", 6)
 --*/
-#define __GPIO_PI_PIN_6_AF__ 0
+#define __GPIO_PI_PIN_6_AF__ 12
 
 /*--
 this:AddPinStateWidget("I", 6)
@@ -3718,23 +3718,23 @@ this:AddPinStateWidget("I", 6)
 /*--
 this:AddPinNameWidget("I", 7)
 --*/
-#define __GPIO_PI_PIN_7_NAME__ PI7_NC
+#define __GPIO_PI_PIN_7_NAME__ FMC_D29
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 7, __GPIO_PI_PIN_7_NAME__);
 
 /*--
 this:AddPinSpeedWidget("I", 7)
 --*/
-#define __GPIO_PI_PIN_7_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PI_PIN_7_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("I", 7)
 --*/
-#define __GPIO_PI_PIN_7_MODE__ _GPIO_MODE_IN
+#define __GPIO_PI_PIN_7_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("I", 7)
 --*/
-#define __GPIO_PI_PIN_7_AF__ 0
+#define __GPIO_PI_PIN_7_AF__ 12
 
 /*--
 this:AddPinStateWidget("I", 7)
@@ -3744,7 +3744,7 @@ this:AddPinStateWidget("I", 7)
 /*--
 this:AddPinNameWidget("I", 8)
 --*/
-#define __GPIO_PI_PIN_8_NAME__ PI8_NC
+#define __GPIO_PI_PIN_8_NAME__ uSD_DETECT
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 8, __GPIO_PI_PIN_8_NAME__);
 
 /*--
@@ -3755,7 +3755,7 @@ this:AddPinSpeedWidget("I", 8)
 /*--
 this:AddPinModeWidget("I", 8)
 --*/
-#define __GPIO_PI_PIN_8_MODE__ _GPIO_MODE_IN
+#define __GPIO_PI_PIN_8_MODE__ _GPIO_MODE_IN_PU
 
 /*--
 this:AddPinAltFuncWidget("I", 8)
@@ -3770,23 +3770,23 @@ this:AddPinStateWidget("I", 8)
 /*--
 this:AddPinNameWidget("I", 9)
 --*/
-#define __GPIO_PI_PIN_9_NAME__ PI9_NC
+#define __GPIO_PI_PIN_9_NAME__ FMC_D30
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 9, __GPIO_PI_PIN_9_NAME__);
 
 /*--
 this:AddPinSpeedWidget("I", 9)
 --*/
-#define __GPIO_PI_PIN_9_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PI_PIN_9_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("I", 9)
 --*/
-#define __GPIO_PI_PIN_9_MODE__ _GPIO_MODE_IN
+#define __GPIO_PI_PIN_9_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("I", 9)
 --*/
-#define __GPIO_PI_PIN_9_AF__ 0
+#define __GPIO_PI_PIN_9_AF__ 12
 
 /*--
 this:AddPinStateWidget("I", 9)
@@ -3796,23 +3796,23 @@ this:AddPinStateWidget("I", 9)
 /*--
 this:AddPinNameWidget("I", 10)
 --*/
-#define __GPIO_PI_PIN_10_NAME__ PI10_NC
+#define __GPIO_PI_PIN_10_NAME__ FMC_D31
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 10, __GPIO_PI_PIN_10_NAME__);
 
 /*--
 this:AddPinSpeedWidget("I", 10)
 --*/
-#define __GPIO_PI_PIN_10_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PI_PIN_10_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("I", 10)
 --*/
-#define __GPIO_PI_PIN_10_MODE__ _GPIO_MODE_IN
+#define __GPIO_PI_PIN_10_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("I", 10)
 --*/
-#define __GPIO_PI_PIN_10_AF__ 0
+#define __GPIO_PI_PIN_10_AF__ 12
 
 /*--
 this:AddPinStateWidget("I", 10)
@@ -3822,23 +3822,23 @@ this:AddPinStateWidget("I", 10)
 /*--
 this:AddPinNameWidget("I", 11)
 --*/
-#define __GPIO_PI_PIN_11_NAME__ PI11_NC
+#define __GPIO_PI_PIN_11_NAME__ ULPI_DIR
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 11, __GPIO_PI_PIN_11_NAME__);
 
 /*--
 this:AddPinSpeedWidget("I", 11)
 --*/
-#define __GPIO_PI_PIN_11_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PI_PIN_11_SPEED__ _GPIO_SPEED_VERY_HIGH
 
 /*--
 this:AddPinModeWidget("I", 11)
 --*/
-#define __GPIO_PI_PIN_11_MODE__ _GPIO_MODE_IN
+#define __GPIO_PI_PIN_11_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("I", 11)
 --*/
-#define __GPIO_PI_PIN_11_AF__ 0
+#define __GPIO_PI_PIN_11_AF__ 10
 
 /*--
 this:AddPinStateWidget("I", 11)
@@ -3848,7 +3848,7 @@ this:AddPinStateWidget("I", 11)
 /*--
 this:AddPinNameWidget("I", 12)
 --*/
-#define __GPIO_PI_PIN_12_NAME__ PI12_NC
+#define __GPIO_PI_PIN_12_NAME__ LED1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 12, __GPIO_PI_PIN_12_NAME__);
 
 /*--
@@ -3859,7 +3859,7 @@ this:AddPinSpeedWidget("I", 12)
 /*--
 this:AddPinModeWidget("I", 12)
 --*/
-#define __GPIO_PI_PIN_12_MODE__ _GPIO_MODE_IN
+#define __GPIO_PI_PIN_12_MODE__ _GPIO_MODE_PP
 
 /*--
 this:AddPinAltFuncWidget("I", 12)
@@ -3874,7 +3874,7 @@ this:AddPinStateWidget("I", 12)
 /*--
 this:AddPinNameWidget("I", 13)
 --*/
-#define __GPIO_PI_PIN_13_NAME__ PI13_NC
+#define __GPIO_PI_PIN_13_NAME__ LED2
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 13, __GPIO_PI_PIN_13_NAME__);
 
 /*--
@@ -3885,7 +3885,7 @@ this:AddPinSpeedWidget("I", 13)
 /*--
 this:AddPinModeWidget("I", 13)
 --*/
-#define __GPIO_PI_PIN_13_MODE__ _GPIO_MODE_IN
+#define __GPIO_PI_PIN_13_MODE__ _GPIO_MODE_PP
 
 /*--
 this:AddPinAltFuncWidget("I", 13)
@@ -3895,12 +3895,12 @@ this:AddPinAltFuncWidget("I", 13)
 /*--
 this:AddPinStateWidget("I", 13)
 --*/
-#define __GPIO_PI_PIN_13_STATE__ _LOW
+#define __GPIO_PI_PIN_13_STATE__ _HIGH
 
 /*--
 this:AddPinNameWidget("I", 14)
 --*/
-#define __GPIO_PI_PIN_14_NAME__ PI14_NC
+#define __GPIO_PI_PIN_14_NAME__ LED3
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 14, __GPIO_PI_PIN_14_NAME__);
 
 /*--
@@ -3911,7 +3911,7 @@ this:AddPinSpeedWidget("I", 14)
 /*--
 this:AddPinModeWidget("I", 14)
 --*/
-#define __GPIO_PI_PIN_14_MODE__ _GPIO_MODE_IN
+#define __GPIO_PI_PIN_14_MODE__ _GPIO_MODE_PP
 
 /*--
 this:AddPinAltFuncWidget("I", 14)
@@ -3921,12 +3921,12 @@ this:AddPinAltFuncWidget("I", 14)
 /*--
 this:AddPinStateWidget("I", 14)
 --*/
-#define __GPIO_PI_PIN_14_STATE__ _LOW
+#define __GPIO_PI_PIN_14_STATE__ _HIGH
 
 /*--
 this:AddPinNameWidget("I", 15)
 --*/
-#define __GPIO_PI_PIN_15_NAME__ PI15_NC
+#define __GPIO_PI_PIN_15_NAME__ LED4
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTI_IDX, 15, __GPIO_PI_PIN_15_NAME__);
 
 /*--
@@ -3937,7 +3937,7 @@ this:AddPinSpeedWidget("I", 15)
 /*--
 this:AddPinModeWidget("I", 15)
 --*/
-#define __GPIO_PI_PIN_15_MODE__ _GPIO_MODE_IN
+#define __GPIO_PI_PIN_15_MODE__ _GPIO_MODE_PP
 
 /*--
 this:AddPinAltFuncWidget("I", 15)
@@ -3947,12 +3947,12 @@ this:AddPinAltFuncWidget("I", 15)
 /*--
 this:AddPinStateWidget("I", 15)
 --*/
-#define __GPIO_PI_PIN_15_STATE__ _LOW
+#define __GPIO_PI_PIN_15_STATE__ _HIGH
 
 /*--
 this:AddPinNameWidget("J", 0)
 --*/
-#define __GPIO_PJ_PIN_0_NAME__ PJ0_NC
+#define __GPIO_PJ_PIN_0_NAME__ ARD_D7
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 0, __GPIO_PJ_PIN_0_NAME__);
 
 /*--
@@ -3978,7 +3978,7 @@ this:AddPinStateWidget("J", 0)
 /*--
 this:AddPinNameWidget("J", 1)
 --*/
-#define __GPIO_PJ_PIN_1_NAME__ PJ1_NC
+#define __GPIO_PJ_PIN_1_NAME__ OTG_HS_OVERCURRENT
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 1, __GPIO_PJ_PIN_1_NAME__);
 
 /*--
@@ -4004,7 +4004,7 @@ this:AddPinStateWidget("J", 1)
 /*--
 this:AddPinNameWidget("J", 2)
 --*/
-#define __GPIO_PJ_PIN_2_NAME__ PJ2_NC
+#define __GPIO_PJ_PIN_2_NAME__ DSI_TE
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 2, __GPIO_PJ_PIN_2_NAME__);
 
 /*--
@@ -4015,12 +4015,12 @@ this:AddPinSpeedWidget("J", 2)
 /*--
 this:AddPinModeWidget("J", 2)
 --*/
-#define __GPIO_PJ_PIN_2_MODE__ _GPIO_MODE_IN
+#define __GPIO_PJ_PIN_2_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 this:AddPinAltFuncWidget("J", 2)
 --*/
-#define __GPIO_PJ_PIN_2_AF__ 0
+#define __GPIO_PJ_PIN_2_AF__ 13
 
 /*--
 this:AddPinStateWidget("J", 2)
@@ -4030,7 +4030,7 @@ this:AddPinStateWidget("J", 2)
 /*--
 this:AddPinNameWidget("J", 3)
 --*/
-#define __GPIO_PJ_PIN_3_NAME__ PJ3_NC
+#define __GPIO_PJ_PIN_3_NAME__ ARD_D2
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 3, __GPIO_PJ_PIN_3_NAME__);
 
 /*--
@@ -4056,7 +4056,7 @@ this:AddPinStateWidget("J", 3)
 /*--
 this:AddPinNameWidget("J", 4)
 --*/
-#define __GPIO_PJ_PIN_4_NAME__ PJ4_NC
+#define __GPIO_PJ_PIN_4_NAME__ ARD_D4
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 4, __GPIO_PJ_PIN_4_NAME__);
 
 /*--
@@ -4082,7 +4082,7 @@ this:AddPinStateWidget("J", 4)
 /*--
 this:AddPinNameWidget("J", 5)
 --*/
-#define __GPIO_PJ_PIN_5_NAME__ PJ5_NC
+#define __GPIO_PJ_PIN_5_NAME__ ARD_D8
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 5, __GPIO_PJ_PIN_5_NAME__);
 
 /*--
@@ -4108,7 +4108,7 @@ this:AddPinStateWidget("J", 5)
 /*--
 this:AddPinNameWidget("J", 6)
 --*/
-#define __GPIO_PJ_PIN_6_NAME__ PJ6_NC
+#define __GPIO_PJ_PIN_6_NAME__ ARD_D9
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 6, __GPIO_PJ_PIN_6_NAME__);
 
 /*--
@@ -4134,7 +4134,7 @@ this:AddPinStateWidget("J", 6)
 /*--
 this:AddPinNameWidget("J", 7)
 --*/
-#define __GPIO_PJ_PIN_7_NAME__ PJ7_NC
+#define __GPIO_PJ_PIN_7_NAME__ ARD_D6
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 7, __GPIO_PJ_PIN_7_NAME__);
 
 /*--
@@ -4160,7 +4160,7 @@ this:AddPinStateWidget("J", 7)
 /*--
 this:AddPinNameWidget("J", 8)
 --*/
-#define __GPIO_PJ_PIN_8_NAME__ PJ8_NC
+#define __GPIO_PJ_PIN_8_NAME__ ARD_D1
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 8, __GPIO_PJ_PIN_8_NAME__);
 
 /*--
@@ -4186,7 +4186,7 @@ this:AddPinStateWidget("J", 8)
 /*--
 this:AddPinNameWidget("J", 9)
 --*/
-#define __GPIO_PJ_PIN_9_NAME__ PJ9_NC
+#define __GPIO_PJ_PIN_9_NAME__ ARD_D0
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 9, __GPIO_PJ_PIN_9_NAME__);
 
 /*--
@@ -4212,7 +4212,7 @@ this:AddPinStateWidget("J", 9)
 /*--
 this:AddPinNameWidget("J", 10)
 --*/
-#define __GPIO_PJ_PIN_10_NAME__ PJ10_NC
+#define __GPIO_PJ_PIN_10_NAME__ ARD_D11
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 10, __GPIO_PJ_PIN_10_NAME__);
 
 /*--
@@ -4238,7 +4238,7 @@ this:AddPinStateWidget("J", 10)
 /*--
 this:AddPinNameWidget("J", 11)
 --*/
-#define __GPIO_PJ_PIN_11_NAME__ PJ11_NC
+#define __GPIO_PJ_PIN_11_NAME__ ARD_D12
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 11, __GPIO_PJ_PIN_11_NAME__);
 
 /*--
@@ -4264,7 +4264,7 @@ this:AddPinStateWidget("J", 11)
 /*--
 this:AddPinNameWidget("J", 12)
 --*/
-#define __GPIO_PJ_PIN_12_NAME__ PJ12_NC
+#define __GPIO_PJ_PIN_12_NAME__ LCD_BL_CTRL
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 12, __GPIO_PJ_PIN_12_NAME__);
 
 /*--
@@ -4290,7 +4290,7 @@ this:AddPinStateWidget("J", 12)
 /*--
 this:AddPinNameWidget("J", 13)
 --*/
-#define __GPIO_PJ_PIN_13_NAME__ PJ13_NC
+#define __GPIO_PJ_PIN_13_NAME__ PMOD12_RESET
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 13, __GPIO_PJ_PIN_13_NAME__);
 
 /*--
@@ -4301,7 +4301,7 @@ this:AddPinSpeedWidget("J", 13)
 /*--
 this:AddPinModeWidget("J", 13)
 --*/
-#define __GPIO_PJ_PIN_13_MODE__ _GPIO_MODE_IN
+#define __GPIO_PJ_PIN_13_MODE__ _GPIO_MODE_PP
 
 /*--
 this:AddPinAltFuncWidget("J", 13)
@@ -4311,12 +4311,12 @@ this:AddPinAltFuncWidget("J", 13)
 /*--
 this:AddPinStateWidget("J", 13)
 --*/
-#define __GPIO_PJ_PIN_13_STATE__ _LOW
+#define __GPIO_PJ_PIN_13_STATE__ _HIGH
 
 /*--
 this:AddPinNameWidget("J", 14)
 --*/
-#define __GPIO_PJ_PIN_14_NAME__ PJ14_NC
+#define __GPIO_PJ_PIN_14_NAME__ DCMI_PWR_EN
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 14, __GPIO_PJ_PIN_14_NAME__);
 
 /*--
@@ -4342,7 +4342,7 @@ this:AddPinStateWidget("J", 14)
 /*--
 this:AddPinNameWidget("J", 15)
 --*/
-#define __GPIO_PJ_PIN_15_NAME__ PJ15_NC
+#define __GPIO_PJ_PIN_15_NAME__ AUDIO_INT
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTJ_IDX, 15, __GPIO_PJ_PIN_15_NAME__);
 
 /*--
@@ -4368,7 +4368,7 @@ this:AddPinStateWidget("J", 15)
 /*--
 this:AddPinNameWidget("K", 0)
 --*/
-#define __GPIO_PK_PIN_0_NAME__ PK0_NC
+#define __GPIO_PK_PIN_0_NAME__ ARD_D13
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 0, __GPIO_PK_PIN_0_NAME__);
 
 /*--
@@ -4394,7 +4394,7 @@ this:AddPinStateWidget("K", 0)
 /*--
 this:AddPinNameWidget("K", 1)
 --*/
-#define __GPIO_PK_PIN_1_NAME__ PK1_NC
+#define __GPIO_PK_PIN_1_NAME__ ARD_D10
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 1, __GPIO_PK_PIN_1_NAME__);
 
 /*--
@@ -4420,7 +4420,7 @@ this:AddPinStateWidget("K", 1)
 /*--
 this:AddPinNameWidget("K", 2)
 --*/
-#define __GPIO_PK_PIN_2_NAME__ PK2_NC
+#define __GPIO_PK_PIN_2_NAME__ JOY_SEL
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 2, __GPIO_PK_PIN_2_NAME__);
 
 /*--
@@ -4431,7 +4431,7 @@ this:AddPinSpeedWidget("K", 2)
 /*--
 this:AddPinModeWidget("K", 2)
 --*/
-#define __GPIO_PK_PIN_2_MODE__ _GPIO_MODE_IN
+#define __GPIO_PK_PIN_2_MODE__ _GPIO_MODE_IN_PU
 
 /*--
 this:AddPinAltFuncWidget("K", 2)
@@ -4446,7 +4446,7 @@ this:AddPinStateWidget("K", 2)
 /*--
 this:AddPinNameWidget("K", 3)
 --*/
-#define __GPIO_PK_PIN_3_NAME__ PK3_NC
+#define __GPIO_PK_PIN_3_NAME__ JOY_DOWN
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 3, __GPIO_PK_PIN_3_NAME__);
 
 /*--
@@ -4457,7 +4457,7 @@ this:AddPinSpeedWidget("K", 3)
 /*--
 this:AddPinModeWidget("K", 3)
 --*/
-#define __GPIO_PK_PIN_3_MODE__ _GPIO_MODE_IN
+#define __GPIO_PK_PIN_3_MODE__ _GPIO_MODE_IN_PU
 
 /*--
 this:AddPinAltFuncWidget("K", 3)
@@ -4472,7 +4472,7 @@ this:AddPinStateWidget("K", 3)
 /*--
 this:AddPinNameWidget("K", 4)
 --*/
-#define __GPIO_PK_PIN_4_NAME__ PK4_NC
+#define __GPIO_PK_PIN_4_NAME__ JOY_LEFT
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 4, __GPIO_PK_PIN_4_NAME__);
 
 /*--
@@ -4483,7 +4483,7 @@ this:AddPinSpeedWidget("K", 4)
 /*--
 this:AddPinModeWidget("K", 4)
 --*/
-#define __GPIO_PK_PIN_4_MODE__ _GPIO_MODE_IN
+#define __GPIO_PK_PIN_4_MODE__ _GPIO_MODE_IN_PU
 
 /*--
 this:AddPinAltFuncWidget("K", 4)
@@ -4498,7 +4498,7 @@ this:AddPinStateWidget("K", 4)
 /*--
 this:AddPinNameWidget("K", 5)
 --*/
-#define __GPIO_PK_PIN_5_NAME__ PK5_NC
+#define __GPIO_PK_PIN_5_NAME__ JOY_RIGHT
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 5, __GPIO_PK_PIN_5_NAME__);
 
 /*--
@@ -4509,7 +4509,7 @@ this:AddPinSpeedWidget("K", 5)
 /*--
 this:AddPinModeWidget("K", 5)
 --*/
-#define __GPIO_PK_PIN_5_MODE__ _GPIO_MODE_IN
+#define __GPIO_PK_PIN_5_MODE__ _GPIO_MODE_IN_PU
 
 /*--
 this:AddPinAltFuncWidget("K", 5)
@@ -4524,7 +4524,7 @@ this:AddPinStateWidget("K", 5)
 /*--
 this:AddPinNameWidget("K", 6)
 --*/
-#define __GPIO_PK_PIN_6_NAME__ PK6_NC
+#define __GPIO_PK_PIN_6_NAME__ JOY_UP
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 6, __GPIO_PK_PIN_6_NAME__);
 
 /*--
@@ -4535,7 +4535,7 @@ this:AddPinSpeedWidget("K", 6)
 /*--
 this:AddPinModeWidget("K", 6)
 --*/
-#define __GPIO_PK_PIN_6_MODE__ _GPIO_MODE_IN
+#define __GPIO_PK_PIN_6_MODE__ _GPIO_MODE_IN_PU
 
 /*--
 this:AddPinAltFuncWidget("K", 6)
@@ -4550,7 +4550,7 @@ this:AddPinStateWidget("K", 6)
 /*--
 this:AddPinNameWidget("K", 7)
 --*/
-#define __GPIO_PK_PIN_7_NAME__ PK7_NC
+#define __GPIO_PK_PIN_7_NAME__ TOUCH_INT
 _GPIO_PIN_NAME(IOCTL_GPIO_PORTK_IDX, 7, __GPIO_PK_PIN_7_NAME__);
 
 /*--
@@ -4561,7 +4561,7 @@ this:AddPinSpeedWidget("K", 7)
 /*--
 this:AddPinModeWidget("K", 7)
 --*/
-#define __GPIO_PK_PIN_7_MODE__ _GPIO_MODE_IN
+#define __GPIO_PK_PIN_7_MODE__ _GPIO_MODE_IN_PU
 
 /*--
 this:AddPinAltFuncWidget("K", 7)

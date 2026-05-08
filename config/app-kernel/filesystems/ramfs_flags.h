@@ -41,7 +41,7 @@ this:SetTitle("Home > File Systems > ramfs", "The ramfs file system configuratio
 /*--
 this:AddWidget("Spinbox", 8, 4096, "File chain size (bytes)")
 --*/
-#define __RAMFS_FILE_CHAIN_SIZE__ 32
+#define __RAMFS_FILE_CHAIN_SIZE__ 64
 
 #endif /* _RAMFS_FLAGS_H_ */
 /*==============================================================================

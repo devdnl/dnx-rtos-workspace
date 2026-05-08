@@ -49,7 +49,7 @@ this:AddItem("No", "_NO_")
 /*--
 this:AddWidget("Spinbox", 0, 512, "Number of index entries")
 --*/
-#define __FLATFS_INDEX_SIZE__ 0
+#define __FLATFS_INDEX_SIZE__ 32
 
 #endif /* _FLATFS_FLAGS_H_ */
 /*==============================================================================

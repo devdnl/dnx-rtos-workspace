@@ -38,16 +38,16 @@
  *       including that file into the project.
  */
 
-#define __ARCH__ stm32f1
-#define __MEMORY_1__ "rom (rx)  : org = 0x08000000, len = 128k"
-#define __MEMORY_2__ "ram (rwx) : org = 0x20000000, len = 20k"
-#define __MEMORY_3__ ""
-#define __MEMORY_4__ ""
-#define __MEMORY_5__ ""
-#define __MEMORY_6__ ""
-#define __MEMORY_7__ ""
-#define __MEMORY_8__ ""
-#define __MEMORY_9__ ""
+#define __ARCH__ stm32h7
+#define __MEMORY_1__ "flash   (rx)  : org = 0x08000000, len = 256k"
+#define __MEMORY_2__ "axisram (rwx) : org = 0x24000000, len = 512k"
+#define __MEMORY_3__ "sram1   (rwx) : org = 0x30000000, len = 128k"
+#define __MEMORY_4__ "sram2   (rwx) : org = 0x30020000, len = 128k"
+#define __MEMORY_5__ "sram3   (rwx) : org = 0x30040000, len = 32k"
+#define __MEMORY_6__ "sram4   (rwx) : org = 0x38000000, len = 64k"
+#define __MEMORY_7__ "itcm    (rwx) : org = 0x00000000, len = 64k"
+#define __MEMORY_8__ "dtcm    (rw)  : org = 0x20000000, len = 128k"
+#define __MEMORY_9__ "bkp     (rw)  : org = 0x38800000, len = 4k"
 #define __MEMORY_10__ ""
 #define __MEMORY_11__ ""
 #define __MEMORY_12__ ""

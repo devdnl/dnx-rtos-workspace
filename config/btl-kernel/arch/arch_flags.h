@@ -749,9 +749,9 @@ __ENABLE_ADC__=_NO_
 #     this:SetFlagValue("__ENABLE_AFM__", "_NO_")
 # end
 #--*/
-#define __ENABLE_AFM__ _NO_
+#define __ENABLE_AFM__ _YES_
 #/*
-__ENABLE_AFM__=_NO_
+__ENABLE_AFM__=_YES_
 #*/
 
 #/*--
@@ -828,9 +828,9 @@ __ENABLE_DHT11__=_NO_
 #     this:SetFlagValue("__ENABLE_DMA__", "_NO_")
 # end
 #--*/
-#define __ENABLE_DMA__ _NO_
+#define __ENABLE_DMA__ _YES_
 #/*
-__ENABLE_DMA__=_NO_
+__ENABLE_DMA__=_YES_
 #*/
 
 #/*--
@@ -851,9 +851,9 @@ __ENABLE_ENC28J60__=_NO_
 #     this:SetFlagValue("__ENABLE_EMI__", "_NO_")
 # end
 #--*/
-#define __ENABLE_EMI__ _NO_
+#define __ENABLE_EMI__ _YES_
 #/*
-__ENABLE_EMI__=_NO_
+__ENABLE_EMI__=_YES_
 #*/
 
 #/*--
@@ -865,9 +865,9 @@ __ENABLE_EMI__=_NO_
 #     this:SetFlagValue("__ENABLE_ETH__", "_NO_")
 # end
 #--*/
-#define __ENABLE_ETH__ _NO_
+#define __ENABLE_ETH__ _YES_
 #/*
-__ENABLE_ETH__=_NO_
+__ENABLE_ETH__=_YES_
 #*/
 
 #/*--
@@ -902,9 +902,9 @@ __ENABLE_GPIO__=_YES_
 #     this:SetFlagValue("__ENABLE_I2C__", "_NO_")
 # end
 #--*/
-#define __ENABLE_I2C__ _NO_
+#define __ENABLE_I2C__ _YES_
 #/*
-__ENABLE_I2C__=_NO_
+__ENABLE_I2C__=_YES_
 #*/
 
 #/*--
@@ -957,9 +957,9 @@ __ENABLE_LTDC__=_NO_
 # this:PutWidgets("MEMBLOCK")
 # this:SetToolTip("Memory Block driver represented as file.")
 #--*/
-#define __ENABLE_MEMBLOCK__ _NO_
+#define __ENABLE_MEMBLOCK__ _YES_
 #/*
-__ENABLE_MEMBLOCK__=_NO_
+__ENABLE_MEMBLOCK__=_YES_
 #*/
 
 #/*--
@@ -971,9 +971,9 @@ __ENABLE_MEMBLOCK__=_NO_
 #     this:SetFlagValue("__ENABLE_NVM__", "_NO_")
 # end
 #--*/
-#define __ENABLE_NVM__ _NO_
+#define __ENABLE_NVM__ _YES_
 #/*
-__ENABLE_NVM__=_NO_
+__ENABLE_NVM__=_YES_
 #*/
 
 #/*--
@@ -994,9 +994,9 @@ __ENABLE_QSPI__=_NO_
 # this:PutWidgets("PART")
 # this:SetToolTip("Partition device driver.")
 #--*/
-#define __ENABLE_PART__ _NO_
+#define __ENABLE_PART__ _YES_
 #/*
-__ENABLE_PART__=_NO_
+__ENABLE_PART__=_YES_
 #*/
 
 #/*--
@@ -1022,9 +1022,9 @@ __ENABLE_PWM__=_NO_
 #     this:SetFlagValue("__ENABLE_RTC__", "_NO_")
 # end
 #--*/
-#define __ENABLE_RTC__ _NO_
+#define __ENABLE_RTC__ _YES_
 #/*
-__ENABLE_RTC__=_NO_
+__ENABLE_RTC__=_YES_
 #*/
 
 #/*--
@@ -1036,9 +1036,9 @@ __ENABLE_RTC__=_NO_
 #     this:SetFlagValue("__ENABLE_SDMMC__", "_NO_")
 # end
 #--*/
-#define __ENABLE_SDMMC__ _NO_
+#define __ENABLE_SDMMC__ _YES_
 #/*
-__ENABLE_SDMMC__=_NO_
+__ENABLE_SDMMC__=_YES_
 #*/
 
 #/*--
@@ -1075,9 +1075,9 @@ __ENABLE_SND__=_NO_
 #     this:SetFlagValue("__ENABLE_SPI__", "_NO_")
 # end
 #--*/
-#define __ENABLE_SPI__ _NO_
+#define __ENABLE_SPI__ _YES_
 #/*
-__ENABLE_SPI__=_NO_
+__ENABLE_SPI__=_YES_
 #*/
 
 #/*--
@@ -1130,9 +1130,9 @@ __ENABLE_UART__=_YES_
 # this:PutWidgets("URANDOM")
 # this:SetToolTip("Pseudo random generator device.")
 #--*/
-#define __ENABLE_URANDOM__ _NO_
+#define __ENABLE_URANDOM__ _YES_
 #/*
-__ENABLE_URANDOM__=_NO_
+__ENABLE_URANDOM__=_YES_
 #*/
 
 #/*--
@@ -1181,9 +1181,9 @@ __ENABLE_WDG__=_NO_
 # this:PutWidgets("ZERO")
 # this:SetToolTip("Zero data device. Device node is working as /dev/zero or /dev/null.")
 #--*/
-#define __ENABLE_ZERO__ _NO_
+#define __ENABLE_ZERO__ _YES_
 #/*
-__ENABLE_ZERO__=_NO_
+__ENABLE_ZERO__=_YES_
 #*/
 
 #// MODULE LIST END

@@ -84,9 +84,9 @@ __PROJECT_TOOLCHAIN__=arm-none-eabi-
 # this:AddItem("STMicroelectronics STM32H7", "stm32h7")
 # this:AddItem("Raspberry Pi Pico M0+", "rpcm0")
 #--*/
-#define __CPU_ARCH__ stm32f1
+#define __CPU_ARCH__ stm32h7
 #/*
-__CPU_ARCH__=stm32f1
+__CPU_ARCH__=stm32h7
 #*/
 
 #/*--
@@ -99,13 +99,13 @@ __CPU_ARCH__=stm32f1
 # this:AddWidget("Editline", false, "Appset executable address")
 # this:SetToolTip("Start address of application executable section.")
 #--*/
-#define __PROJ_APPSET_TABLE_ADDRESS__ 0x08010000
+#define __PROJ_APPSET_TABLE_ADDRESS__ 0x08040000
 
 #/*--
 # this:AddWidget("Editline", false, "Appset executable size")
 # this:SetToolTip("Size of application executable section.")
 #--*/
-#define __PROJ_APPSET_TABLE_SIZE__ 1024k
+#define __PROJ_APPSET_TABLE_SIZE__ 256k
 
 #/*--
 # this:AddWidget("Editline", false, "Appset RAM address")

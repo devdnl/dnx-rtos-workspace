@@ -40,7 +40,7 @@
 this:SetTitle("Home > Microcontroller > I²C", "The I²C module configuration.")
 ++*/
 
-/*------------------------------------------------------------------------------
+/*----------------------------------------------------------------------------*/
 /*--
 this:AddWidget("Editline", false, "I2C1 SCL frequency [Hz]")
 --*/
@@ -86,7 +86,7 @@ uC.AddPriorityItems(this, false)
 --*/
 #define __I2C1_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
-/*------------------------------------------------------------------------------
+/*----------------------------------------------------------------------------*/
 /*--
 this:AddExtraWidget("Label", "I2C2_GAP", "")
 this:AddWidget("Editline", false, "I2C2 SCL frequency [Hz]")
@@ -133,7 +133,7 @@ uC.AddPriorityItems(this, false)
 --*/
 #define __I2C2_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
-/*------------------------------------------------------------------------------
+/*----------------------------------------------------------------------------*/
 /*--
 this:AddExtraWidget("Label", "I2C3_GAP", "")
 this:AddWidget("Editline", false, "I2C3 SCL frequency [Hz]")
@@ -182,7 +182,7 @@ uC.AddPriorityItems(this, false)
 #define __I2C3_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 
-/*------------------------------------------------------------------------------
+/*----------------------------------------------------------------------------*/
 /*--
 this:AddExtraWidget("Label", "I2C4_GAP", "")
 this:AddWidget("Editline", false, "I2C4 SCL frequency [Hz]")

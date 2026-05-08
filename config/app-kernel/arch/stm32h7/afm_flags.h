@@ -73,7 +73,7 @@ this:AddWidget("Combobox", "Ethernet PHY interface")
 this:AddItem("MII interface", "(0 << SYSCFG_PMCR_EPIS_SEL_Pos)")
 this:AddItem("RMII interface", "(4 << SYSCFG_PMCR_EPIS_SEL_Pos)")
 --*/
-#define __AFM_MII_RMII_SEL__ (0 << SYSCFG_PMCR_EPIS_SEL_Pos)
+#define __AFM_MII_RMII_SEL__ (4 << SYSCFG_PMCR_EPIS_SEL_Pos)
 
 /*--
 this:AddWidget("Combobox", "Analog switch Booster voltage selection")
@@ -252,7 +252,7 @@ this:AddWidget("Combobox", "Compensation cell enable")
 this:AddItem("I/O compensation cell disabled", "(0 << SYSCFG_CCCSR_EN_Pos)")
 this:AddItem("I/O compensation cell enabled", "(1 << SYSCFG_CCCSR_EN_Pos)")
 --*/
-#define __AFM_CMP_EN__ (0 << SYSCFG_CCCSR_EN_Pos)
+#define __AFM_CMP_EN__ (1 << SYSCFG_CCCSR_EN_Pos)
 
 
 /*--
