@@ -174,6 +174,28 @@ conf_parser_t *conf_parser__delete(conf_parser_t *this)
 
 //==============================================================================
 /**
+ * @brief  Clear configuration.
+ *
+ * @param  this         parser instance
+ *
+ * @param  Return NULL.
+ */
+//==============================================================================
+int conf_parser__clear(conf_parser_t *this)
+{
+        if (this) {
+                if (mutex_lock(this->mutex, MAX_DELAY_MS)) {
+                        clear_conf(this);
+                        mutex_unlock(this->mutex);
+                        return ESUCC;
+                }
+        }
+
+        return EINVAL;
+}
+
+//==============================================================================
+/**
  * @brief  Load selected configuration file.
  *
  * @param  this         parser instance
@@ -507,7 +529,7 @@ int conf_parser__save_buffer(conf_parser_t *this, char *buf, size_t bufsz)
                 return conf_parser_status__arg_error;
         }
 
-        size_t n = 0;
+        int n = 0;
 
         if (mutex_lock(this->mutex, MAX_DELAY_MS)) {
 

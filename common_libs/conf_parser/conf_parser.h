@@ -77,6 +77,8 @@ extern conf_parser_t *conf_parser__new(const char *path);
 
 extern conf_parser_t *conf_parser__delete(conf_parser_t *parser);
 
+extern int conf_parser__clear(conf_parser_t *parser);
+
 extern int conf_parser__set_file_path(conf_parser_t *parser, const char *path);
 
 extern int conf_parser__load_file(conf_parser_t *parser, const char *path);
