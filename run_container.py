@@ -4,10 +4,13 @@ import subprocess
 import os
 import sys
 import platform
+import hashlib
 from pathlib import Path
 
 image_name = "dnx-rtos-workspace"
-container_name = Path.cwd().name
+cwd = Path.cwd()
+short_hash =  hashlib.sha1(str(cwd).encode()).hexdigest()[:8]
+container_name = Path.cwd().name + '-' + short_hash
 cont_platform = "docker"
 pwd = os.path.abspath(os.getcwd())
 
