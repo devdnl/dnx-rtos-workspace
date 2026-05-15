@@ -216,7 +216,7 @@ static void sys_free(void *ptr)
 static void protect(_libc_heap_t *heap)
 {
         while (atomic_flag_test_and_set_explicit(&heap->futex, memory_order_acquire)) {
-                msleep(1);
+                msleep(0);
         }
 }
 
