@@ -811,6 +811,15 @@ extern int register_appset(const void **appset_address_array, size_t appset_coun
 //==============================================================================
 extern int set_heap_allocation_size(size_t alloc_size);
 
+//==============================================================================
+/**
+ * @brief  Check consistency of heap memory.
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+extern int check_heap_consistency(void);
+
 /**@}*/
 
 #ifdef __cplusplus

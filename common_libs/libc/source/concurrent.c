@@ -39,6 +39,8 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include "libc/source/syscall.h"
+#include "libc/include/dnx/os.h"
+#include "libc/include/unistd.h"
 
 /*==============================================================================
   Local macros
@@ -1170,6 +1172,58 @@ int queue_get_space_available(queue_t *queue)
         }
 
         return items;
+}
+
+//==============================================================================
+/**
+ * @brief  Futex initialization.
+ *
+ * @param  futex        futex object
+ */
+//==============================================================================
+void futex_init(futex_t *futex)
+{
+        atomic_flag_clear(futex);
+}
+
+//==============================================================================
+/**
+ * @brief  Futex lock.
+ *
+ * @param  futex        futex object
+ * @param  timeout      timeout in milliseconds
+ *
+ * @return If futex is locked then <b>true</b> is returned. If futex is used or
+ * timeout occur or object is incorrect, then <b>false</b> is returned.
+ */
+//==============================================================================
+bool futex_lock(futex_t *futex, u32_t timeout)
+{
+        clock_t tref = get_uptime_ms();
+
+        while (atomic_flag_test_and_set_explicit(futex, memory_order_acquire)) {
+
+                if ((timeout != WAIT_FOREVER_MS) and (get_uptime_ms() - tref >= timeout)) {
+                        errno = ETIME;
+                        return false;
+                } else {
+                        msleep(0);
+                }
+        }
+
+        return true;
+}
+
+//==============================================================================
+/**
+ * @brief  Futex unlock.
+ *
+ * @param  futex        futex object
+ */
+//==============================================================================
+void futex_unlock(futex_t *futex)
+{
+        atomic_flag_clear_explicit(futex, memory_order_release);
 }
 
 /*==============================================================================

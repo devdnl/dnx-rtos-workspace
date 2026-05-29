@@ -55,7 +55,7 @@
   Local symbolic constants/macros
 ==============================================================================*/
 #define BOOTLOADER_VERSION    "1.1"
-#define APP_BASE_ADDRESS      0x08040000
+#define APP_BASE_ADDRESS      0x08080000
 #define QSPI_BASE_ADDRESS     0x90000000
 #define PATH_VENDOR           "/sd/vendor"
 #define PATH_UPDATE_FILE      PATH_VENDOR "/project.fpkg"

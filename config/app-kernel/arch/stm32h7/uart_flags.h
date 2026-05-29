@@ -221,7 +221,7 @@ this:AddItem("1000000", "")
 this:AddItem("2000000", "")
 this:AddItem("4000000", "")
 --*/
-#define __UART_DEFAULT_BAUD__ 115200
+#define __UART_DEFAULT_BAUD__ 460800
 
 
 /*--

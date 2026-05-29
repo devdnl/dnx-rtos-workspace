@@ -55,6 +55,7 @@ extern "C" {
 #include <stdio.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <stdatomic.h>
 
 /*==============================================================================
   Exported macros
@@ -135,6 +136,13 @@ typedef struct _libc_sem sem_t;
  * The type represent mutex object. Fields are private.
  */
 typedef struct _libc_mutex mutex_t;
+
+/**
+ * @brief Futex object
+ *
+ * The type represent futex object.
+ */
+typedef atomic_flag futex_t;
 
 /**
  * @brief Mutex type
@@ -2485,6 +2493,37 @@ extern int q_items(int fd);
  */
 //==============================================================================
 extern int q_space(int fd);
+
+//==============================================================================
+/**
+ * @brief  Futex initialization.
+ *
+ * @param  futex        futex object
+ */
+//==============================================================================
+extern void futex_init(futex_t *futex);
+
+//==============================================================================
+/**
+ * @brief  Futex lock.
+ *
+ * @param  futex        futex object
+ * @param  timeout      timeout in milliseconds
+ *
+ * @return If futex is locked then <b>true</b> is returned. If futex is used or
+ * timeout occur or object is incorrect, then <b>false</b> is returned.
+ */
+//==============================================================================
+extern bool futex_lock(futex_t *futex, u32_t timeout);
+
+//==============================================================================
+/**
+ * @brief  Futex unlock.
+ *
+ * @param  futex        futex object
+ */
+//==============================================================================
+extern void futex_unlock(futex_t *futex);
 
 #ifdef __cplusplus
 }

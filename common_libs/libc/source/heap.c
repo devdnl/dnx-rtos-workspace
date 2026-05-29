@@ -73,12 +73,14 @@
 #include <stdatomic.h>
 #include <unistd.h>
 
-// #define HEAP_OVERFLOW_CHECK 1
-// #define HEAP_SANITY_CHECK   1
-
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define HEAP_OVERFLOW_CHECK     __LIBC_HEAP_OVERFLOW_CHECK__
+#define HEAP_SANITY_CHECK       __LIBC_HEAP_SANITY_CHECK__
+#define HEAP_OVF_REGION_SIZE    __LIBC_HEAP_OVF_REGION_SIZE__
+#define HEAP_EMPTY_REGION_VALUE __LIBC_HEAP_EMPTY_REGION_VALUE__
+
 #define HEAP_ALIGN      sizeof(int)
 #define HEAP_BLOCK_SIZE 4
 
@@ -94,15 +96,14 @@
 #define SIZEOF_STRUCT_MEM      MEM_ALIGN_SIZE(sizeof(struct mem))
 
 #if HEAP_OVERFLOW_CHECK
-#define MEM_SANITY_REGION_BEFORE_ALIGNED 8
-#define MEM_SANITY_REGION_AFTER_ALIGNED  8
+#define MEM_SANITY_REGION_BEFORE_ALIGNED HEAP_OVF_REGION_SIZE
+#define MEM_SANITY_REGION_AFTER_ALIGNED  HEAP_OVF_REGION_SIZE
 #else
 #define MEM_SANITY_REGION_BEFORE_ALIGNED 0
 #define MEM_SANITY_REGION_AFTER_ALIGNED  0
 #endif
 
-#define MEM_SANITY_OFFSET   MEM_SANITY_REGION_BEFORE_ALIGNED
-#define MEM_SANITY_OVERHEAD (MEM_SANITY_REGION_BEFORE_ALIGNED + MEM_SANITY_REGION_AFTER_ALIGNED)
+#define MEM_SANITY_OFFSET MEM_SANITY_REGION_BEFORE_ALIGNED
 
 #define HEAP_ASSERT(_cond, _msg, _fail_var) \
         if (!(_cond)) {                     \
@@ -113,21 +114,19 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-typedef atomic_flag futex_t;
-
 typedef struct mem_heap {
-        struct mem_heap     *next;
-        struct mem          *ram_end;
+        struct mem_heap *next;
+        struct mem *ram_end;
         struct mem volatile *lfree;
-        size_t               size;
-        size_t               used;
-        uint_aligned8_t      ram_start[];
+        size_t size;
+        size_t used;
+        uint_aligned8_t ram_start[];
 } mem_heap_t;
 
 struct _libc_heap {
-        futex_t     futex;
+        atomic_flag futex;
         mem_heap_t *mem;
-        size_t      alloc_block_size;
+        size_t alloc_block_size;
 };
 
 /**
@@ -138,7 +137,7 @@ struct _libc_heap {
 struct mem {
         size_t next; /**< index (-> ram[next]) of the next struct      */
         size_t prev; /**< index (-> ram[prev]) of the previous struct  */
-        u8_t   used; /**< 1: this area is used; 0: this area is unused */
+        u8_t used;   /**< 1: this area is used; 0: this area is unused */
 #if HEAP_OVERFLOW_CHECK
         size_t user_size; /**< user size used in overflow check */
 #endif
@@ -164,6 +163,16 @@ static bool mem_heap_check_consistency(mem_heap_t *heap);
 
 //==============================================================================
 /**
+ * @brief  Immediate abort running program.
+ */
+//==============================================================================
+static void abort_now(void)
+{
+        _libc_syscall(_LIBC_SYS_PROCESSABORT);
+}
+
+//==============================================================================
+/**
  * @brief  Memory allocate syscall.
  *
  * @param  size         block size
@@ -174,7 +183,7 @@ static bool mem_heap_check_consistency(mem_heap_t *heap);
 static void *sys_malloc(size_t size)
 {
         void *mem;
-        int   err = _libc_syscall(_LIBC_SYS_MALLOC, &size, &mem);
+        int err = _libc_syscall(_LIBC_SYS_MALLOC, &size, &mem);
         return err ? NULL : mem;
 }
 
@@ -190,7 +199,7 @@ static void *sys_malloc(size_t size)
 static void *sys_zalloc(size_t size)
 {
         void *mem;
-        int   err = _libc_syscall(_LIBC_SYS_ZALLOC, &size, &mem);
+        int err = _libc_syscall(_LIBC_SYS_ZALLOC, &size, &mem);
         return err ? NULL : mem;
 }
 
@@ -289,6 +298,10 @@ static void plug_holes(mem_heap_t *heap, struct mem *mem)
                 if (nmem->next != heap->size) {
                         ptr_to_mem(heap, nmem->next)->prev = mem_to_ptr(heap, mem);
                 }
+
+#if HEAP_OVERFLOW_CHECK
+                memset(nmem, HEAP_EMPTY_REGION_VALUE, MEM_ALIGN_SIZE(sizeof(*nmem)));
+#endif
         }
 
         /* plug hole backward */
@@ -304,6 +317,10 @@ static void plug_holes(mem_heap_t *heap, struct mem *mem)
                 if (mem->next != heap->size) {
                         ptr_to_mem(heap, mem->next)->prev = mem_to_ptr(heap, pmem);
                 }
+
+#if HEAP_OVERFLOW_CHECK
+                memset(mem, HEAP_EMPTY_REGION_VALUE, MEM_ALIGN_SIZE(sizeof(*mem)));
+#endif
         }
 }
 
@@ -319,9 +336,9 @@ static void plug_holes(mem_heap_t *heap, struct mem *mem)
 //==============================================================================
 static int link_valid(mem_heap_t *heap, struct mem *mem)
 {
-        size_t      rmem_idx = mem_to_ptr(heap, mem);
-        struct mem *nmem     = ptr_to_mem(heap, mem->next);
-        struct mem *pmem     = ptr_to_mem(heap, mem->prev);
+        size_t rmem_idx = mem_to_ptr(heap, mem);
+        struct mem *nmem = ptr_to_mem(heap, mem->next);
+        struct mem *pmem = ptr_to_mem(heap, mem->prev);
 
         if ((mem->next > heap->size) || (mem->prev > heap->size) ||
                 ((mem->prev != rmem_idx) && (pmem->next != rmem_idx)) ||
@@ -345,18 +362,20 @@ static int link_valid(mem_heap_t *heap, struct mem *mem)
 //==============================================================================
 static void overflow_check_raw(void *p, size_t size)
 {
-        u8_t *m = (u8_t *)p + size;
-        for (u16_t k = 0; k < MEM_SANITY_REGION_AFTER_ALIGNED; k++) {
-                if (m[k] != 0xcd) {
-                        printf("HEAP: block overflow @ %p\n", p);
+        u8_t *m = (u8_t *)p - MEM_SANITY_REGION_BEFORE_ALIGNED;
+        for (u16_t k = 0; k < MEM_SANITY_REGION_BEFORE_ALIGNED; k++) {
+                if (m[k] != 0xFA) {
+                        printf("HEAP: block underflow @ %p, pos %u\n", p, k);
+                        abort_now();
                         break;
                 }
         }
 
-        m = (u8_t *)p - MEM_SANITY_REGION_BEFORE_ALIGNED;
-        for (u16_t k = 0; k < MEM_SANITY_REGION_BEFORE_ALIGNED; k++) {
-                if (m[k] != 0xcd) {
-                        printf("HEAP: block underflow @ %p\n", p);
+        m = (u8_t *)p + size;
+        for (u16_t k = 0; k < MEM_SANITY_REGION_AFTER_ALIGNED; k++) {
+                if (m[k] != 0xFB) {
+                        printf("HEAP: block overflow @ %p, pos %u\n", p, k);
+                        abort_now();
                         break;
                 }
         }
@@ -373,10 +392,10 @@ static void overflow_check_raw(void *p, size_t size)
 static void mem_overflow_init_raw(void *p, size_t size)
 {
         u8_t *m = (u8_t *)p - MEM_SANITY_REGION_BEFORE_ALIGNED;
-        memset(m, 0xcd, MEM_SANITY_REGION_BEFORE_ALIGNED);
+        memset(m, 0xFA, MEM_SANITY_REGION_BEFORE_ALIGNED);
 
         m = (u8_t *)p + size;
-        memset(m, 0xcd, MEM_SANITY_REGION_AFTER_ALIGNED);
+        memset(m, 0xFB, MEM_SANITY_REGION_AFTER_ALIGNED);
 }
 #endif
 
@@ -391,7 +410,7 @@ static void mem_overflow_init_raw(void *p, size_t size)
 static void overflow_init_element(struct mem *mem, size_t user_size)
 {
 #if HEAP_OVERFLOW_CHECK
-        void *p        = (u8_t *)mem + SIZEOF_STRUCT_MEM + MEM_SANITY_OFFSET;
+        void *p = (u8_t *)mem + SIZEOF_STRUCT_MEM + MEM_SANITY_OFFSET;
         mem->user_size = user_size;
         mem_overflow_init_raw(p, user_size);
 #else
@@ -439,15 +458,20 @@ static mem_heap_t *mem_heap_new(size_t size)
                 return NULL;
         }
 
+#if HEAP_OVERFLOW_CHECK
+        memset(heap, HEAP_EMPTY_REGION_VALUE, sizeof(*heap) + size);
+        memset(heap, 0, sizeof(*heap));
+#endif
+
         heap->used = 0;
         heap->size = MEM_ALIGN_SIZE(size - SIZEOF_STRUCT_MEM - MEM_SANITY_OFFSET);
 
         struct mem *mem = (struct mem *)heap->ram_start;
-        mem->next       = heap->size;
-        mem->prev       = 0;
-        mem->used       = 0;
+        mem->next = heap->size;
+        mem->prev = 0;
+        mem->used = 0;
 
-        heap->ram_end       = ptr_to_mem(heap, heap->size);
+        heap->ram_end = ptr_to_mem(heap, heap->size);
         heap->ram_end->used = 1;
         heap->ram_end->next = heap->size;
         heap->ram_end->prev = heap->size;
@@ -493,12 +517,14 @@ static void mem_heap_free(mem_heap_t *heap, void *rmem)
 
         if ((((uintptr_t)rmem) & (HEAP_ALIGN - 1)) != 0) {
                 printf("HEAP: free: unaligned pointer\n");
+                abort_now();
                 return;
         }
 
         struct mem *mem = (struct mem *)(void *)((u8_t *)rmem - (SIZEOF_STRUCT_MEM + MEM_SANITY_OFFSET));
         if ((u8_t *)mem < heap->ram_start || (u8_t *)rmem + BLOCK_MIN_SIZE_ALIGNED > (u8_t *)heap->ram_end) {
                 printf("HEAP: free: illegal pointer\n");
+                abort_now();
                 return;
         }
 
@@ -506,16 +532,19 @@ static void mem_heap_free(mem_heap_t *heap, void *rmem)
 
         if (mem->used > 1) {
                 printf("HEAP: free: invalid usage indicator\n");
+                abort_now();
                 return;
         }
 
         if (!mem->used) {
                 printf("HEAP: free: block unused\n");
+                abort_now();
                 return;
         }
 
         if (!link_valid(heap, mem)) {
                 printf("HEAP: free: invalid link\n");
+                abort_now();
                 return;
         }
 
@@ -527,12 +556,19 @@ static void mem_heap_free(mem_heap_t *heap, void *rmem)
         }
 
         size_t blksize = (mem->next - (size_t)(((u8_t *)mem - heap->ram_start)));
+
+#if HEAP_SANITY_CHECK and HEAP_OVERFLOW_CHECK
+        u8_t *ptr = (u8_t *)mem + SIZEOF_STRUCT_MEM;
+        memset(ptr, HEAP_EMPTY_REGION_VALUE,
+                MEM_SANITY_REGION_BEFORE_ALIGNED + mem->user_size + MEM_SANITY_REGION_AFTER_ALIGNED);
+#endif
+
         heap->used -= blksize;
 
         plug_holes(heap, mem);
 
 #if HEAP_SANITY_CHECK
-        mem_heap_check_consistency(_libc_heap);
+        mem_heap_check_consistency(heap);
 #endif
 }
 
@@ -549,9 +585,9 @@ static void mem_heap_free(mem_heap_t *heap, void *rmem)
 //==============================================================================
 static void *mem_heap_malloc(mem_heap_t *heap, size_t size_in)
 {
-        size_t      ptr, ptr2, size;
+        size_t ptr, ptr2, size;
         struct mem *mem, *mem2;
-        size_t      used;
+        size_t used;
 
         if (!heap || size_in == 0 || !heap->size) {
                 return NULL;
@@ -574,7 +610,7 @@ static void *mem_heap_malloc(mem_heap_t *heap, size_t size_in)
          * Scan through the heap searching for a free block that is big enough,
          * beginning with the lowest free block.
          */
-        for (ptr    = mem_to_ptr(heap, heap->lfree); ptr < heap->size - size;
+        for (ptr = mem_to_ptr(heap, heap->lfree); ptr < heap->size - size;
                 ptr = ptr_to_mem(heap, ptr)->next) {
 
                 mem = ptr_to_mem(heap, ptr);
@@ -602,7 +638,7 @@ static void *mem_heap_malloc(mem_heap_t *heap, size_t size_in)
                                 ptr2 = ptr + SIZEOF_STRUCT_MEM + size;
 
                                 /* create mem2 struct */
-                                mem2       = ptr_to_mem(heap, ptr2);
+                                mem2 = ptr_to_mem(heap, ptr2);
                                 mem2->used = 0;
                                 mem2->next = mem->next;
                                 mem2->prev = ptr;
@@ -646,7 +682,7 @@ static void *mem_heap_malloc(mem_heap_t *heap, size_t size_in)
                         overflow_init_element(mem, size_in);
 
 #if HEAP_SANITY_CHECK
-                        mem_heap_check_consistency(_libc_heap);
+                        mem_heap_check_consistency(heap);
 #endif
 
                         return (u8_t *)mem + SIZEOF_STRUCT_MEM + MEM_SANITY_OFFSET;
@@ -669,115 +705,153 @@ static bool mem_heap_check_consistency(mem_heap_t *heap)
 {
         bool fail = false;
 
-        HEAP_ASSERT(MEM_ALIGN_SIZE(heap->size) == heap->size, "HEAP: invalid heap size alignment", fail);
+        HEAP_ASSERT(MEM_ALIGN_SIZE(heap->size) == heap->size, "HEAP: invalid heap size alignment\n", fail);
         if (fail) {
+                abort_now();
                 return false;
         }
 
         /* begin with first element here */
         struct mem *mem = (struct mem *)heap->ram_start;
 
-        HEAP_ASSERT((mem->used == 0) || (mem->used == 1), "HEAP: element used invalid", fail);
+        HEAP_ASSERT((mem->used == 0) || (mem->used == 1), "HEAP: element used invalid\n", fail);
         if (fail) {
+                abort_now();
                 return false;
         }
 
         u8_t last_used = mem->used;
 
-        HEAP_ASSERT(mem->prev == 0, "HEAP: element prev ptr not valid", fail);
+        HEAP_ASSERT(mem->prev == 0, "HEAP: element prev ptr not valid\n", fail);
         if (fail) {
+                abort_now();
                 return false;
         }
 
-        HEAP_ASSERT(mem->next <= heap->size, "HEAP: element next ptr invalid", fail);
+        HEAP_ASSERT(mem->next <= heap->size, "HEAP: element next ptr invalid\n", fail);
         if (fail) {
+                abort_now();
                 return false;
         }
 
         HEAP_ASSERT(MEM_ALIGN_SIZE(ptr_to_mem(heap, mem->next) == ptr_to_mem(heap, mem->next)),
-                "HEAP: element next ptr unaligned", fail);
+                "HEAP: element next ptr unaligned\n", fail);
         if (fail) {
+                abort_now();
                 return false;
         }
 
         /* check all elements before the end of the heap */
         size_t max = heap->size / SIZEOF_STRUCT_MEM;
 
-        for (mem    = ptr_to_mem(heap, mem->next); ((u8_t *)mem > heap->ram_start) && (mem < heap->ram_end);
+        for (mem = ptr_to_mem(heap, mem->next); ((u8_t *)mem > heap->ram_start) && (mem < heap->ram_end);
                 mem = ptr_to_mem(heap, mem->next)) {
 
-                HEAP_ASSERT(MEM_ALIGN_SIZE((uintptr_t)mem) == (uintptr_t)mem, "HEAP: element unaligned",
+#if HEAP_OVERFLOW_CHECK
+                if (mem->used) {
+                        overflow_check_element(mem);
+                } else {
+                        u8_t *ptr = (u8_t *)mem + SIZEOF_STRUCT_MEM;
+                        size_t blksize = (mem->next - (size_t)(((u8_t *)mem - heap->ram_start))) -
+                                SIZEOF_STRUCT_MEM;
+
+                        for (size_t i = 0; i < blksize; i++) {
+                                HEAP_ASSERT(ptr[i] == HEAP_EMPTY_REGION_VALUE,
+                                        "HEAP: empty element overwritten\n", fail);
+                                if (fail) {
+                                        abort_now();
+                                        return false;
+                                }
+                        }
+                }
+#endif
+
+                HEAP_ASSERT(MEM_ALIGN_SIZE((uintptr_t)mem) == (uintptr_t)mem, "HEAP: element unaligned\n",
                         fail);
                 if (fail) {
+                        abort_now();
                         return false;
                 }
 
-                HEAP_ASSERT(mem->prev <= heap->size, "HEAP: element prev ptr invalid", fail);
+                HEAP_ASSERT(mem->prev <= heap->size, "HEAP: element prev ptr invalid\n", fail);
                 if (fail) {
+                        abort_now();
                         return false;
                 }
 
-                HEAP_ASSERT(mem->next <= heap->size, "HEAP: element next ptr invalid", fail);
+                HEAP_ASSERT(mem->next <= heap->size, "HEAP: element next ptr invalid\n", fail);
                 if (fail) {
+                        abort_now();
                         return false;
                 }
 
                 HEAP_ASSERT(MEM_ALIGN_SIZE(ptr_to_mem(heap, mem->prev) == ptr_to_mem(heap, mem->prev)),
-                        "HEAP: element prev ptr unaligned", fail);
+                        "HEAP: element prev ptr unaligned\n", fail);
                 if (fail) {
+                        abort_now();
                         return false;
                 }
 
                 HEAP_ASSERT(MEM_ALIGN_SIZE(ptr_to_mem(heap, mem->next) == ptr_to_mem(heap, mem->next)),
-                        "HEAP: element next ptr unaligned", fail);
+                        "HEAP: element next ptr unaligned\n", fail);
                 if (fail) {
+                        abort_now();
                         return false;
                 }
 
                 if (last_used == 0) {
                         /* 2 unused elements in a row? */
-                        HEAP_ASSERT(mem->used == 1, "HEAP: 2 element unused in row?", fail);
+                        HEAP_ASSERT(mem->used == 1, "HEAP: 2 element unused in row?\n", fail);
                         if (fail) {
+                                abort_now();
                                 return false;
                         }
                 } else {
-                        HEAP_ASSERT((mem->used == 0) || (mem->used == 1), "HEAP: element used invalid", fail);
+                        HEAP_ASSERT((mem->used == 0) || (mem->used == 1), "HEAP: element used invalid\n",
+                                fail);
                         if (fail) {
+                                abort_now();
                                 return false;
                         }
                 }
 
-                HEAP_ASSERT(link_valid(heap, mem), "HEAP: element link invalid", fail);
+                HEAP_ASSERT(link_valid(heap, mem), "HEAP: element link invalid\n", fail);
                 if (fail) {
+                        abort_now();
                         return false;
                 }
 
                 /* used/unused altering */
                 last_used = mem->used;
 
-                HEAP_ASSERT(--max > 0, "HEAP: sanity: dead loop", fail);
+                HEAP_ASSERT(--max > 0, "HEAP: sanity: dead loop\n", fail);
                 if (fail) {
+                        abort_now();
                         return false;
                 }
         }
 
-        HEAP_ASSERT(mem == ptr_to_mem(heap, heap->size), "HEAP: end ptr sanity", fail);
+        HEAP_ASSERT(mem == ptr_to_mem(heap, heap->size), "HEAP: end ptr sanity\n", fail);
         if (fail) {
+                abort_now();
                 return false;
         }
 
-        HEAP_ASSERT(mem->used == 1, "HEAP: element used invalid", fail);
+        HEAP_ASSERT(mem->used == 1, "HEAP: element used invalid\n", fail);
         if (fail) {
+                abort_now();
                 return false;
         }
 
-        HEAP_ASSERT(mem->prev == heap->size, "HEAP: element prev ptr invalid", fail);
+        HEAP_ASSERT(mem->prev == heap->size, "HEAP: element prev ptr invalid\n", fail);
         if (fail) {
+                abort_now();
                 return false;
         }
 
-        HEAP_ASSERT(mem->next == heap->size, "HEAP: element next ptr invalid", fail);
+        HEAP_ASSERT(mem->next == heap->size, "HEAP: element next ptr invalid\n", fail);
         if (fail) {
+                abort_now();
                 return false;
         }
 
@@ -897,7 +971,7 @@ _libc_heap_t *_libc_heap_new(size_t alloc_block_size)
 
         atomic_flag_clear(&heap->futex);
         heap->alloc_block_size = alloc_block_size;
-        heap->mem              = NULL;
+        heap->mem = NULL;
 
         return heap;
 }
@@ -946,7 +1020,7 @@ void *_libc_heap_free(_libc_heap_t *heap, void *ptr)
                 return NULL;
         }
 
-        mem_heap_t *mem      = heap->mem;
+        mem_heap_t *mem = heap->mem;
         mem_heap_t *mem_prev = NULL;
 
         protect(heap);
@@ -971,7 +1045,7 @@ void *_libc_heap_free(_libc_heap_t *heap, void *ptr)
                 }
 
                 mem_prev = mem;
-                mem      = mem->next;
+                mem = mem->next;
         }
 
         unprotect(heap);
@@ -995,8 +1069,8 @@ void *_libc_heap_malloc(_libc_heap_t *heap, size_t size)
                 return NULL;
         }
 
-        void       *ptr      = NULL;
-        mem_heap_t *mem      = heap->mem;
+        void *ptr = NULL;
+        mem_heap_t *mem = heap->mem;
         mem_heap_t *mem_last = heap->mem;
 
         protect(heap);
@@ -1010,7 +1084,7 @@ void *_libc_heap_malloc(_libc_heap_t *heap, size_t size)
                 }
 
                 mem_last = mem;
-                mem      = mem->next;
+                mem = mem->next;
         }
 
         if (not ptr) {
@@ -1018,10 +1092,10 @@ void *_libc_heap_malloc(_libc_heap_t *heap, size_t size)
 
                 if (mem_last) {
                         mem_last->next = mem_heap_new(heap_size);
-                        mem            = mem_last->next;
+                        mem = mem_last->next;
                 } else {
                         heap->mem = mem_heap_new(heap_size);
-                        mem       = heap->mem;
+                        mem = heap->mem;
                 }
 
                 if (mem) {
@@ -1049,8 +1123,8 @@ size_t _libc_heap_get_free(_libc_heap_t *heap)
                 return 0;
         }
 
-        size_t      free = 0;
-        mem_heap_t *mem  = heap->mem;
+        size_t free = 0;
+        mem_heap_t *mem = heap->mem;
 
         protect(heap);
 
@@ -1079,8 +1153,8 @@ size_t _libc_heap_get_used(_libc_heap_t *heap)
                 return 0;
         }
 
-        size_t      used = 0;
-        mem_heap_t *mem  = heap->mem;
+        size_t used = 0;
+        mem_heap_t *mem = heap->mem;
 
         protect(heap);
 
@@ -1109,8 +1183,8 @@ size_t _libc_heap_get_size(_libc_heap_t *heap)
                 return 0;
         }
 
-        size_t      size = 0;
-        mem_heap_t *mem  = heap->mem;
+        size_t size = 0;
+        mem_heap_t *mem = heap->mem;
 
         protect(heap);
 
@@ -1140,8 +1214,8 @@ size_t _libc_heap_get_block_size(_libc_heap_t *heap, void *ptr)
                 return 0;
         }
 
-        size_t      size = 0;
-        mem_heap_t *mem  = heap->mem;
+        size_t size = 0;
+        mem_heap_t *mem = heap->mem;
 
         protect(heap);
 
@@ -1174,8 +1248,8 @@ bool _libc_heap_is_consistent(_libc_heap_t *heap)
                 return false;
         }
 
-        bool        consistent = false;
-        mem_heap_t *mem        = heap->mem;
+        bool consistent = false;
+        mem_heap_t *mem = heap->mem;
 
         protect(heap);
 

@@ -64,6 +64,41 @@ this:SetToolTip("File with ioctl() function requests definitions. The headers ar
 --*/
 #define __LIBC_IOCTL_REQUEST_FILE__ "../../build/ioctl/ioctl_requests.h"
 
+/*--
+this:AddWidget("Combobox", "Heap sanity check on alloc and free")
+this:AddItem("Yes", "_YES_")
+this:AddItem("No", "_NO_")
+this:SetToolTip("Flag enable heap sanity check on memory allocation and free.")
+--*/
+#define __LIBC_HEAP_SANITY_CHECK__ _NO_
+
+/*--
+this:AddWidget("Combobox", "Heap overflow check")
+this:AddItem("Yes", "_YES_")
+this:AddItem("No", "_NO_")
+this:SetToolTip("Flag enable heap overflow check on memory freeing and sanity check.")
+--*/
+#define __LIBC_HEAP_OVERFLOW_CHECK__ _NO_
+
+/*--
+this:AddWidget("Combobox", "Heap overflow region size")
+this:AddItem("8 + 8", "8")
+this:AddItem("16 + 16", "16")
+this:AddItem("32 + 32", "32")
+this:AddItem("64 + 64", "64")
+this:AddItem("128 + 128", "128")
+this:SetToolTip("Flag set size of memory region guard used for undeflow/overflow detection. "..
+                "The value is doubled because guard regions are before and after allocated memory.")
+--*/
+#define __LIBC_HEAP_OVF_REGION_SIZE__ 8
+
+/*--
+this:AddWidget("Spinbox", 0, 255, "Heap empty region value")
+this:SetToolTip("This value is taken into account when heap overflow detection is enabled. "..
+        "This flag determines the value that should be used for deallocated memory regions to detect overwrite errors.")
+--*/
+#define __LIBC_HEAP_EMPTY_REGION_VALUE__ 0xFE
+
 #endif /* _LIBC_FLAGS_H_ */
 /*==============================================================================
   End of file

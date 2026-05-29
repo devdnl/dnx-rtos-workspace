@@ -86,6 +86,18 @@ int set_heap_allocation_size(size_t alloc_size)
 
 //==============================================================================
 /**
+ * @brief  Check consistency of heap memory.
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+int check_heap_consistency(void)
+{
+        return _libc_heap_is_consistent(get_heap()) ? 0 : EILSEQ;
+}
+
+//==============================================================================
+/**
  * @brief Function allocates memory block.
  *
  * The malloc() function allocates <i>size</i> bytes and returns a pointer to the
@@ -106,7 +118,7 @@ void *_libc_malloc(size_t size)
 {
         _libc_heap_t *heap = get_heap();
         if (!heap) {
-                heap       = _libc_heap_new(ALLOC_BLOCK_SIZE);
+                heap = _libc_heap_new(ALLOC_BLOCK_SIZE);
                 get_heap() = heap;
         }
 
