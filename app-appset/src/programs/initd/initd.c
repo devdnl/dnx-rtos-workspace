@@ -292,7 +292,7 @@ static void mount_file_systems(void)
         }
 
         mkdir("/sd", 0666);
-        mount("fatfs", "/dev/sd0p1", "/sd", "");
+        mount("ext4fs", "/dev/sd0p1", "/sd", "");
 
         /*
          * ROMFS at address 0x08070000

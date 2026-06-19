@@ -40,6 +40,7 @@ Brief   Simple line editor
 #include <sys/ioctl.h>
 #include <llist/llist.h>
 #include <dnx/misc.h>
+#include <sys/stat.h>
 
 /*==============================================================================
   Local macros
@@ -200,6 +201,12 @@ static int save_file_content(llist_t **content, const char *path)
 {
         int err = -1;
 
+        struct stat fstat;
+        if (stat(path, &fstat) != 0) {
+                memset(&fstat, 0, sizeof(fstat));
+                fstat.st_mode = S_IRUSR | S_IWUSR;
+        }
+
         snprintf(global->buf, sizeof(global->buf), "%s~", path);
         snprintf(global->bufline, sizeof(global->bufline), "%s.~", path);
 
@@ -215,6 +222,7 @@ static int save_file_content(llist_t **content, const char *path)
 
                 fclose(out);
 
+                chmod(global->buf, fstat.st_mode);
                 rename(path, global->bufline);
                 rename(global->buf, path);
                 remove(global->bufline);
