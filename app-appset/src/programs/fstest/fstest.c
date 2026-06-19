@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 
         global->verbose = isstreq(argv[1], "-v");
 
-        process_stat_t proc_stat;
+        process_stat_t proc_stat = {0};
         process_stat(getpid(), &proc_stat);
         u16_t stack_max_usage = proc_stat.stack_max_usage;
 

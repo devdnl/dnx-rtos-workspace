@@ -65,6 +65,7 @@
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
         memstat_t mem;
+        char cmdline[128];
         process_stat_t pstat;
         bool show_threads;
         uint refresh_inteval_s;
@@ -149,6 +150,9 @@ int main(int argc, char *argv[])
                         "PID PR   MEMBS STSLV %%STU  %%CPU  SCPS TH RES CMD" VT100_RESET_ATTRIBUTES "\n");
 
                 size_t seek = 0;
+                global->pstat.cmdline_buf = global->cmdline;
+                global->pstat.cmdline_len = sizeof(global->cmdline);
+
                 while (process_stat_seek(seek++, &global->pstat) == 0) {
                         char cpu_load_str[7];
                         if (global->pstat.threads_count == 0) {
@@ -177,7 +181,7 @@ int main(int argc, char *argv[])
                                 global->pstat.dir_count + global->pstat.files_count +
                                         global->pstat.mutexes_count + global->pstat.queue_count +
                                         global->pstat.semaphores_count + global->pstat.socket_count,
-                                global->pstat.name);
+                                global->pstat.cmdline_buf);
 
                         if (global->show_threads) {
                                 for (int tid = 0; tid < 32; tid++) {

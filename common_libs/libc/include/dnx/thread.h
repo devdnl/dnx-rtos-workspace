@@ -116,9 +116,9 @@ extern "C" {
 #define STACK_DEPTH_CUSTOM(depth)
 #endif
 
-#define mutex_scope(_mtx, _timeout)\
-for (mutex_t *__mtx = _mtx; __mtx; mutex_unlock(__mtx), __mtx = NULL)\
-        for (bool _ = mutex_lock(__mtx, _timeout); _; _ = false)
+#define mutex_scope(_mtx, _timeout)                                           \
+        for (mutex_t *__mtx = _mtx; __mtx; mutex_unlock(__mtx), __mtx = NULL) \
+                for (bool _ = mutex_lock(__mtx, _timeout); _; _ = false)
 
 /*==============================================================================
   Exported object types
@@ -172,15 +172,15 @@ typedef int (*thread_func_t)(void *arg);
  * The type is used to configure process settings.
  */
 typedef struct {
-        int         fd_stdin;           //!< stdin  file object pointer (major)
-        int         fd_stdout;          //!< stdout file object pointer (major)
-        int         fd_stderr;          //!< stderr file object pointer (major)
-        const char *p_stdin;            //!< stdin  file path (minor)
-        const char *p_stdout;           //!< stdout file path (minor)
-        const char *p_stderr;           //!< stderr file path (minor)
-        const char *cwd;                //!< working directory path
-        i16_t       priority;           //!< process priority
-        bool        detached;           //!< independent process (no parent)
+        int fd_stdin;         //!< stdin  file object pointer (major)
+        int fd_stdout;        //!< stdout file object pointer (major)
+        int fd_stderr;        //!< stderr file object pointer (major)
+        const char *p_stdin;  //!< stdin  file path (minor)
+        const char *p_stdout; //!< stdout file path (minor)
+        const char *p_stderr; //!< stderr file path (minor)
+        const char *cwd;      //!< working directory path
+        i16_t priority;       //!< process priority
+        bool detached;        //!< independent process (no parent)
 } process_attr_t;
 
 /**
@@ -189,22 +189,23 @@ typedef struct {
  * The type represent process statistics.
  */
 typedef struct {
-        const char *name;               //!< process name
-        pid_t       pid;                //!< process ID
-        size_t      memory_usage;       //!< memory usage (allocated by process)
-        u16_t       memory_block_count; //!< number of used memory blocks
-        u16_t       files_count;        //!< number of opened files
-        u16_t       dir_count;          //!< number of opened directories
-        u16_t       mutexes_count;      //!< number of used mutexes
-        u16_t       semaphores_count;   //!< number of used semaphores
-        u16_t       queue_count;        //!< number of used queues
-        u16_t       socket_count;       //!< number of used sockets
-        u16_t       threads_count;      //!< number of threads
-        u16_t       CPU_load;           //!< CPU load (1% = 10)
-        u16_t       stack_size;         //!< stack size
-        u16_t       stack_max_usage;    //!< max stack usage
-        i16_t       priority;           //!< priority
-        u16_t       syscalls_per_sec;   //!< syscalls per second
+        char *cmdline_buf;        //!< process command line buffer (destination)
+        size_t cmdline_len;       //!< process command line buffer length
+        pid_t pid;                //!< process ID
+        size_t memory_usage;      //!< memory usage (allocated by process)
+        u16_t memory_block_count; //!< number of used memory blocks
+        u16_t files_count;        //!< number of opened files
+        u16_t dir_count;          //!< number of opened directories
+        u16_t mutexes_count;      //!< number of used mutexes
+        u16_t semaphores_count;   //!< number of used semaphores
+        u16_t queue_count;        //!< number of used queues
+        u16_t socket_count;       //!< number of used sockets
+        u16_t threads_count;      //!< number of threads
+        u16_t CPU_load;           //!< CPU load (1% = 10)
+        u16_t stack_size;         //!< stack size
+        u16_t stack_max_usage;    //!< max stack usage
+        i16_t priority;           //!< priority
+        u16_t syscalls_per_sec;   //!< syscalls per second
 } process_stat_t;
 
 /**
@@ -213,12 +214,12 @@ typedef struct {
  * The type represent thread attributes that configures thread settings.
  */
 typedef struct {
-        tid_t       tid;                //!< thread ID
-        u16_t       CPU_load;           //!< CPU load (1% = 10)
-        u16_t       stack_size;         //!< stack size
-        u16_t       stack_max_usage;    //!< max stack usage
-        i16_t       priority;           //!< priority
-        u16_t       syscalls_per_sec;   //!< syscalls per second
+        tid_t tid;              //!< thread ID
+        u16_t CPU_load;         //!< CPU load (1% = 10)
+        u16_t stack_size;       //!< stack size
+        u16_t stack_max_usage;  //!< max stack usage
+        i16_t priority;         //!< priority
+        u16_t syscalls_per_sec; //!< syscalls per second
 } thread_stat_t;
 
 /**
@@ -227,9 +228,9 @@ typedef struct {
  * The type represent thread attributes that configures thread settings.
  */
 typedef struct {
-        size_t stack_depth;             //!< stack depth
-        i16_t  priority;                //!< thread priority
-        bool   detached;                //!< independent thread (without join possibility)
+        size_t stack_depth; //!< stack depth
+        i16_t priority;     //!< thread priority
+        bool detached;      //!< independent thread (without join possibility)
 } thread_attr_t;
 
 /*==============================================================================
@@ -1114,7 +1115,6 @@ static inline int thread_get_current_core(u8_t *core)
         int err = _libc_syscall(_LIBC_SYS_GETCURRENTCORE, core);
         return err ? -1 : 0;
 }
-
 
 //==============================================================================
 /**
