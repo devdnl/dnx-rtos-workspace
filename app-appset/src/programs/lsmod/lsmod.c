@@ -90,13 +90,13 @@ int main(int argc, char *argv[])
 
         printf(VT100_FONT_BOLD "ID" VT100_CURSOR_BACKWARD(99)
                         VT100_CURSOR_FORWARD(4) "Name" VT100_CURSOR_BACKWARD(99)
-                                VT100_CURSOR_FORWARD(% u) "Instances" VT100_RESET_ATTRIBUTES "\n",
+                                VT100_CURSOR_FORWARD(%u) "Instances" VT100_RESET_ATTRIBUTES "\n",
                 max_name_len + 5);
 
         for (size_t i = 0; i < drv_number; i++) {
 
                 printf("%d" VT100_CURSOR_BACKWARD(99) VT100_CURSOR_FORWARD(4) "%s" VT100_CURSOR_BACKWARD(99)
-                                VT100_CURSOR_FORWARD(% u) "%d\n",
+                                VT100_CURSOR_FORWARD(%u) "%d\n",
                         i, get_driver_name(i), max_name_len + 5, get_number_of_driver_instances(i));
         }
 
