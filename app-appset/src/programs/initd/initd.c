@@ -291,8 +291,8 @@ static void mount_file_systems(void)
                 ioctl(fd, IOCTL_PART__READ_MBR);
         }
 
-        mkdir("/sd", 0666);
-        mount("ext4fs", "/dev/sd0p1", "/sd", "");
+        mkdir("/mnt", 0666);
+        mount("ext4fs", "/dev/sd0p1", "/mnt", "");
 
         /*
          * ROMFS at address 0x08070000
@@ -431,7 +431,7 @@ static void start_user_programs(void)
                 .priority = PRIORITY_NORMAL,
         };
 
-        process_create("netmgr --daemon /netmgr.conf", &attr2);
+        process_create("netmgr --daemon /mnt/netmgr.conf", &attr2);
 }
 
 //==============================================================================

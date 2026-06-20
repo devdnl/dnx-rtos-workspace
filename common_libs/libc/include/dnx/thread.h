@@ -55,7 +55,6 @@ extern "C" {
 #include <stdio.h>
 #include <errno.h>
 #include <stdbool.h>
-#include <stdatomic.h>
 
 /*==============================================================================
   Exported macros
@@ -142,7 +141,7 @@ typedef struct _libc_mutex mutex_t;
  *
  * The type represent futex object.
  */
-typedef atomic_flag futex_t;
+typedef struct atomicflag futex_t;
 
 /**
  * @brief Mutex type

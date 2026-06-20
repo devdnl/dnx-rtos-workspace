@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <sys/stat.h>
+#include <stdatomic.h>
 #include "libc/source/syscall.h"
 #include "libc/include/dnx/os.h"
 #include "libc/include/unistd.h"
@@ -67,26 +68,32 @@ struct _libc_queue {
 typedef struct {
         void **global_ref;
         void **app_ctx_ref;
-        int   *errno_ref;
+        int *errno_ref;
 } dnxrtctx_t;
 
 /**
  * @brief Process attributes passed to the syscall.
  */
 typedef struct {
-        void (*at_init)(void *);  //!< function called at init before main()
-        void       *at_init_ctx;  //!< context of at_init function
-        const char *cwd;          //!< working directory path
-        size_t      app_ctx_size; //!< size of application context object
-        int         fd_stdin;     //!< stdin file descriptor (major)
-        int         fd_stdout;    //!< stdin file descriptor (major)
-        int         fd_stderr;    //!< stdin file descriptor (major)
-        const char *p_stdin;      //!< stdin  file path (minor)
-        const char *p_stdout;     //!< stdout file path (minor)
-        const char *p_stderr;     //!< stderr file path (minor)
-        i16_t       priority;     //!< process priority
-        bool        detached;     //!< independent process (no parent)
+        void (*at_init)(void *); //!< function called at init before main()
+        void *at_init_ctx;       //!< context of at_init function
+        const char *cwd;         //!< working directory path
+        size_t app_ctx_size;     //!< size of application context object
+        int fd_stdin;            //!< stdin file descriptor (major)
+        int fd_stdout;           //!< stdin file descriptor (major)
+        int fd_stderr;           //!< stdin file descriptor (major)
+        const char *p_stdin;     //!< stdin  file path (minor)
+        const char *p_stdout;    //!< stdout file path (minor)
+        const char *p_stderr;    //!< stderr file path (minor)
+        i16_t priority;          //!< process priority
+        bool detached;           //!< independent process (no parent)
 } _syscall_process_attr_t;
+
+struct atomicflag {
+        atomic_flag flag;
+};
+
+static_assert(sizeof(struct atomicflag) == sizeof(atomic_flag), "");
 
 /*==============================================================================
   Local function prototypes
@@ -189,17 +196,17 @@ pid_t process_create(const char *cmd, const process_attr_t *attr)
         pid_t pid = 0;
 
         _syscall_process_attr_t sys_attr;
-        sys_attr.fd_stdin     = attr->fd_stdin;
-        sys_attr.fd_stdout    = attr->fd_stdout;
-        sys_attr.fd_stderr    = attr->fd_stderr;
-        sys_attr.p_stdin      = attr->p_stdin;
-        sys_attr.p_stdout     = attr->p_stdout;
-        sys_attr.p_stderr     = attr->p_stderr;
-        sys_attr.cwd          = attr->cwd;
-        sys_attr.detached     = attr->detached;
-        sys_attr.priority     = attr->priority;
-        sys_attr.at_init      = process_at_init;
-        sys_attr.at_init_ctx  = (void *)attr;
+        sys_attr.fd_stdin = attr->fd_stdin;
+        sys_attr.fd_stdout = attr->fd_stdout;
+        sys_attr.fd_stderr = attr->fd_stderr;
+        sys_attr.p_stdin = attr->p_stdin;
+        sys_attr.p_stdout = attr->p_stdout;
+        sys_attr.p_stderr = attr->p_stderr;
+        sys_attr.cwd = attr->cwd;
+        sys_attr.detached = attr->detached;
+        sys_attr.priority = attr->priority;
+        sys_attr.at_init = process_at_init;
+        sys_attr.at_init_ctx = (void *)attr;
         sys_attr.app_ctx_size = sizeof(_libc_app_ctx_t);
 
         // keep _syscall_process_attr_t as small as possible because is stored
@@ -489,7 +496,7 @@ int sem_getvalue(int fd)
         }
 
         size_t ctr;
-        int    err = _libc_syscall(_LIBC_SYS_SEMAPHOREGETVALUE, &fd, &ctr);
+        int err = _libc_syscall(_LIBC_SYS_SEMAPHOREGETVALUE, &fd, &ctr);
         return err ? -1 : (int)ctr;
 }
 
@@ -895,7 +902,7 @@ int q_recv_peek(int fd, void *item, u32_t timeout)
 int q_items(int fd)
 {
         size_t count = 0;
-        int    err   = _libc_syscall(_LIBC_SYS_QUEUEITEMSCOUNT, &fd, &count);
+        int err = _libc_syscall(_LIBC_SYS_QUEUEITEMSCOUNT, &fd, &count);
         return err ? -1 : (int)count;
 }
 
@@ -916,7 +923,7 @@ int q_items(int fd)
 int q_space(int fd)
 {
         size_t count = 0;
-        int    err   = _libc_syscall(_LIBC_SYS_QUEUEFREESPACE, &fd, &count);
+        int err = _libc_syscall(_LIBC_SYS_QUEUEFREESPACE, &fd, &count);
         return err ? -1 : (int)count;
 }
 
@@ -1201,7 +1208,7 @@ bool futex_lock(futex_t *futex, u32_t timeout)
 {
         clock_t tref = get_uptime_ms();
 
-        while (atomic_flag_test_and_set_explicit(futex, memory_order_acquire)) {
+        while (atomic_flag_test_and_set_explicit(&futex->flag, memory_order_acquire)) {
 
                 if ((timeout != WAIT_FOREVER_MS) and (get_uptime_ms() - tref >= timeout)) {
                         errno = ETIME;
@@ -1223,7 +1230,7 @@ bool futex_lock(futex_t *futex, u32_t timeout)
 //==============================================================================
 void futex_unlock(futex_t *futex)
 {
-        atomic_flag_clear_explicit(futex, memory_order_release);
+        atomic_flag_clear_explicit(&futex->flag, memory_order_release);
 }
 
 /*==============================================================================
