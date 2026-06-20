@@ -178,7 +178,7 @@ int httpsrv_interpreter_init(httpsrv_thread_t *self)
                 return ENOMEM;
         }
 
-        lua_State *L = lua_newstate(lua_alloc, self);
+        lua_State *L = lua_newstate(lua_alloc, self, time(NULL));
         if (not L) {
                 VERBOSE("Lua: cannot initialize\n");
                 httpsrv_interpreter_deinit(self);

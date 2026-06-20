@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #-------------------------------------------------------------------------------
 #
-# NOTE: script add programs and libraries to the system.
+# Script add programs and libraries to the system.
 #
 #-------------------------------------------------------------------------------
 
