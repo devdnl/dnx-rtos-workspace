@@ -141,7 +141,7 @@ typedef struct _libc_mutex mutex_t;
  *
  * The type represent futex object.
  */
-typedef struct atomicflag futex_t;
+typedef uint32_t futex_t;
 
 /**
  * @brief Mutex type

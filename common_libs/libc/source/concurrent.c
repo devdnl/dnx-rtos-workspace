@@ -89,11 +89,7 @@ typedef struct {
         bool detached;           //!< independent process (no parent)
 } _syscall_process_attr_t;
 
-struct atomicflag {
-        atomic_flag flag;
-};
-
-static_assert(sizeof(struct atomicflag) == sizeof(atomic_flag), "");
+static_assert(sizeof(futex_t) >= sizeof(atomic_flag), "");
 
 /*==============================================================================
   Local function prototypes
@@ -1208,7 +1204,7 @@ bool futex_lock(futex_t *futex, u32_t timeout)
 {
         clock_t tref = get_uptime_ms();
 
-        while (atomic_flag_test_and_set_explicit(&futex->flag, memory_order_acquire)) {
+        while (atomic_flag_test_and_set_explicit(futex, memory_order_acquire)) {
 
                 if ((timeout != WAIT_FOREVER_MS) and (get_uptime_ms() - tref >= timeout)) {
                         errno = ETIME;
@@ -1230,7 +1226,7 @@ bool futex_lock(futex_t *futex, u32_t timeout)
 //==============================================================================
 void futex_unlock(futex_t *futex)
 {
-        atomic_flag_clear_explicit(&futex->flag, memory_order_release);
+        atomic_flag_clear_explicit(futex, memory_order_release);
 }
 
 /*==============================================================================
