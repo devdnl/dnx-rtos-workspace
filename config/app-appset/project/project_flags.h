@@ -105,7 +105,7 @@ __CPU_ARCH__=stm32h7
 # this:AddWidget("Editline", false, "Appset executable size")
 # this:SetToolTip("Size of application executable section.")
 #--*/
-#define __PROJ_APPSET_TABLE_SIZE__ 768k
+#define __PROJ_APPSET_TABLE_SIZE__ 1024k
 
 #/*--
 # this:AddWidget("Editline", false, "Appset RAM address")
@@ -123,7 +123,7 @@ __CPU_ARCH__=stm32h7
 #this:AddWidget("Editline", false, "dnx RTOS section address")
 #this:SetToolTip("dnx RTOS section start address.")
 #--*/
-#define __LIBC_DNX_RTOS_ADDRESS__ 0x08080000
+#define __LIBC_DNX_RTOS_ADDRESS__ 0x08000000
 
 #if (__CPU_ARCH__ == stm32f1)
 #define ARCH_stm32f1

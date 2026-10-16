@@ -67,9 +67,9 @@ __ROMFS_NAME__="romfs"
 # this:AddWidget("Editline", false, "ROMFS offset address")
 # this:SetToolTip("Start address of ROMFS image in hex file.")
 #--*/
-#define __ROMFS_ADDRESS__ 0x081C0000
+#define __ROMFS_ADDRESS__ 0x08080000
 #/*
-__ROMFS_ADDRESS__=0x081C0000
+__ROMFS_ADDRESS__=0x08080000
 #*/
 
 #endif /* _ROMFS_CONFIG_H_ */

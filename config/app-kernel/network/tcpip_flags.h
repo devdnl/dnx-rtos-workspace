@@ -691,7 +691,7 @@ this:AddItem("Disable (0)", "0")
 this:AddItem("Enable (1)", "1")
 this:SetToolTip("LWIP_LOOPIF_MULTICAST==1: Support multicast/IGMP on loop interface (127.0.0.1).")
 --*/
-#define __NETWORK_LWIP_LOOPIF_MULTICAST__ 0
+#define __NETWORK_LWIP_LOOPIF_MULTICAST__ 1
 /*--
 this:AddWidget("Combobox", "LWIP_NETIF_LOOPBACK")
 this:AddItem("Disable (0)", "0")

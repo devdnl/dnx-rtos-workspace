@@ -40,51 +40,12 @@ this:SetTitle("Home > Microcontroller > SDMMC", "The SDMMC module configuration.
 ++*/
 
 /*--
-this:AddWidget("Combobox", "SDMMC1 Clock polarity")
-this:AddItem("SDIO_CK generated on rising edge", "SDIO_CLOCK_EDGE_RISING")
-this:AddItem("SDIO_CK generated on falling edge", "SDIO_CLOCK_EDGE_FALLING")
---*/
-#define __SDMMC_CFG_SDMMC1_CLOCK_EDGE__ SDIO_CLOCK_EDGE_RISING
-
-/*--
-this:AddWidget("Combobox", "SDMMC1 Hardware flow control")
-this:AddItem("Disable", "SDIO_HARDWARE_FLOW_CONTROL_DISABLE")
-this:AddItem("Enable", "SDIO_HARDWARE_FLOW_CONTROL_ENABLE")
-this:SetToolTip("This option cause SDMMC communication errors because of hardware bug!")
---*/
-#define __SDMMC_CFG_SDMMC1_HW_FLOW_CTRL__ SDIO_HARDWARE_FLOW_CONTROL_DISABLE
-
-/*--
-this:AddWidget("Combobox", "SDMMC1 Bus wide")
-this:AddItem("1-bit wide bus", "SDIO_BUS_WIDE_1B")
-this:AddItem("4-bit wide bus", "SDIO_BUS_WIDE_4B")
-this:AddItem("8-bit wide bus", "SDIO_BUS_WIDE_8B")
---*/
-#define __SDMMC_CFG_SDMMC1_BUS_WIDE__ SDIO_BUS_WIDE_4B
-
-/*--
-this:AddWidget("Spinbox", 1, 256, "SDMMC1 Clock divide factor")
---*/
-#define __SDMMC_CFG_SDMMC1_CKDIV__ 3
-
-/*--
-this:AddWidget("Spinbox", 100, 60000, "SDMMC1 Card operation timeout [ms]")
---*/
-#define __SDMMC_CFG_SDMMC1_CARD_TIMEOUT__ 5000
-
-/*--
-this:AddWidget("Combobox", "SDMMC1 Power save")
-this:AddItem("Disable", "SDIO_CLOCK_POWER_SAVE_DISABLE")
-this:AddItem("Enable", "SDIO_CLOCK_POWER_SAVE_ENABLE")
---*/
-#define __SDMMC_CFG_SDMMC1_PWRSAVE__ SDIO_CLOCK_POWER_SAVE_DISABLE
-
-/*--
 this:AddWidget("Combobox", "SDMMC1 Device type")
-this:AddItem("SD Card", "_SDMMC_TYPE_SDCARD")
-this:AddItem("MMC/eMMC", "_SDMMC_TYPE_MMC")
+this:AddItem("SD", "_SDMMC_TYPE_SD")
+this:AddItem("MMC", "_SDMMC_TYPE_MMC")
+this:AddItem("MMC/SD", "_SDMMC_TYPE_BOTH")
 --*/
-#define __SDMMC_CFG_SDMMC1_TYPE__ _SDMMC_TYPE_SDCARD
+#define __SDMMC_CFG_SDMMC1_TYPE__ _SDMMC_TYPE_BOTH
 
 /*--
 this:AddWidget("Combobox", "SDMMC1 Driver mode")

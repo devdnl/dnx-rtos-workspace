@@ -39,7 +39,7 @@
  */
 
 #define __ARCH__ stm32h7
-#define __MEMORY_1__ "flash   (rx)  : org = 0x08080000, len = 512k"
+#define __MEMORY_1__ "flash   (rx)  : org = 0x08000000, len = 512k"
 #define __MEMORY_2__ "axisram (rwx) : org = 0x24000000, len = 512k"
 #define __MEMORY_3__ "sram1   (rwx) : org = 0x30000000, len = 128k"
 #define __MEMORY_4__ "sram2   (rwx) : org = 0x30020000, len = 128k"

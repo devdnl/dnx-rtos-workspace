@@ -40,50 +40,12 @@ this:SetTitle("Home > Microcontroller > SDMMC", "The SDMMC module configuration.
 ++*/
 
 /*--
-this:AddWidget("Combobox", "SDMMC1 Clock polarity")
-this:AddItem("SDIO_CK generated on rising edge", "SDMMC_CLOCK_EDGE_RISING")
-this:AddItem("SDIO_CK generated on falling edge", "SDMMC_CLOCK_EDGE_FALLING")
---*/
-#define __SDMMC_CFG_SDMMC1_CLOCK_EDGE__ SDMMC_CLOCK_EDGE_RISING
-
-/*--
-this:AddWidget("Combobox", "SDMMC1 Hardware flow control")
-this:AddItem("Disable", "SDMMC_HARDWARE_FLOW_CONTROL_DISABLE")
-this:AddItem("Enable", "SDMMC_HARDWARE_FLOW_CONTROL_ENABLE")
---*/
-#define __SDMMC_CFG_SDMMC1_HW_FLOW_CTRL__ SDMMC_HARDWARE_FLOW_CONTROL_ENABLE
-
-/*--
-this:AddWidget("Combobox", "SDMMC1 Bus wide")
-this:AddItem("1-bit wide bus", "SDMMC_BUS_WIDE_1B")
-this:AddItem("4-bit wide bus", "SDMMC_BUS_WIDE_4B")
-this:AddItem("8-bit wide bus", "SDMMC_BUS_WIDE_8B")
---*/
-#define __SDMMC_CFG_SDMMC1_BUS_WIDE__ SDMMC_BUS_WIDE_4B
-
-/*--
-this:AddWidget("Spinbox", 1, 256, "SDMMC1 Clock divide factor")
---*/
-#define __SDMMC_CFG_SDMMC1_CKDIV__ 1
-
-/*--
-this:AddWidget("Spinbox", 100, 60000, "SDMMC1 card operation timeout [ms]")
---*/
-#define __SDMMC_CFG_SDMMC1_CARD_TIMEOUT__ 500
-
-/*--
-this:AddWidget("Combobox", "SDMMC1 Power save")
-this:AddItem("Disable", "SDMMC_CLOCK_POWER_SAVE_DISABLE")
-this:AddItem("Enable", "SDMMC_CLOCK_POWER_SAVE_ENABLE")
---*/
-#define __SDMMC_CFG_SDMMC1_PWRSAVE__ SDMMC_CLOCK_POWER_SAVE_DISABLE
-
-/*--
 this:AddWidget("Combobox", "SDMMC1 Device type")
-this:AddItem("SD Card", "_SDMMC_TYPE_SDCARD")
-this:AddItem("MMC/eMMC", "_SDMMC_TYPE_MMC")
+this:AddItem("SD", "_SDMMC_TYPE_SD")
+this:AddItem("MMC", "_SDMMC_TYPE_MMC")
+this:AddItem("MMC/SD", "_SDMMC_TYPE_BOTH")
 --*/
-#define __SDMMC_CFG_SDMMC1_TYPE__ _SDMMC_TYPE_SDCARD
+#define __SDMMC_CFG_SDMMC1_TYPE__ _SDMMC_TYPE_SD
 
 /*--
 this:AddWidget("Combobox", "SDMMC1 Driver mode")
@@ -92,16 +54,6 @@ this:AddItem("IRQ", "_SDMMC_MODE_IRQ")
 this:AddItem("DMA", "_SDMMC_MODE_DMA")
 --*/
 #define __SDMMC_CFG_SDMMC1_MODE__ _SDMMC_MODE_DMA
-
-/*--
-this:AddWidget("Combobox", "SDMMC1 Speed mode")
-this:AddItem("Default", "SDMMC_SPEED_MODE_DEFAULT")
-this:AddItem("Auto", "SDMMC_SPEED_MODE_AUTO")
-this:AddItem("High", "SDMMC_SPEED_MODE_HIGH")
-this:AddItem("DDR (MMC only)", "SDMMC_SPEED_MODE_DDR")
-this:AddItem("Ultra (SD only)", "SDMMC_SPEED_MODE_ULTRA")
---*/
-#define __SDMMC_CFG_SDMMC1_SPEED_MODE__ SDMMC_SPEED_MODE_HIGH
 
 /*--
 this:AddWidget("Combobox", "SDMMC1 IRQ priority")
@@ -113,49 +65,12 @@ uC.AddPriorityItems(this, false)
 
 /*--
 this:AddExtraWidget("Label", "SD2_GAP", "")
-this:AddWidget("Combobox", "SDMMC2 Clock polarity")
-this:AddItem("SDIO_CK generated on rising edge", "SDMMC_CLOCK_EDGE_RISING")
-this:AddItem("SDIO_CK generated on falling edge", "SDMMC_CLOCK_EDGE_FALLING")
---*/
-#define __SDMMC_CFG_SDMMC2_CLOCK_EDGE__ SDMMC_CLOCK_EDGE_RISING
-
-/*--
-this:AddWidget("Combobox", "SDMMC2 Hardware flow control")
-this:AddItem("Disable", "SDMMC_HARDWARE_FLOW_CONTROL_DISABLE")
-this:AddItem("Enable", "SDMMC_HARDWARE_FLOW_CONTROL_ENABLE")
---*/
-#define __SDMMC_CFG_SDMMC2_HW_FLOW_CTRL__ SDMMC_HARDWARE_FLOW_CONTROL_ENABLE
-
-/*--
-this:AddWidget("Combobox", "SDMMC2 Bus wide")
-this:AddItem("1-bit wide bus", "SDMMC_BUS_WIDE_1B")
-this:AddItem("4-bit wide bus", "SDMMC_BUS_WIDE_4B")
---*/
-#define __SDMMC_CFG_SDMMC2_BUS_WIDE__ SDMMC_BUS_WIDE_1B
-
-/*--
-this:AddWidget("Spinbox", 1, 256, "SDMMC2 Clock divide factor")
---*/
-#define __SDMMC_CFG_SDMMC2_CKDIV__ 1
-
-/*--
-this:AddWidget("Spinbox", 100, 2000, "SDMMC2 Card operation timeout [ms]")
---*/
-#define __SDMMC_CFG_SDMMC2_CARD_TIMEOUT__ 500
-
-/*--
-this:AddWidget("Combobox", "SDMMC2 Power save")
-this:AddItem("Disable", "SDMMC_CLOCK_POWER_SAVE_DISABLE")
-this:AddItem("Enable", "SDMMC_CLOCK_POWER_SAVE_ENABLE")
---*/
-#define __SDMMC_CFG_SDMMC2_PWRSAVE__ SDMMC_CLOCK_POWER_SAVE_DISABLE
-
-/*--
 this:AddWidget("Combobox", "SDMMC2 Device type")
-this:AddItem("SD Card", "_SDMMC_TYPE_SDCARD")
-this:AddItem("MMC/eMMC", "_SDMMC_TYPE_MMC")
+this:AddItem("SD", "_SDMMC_TYPE_SD")
+this:AddItem("MMC", "_SDMMC_TYPE_MMC")
+this:AddItem("MMC/SD", "_SDMMC_TYPE_BOTH")
 --*/
-#define __SDMMC_CFG_SDMMC2_TYPE__ _SDMMC_TYPE_SDCARD
+#define __SDMMC_CFG_SDMMC2_TYPE__ _SDMMC_TYPE_SD
 
 /*--
 this:AddWidget("Combobox", "SDMMC2 Driver mode")
@@ -164,16 +79,6 @@ this:AddItem("IRQ", "_SDMMC_MODE_IRQ")
 this:AddItem("DMA", "_SDMMC_MODE_DMA")
 --*/
 #define __SDMMC_CFG_SDMMC2_MODE__ _SDMMC_MODE_DMA
-
-/*--
-this:AddWidget("Combobox", "SDMMC2 Speed mode")
-this:AddItem("Default", "SDMMC_SPEED_MODE_DEFAULT")
-this:AddItem("Auto", "SDMMC_SPEED_MODE_AUTO")
-this:AddItem("High", "SDMMC_SPEED_MODE_HIGH")
-this:AddItem("DDR (MMC only)", "SDMMC_SPEED_MODE_DDR")
-this:AddItem("Ultra (SD only)", "SDMMC_SPEED_MODE_ULTRA")
---*/
-#define __SDMMC_CFG_SDMMC2_SPEED_MODE__ SDMMC_SPEED_MODE_DEFAULT
 
 /*--
 this:AddWidget("Combobox", "SDMMC2 IRQ priority")

@@ -85,9 +85,9 @@ __ENABLE_PROCFS__=_YES_
 # this:AddExtraWidget("Submenu", "FATFS_CONFIGURE", "fatfs: configure", "filesystems/fatfs_flags.h")
 #--*/
 #include "../filesystems/fatfs_flags.h"
-#define __ENABLE_FATFS__ _NO_
+#define __ENABLE_FATFS__ _YES_
 #/*
-__ENABLE_FATFS__=_NO_
+__ENABLE_FATFS__=_YES_
 #*/
 
 #/*--
