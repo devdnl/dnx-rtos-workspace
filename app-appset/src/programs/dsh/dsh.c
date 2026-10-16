@@ -53,7 +53,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define PROMPT_LINE_LEN  100
+#define PROMPT_LINE_LEN  256
 #define CWD_PATH_LEN     128
 #define HISTORY_NEXT_KEY "\033^[A"
 #define HISTORY_PREV_KEY "\033^[B"
@@ -176,7 +176,7 @@ static bool read_input(void)
 //==============================================================================
 static bool history_request(void)
 {
-        if (strcmp(global->line, HISTORY_NEXT_KEY) == 0 || strcmp(global->line, HISTORY_PREV_KEY) == 0) {
+        if (strcmp(global->line, HISTORY_NEXT_KEY) == 0) {
 
                 bool found = false;
 
@@ -189,6 +189,26 @@ static bool history_request(void)
 
                         if (++global->history_rd >= HISTORY_ENTRIES) {
                                 global->history_rd = 0;
+                        }
+                }
+
+                global->prompt_enable = false;
+
+                return true;
+
+        } else if (strcmp(global->line, HISTORY_PREV_KEY) == 0) {
+
+                bool found = false;
+
+                for (size_t i = 0; i < HISTORY_ENTRIES and not found; i++) {
+                        if (--global->history_rd >= HISTORY_ENTRIES) {
+                                global->history_rd = HISTORY_ENTRIES - 1;
+                        }
+
+                        if (not isstrempty(global->history[global->history_rd])) {
+                                ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE,
+                                        global->history[global->history_rd]);
+                                found = true;
                         }
                 }
 

@@ -283,16 +283,26 @@ static void mount_file_systems(void)
         /*
          * SD card
          */
-        driver_init("SDMMC", 0, 0, "/dev/sd0");
+        driver_init2("SDMMC", 0, 0, "/dev/sdmmc0",
+                &(const SDMMC_config_t) {
+                        .device_type = SDMMC_DEVICE_TYPE__SD,
+                        .clock_edge = SDMMC_CLOCK_EDGE__RISING,
+                        .bus_wide = SDMMC_BUS_WIDE__4BIT,
+                        .speed_mode = SDMMC_SPEED_MODE__HIGH,
+                        .card_timeout = 500,
+                        .clock_div = 1,
+                        .clock_power_save = false,
+                        .hardware_flow_ctrl = true,
+                });
 
-        driver_init2("PART", 0, 0, "/dev/sd0p1", &(const PART_config_t) {.path = "/dev/sd0"});
+        driver_init2("PART", 0, 0, "/dev/sd0p1", &(const PART_config_t) {.path = "/dev/sdmmc0"});
 
         scope (int fd = open("/dev/sd0p1", O_RDWR), fd > 0, close(fd)) {
                 ioctl(fd, IOCTL_PART__READ_MBR);
         }
 
         mkdir("/mnt", 0666);
-        mount("ext4fs", "/dev/sd0p1", "/mnt", "");
+        mount("fatfs", "/dev/sd0p1", "/mnt", "");
 
         /*
          * ROMFS at address 0x08070000
