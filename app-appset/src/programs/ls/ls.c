@@ -49,7 +49,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define CWD_MAX_LEN          128
+#define CWD_MAX_LEN 128
 
 #define KiB                  (u32_t)(1024)
 #define MiB                  (u32_t)(1024 * 1024)
@@ -58,7 +58,7 @@
 #define CONVERT_TO_MiB(_val) (_val >> 20)
 #define CONVERT_TO_GiB(_val) (_val >> 30)
 
-#define CURSOR_AT(_col)      VT100_CURSOR_BACKWARD(999) VT100_CURSOR_FORWARD(_col)
+#define CURSOR_AT(_col) VT100_CURSOR_BACKWARD(999) VT100_CURSOR_FORWARD(_col)
 
 /*==============================================================================
   Local types, enums definitions
@@ -93,6 +93,7 @@ int main(int argc, char *argv[])
         getcwd(global->cwd, CWD_MAX_LEN - 1);
 
         bool human_readable = false;
+        bool list = false;
 
         for (int i = 0; i < argc; i++) {
 
@@ -108,10 +109,18 @@ int main(int argc, char *argv[])
                         } else {
                                 argv[i] = "./";
                         }
+                } else if (isstreq(argv[i], "-a")) {
+                        list = true;
+
+                        if (argc > 2) {
+                                continue;
+                        } else {
+                                argv[i] = "./";
+                        }
                 }
 
                 if (argc >= 2) {
-                        if (argc >= 3) {
+                        if ((argc >= 3) and not list) {
                                 printf("%s:\n", argv[i]);
                         }
 
@@ -150,6 +159,11 @@ int main(int argc, char *argv[])
 
                                 struct stat st;
                                 if (stat(dirent->d_name, &st) == 0) {
+
+                                        if (list) {
+                                                printf("'%s' ", dirent->d_name);
+                                                continue;
+                                        }
 
                                         const char *type;
                                         switch (st.st_mode & S_IFMT) {
@@ -237,7 +251,11 @@ int main(int argc, char *argv[])
                                 perror("Read dir");
                         }
 
-                        printf("total %d%c\n", count, (argc >= 3) ? '\n' : ' ');
+                        if (not list) {
+                                printf("total %d%c\n", count, (argc >= 3) ? '\n' : ' ');
+                        } else {
+                                puts("");
+                        }
 
                         closedir(dir);
                 } else {

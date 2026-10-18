@@ -37,6 +37,7 @@ Brief   Format selected file by EEFS.
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 #include <unistd.h>
 #include <time.h>
 #include <dnx/misc.h>
@@ -49,9 +50,15 @@ Brief   Format selected file by EEFS.
 #define BLOCKS_IN_BYTE     8
 #define ENTRY_TYPE_NONE    0xFF
 
+#define MIN_BLOCKS         8     // the same limit as in the driver
+#define MAX_BLOCKS         65535 // 16-bit block numbers
+
 #define BLOCK_MAIN_MAGIC   0x53464545
 #define BLOCK_MAGIC_DIR    0x30524944
 #define BLOCK_MAGIC_BITMAP 0x20504D42
+
+#define BMP_MAIN_BITS (sizeof(((block_main_t *)0)->bitmap) * BLOCKS_IN_BYTE)
+#define BMP_BLK_BITS  (sizeof(((block_bitmap_t *)0)->map) * BLOCKS_IN_BYTE)
 
 /*==============================================================================
   Local object types
@@ -217,28 +224,50 @@ static int write_block(uint16_t block_pos)
 
         global->block.chsum.checksum ^= block_pos;
 
-        fseek(global->file, block_pos * cast(fpos_t, BLOCK_SIZE), SEEK_SET);
+        if (fseek(global->file, block_pos * cast(fpos_t, BLOCK_SIZE), SEEK_SET) != 0) {
+                perror("Block seek");
+                return EXIT_FAILURE;
+        }
 
         if (fwrite(&global->block, 1, BLOCK_SIZE, global->file) != BLOCK_SIZE) {
-
                 perror("Block write");
                 return EXIT_FAILURE;
-        } else {
-                return EXIT_SUCCESS;
         }
+
+        return EXIT_SUCCESS;
 }
 
 //==============================================================================
 /**
- * Function allocate selected block in bitmap.
+ * Function mark block as used in bitmap.
  *
  * @param  bitmap       bitmap array.
- * @param  block        block to allocate.
+ * @param  block        block to allocate (relative to bitmap start).
  */
 //==============================================================================
-static void alloc_block(uint8_t bitmap[], uint16_t block)
+static void alloc_block(uint8_t bitmap[], uint32_t block)
 {
         bitmap[block / 8] &= ~(1 << (block % 8));
+}
+
+//==============================================================================
+/**
+ * Function mark as used blocks of bitmap that are behind medium end.
+ * Prevents allocation of not existing blocks.
+ *
+ * @param  bitmap       bitmap array.
+ * @param  bits         number of bitmap bits.
+ * @param  base         number of first block described by bitmap.
+ * @param  total        total number of blocks.
+ */
+//==============================================================================
+static void alloc_beyond_end(uint8_t bitmap[], uint32_t bits, uint32_t base, uint32_t total)
+{
+        for (uint32_t bit = 0; bit < bits; bit++) {
+                if ((base + bit) >= total) {
+                        alloc_block(bitmap, bit);
+                }
+        }
 }
 
 //==============================================================================
@@ -251,19 +280,23 @@ static void alloc_block(uint8_t bitmap[], uint16_t block)
 static int mkfs(void)
 {
         // calculate file system parameters
-        uint32_t total_blocks = (uint32_t)global->mem_size / BLOCK_SIZE;
+        uint32_t total_blocks = cast(uint32_t, global->mem_size / BLOCK_SIZE);
 
-        int32_t tmp = total_blocks - (sizeof(global->block.main.bitmap) * BLOCKS_IN_BYTE);
+        if (total_blocks > MAX_BLOCKS) {
+                total_blocks = MAX_BLOCKS;
+        }
 
-        uint32_t extra_bmp_blks = tmp > 0 ? CEILING(tmp / BLOCKS_IN_BYTE, sizeof(global->block.bitmap.map))
-                                          : 0;
+        uint32_t extra_bmp_blks = 0;
+        if (total_blocks > BMP_MAIN_BITS) {
+                extra_bmp_blks = CEILING(total_blocks - BMP_MAIN_BITS, BMP_BLK_BITS);
+        }
 
         uint16_t root_dir_block_addr = 1 + extra_bmp_blks;
 
         uint16_t used_blocks = 1 /*main*/ + extra_bmp_blks + 1 /*root dir*/;
 
         // create main block
-        memset(&global->block.main, 0xFF, sizeof(global->block));
+        memset(&global->block, 0xFF, sizeof(global->block));
 
         global->block.main.magic = BLOCK_MAIN_MAGIC;
         global->block.main.blocks = total_blocks;
@@ -273,15 +306,20 @@ static int mkfs(void)
                 alloc_block(global->block.main.bitmap, block);
         }
 
+        alloc_beyond_end(global->block.main.bitmap, BMP_MAIN_BITS, 0, total_blocks);
+
         if (write_block(0) != EXIT_SUCCESS) {
                 return EXIT_FAILURE;
         }
 
         // create extra bitmap blocks
-        memset(&global->block.bitmap, 0xFF, sizeof(global->block.bitmap));
-        global->block.bitmap.magic = BLOCK_MAGIC_BITMAP;
-
         for (u16_t addr = 1; addr <= extra_bmp_blks; addr++) {
+                memset(&global->block, 0xFF, sizeof(global->block));
+                global->block.bitmap.magic = BLOCK_MAGIC_BITMAP;
+
+                uint32_t base = BMP_MAIN_BITS + (addr - 1) * BMP_BLK_BITS;
+                alloc_beyond_end(global->block.bitmap.map, BMP_BLK_BITS, base, total_blocks);
+
                 if (write_block(addr) != EXIT_SUCCESS) {
                         return EXIT_FAILURE;
                 }
@@ -290,7 +328,7 @@ static int mkfs(void)
         // create root
         time_t t = time(NULL);
 
-        memset(&global->block.dir, 0xFF, sizeof(global->block.dir));
+        memset(&global->block, 0xFF, sizeof(global->block));
         global->block.dir.magic = BLOCK_MAGIC_DIR;
         global->block.dir.ctime = t;
         global->block.dir.mtime = t;
@@ -316,37 +354,49 @@ int main(int argc, char *argv[])
 {
         if (argc < 2) {
                 show_help(argv[0]);
-        } else {
-                int err = EXIT_FAILURE;
-
-                global->file = fopen(argv[1], "r+");
-                if (!global->file) {
-                        perror(argv[1]);
-                        return EXIT_FAILURE;
-
-                } else {
-                        struct stat buf;
-                        memset(&buf, 0, sizeof(struct stat));
-                        fstat(fileno(global->file), &buf);
-                        global->mem_size = buf.st_size;
-
-                        if (global->mem_size >= 8388352) {
-                                printf("Too big disc for this file system!");
-
-                        } else {
-                                printf("Memory size set automatically to %d bytes.\n",
-                                        cast(uint, global->mem_size));
-
-                                err = mkfs();
-                        }
-                }
-
-                fclose(global->file);
-
-                return err;
+                return EXIT_FAILURE;
         }
 
-        return EXIT_FAILURE;
+        int err = EXIT_FAILURE;
+
+        global->file = fopen(argv[1], "r+");
+        if (!global->file) {
+                perror(argv[1]);
+                return EXIT_FAILURE;
+        }
+
+        struct stat buf;
+        memset(&buf, 0, sizeof(struct stat));
+
+        if (fstat(fileno(global->file), &buf) != 0) {
+                perror(argv[1]);
+
+        } else {
+                global->mem_size = buf.st_size;
+
+                if (global->mem_size < (MIN_BLOCKS * BLOCK_SIZE)) {
+                        printf("Too small disc for this file system (minimum %u bytes)!\n",
+                                cast(uint, MIN_BLOCKS * BLOCK_SIZE));
+
+                } else {
+                        if (global->mem_size > (cast(size_t, MAX_BLOCKS) * BLOCK_SIZE)) {
+                                printf("Disc is bigger than file system limit, only %u bytes are used.\n",
+                                        cast(uint, MAX_BLOCKS * BLOCK_SIZE));
+                        } else {
+                                printf("Memory size set automatically to %u bytes.\n",
+                                        cast(uint, global->mem_size));
+                        }
+
+                        err = mkfs();
+                }
+        }
+
+        if (fclose(global->file) != 0) {
+                perror(argv[1]);
+                err = EXIT_FAILURE;
+        }
+
+        return err;
 }
 
 /*==============================================================================

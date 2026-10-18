@@ -1285,6 +1285,7 @@
 	};
 	["config/app-kernel/filesystems/eefs_flags.h"]={
 		["__EEFS_CACHE_SIZE__"]="8";
+        ["__EEFS_CHECK_ENABLE__"]="_YES_";
 		["__EEFS_LOG_ENABLE__"]="_NO_";
 	};
 	["config/app-kernel/filesystems/ext4fs_flags.h"]={
@@ -2831,6 +2832,7 @@
 	};
 	["config/btl-kernel/filesystems/eefs_flags.h"]={
 		["__EEFS_CACHE_SIZE__"]="8";
+        ["__EEFS_CHECK_ENABLE__"]="_YES_";
 		["__EEFS_LOG_ENABLE__"]="_NO_";
 	};
 	["config/btl-kernel/filesystems/ext4fs_flags.h"]={

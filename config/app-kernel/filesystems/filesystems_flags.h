@@ -100,9 +100,9 @@ __ENABLE_FATFS__=_YES_
 # this:AddExtraWidget("Submenu", "EEFS_CONFIGURE", "eefs: configure", "filesystems/eefs_flags.h")
 #--*/
 #include "../filesystems/eefs_flags.h"
-#define __ENABLE_EEFS__ _NO_
+#define __ENABLE_EEFS__ _YES_
 #/*
-__ENABLE_EEFS__=_NO_
+__ENABLE_EEFS__=_YES_
 #*/
 
 #/*--

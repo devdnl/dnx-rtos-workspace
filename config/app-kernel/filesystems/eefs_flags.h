@@ -46,6 +46,13 @@ this:AddItem("Disable", "_NO_")
 #define __EEFS_LOG_ENABLE__ _NO_
 
 /*--
+this:AddWidget("Combobox", "Enable file system check")
+this:AddItem("Enable", "_YES_")
+this:AddItem("Disable", "_NO_")
+--*/
+#define __EEFS_CHECK_ENABLE__ _YES_
+
+/*--
 this:AddWidget("Spinbox", 0, 512, "Cache size (128 bytes blocks)")
 --*/
 #define __EEFS_CACHE_SIZE__ 8

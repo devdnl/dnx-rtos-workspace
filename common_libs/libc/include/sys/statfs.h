@@ -112,9 +112,8 @@ extern "C" {
 //==============================================================================
 static inline int statfs(const char *path, struct statfs *statfs)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_STATFS, &r, path, statfs);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_STATFS, path, statfs);
+        return err ? -1 : 0;
 }
 
 #ifdef __cplusplus

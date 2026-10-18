@@ -51,6 +51,7 @@ Brief   Make flatfs in selected file/device
 #define CRC32_INIT        0xFFFFFFFF
 #define MAX_FILE_SIZE_KiB 64
 #define BYTES_IN_KiB      1024
+#define MAX_FILE_SIZE_LIMIT_KiB ((UINT32_MAX / BYTES_IN_KiB) - 1)
 
 /*==============================================================================
   Local object types
@@ -167,8 +168,8 @@ int main(int argc, char *argv[])
 
         } else {
                 global->path = argv[1];
-                i32_t max_file_size = atoi(argv[2]);
-                bool fast_format = isstreq(argv[3], "fast");
+                i64_t max_file_size = atol(argv[2]);
+                bool fast_format = (argc > 3) and isstreq(argv[3], "fast");
                 u64_t disc_size;
 
                 global->disc = fopen(global->path, "r+");
@@ -186,30 +187,47 @@ int main(int argc, char *argv[])
                                         args_correct = false;
                                 }
 
+                                if ((disc_size / BLOCK_SIZE) > UINT32_MAX) {
+                                        fprintf(stderr, "Too big disc! Max is %llu B.\n",
+                                                cast(unsigned long long, UINT32_MAX) * BLOCK_SIZE);
+                                        args_correct = false;
+                                }
+
                                 if (max_file_size < MAX_FILE_SIZE_KiB) {
                                         fprintf(stderr,
-                                                "Too small max file size! Min is %lu "
+                                                "Too small max file size! Min is %d "
                                                 "KiB.\n",
                                                 MAX_FILE_SIZE_KiB);
                                         args_correct = false;
                                 }
 
-                                if ((max_file_size * BYTES_IN_KiB) >=
+                                // file size is stored in 32-bit field
+                                if (max_file_size > MAX_FILE_SIZE_LIMIT_KiB) {
+                                        fprintf(stderr, "Too big max file size! Max is %lld KiB.\n",
+                                                cast(long long, MAX_FILE_SIZE_LIMIT_KiB));
+                                        args_correct = false;
+
+                                } else if ((max_file_size * BYTES_IN_KiB) >=
                                         ((i64_t)disc_size - (4 * (i64_t)BLOCK_SIZE))) {
                                         fprintf(stderr, "Too big max file size!\n");
                                         args_correct = false;
                                 }
 
                                 if (args_correct) {
-                                        exit = format(disc_size / BLOCK_SIZE,
+                                        int err = format(disc_size / BLOCK_SIZE,
                                                 max_file_size * BYTES_IN_KiB / BLOCK_SIZE, fast_format);
+
+                                        exit = err ? EXIT_FAILURE : EXIT_SUCCESS;
 
                                 } else {
                                         fprintf(stderr, "Disc not formatted.\n");
                                 }
                         }
 
-                        fclose(global->disc);
+                        if (fclose(global->disc) != 0) {
+                                perror(global->path);
+                                exit = EXIT_FAILURE;
+                        }
                 } else {
                         perror(global->path);
                 }
@@ -311,27 +329,35 @@ static int format(u64_t disc_size, u32_t max_file_size, bool fast_format)
         u32_t total_files = CEILING(blocks_for_files, max_file_size);
         u32_t blocks_per_last_file = blocks_for_files - ((total_files - 1) * max_file_size);
 
-        printf("Volume size      : %llu B\n", disc_size * BLOCK_SIZE);
-        printf("Maximal file size: %llu B\n", cast(u64_t, max_file_size) * BLOCK_SIZE);
+        printf("Volume size      : %llu B\n", cast(u64_t, disc_size) * BLOCK_SIZE);
+        printf("Maximal file size: %llu B\n", cast(u64_t, max_file_size - 1) * BLOCK_SIZE);
         printf("Last file size   : %llu B\n", cast(u64_t, blocks_per_last_file - 1) * BLOCK_SIZE);
-        printf("Maximal files    : %u\n", total_files);
+        printf("Maximal files    : %lu\n", total_files);
+
+        if (blocks_per_last_file == 1) {
+                printf("Note: last file node has no space for data.\n");
+        }
+
         printf("Formatting...\n");
 
         memset(global->buf, 0, sizeof(global->buf));
         int err = block_write(address_of_secondary_bmp, global->buf, 1);
         if (!err) {
 
-                int err = block_write(address_of_primary_bmp, global->buf, 1);
+                err = block_write(address_of_primary_bmp, global->buf, 1);
                 if (!err) {
 
                         // full format
                         if (not fast_format) {
                                 u32_t address = address_of_primary_bmp + 1;
-                                for (u32_t blknum = 0; blknum < total_files; blknum++) {
-                                        block_write(address, global->buf, 1);
+                                for (u32_t blknum = 0; !err and (blknum < total_files); blknum++) {
+                                        err = block_write(address, global->buf, 1);
                                         address += max_file_size;
                                 }
                         }
+                }
+
+                if (!err) {
 
                         // save file system descriptor
                         blk_fs_t *blk = &global->blk;
