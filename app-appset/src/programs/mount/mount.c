@@ -75,7 +75,13 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
         }
 
-        if (mount(argv[2], argv[1], argv[3], argv[4]) != 0) {
+        const char *src_path = argv[1];
+
+        if (isstreq(src_path, "-")) {
+                src_path = "";
+        }
+
+        if (mount(argv[2], src_path, argv[3], argv[4]) != 0) {
                 perror("Mount error");
         }
 

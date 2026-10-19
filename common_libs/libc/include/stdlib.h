@@ -66,24 +66,24 @@ extern "C" {
 /**
  * @brief General failure status
  */
-#define EXIT_FAILURE    1
+#define EXIT_FAILURE 1
 
 /**
  * @brief General success status
  */
-#define EXIT_SUCCESS    0
+#define EXIT_SUCCESS 0
 
 /**
  * @brief A value reserved for indicating that the pointer does not refer to a valid object.
  */
 #ifndef NULL
-#define NULL            0
+#define NULL 0
 #endif
 
 /**
  * @brief Is the maximum value that can be returned by rand() function.
  */
-#define RAND_MAX        __RAND_MAX
+#define RAND_MAX __RAND_MAX
 
 /*==============================================================================
   Exported object types
@@ -97,8 +97,8 @@ extern "C" {
  * @see div()
  */
 typedef struct {
-        int quot;               /*!< Quotient.*/
-        int rem;                /*!< Remainder.*/
+        int quot; /*!< Quotient.*/
+        int rem;  /*!< Remainder.*/
 } div_t;
 
 /**
@@ -110,8 +110,8 @@ typedef struct {
  * @see ldiv()
  */
 typedef struct {
-        long quot;              /*!< Quotient.*/
-        long rem;               /*!< Remainder.*/
+        long quot; /*!< Quotient.*/
+        long rem;  /*!< Remainder.*/
 } ldiv_t;
 
 /**
@@ -253,11 +253,7 @@ extern long labs(long j);
  * @see compar_t
  */
 //==============================================================================
-extern void *bsearch(const void *key,
-                     const void *base,
-                     size_t      nmemb,
-                     size_t      size,
-                     compar_t    compar);
+extern void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, compar_t compar);
 
 //==============================================================================
 /**
@@ -327,10 +323,7 @@ extern void *bsearch(const void *key,
  * @see compar_t
  */
 //==============================================================================
-extern void qsort(void    *base,
-                  size_t   nmemb,
-                  size_t   size,
-                  compar_t compar);
+extern void qsort(void *base, size_t nmemb, size_t size, compar_t compar);
 
 //==============================================================================
 /**
@@ -709,7 +702,7 @@ extern int system(const char *command);
 //==============================================================================
 static inline char *getenv(const char *name)
 {
-        (void) name;
+        (void)name;
         return NULL;
 }
 
@@ -756,9 +749,9 @@ static inline char *getenv(const char *name)
 //==============================================================================
 static inline int getsubopt(char **optionp, char *const *tokens, char **valuep)
 {
-        (void) optionp;
-        (void) tokens;
-        (void) valuep;
+        (void)optionp;
+        (void)tokens;
+        (void)valuep;
 
         return -1;
 }
@@ -887,8 +880,9 @@ static inline long strtol(const char *nptr, char **endptr, int base)
 
         i32_t result;
         char *end = _libc_strtoi(nptr, base, &result);
-        if (endptr)
+        if (endptr) {
                 *endptr = end;
+        }
         return result;
 }
 
@@ -960,9 +954,151 @@ static inline unsigned long strtoul(const char *nptr, char **endptr, int base)
 
         i32_t result;
         char *end = _libc_strtoi(nptr, base, &result);
-        if (endptr)
+        if (endptr) {
                 *endptr = end;
+        }
         return result;
+}
+
+//==============================================================================
+/**
+ * @brief Function converts string to 64-bit signed integer value.
+ *
+ * The strtoll() function converts the initial part of the string in <i>nptr</i>
+ * to a 64-bit value according to the given <i>base</i>, which must be
+ * between 2 and 16 inclusive, or be the special value 0.
+ *
+ * The string may begin with an arbitrary amount of white space (as
+ * determined by isspace()) followed by a single optional '+' or '-'
+ * sign. If base is zero or 16, the number will be read in base 16; otherwise,
+ * a zero base is taken as 10 (decimal) unless the next character is '0', in
+ * which case it is taken as 8 (octal).<p>
+ *
+ * If <i>endptr</i> is not @ref NULL, strtol()stores the address of the first
+ * invalid character in <i>*endptr</i>.  If there were no digits at all,
+ * strtol() stores the original value of <i>nptr</i> in <i>*endptr</i> (and
+ * returns 0).  In particular, if <i>*nptr</i> is not '\0' but <i>**endptr</i>
+ * is '\0' on return, the entire string is valid.
+ *
+ * @param nptr          string to convert
+ * @param endptr        points to first not converted character
+ * @param base          calculation base
+ *
+ * @return The strtol() function returns the result of the conversion, unless
+ * the value would underflow or overflow.
+ *
+ * @b Example
+ * @code
+        const char *end;
+        const char *str;
+        i64_t       val;
+
+        // convert string to decimal value
+        str = "123";
+        val = strtoll(str, &end, 10);
+
+        // convert string to hex value
+        str = "1FF";
+        val = strtoll(str, &end, 16);
+
+        // convert string to octal
+        str = "77"
+        val = strtoll(str, &end, 8);
+
+        // convert string automatically
+        str = "0x45";
+        val = strtoll(str, &end, 0);
+
+        str = "056";
+        val = strtoll(str, &end, 0);
+
+        str = "123";
+        val = strtull(str, &end, 0);
+
+        str = "0b1110";
+        val = strtoll(str, &end, 0);
+   @endcode
+ *
+ * @see atoi(), atol(), atof(), strtod(), strtof()
+ */
+//==============================================================================
+static inline i64_t strtoll(const char *__restrict nptr, char **__restrict endptr, int base)
+{
+        extern char *_libc_strtoll(const char *string, int base, i64_t *value);
+
+        i64_t result;
+        char *end = _libc_strtoll(nptr, base, &result);
+        if (endptr) {
+                *endptr = end;
+        }
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief Function converts string to 64-bit unsigned integer value.
+ *
+ * The strtoull() function converts the initial part of the string in <i>nptr</i>
+ * to a 64-bit value according to the given <i>base</i>, which must be
+ * between 2 and 16 inclusive, or be the special value 0.
+ *
+ * The string may begin with an arbitrary amount of white space (as
+ * determined by isspace()) followed by a single optional '+' or '-'
+ * sign. If base is zero or 16, the number will be read in base 16; otherwise,
+ * a zero base is taken as 10 (decimal) unless the next character is '0', in
+ * which case it is taken as 8 (octal).<p>
+ *
+ * If <i>endptr</i> is not @ref NULL, strtol()stores the address of the first
+ * invalid character in <i>*endptr</i>.  If there were no digits at all,
+ * strtol() stores the original value of <i>nptr</i> in <i>*endptr</i> (and
+ * returns 0).  In particular, if <i>*nptr</i> is not '\0' but <i>**endptr</i>
+ * is '\0' on return, the entire string is valid.
+ *
+ * @param nptr          string to convert
+ * @param endptr        points to first not converted character
+ * @param base          calculation base
+ *
+ * @return The strtol() function returns the result of the conversion, unless
+ * the value would underflow or overflow.
+ *
+ * @b Example
+ * @code
+        const char *end;
+        const char *str;
+        u64_t       val;
+
+        // convert string to decimal value
+        str = "123";
+        val = strtoull(str, &end, 10);
+
+        // convert string to hex value
+        str = "1FF";
+        val = strtoull(str, &end, 16);
+
+        // convert string to octal
+        str = "77"
+        val = strtoull(str, &end, 8);
+
+        // convert string automatically
+        str = "0x45";
+        val = strtoull(str, &end, 0);
+
+        str = "056";
+        val = strtoull(str, &end, 0);
+
+        str = "123";
+        val = strtuoll(str, &end, 0);
+
+        str = "0b1110";
+        val = strtoull(str, &end, 0);
+   @endcode
+ *
+ * @see atoi(), atol(), atof(), strtod(), strtof()
+ */
+//==============================================================================
+static inline u64_t strtoull(const char *__restrict nptr, char **__restrict endptr, int base)
+{
+        return (u64_t)strtoll(nptr, endptr, base);
 }
 
 //==============================================================================

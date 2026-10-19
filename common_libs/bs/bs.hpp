@@ -274,6 +274,11 @@ public:
                 return bs_get_chunk_length(&this->ctx);
         }
 
+        uint8_t *get_chunk_data()
+        {
+                return bs_get_chunk_data(&this->ctx);
+        }
+
         int set_int8_t(const char *key, int8_t value)
         {
                 return bs_set_int8_t(&this->ctx, key, value);

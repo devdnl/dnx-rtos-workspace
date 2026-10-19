@@ -111,12 +111,16 @@ int main(int argc, char *argv[])
 
                 u32_t percent = ((dtotal - dfree) * 1000) / dtotal;
 
+                if (isstreq(mnt.mnt_src, "/")) {
+                        mnt.mnt_src = "";
+                }
+
                 printf("%s" VT100_CURSOR_BACKWARD(90) VT100_CURSOR_FORWARD(17) "%u %s" VT100_CURSOR_BACKWARD(
                                90) VT100_CURSOR_FORWARD(28) "%u %s" VT100_CURSOR_BACKWARD(90)
                                 VT100_CURSOR_FORWARD(39) "%u.%u%%" VT100_CURSOR_BACKWARD(90)
-                                        VT100_CURSOR_FORWARD(46) "%s (%s)\n",
+                                        VT100_CURSOR_FORWARD(46) "%s %s%s%s\n",
                         mnt.mnt_fsname, dtotal, unit, dfree, unit, percent / 10, percent % 10, mnt.mnt_dir,
-                        mnt.mnt_src);
+                        isstrempty(mnt.mnt_src) ? "" : "(", mnt.mnt_src, isstrempty(mnt.mnt_src) ? "" : ")");
         }
 
         return EXIT_SUCCESS;

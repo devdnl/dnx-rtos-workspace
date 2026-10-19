@@ -33,7 +33,15 @@ Brief   Binary serialization.
 /**
 @defgroup BS_BS_H_ BS_BS_H_
 
-Detailed Doxygen description.
+Binary serialization of key-value pairs into a flat buffer (chunk).
+
+Chunk layout: sequence of items, each item:
+  [type:u8][key_len:u8][data_len:u16][key + '\0'][data]
+
+Limits: key up to 254 characters, data up to 65535 bytes (string up to
+65534 characters + '\0'). Values are stored in native byte order.
+The chunk has no header; the user is responsible for transporting the
+chunk together with its exact length.
 */
 /**@{*/
 
@@ -54,7 +62,7 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define BS_VERSION 20260318
+#define BS_VERSION 20261018
 
 /*==============================================================================
   Exported object types
@@ -68,12 +76,14 @@ typedef struct {
 
 typedef enum {
         bs_err_ok,
-        bs_err_invalid_value,
-        bs_err_unexpected_type,
-        bs_err_value_size,
-        bs_err_value_not_found,
-        bs_err_chunk_full,
-        bs_err_exist,
+        bs_err_invalid_value,           /*!< invalid argument or context */
+        bs_err_unexpected_type,         /*!< stored type can't be converted to requested type */
+        bs_err_value_size,              /*!< key/value too long or stored value has wrong size */
+        bs_err_value_not_found,         /*!< key not found / end of iteration */
+        bs_err_chunk_full,              /*!< no space left in chunk */
+        bs_err_exist,                   /*!< key already exists */
+        bs_err_corrupted,               /*!< chunk structure is damaged */
+        bs_err_out_of_range,            /*!< value doesn't fit into requested type */
 } bs_err_t;
 
 typedef enum {

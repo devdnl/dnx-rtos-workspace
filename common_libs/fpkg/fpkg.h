@@ -46,6 +46,24 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+/*
+ * Return values of fpkg__readdir() (other functions return 0 or -1).
+ */
+#define FPKG_OK                 0       /* item returned */
+#define FPKG_ERR_ARG            (-1)    /* invalid argument */
+#define FPKG_ERR_IO             (-2)    /* read error or corrupted image */
+#define FPKG_ERR_NOMEM          (-3)    /* out of memory */
+#define FPKG_END_OF_DIR         (-5)    /* no more items */
+
+/*
+ * Notes:
+ *  - Paths are absolute ("/dir/file"); trailing '/' is ignored, "/" is root.
+ *  - Name in fpkg_dirent_t is valid until next fpkg__readdir()/fpkg__dirclose().
+ *  - Library is not thread safe: all objects created from one fpkg_t share
+ *    file and buffer of that container; use one fpkg_t per thread or lock.
+ *  - Directory and file objects must be closed before container is closed.
+ *  - "Encryption" is an obfuscation only (no key, all seeds are in the image).
+ */
 
 /*==============================================================================
   Exported object types
@@ -66,6 +84,7 @@ typedef enum {
 
 typedef struct {
         uint32_t size;
+        bool dir;
 } fpkg_stat_t;
 
 typedef struct fpkg_dir fpkg_dir_t;
@@ -85,8 +104,10 @@ extern bool fpkg__is_valid(fpkg_t *fpkg);
 extern fpkg_dir_t *fpkg__diropen(fpkg_t *fpkg, const char *dirname);
 extern fpkg_dir_t *fpkg__dirclose(fpkg_dir_t *dir);
 extern int fpkg__readdir(fpkg_dir_t *dir, fpkg_dirent_t *entry);
+extern void fpkg__rewinddir(fpkg_dir_t *dir);
 extern fpkg_file_t *fpkg__fopen(fpkg_t *fpkg, const char *filename);
 extern int fpkg__fseek(fpkg_file_t *file, int32_t seek, fpkg_seek_mode_t mode);
+extern int32_t fpkg__ftell(fpkg_file_t *file);
 extern size_t fpkg__fread(fpkg_file_t *file, void *dst, uint32_t count);
 extern int fpkg__stat(fpkg_t *fpkg, const char *filename, fpkg_stat_t *stat);
 extern int fpkg__fstat(fpkg_file_t *file, fpkg_stat_t *stat);

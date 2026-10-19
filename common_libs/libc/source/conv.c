@@ -394,6 +394,97 @@ char *_libc_strtoi(const char *string, int base, i32_t *value)
 
 //==============================================================================
 /**
+ * @brief Function convert ASCII to the number
+ * When function find any other character than number (depended of actual base)
+ * immediately finished operation and return pointer when bad character was
+ * found. If base is 0 then function recognize type of number used in string.
+ * For hex values "0x" is recognized, for octal values "0" at the beginning of
+ * string is recognized, for binary "0b" is recognized, and for decimals values
+ * none above.
+ *
+ * @param[in]  string       string to decode
+ * @param[in]  base         decode base
+ * @param[out] value        pointer to result
+ *
+ * @return pointer in string when operation was finished
+ */
+//==============================================================================
+char *_libc_strtoll(const char *string, int base, i64_t *value)
+{
+        if (not string) {
+                *value = 0;
+                return NULL;
+        }
+
+        *value = 0;
+
+        i64_t sign = 1;
+        if (string[0] == '-') {
+                string++;
+                sign = -1;
+        } else if (string[0] == '+') {
+                string++;
+                sign = 1;
+        }
+
+        if (base == 0) {
+                if (strncmp("0x", string, 2) == 0) {
+                        base    = 16;
+                        string += 2;
+                } else if (strncmp("0b", string, 2) == 0) {
+                        base    = 2;
+                        string += 2;
+                } else if (strncmp("0", string, 1) == 0) {
+                        base    = 8;
+                        string += 1;
+                } else {
+                        base = 10;
+                }
+        } else if (base < 2 || base > 16) {
+                return const_cast(string);
+        }
+
+        char  character;
+        bool  char_found = false;
+        while ((character = *string) != '\0') {
+                /* if space exist, atoi continue finding correct character */
+                if ((character == ' ') && (char_found == false)) {
+                        string++;
+                        continue;
+                } else {
+                        char_found = true;
+                }
+
+                /* check character range */
+                if (character >= 'a') {
+                        character -= 'a' - 10;
+                } else if (character >= 'A') {
+                        character -= 'A' - 10;
+                } else if (character >= '0') {
+                        character -= '0';
+                } else {
+                        break;
+                }
+
+                /* check character range according to actual base */
+                if (character >= base) {
+                        break;
+                }
+
+                /* compute value */
+                *value = *value * base;
+                *value = *value + character;
+
+                string++;
+        }
+
+        *value *= sign;
+
+        return const_cast(string);
+}
+
+//==============================================================================
+/**
  * @brief Function convert string to integer
  *
  * @param[in] str       string
