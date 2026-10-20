@@ -121,26 +121,31 @@ static void *lua_alloc(void *ud, void *ptr, size_t osize, size_t nsize)
         if (nsize == 0) {
                 free(ptr);
                 return NULL;
-
-        } else {
-                if (ptr) {
-                        if (osize >= nsize) {
-                                return ptr;
-
-                        } else {
-                                void *mem = malloc(nsize);
-                                if (mem) {
-                                        memcpy(mem, ptr, osize);
-                                }
-
-                                free(ptr);
-
-                                return mem;
-                        }
-                } else {
-                        return malloc(nsize);
-                }
         }
+
+        /*
+         * NOTE: when ptr is NULL, osize contains the object type, not a size.
+         */
+        if (ptr == NULL) {
+                return malloc(nsize);
+        }
+
+        if (osize >= nsize) {
+                return ptr;
+        }
+
+        /*
+         * NOTE: Lua requires that on allocation failure the old block stays
+         *       untouched (Lua still owns and uses it). Free old block only
+         *       when the new one was allocated.
+         */
+        void *mem = malloc(nsize);
+        if (mem) {
+                memcpy(mem, ptr, osize);
+                free(ptr);
+        }
+
+        return mem;
 }
 
 //==============================================================================
@@ -611,10 +616,12 @@ static int luafn_ipc_request(lua_State *L)
         }
 
         /*
-         * Conver answer to Lua table.
+         * Convert answer to Lua table.
          */
         lua_pushnumber(L, 0);
         lua_newtable(L);
+
+        const u8_t *buf_end = cast(u8_t *, self->interpreter.tmp_buf) + n;
 
         bs_t bs_rd = bs_read_init(cast(uint8_t *, self->interpreter.tmp_buf), n);
 
@@ -687,7 +694,13 @@ static int luafn_ipc_request(lua_State *L)
                 case bs_type__uint64_t: {
                         uint64_t v;
                         memcpy(&v, value, sizeof(v));
-                        lua_pushinteger(L, v);
+
+                        // values above LUA_MAXINTEGER would become negative
+                        if (v > cast(uint64_t, LUA_MAXINTEGER)) {
+                                lua_pushnumber(L, cast(lua_Number, v));
+                        } else {
+                                lua_pushinteger(L, cast(lua_Integer, v));
+                        }
                         break;
                 }
 
@@ -705,9 +718,23 @@ static int luafn_ipc_request(lua_State *L)
                         break;
                 }
 
-                case bs_type__string:
-                        lua_pushstring(L, value);
+                case bs_type__string: {
+                        /*
+                         * NOTE: string length is bounded by record length
+                         *       (value_len, may include NUL terminator) or by
+                         *       received data end, never read past buffer.
+                         */
+                        const char *str = value;
+                        size_t max_len = value_len;
+
+                        if ((max_len == 0) or (cast(const u8_t *, str) + max_len > buf_end)) {
+                                max_len = cast(size_t, buf_end - cast(const u8_t *, str));
+                        }
+
+                        const char *nul = memchr(str, '\0', max_len);
+                        lua_pushlstring(L, str, nul ? cast(size_t, nul - str) : max_len);
                         break;
+                }
 
                 case bs_type__blob:
                         lua_pushlstring(L, value, value_len);

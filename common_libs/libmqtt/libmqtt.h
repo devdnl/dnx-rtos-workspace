@@ -37,6 +37,7 @@ Brief   MQTT library (MQTT v3.1.1).
 ==============================================================================*/
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <errno.h>
 #include <dnx/misc.h>
 #include <stdio.h>
@@ -49,7 +50,7 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define LIBMQTT_VERSION 20260415
+#define LIBMQTT_VERSION 20261013
 
 /*==============================================================================
   Exported object types
@@ -104,34 +105,51 @@ typedef enum {
         libmqtt_reason__wildcard_subscriptions_not_supported = 0xa2,
 } libmqtt_reason_t;
 
-typedef struct {
-        const char *user_name;
-        const char *password;
-        const char *client_id;
-        const char *will_topic;
-        const char *will_msg;
-} libmqtt_connect_params_t;
-
-typedef struct libmqtt_conf {
-        u32_t timeout_ms;   // MQTT receive timeout in milliseconds
-        u32_t rx_buf_size;  // MQTT frame receive buffer
-        u32_t tx_buf_size;  // MQTT frame transmit buffer
-        u32_t out_buf_size; // socket output buffer
-        void *context;
-        void *socket;
-        int (*socket_recv)(struct libmqtt_conf *conf, void *buf, u16_t len);
-        int (*socket_send)(struct libmqtt_conf *conf, const void *buf, u16_t len);
-        i64_t (*get_time_ms)(void);
-        u16_t max_subscribe_topics;
-        u16_t keep_alive;
-} libmqtt_conf_t;
-
 typedef enum {
         libmqtt_qos__QOS0,
         libmqtt_qos__QOS1,
         libmqtt_qos__QOS2,
 } libmqtt_qos_t;
 
+/*
+ * Connection parameters.
+ *  - client_id is required (an empty string "" is allowed - clean session).
+ *  - password requires user_name (MQTT 3.1.1 [MQTT-3.1.2-22]).
+ *  - will_topic and will_msg must be both set or both NULL.
+ *  - empty strings ("") are valid values and are encoded as zero-length fields.
+ */
+typedef struct {
+        const char *user_name;
+        const char *password;
+        const char *client_id;
+        const char *will_topic;
+        const char *will_msg;
+        bool will_retain;       // retain flag of the will message
+        libmqtt_qos_t will_qos; // QoS of the will message
+} libmqtt_connect_params_t;
+
+typedef struct libmqtt_conf {
+        u32_t timeout_ms;   // MQTT response timeout in milliseconds (> 0)
+        u32_t rx_buf_size;  // MQTT frame receive buffer (max. incoming packet size)
+        u32_t tx_buf_size;  // MQTT frame transmit buffer
+        u32_t out_buf_size; // socket output buffer (<= 65535)
+        void *context;
+        void *socket;
+        // must return -1 with errno = ETIME (or EAGAIN) on timeout, 0 means
+        // connection closed by peer
+        int (*socket_recv)(struct libmqtt_conf *conf, void *buf, u16_t len);
+        int (*socket_send)(struct libmqtt_conf *conf, const void *buf, u16_t len);
+        i64_t (*get_time_ms)(void);
+        u16_t max_subscribe_topics;
+        u16_t keep_alive; // keep alive interval in seconds (> 0)
+} libmqtt_conf_t;
+
+/*
+ * Message passed to the subscription callback.
+ * NOTE: topic and payload are NOT NUL-terminated and are valid only during
+ *       callback execution. From callback only QoS0 publish is allowed;
+ *       functions waiting for the broker response return -EDEADLK.
+ */
 typedef struct {
         libmqtt_t *self;
         void *context;
@@ -142,7 +160,7 @@ typedef struct {
 } libmqtt_subscribe_msg_t;
 
 typedef struct {
-        char *topic;
+        char *topic; // topic filter, wildcards '+' and '#' are supported
         void (*callback)(libmqtt_subscribe_msg_t *msg);
         void *context;
         libmqtt_qos_t qos;
@@ -152,8 +170,8 @@ typedef struct {
         const char *topic;
         libmqtt_qos_t qos;
         bool retain;
-        const void *payload;
-        size_t payload_len;
+        const void *payload; // can be NULL if payload_len == 0
+        size_t payload_len;  // 0 is allowed (e.g. clearing a retained message)
 } libmqtt_publish_t;
 
 typedef struct {
