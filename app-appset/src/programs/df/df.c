@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <mntent.h>
 #include <sys/statfs.h>
 #include <dnx/misc.h>
@@ -63,6 +64,8 @@
 static void print_usage(const char *name);
 static void print_summary(void);
 static void print_details(void);
+static int read_mntentry(size_t seek, struct mntent *mnt, int *err);
+static const char *fs_type_name(u32_t type);
 static void print_size(u64_t bytes);
 static void print_percent(u64_t part, u64_t total);
 
@@ -130,6 +133,39 @@ static void print_usage(const char *name)
 
 //==============================================================================
 /**
+ * @brief Read mount entry.
+ *
+ * The kernel returns an error for an existing entry when statfs() of that
+ * file system fails (mnt_dir and mnt_src are still filled). Only ENOENT means
+ * end of the mount list, so other errors must not stop iteration.
+ *
+ * @param seek          entry index
+ * @param mnt           entry container
+ * @param err           statfs error of entry (0 on success)
+ *
+ * @return 0 if entry exists, -1 at end of list.
+ */
+//==============================================================================
+static int read_mntentry(size_t seek, struct mntent *mnt, int *err)
+{
+        memset(mnt, 0, sizeof(*mnt));
+        errno = 0;
+
+        if (getmntentry(seek, mnt) == 0) {
+                *err = 0;
+                return 0;
+        }
+
+        if ((errno == ENOENT) || (mnt->mnt_dir == NULL)) {
+                return -1;
+        }
+
+        *err = errno;
+        return 0;
+}
+
+//==============================================================================
+/**
  * @brief Print table of mounted file systems (default view).
  */
 //==============================================================================
@@ -140,7 +176,8 @@ static void print_summary(void)
 
         struct mntent mnt;
         size_t i = 0;
-        while (getmntentry(i++, &mnt) == 0) {
+        int err;
+        while (read_mntentry(i++, &mnt, &err) == 0) {
                 u32_t dtotal;
                 u32_t dfree;
                 const char *unit;
@@ -159,9 +196,13 @@ static void print_summary(void)
                         unit = "B";
                 }
 
-                u32_t percent = (dtotal > 0) ? (((dtotal - dfree) * 1000) / dtotal) : 0;
+                u32_t percent = (dtotal > 0) ? (u32_t)(((u64_t)(dtotal - dfree) * 1000) / dtotal) : 0;
 
-                if (isstreq(mnt.mnt_src, "/")) {
+                if (isstrempty(mnt.mnt_fsname)) {
+                        mnt.mnt_fsname = "unknown";
+                }
+
+                if (isstrempty(mnt.mnt_src) || isstreq(mnt.mnt_src, "/")) {
                         mnt.mnt_src = "";
                 }
 
@@ -184,8 +225,9 @@ static void print_details(void)
         struct mntent mnt;
         size_t i = 0;
         bool first = true;
+        int err;
 
-        while (getmntentry(i++, &mnt) == 0) {
+        while (read_mntentry(i++, &mnt, &err) == 0) {
 
                 if (!first) {
                         printf("\n");
@@ -193,25 +235,37 @@ static void print_details(void)
                 first = false;
 
                 printf(VT100_FONT_BOLD "%s" VT100_RESET_ATTRIBUTES "\n", mnt.mnt_dir);
-                printf("  File system  : %s\n", mnt.mnt_fsname);
                 printf("  Source       : %s\n", isstrempty(mnt.mnt_src) ? "-" : mnt.mnt_src);
 
                 struct statfs fs;
-                if (statfs(mnt.mnt_dir, &fs) != 0) {
-                        printf("  statfs()     : error\n");
+                memset(&fs, 0, sizeof(fs));
+
+                if (err == 0) {
+                        if (statfs(mnt.mnt_dir, &fs) != 0) {
+                                err = errno;
+                        }
+                }
+
+                if (err != 0) {
+                        printf("  File system  : %s\n", isstrempty(mnt.mnt_fsname) ? "unknown" : mnt.mnt_fsname);
+                        printf("  statfs()     : %s\n", strerror(err));
                         continue;
                 }
 
-                u64_t bsize   = fs.f_bsize;
-                u64_t blocks  = fs.f_blocks;
-                u64_t bfree   = fs.f_bfree;
-                u64_t bused   = (blocks >= bfree) ? (blocks - bfree) : 0;
+                const char *fsname = !isstrempty(fs.f_fsname)   ? fs.f_fsname
+                                   : !isstrempty(mnt.mnt_fsname) ? mnt.mnt_fsname
+                                                                 : "unknown";
 
-                printf("  Type         : 0x%X\n", (u32_t)fs.f_type);
-                printf("  Block size   : %u B\n", (u32_t)bsize);
+                u64_t bsize  = fs.f_bsize;
+                u64_t blocks = fs.f_blocks;
+                u64_t bfree  = (fs.f_bfree <= fs.f_blocks) ? fs.f_bfree : fs.f_blocks;
+                u64_t bused  = blocks - bfree;
 
+                printf("  File system  : %s\n", fsname);
+                printf("  Type         : %s\n", fs_type_name(fs.f_type));
+                printf("  Block size   : %u B\n", (u32_t)fs.f_bsize);
                 printf("  Blocks       : %u total, %u free, %u used\n",
-                       (u32_t)blocks, (u32_t)bfree, (u32_t)bused);
+                       (u32_t)fs.f_blocks, (u32_t)bfree, (u32_t)bused);
 
                 printf("  Size         : ");
                 print_size(blocks * bsize);
@@ -229,16 +283,39 @@ static void print_details(void)
 
                 if (fs.f_files > 0) {
                         u32_t files = fs.f_files;
-                        u32_t ffree = fs.f_ffree;
-                        u32_t fused = (files >= ffree) ? (files - ffree) : 0;
+                        u32_t ffree = (fs.f_ffree <= fs.f_files) ? fs.f_ffree : fs.f_files;
+                        u32_t fused = files - ffree;
 
-                        printf("  Inodes       : %u total, %u free, %u used (", files, ffree, fused);
+                        printf("  Inodes       : %u total, %u free, %u used (",
+                               (u32_t)files, (u32_t)ffree, (u32_t)fused);
                         print_percent(fused, files);
                         printf(")\n");
                 } else {
                         printf("  Inodes       : -\n");
                 }
         }
+}
+
+//==============================================================================
+/**
+ * @brief Return name of file system type (kernel enum SYS_FS_TYPE).
+ *
+ * @param type          file system type
+ *
+ * @return Type name.
+ */
+//==============================================================================
+static const char *fs_type_name(u32_t type)
+{
+        static const char *const name[] = {
+                "RAM",   // SYS_FS_TYPE__RAM
+                "solid", // SYS_FS_TYPE__SOLID
+                "device",// SYS_FS_TYPE__DEV
+                "system",// SYS_FS_TYPE__SYS
+                "network"// SYS_FS_TYPE__NET
+        };
+
+        return (type < ARRAY_SIZE(name)) ? name[type] : "unknown";
 }
 
 //==============================================================================
@@ -265,7 +342,7 @@ static void print_size(u64_t bytes)
         if (u == 0) {
                 printf("%u %s", (u32_t)val, unit[u]);
         } else {
-                printf("%u.%u %s", (u32_t)val, frac, unit[u]);
+                printf("%u.%u %s", (u32_t)val, (u32_t)frac, unit[u]);
         }
 }
 
@@ -280,7 +357,7 @@ static void print_size(u64_t bytes)
 static void print_percent(u64_t part, u64_t total)
 {
         u32_t permille = (total > 0) ? (u32_t)((part * 1000) / total) : 0;
-        printf("%u.%u%%", permille / 10, permille % 10);
+        printf("%u.%u%%", (u32_t)(permille / 10), (u32_t)(permille % 10));
 }
 
 /*==============================================================================
