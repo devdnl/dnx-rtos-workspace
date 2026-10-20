@@ -1,12 +1,11 @@
-qspi_flash_erase 0x90000000 [get_file_size "/app-appset-nor.bin"]
-qspi_flash_write "/app-appset-nor.bin" 0x90000000
+flash_erase 0x08080000 [get_file_size "/app-kernel.bin"]
+flash_write "/app-kernel.bin" 0x08080000
 
-qspi_flash_erase 0x90800000 [get_file_size "/app-romfs-nor.bin"]
-qspi_flash_write "/app-romfs-nor.bin" 0x90800000
+flash_erase 0x08100000 [get_file_size "/app-appset.bin"]
+flash_write "/app-appset.bin" 0x08100000
 
-flash_erase 0x08040000 262144
-flash_write "/app-kernel.bin" 0x08040000
-flash_write "/app-appset.bin" 0x08070000
+flash_erase 0x081C0000 [get_file_size "/app-romfs.bin"]
+flash_write "/app-romfs.bin" 0x081C0000
 
 fpkg_extract "/manifest" "/sd/manifest"
 

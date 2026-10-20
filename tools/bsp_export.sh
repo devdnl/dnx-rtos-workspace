@@ -7,7 +7,7 @@ if [ "$#" == "0" ]; then
     exit
 fi
 
-sh ../kernel/tools/configtool.sh export="../$1":"../,config"
+bash ../kernel/tools/configtool.sh export="../$1":"../,config"
 
 if [ "$#" == "2" ]; then
     lua ./optimize_bsp.lua "../$1" "$2"

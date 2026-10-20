@@ -53,7 +53,7 @@ The default configuration targets **stm32h7** (`__CPU_ARCH__` in
 ## Build environment
 
 Builds require `arm-none-eabi-gcc` 10.3-2021.10, GNU make, `srec_cat`,
-Python 3, Lua 5.5 and `dialog` (configtool). The supported environment is the
+Python 3, Lua 5.4+ with LuaFileSystem and `dialog` (configtool). The supported environment is the
 Docker image defined in `tools/Dockerfile`:
 
 ```sh
@@ -94,8 +94,10 @@ Notes:
   generated files.
 - `install*` and `config-*` targets need hardware / an interactive terminal —
   do not run them unless the user asks.
-- Static analysis: `make check` / `make checkprog` inside `kernel/` or
-  `app-appset/` (cppcheck).
+- Static analysis: `make check` inside `kernel/`, `make check` / `make checkprog`
+  inside `app-appset/` (cppcheck).
+- `kernel/tools/tests.sh` builds the kernel for all test configurations in
+  `kernel/tools/test_bsp/` and restores the kernel's default `config/`.
 
 ## Configuration files (important)
 
@@ -193,6 +195,3 @@ both C preprocessor and make**. Rules:
 - After changes, build the affected partition (`make build-app-appset`,
   `make build-app-kernel`, …) if the toolchain is available, and report the
   result. If you cannot build, state it explicitly.
-- Some helper scripts are legacy and may reference outdated paths (e.g.
-  `kernel/tools/tests.sh`, `quickcheck` include path). Verify before relying on
-  them.

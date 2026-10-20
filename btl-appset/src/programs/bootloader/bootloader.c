@@ -58,7 +58,7 @@
 #define APP_BASE_ADDRESS      0x08080000
 #define QSPI_BASE_ADDRESS     0x90000000
 #define PATH_VENDOR           "/sd/vendor"
-#define PATH_UPDATE_FILE      PATH_VENDOR "/project.fpkg"
+#define PATH_UPDATE_FILE      PATH_VENDOR "/project-app.fpkg"
 #define PATH_APP_FLASH        "/dev/app-flash"
 #define PATH_APP_QSPI         "/dev/app-qspi"
 #define FPKG_SECTION_MANIFEST "/manifest"
@@ -341,10 +341,11 @@ static void initialize_additional_drivers(void)
                         .read_status_register_command = &qspi_rdsr,
                 });
 
+        // application section: sectors 4-15 (0x08080000-0x081FFFFF), APP_BASE_ADDRESS is offset 0
         driver_init2("NVM", 0, 0, PATH_APP_FLASH,
                 &(const NVM_config_t) {
-                        .start_sector = 6,
-                        .number_of_sectors = 2,
+                        .start_sector = 4,
+                        .number_of_sectors = 12,
                 });
 }
 

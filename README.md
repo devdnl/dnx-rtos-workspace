@@ -352,32 +352,37 @@ them is running at a time.
    `bootloader` program from `btl-appset`.
 2. The boot loader initializes basic drivers and mounts the SD card
    (`/dev/sd0p1`, FAT) at `/sd`.
-3. If the update package `/sd/vendor/project.fpkg` exists, the boot loader
+3. If the update package `/sd/vendor/project-app.fpkg` exists, the boot loader
    extracts the `manifest` file from it and executes it as a TCL script.
-   The manifest describes which images from the package are written to which
-   addresses, e.g.:
+   The manifest (`app-dist/manifest`) describes which images from the package
+   are written to which addresses:
    ```
-   flash_erase 0x08080000 524288
+   flash_erase 0x08080000 [get_file_size "/app-kernel.bin"]
    flash_write "/app-kernel.bin" 0x08080000
 
-   flash_erase 0x08100000 786432
+   flash_erase 0x08100000 [get_file_size "/app-appset.bin"]
    flash_write "/app-appset.bin" 0x08100000
 
-   flash_erase 0x081C0000 262144
+   flash_erase 0x081C0000 [get_file_size "/app-romfs.bin"]
    flash_write "/app-romfs.bin" 0x081C0000
+
+   fpkg_extract "/manifest" "/sd/manifest"
 
    puts "DONE"
    ```
-   Available commands: `flash_erase`, `flash_write`, `qspi_flash_erase`,
+   `flash_erase` erases only the sectors needed for the image. Available
+   commands: `flash_erase`, `flash_write`, `qspi_flash_erase`,
    `qspi_flash_write`, `get_file_size`, `fpkg_extract`, `remove`, `mkdir` and
-   `rename`. After the update the package is renamed to `project.fpkg.bak`,
-   so it is not installed again at next start.
+   `rename`. Internal flash commands can access only the application section
+   (`0x08080000`–`0x081FFFFF`), so the boot loader cannot overwrite itself.
+   After the update the package is renamed to `project-app.fpkg.bak`, so it is
+   not installed again at next start.
 4. The boot loader unmounts the SD card and jumps to the application reset
    vector stored at `0x08080000`. If the application partition is empty (erased
    flash) the boot loader stops and waits.
 
-The update package is created by `make build-app` (`build/project-app.fpkg`)
-from the content of the `app-dist` directory (manifest and other files) and the
+The update package is created by `make build-app` (`build/project-app.fpkg`;
+copy it to `vendor/` on the SD card) from the content of the `app-dist` directory (manifest and other files) and the
 application binaries (`app-kernel.bin`, `app-appset.bin`, `app-romfs.bin`).
 
 ### Programming
