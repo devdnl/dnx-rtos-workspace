@@ -83,7 +83,7 @@ uC.AddPriorityItems(this, false)
 --*/
 #define __I2C1_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
-/*----------------------------------------------------------------------------*/
+/*--
 this:AddExtraWidget("Label", "Label2A", "")
 ++*/
 
@@ -133,7 +133,7 @@ uC.AddPriorityItems(this, false)
 #define __I2C2_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 
-/*----------------------------------------------------------------------------*/
+/*--
 this:AddExtraWidget("Label", "Label3A", "")
 ++*/
 
