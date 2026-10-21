@@ -28,6 +28,7 @@ CSRC_LIB   += $(LIB_ROOT_LIBC)libc/source/syscall.c
 CSRC_LIB   += $(LIB_ROOT_LIBC)libc/source/system.c
 CSRC_LIB   += $(LIB_ROOT_LIBC)libc/source/threads.c
 CSRC_LIB   += $(LIB_ROOT_LIBC)libc/source/vfprintf.c
+CSRC_LIB   += $(LIB_ROOT_LIBC)libc/source/vformat.c
 CSRC_LIB   += $(LIB_ROOT_LIBC)libc/source/vfscanf.c
 CSRC_LIB   += $(LIB_ROOT_LIBC)libc/source/vsnprintf.c
 CSRC_LIB   += $(LIB_ROOT_LIBC)libc/source/vsscanf.c

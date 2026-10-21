@@ -536,6 +536,12 @@ int conf_parser__save_buffer(conf_parser_t *this, char *buf, size_t bufsz)
                 for (pair_t *pair = this->pair; pair; pair = pair->next) {
                         n += snprintf(&buf[n], bufsz - n, "%s = %s%s%s\n", pair_get_key(pair),
                                 pair->string ? "\"" : "", pair_get_value(pair), pair->string ? "\"" : "");
+
+                        // snprintf() returns the length of not truncated output
+                        if ((size_t)n >= bufsz) {
+                                n = (bufsz > 0) ? bufsz - 1 : 0;
+                                break;
+                        }
                 }
 
                 mutex_unlock(this->mutex);

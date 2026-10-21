@@ -36,8 +36,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 #include <dnx/misc.h>
 #include <errno.h>
+#include <libc/source/vformat.h>
 
 /*==============================================================================
   Local macros
@@ -46,6 +48,12 @@
 /*==============================================================================
   Local object types
 ==============================================================================*/
+typedef struct {
+        _libc_fmt_out_t out; //!< must be the first member
+        FILE *file;          //!< destination file
+        size_t len;          //!< number of characters in buffer
+        char buf[BUFSIZ];    //!< output buffer
+} file_out_t;
 
 /*==============================================================================
   Local function prototypes
@@ -69,36 +77,84 @@
 
 //==============================================================================
 /**
- * @brief Function write to file formatted string.
+ * @brief  Write buffered characters to file.
+ *
+ * @param  fo           file sink
+ *
+ * @return On success true is returned, otherwise false.
+ */
+//==============================================================================
+static bool file_flush(file_out_t *fo)
+{
+        bool ok = true;
+
+        if (fo->len > 0) {
+                ok = (fwrite(fo->buf, sizeof(char), fo->len, fo->file) == fo->len);
+                fo->len = 0;
+        }
+
+        return ok;
+}
+
+//==============================================================================
+/**
+ * @brief  File sink write function. Text is collected in the buffer, so
+ *         messages shorter than BUFSIZ are written by single write.
+ *
+ * @param  out          sink
+ * @param  str          text
+ * @param  len          text length
+ *
+ * @return On success true is returned, otherwise false.
+ */
+//==============================================================================
+static bool file_write(_libc_fmt_out_t *out, const char *str, size_t len)
+{
+        file_out_t *fo = (file_out_t *)out;
+
+        while (len > 0) {
+                if (fo->len == sizeof(fo->buf)) {
+                        if (!file_flush(fo)) {
+                                return false;
+                        }
+                }
+
+                size_t room = sizeof(fo->buf) - fo->len;
+                size_t n = (len < room) ? len : room;
+                memcpy(fo->buf + fo->len, str, n);
+                fo->len += n;
+                str += n;
+                len -= n;
+        }
+
+        return true;
+}
+
+//==============================================================================
+/**
+ * @brief Function write to file formatted string (POSIX vfprintf()).
+ *
+ * See vformat.c for supported conversion specifications.
  *
  * @param file                file
  * @param format              formated text
  * @param arg                 arguments
  *
- * @retval number of written characters.
+ * @return Number of written characters. On error negative value is returned.
  */
 //==============================================================================
 int vfprintf(FILE *file, const char *format, va_list arg)
 {
-        int n = 0;
+        file_out_t fo;
+        fo.out.write = file_write;
+        fo.file = file;
+        fo.len = 0;
 
-        va_list carg;
-        va_copy(carg, arg);
-        u32_t size = vsnprintf(NULL, 0, format, carg) + 1;
-        va_end(carg);
+        int n = _libc_vformat(&fo.out, format, arg);
 
-        if (size < BUFSIZ) {
-                char str[BUFSIZ];
-                n = vsnprintf(str, sizeof(str), format, arg);
-                fwrite(str, sizeof(char), n, file);
-
-        } else {
-                char *str = malloc(size);
-                if (str) {
-                        n = vsnprintf(str, size, format, arg);
-                        fwrite(str, sizeof(char), n, file);
-                        free(str);
-                }
+        // flush also on format error (e.g. EILSEQ) to output preceding text
+        if (!file_flush(&fo)) {
+                n = -1;
         }
 
         return n;
@@ -111,7 +167,7 @@ int vfprintf(FILE *file, const char *format, va_list arg)
  * @param format              formated text
  * @param ...                 format arguments
  *
- * @return number of written characters.
+ * @return Number of written characters. On error negative value is returned.
  */
 //==============================================================================
 int _libc_printf(const char *format, ...)
@@ -131,7 +187,7 @@ int _libc_printf(const char *format, ...)
  * @param format              formated text
  * @param ...                 format arguments
  *
- * @return number of written characters.
+ * @return Number of written characters. On error negative value is returned.
  */
 //==============================================================================
 int _libc_fprintf(FILE *stream, const char *format, ...)

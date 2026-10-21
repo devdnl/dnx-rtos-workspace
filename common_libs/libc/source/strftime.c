@@ -276,6 +276,11 @@ size_t strftime(char *buf, size_t size, const char *format, const struct tm *tim
                                         break;
                                 }
 
+                                // snprintf() returns the length of not truncated output
+                                if (m >= size) {
+                                        m = size - 1;
+                                }
+
                                 n += m;
                                 buf += m;
                                 size -= m;

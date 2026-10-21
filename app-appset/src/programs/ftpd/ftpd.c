@@ -414,6 +414,7 @@ static void handle_cmd_PWD(struct thread *self)
         char *path = malloc(PATH_LEN);
         if (path) {
                 int n = snprintf(path, PATH_LEN, "257 \"%s\"\r\n", self->CWD);
+                n = min(n, (int)PATH_LEN - 1); // snprintf() returns the length of not truncated output
                 socket_send(self->socket, path, n, NET_FLAGS__COPY);
                 VERBOSE(path);
                 free(path);
