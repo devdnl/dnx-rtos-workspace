@@ -100,10 +100,10 @@ int main(int argc, char *argv[])
                         err = ioctl(fd, IOCTL_ETHIF__GET_STATUS, &global->status);
                         if (!err) {
                                 printf("Configured: %s\n", global->status.configured ? "YES" : "NO");
-                                printf("State     : %16s\n", ETH_STATE[global->status.state]);
-                                printf("Link      : %16s\n", ETH_LINK[global->status.link_status]);
-                                printf("Duplex    : %16s\n", ETH_DUPLEX[global->status.duplex]);
-                                printf("Speed     : %16s Mbps\n", ETH_SPEED[global->status.speed]);
+                                printf("State     : %s\n", ETH_STATE[global->status.state]);
+                                printf("Link      : %s\n", ETH_LINK[global->status.link_status]);
+                                printf("Duplex    : %s\n", ETH_DUPLEX[global->status.duplex]);
+                                printf("Speed     : %s Mbps\n", ETH_SPEED[global->status.speed]);
                                 printf("MAC       : %02x:%02x:%02x:%02x:%02x:%02x\n", global->status.MAC[0],
                                         global->status.MAC[1], global->status.MAC[2], global->status.MAC[3],
                                         global->status.MAC[4], global->status.MAC[5]);
