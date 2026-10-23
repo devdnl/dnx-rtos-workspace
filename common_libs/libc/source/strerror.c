@@ -122,6 +122,7 @@ const char *strerror(int errnum)
                 [EISCONN] = "Socket is connected",
                 [EALREADY] = "Connection already in progress",
                 [EBADF] = "Bad file descriptor",
+                [EPIPE] = "Broken pipe",
         };
 
         if ((errnum >= 0) && (errnum < _ENUMBER)) {

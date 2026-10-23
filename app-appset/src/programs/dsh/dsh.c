@@ -66,6 +66,7 @@
 #define CAPTURE_MAX      4096   /* max. captured output of $(cmd) [bytes]  */
 #define CAPTURE_DEPTH    4      /* max. nesting of $(cmd)                  */
 #define SLEEP_SLICE_MS   20     /* CTRL+C check period during sleep        */
+#define PIPELINE_POLL_MS 20     /* pipeline programs exit check period     */
 
 #ifndef ETX
 #define ETX              0x03   /* CTRL+C */
@@ -91,6 +92,7 @@ typedef struct {
         pid_t          pid;
         FILE          *pipe;
         char           pipe_name[PIPE_NAME_LEN];
+        bool           done;
 } stage_t;
 
 /** Control flow result of executed line(s). */
@@ -1945,20 +1947,48 @@ static bool run_pipeline(char **cmds, size_t count, char *std_in, char *file,
         }
 
         /*
-         * Wait for programs. When program finishes then pipe to the next
-         * program is closed, so the reader gets EOF.
+         * Wait for programs in any order. When program finishes then pipe to
+         * the next program is closed, so the reader gets EOF. When reader
+         * finishes (e.g. 'more' closed by CTRL+C) then nobody reads the pipe,
+         * so the writer is killed (SIGPIPE behavior) and the pipe is cleared
+         * to release writer blocked on full pipe.
          */
         if (not detached) {
-                for (size_t i = 0; i < count; i++) {
-                        int exit_code = 0;
-                        process_wait(stage[i].pid, &exit_code, MAX_DELAY_MS);
+                size_t running = count;
 
-                        if (stage[i].pipe) {
-                                ioctl(fileno(stage[i].pipe), IOCTL_PIPE__CLOSE);
-                        }
+                while (running > 0) {
+                        for (size_t i = 0; i < count; i++) {
+                                if (stage[i].done) {
+                                        continue;
+                                }
 
-                        if (i + 1 == count) {
-                                global->status = exit_code;
+                                int exit_code = 0;
+                                errno = 0;
+                                if (process_wait(stage[i].pid, &exit_code, PIPELINE_POLL_MS) != 0) {
+                                        if (errno == ETIME) {
+                                                continue;
+                                        }
+
+                                        exit_code = 1;
+                                }
+
+                                stage[i].done = true;
+                                running--;
+
+                                if (stage[i].pipe) {
+                                        ioctl(fileno(stage[i].pipe), IOCTL_PIPE__CLOSE);
+                                }
+
+                                if ((i > 0) and not stage[i - 1].done) {
+                                        FILE *pipe = stage[i - 1].pipe;
+                                        ioctl(fileno(pipe), IOCTL_PIPE__CLOSE);
+                                        process_kill(stage[i - 1].pid);
+                                        ioctl(fileno(pipe), IOCTL_PIPE__CLEAR);
+                                }
+
+                                if (i + 1 == count) {
+                                        global->status = exit_code;
+                                }
                         }
                 }
         } else {

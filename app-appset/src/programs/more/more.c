@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
         FILE *file;
 
         if ((argc == 2) && argv[1]) {
-                file = fopen(argv[1], "r+");
+                file = fopen(argv[1], "r");
 
                 if (!file) {
                         perror(argv[1]);
@@ -115,6 +115,7 @@ int main(int argc, char *argv[])
                 }
 
                 while (true) {
+                        clearerr(stdout);
                         int c = getc(stdout);
 
                         if (c == '\n') {
@@ -124,6 +125,9 @@ int main(int argc, char *argv[])
                         } else if (c == ' ') {
                                 show = ROWS;
                                 break;
+
+                        } else if ((c == 'q') || (c == ETX)) {
+                                goto exit;
                         }
 
                         msleep(20);

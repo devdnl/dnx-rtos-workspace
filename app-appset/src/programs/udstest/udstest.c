@@ -1852,7 +1852,7 @@ static const char *test_stream_shutdown(void)
 
         CHECK(send_all(cli, "data", 4) == 0, "send()");
         CHECK(socket_shutdown(cli, NET_SHUT__WR) == 0, "socket_shutdown(WR)");
-        EXPECT_ERR(socket_send(cli, "x", 1, NET_FLAGS__NONE), EPERM, "send after shutdown");
+        EXPECT_ERR(socket_send(cli, "x", 1, NET_FLAGS__NONE), EPIPE, "send after shutdown");
 
         int n = socket_recv(acc, buf, sizeof(buf), NET_FLAGS__NONE);
         CHECK(n == 4, "recv(remaining data): %d", n);
@@ -1915,7 +1915,7 @@ static const char *test_stream_peer_close_recv(void)
         CHECK((job.ret < 0) && (job.err == ECONNRESET), "blocked recv: %d (%s), expected ECONNRESET", job.ret,
                 strerror(job.err));
         CHECK(dt < UDSTEST_WAKEUP_LIMIT, "blocked recv woken after %u ms", (unsigned)dt);
-        EXPECT_ERR(socket_send(cli, "x", 1, NET_FLAGS__NONE), ECONNRESET, "send to closed peer");
+        EXPECT_ERR(socket_send(cli, "x", 1, NET_FLAGS__NONE), EPIPE, "send to closed peer");
 
 cleanup:
         job_join(&job);
@@ -1962,7 +1962,7 @@ static const char *test_stream_peer_close_send(void)
         job_join(&job);
         u32_t dt = elapsed_ms(tref);
 
-        CHECK((job.ret < 0) && (job.err == ECONNRESET), "blocked send: %d (%s), expected ECONNRESET", job.ret,
+        CHECK((job.ret < 0) && (job.err == EPIPE), "blocked send: %d (%s), expected EPIPE", job.ret,
                 strerror(job.err));
         CHECK(dt < UDSTEST_WAKEUP_LIMIT, "blocked send woken after %u ms", (unsigned)dt);
 
