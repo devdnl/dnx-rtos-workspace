@@ -755,7 +755,7 @@ static inline int socket(const char *netname, NET_socket_type_t type, u8_t proto
 {
         int fd;
         int err = _libc_syscall(_LIBC_SYS_NETSOCKETCREATE, &fd, netname, &type, &protocol);
-        return err ? errno : fd;
+        return err ? -1 : fd;
 }
 
 //==============================================================================
