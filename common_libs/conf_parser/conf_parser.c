@@ -1,5 +1,5 @@
 /*==============================================================================
-File    config_parser.c
+File    conf_parser.c
 
 Author  Daniel Zorychta
 
@@ -49,7 +49,8 @@ Brief   Configuration parser.
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define LINE_LEN 128
+#define LINE_LEN        128
+#define TMP_FILE_SUFFIX ".tmp"
 
 /*==============================================================================
   Local object types
@@ -57,9 +58,18 @@ Brief   Configuration parser.
 typedef struct pair {
         struct pair *next;
         bool string;
+        size_t section_len;
         size_t value_offset;
         char data[];
 } pair_t;
+
+typedef struct {
+        FILE *fp;
+        char *buf;
+        size_t bufsz;
+        size_t len;
+        bool error;
+} writer_t;
 
 struct conf_parser {
         mutex_t *mutex;
@@ -81,13 +91,20 @@ enum {
   Local function prototypes
 ==============================================================================*/
 static int interpret_line(conf_parser_t *this, char *line, pair_t **pair);
-static pair_t *pair_new(const char *key, const char *val);
-static size_t pair_get_section_length(const pair_t *pair);
+static int load_line(conf_parser_t *this, char *line, pair_t ***pair, int *n);
+static int set_pair(conf_parser_t *this, const char *key, const char *val, size_t val_len, bool string);
+static pair_t *pair_new(const char *section, size_t section_len, const char *key, const char *val,
+        size_t val_len, bool string);
+static bool pair_is_same_section(const pair_t *a, const pair_t *b);
 static const char *pair_get_key(const pair_t *pair);
 static const char *pair_get_value(const pair_t *pair);
 static char *skip_leading_spaces(char *str);
 static void remove_trailing_spaces(char *str);
 static void clear_conf(conf_parser_t *this);
+static void writer_printf(writer_t *w, const char *fmt, ...);
+static void write_pair(writer_t *w, const pair_t *pair);
+static void write_conf(conf_parser_t *this, writer_t *w);
+static int write_file(conf_parser_t *this, const char *path, bool *opened);
 
 /*==============================================================================
   Local objects
@@ -237,28 +254,23 @@ int conf_parser__load_file(conf_parser_t *this, const char *path)
 
         while (fgets(line, sizeof(line), fp)) {
 
-                int err = interpret_line(this, line, pair);
+                // line longer than buffer cannot be interpreted correctly
+                if (not strchr(line, '\n') and not feof(fp)) {
+                        n = conf_parser_status__syntax_error;
+                        break;
+                }
 
-                if (err == interpret_section) {
-                        continue;
-
-                } else if (err == interpret_pair) {
-                        pair = &(*pair)->next;
-                        n++;
-
-                } else if (err == interpret_comment) {
-                        continue;
-
-                } else if (err == interpret_empty_line) {
-                        continue;
-
-                } else {
-                        n = -1;
+                int err = load_line(this, line, &pair, &n);
+                if (err) {
+                        n = err;
                         break;
                 }
         }
 
         fclose(fp);
+
+        free(this->current_section);
+        this->current_section = NULL;
 
         mutex_unlock(this->mutex);
 
@@ -278,7 +290,7 @@ int conf_parser__load_file(conf_parser_t *this, const char *path)
 //==============================================================================
 int conf_parser__load_buffer(conf_parser_t *this, const char *buf, size_t bufsz)
 {
-        if (not this and not buf and not bufsz) {
+        if (not this or not buf) {
                 return conf_parser_status__arg_error;
         }
 
@@ -292,44 +304,39 @@ int conf_parser__load_buffer(conf_parser_t *this, const char *buf, size_t bufsz)
 
         pair_t **pair = &this->pair;
 
-        while ((*buf != '\0') and (bufsz > 0)) {
+        while ((bufsz > 0) and (*buf != '\0')) {
                 size_t i = 0;
                 char line[LINE_LEN];
+                bool eol = false;
 
-                while ((*buf != '\0') and (bufsz > 0) and (i < LINE_LEN - 1)) {
+                while ((bufsz > 0) and (*buf != '\0') and (i < LINE_LEN - 1)) {
                         int c = *buf;
                         line[i++] = *buf++;
                         bufsz--;
 
                         if (c == '\n') {
+                                eol = true;
                                 break;
                         }
                 }
 
                 line[i] = '\0';
 
-                if (i > 0) {
-                        int err = interpret_line(this, line, pair);
+                // line longer than buffer cannot be interpreted correctly
+                if (not eol and (bufsz > 0) and (*buf != '\0')) {
+                        n = conf_parser_status__syntax_error;
+                        break;
+                }
 
-                        if (err == interpret_section) {
-                                continue;
-
-                        } else if (err == interpret_pair) {
-                                pair = &(*pair)->next;
-                                n++;
-
-                        } else if (err == interpret_comment) {
-                                continue;
-
-                        } else if (err == interpret_empty_line) {
-                                continue;
-
-                        } else {
-                                n = -1;
-                                break;
-                        }
+                int err = load_line(this, line, &pair, &n);
+                if (err) {
+                        n = err;
+                        break;
                 }
         }
+
+        free(this->current_section);
+        this->current_section = NULL;
 
         mutex_unlock(this->mutex);
 
@@ -377,7 +384,11 @@ int conf_parser__set_file_path(conf_parser_t *this, const char *path)
 
 //==============================================================================
 /**
- * @brief  Save configuration file.
+ * @brief  Save configuration file. Configuration is written to temporary file
+ *         <path>.tmp first and then renamed to the target file, so the target
+ *         file is not damaged if writing fails (e.g. no space, power loss).
+ *         If file system does not support temporary file or rename, the file
+ *         is written directly.
  *
  * @param  this         parser instance
  * @param  path         file to save
@@ -395,49 +406,53 @@ int conf_parser__save_file(conf_parser_t *this, const char *path)
                 return conf_parser_status__mutex_error;
         }
 
-        FILE *fp = fopen(path, "w");
-        if (not fp) {
-                mutex_unlock(this->mutex);
-                return conf_parser_status__file_error;
-        }
+        int err = conf_parser_status__file_error;
+        bool direct = true;
 
-        int err = conf_parser_status__success;
+        char *tmp_path = malloc(strlen(path) + sizeof(TMP_FILE_SUFFIX));
+        if (tmp_path) {
+                strcpy(tmp_path, path);
+                strcat(tmp_path, TMP_FILE_SUFFIX);
 
-        bool next_line = false;
-        char *last_section = NULL;
+                bool opened = false;
+                err = write_file(this, tmp_path, &opened);
 
-        for (pair_t *pair = this->pair; pair; pair = pair->next) {
+                if (not opened) {
+                        // temporary file cannot be created (e.g. name too long)
+                        direct = true;
 
-                const char *key = pair_get_key(pair);
-                const char *value = pair_get_value(pair);
+                } else if (err) {
+                        // writing failed (e.g. no space), target file stays untouched
+                        direct = false;
+                        remove(tmp_path);
 
-                size_t section_len = pair_get_section_length(pair);
-                if (section_len > 0) {
-                        if ((last_section == NULL) or (strlen(last_section) != section_len) or
-                                not isstreqn(last_section, pair_get_key(pair), section_len)) {
+                } else if (rename(tmp_path, path) == 0) {
+                        direct = false;
 
-                                fprintf(fp, "%s[%.*s]\n", next_line ? "\n" : "", section_len, key);
+                } else if (errno == ENOSYS) {
+                        // rename not supported by system
+                        direct = true;
+                        remove(tmp_path);
 
-                                free(last_section);
-                                last_section = strndup(key, section_len);
+                } else {
+                        // file system does not replace existing file by rename
+                        remove(path);
+
+                        if (rename(tmp_path, path) == 0) {
+                                direct = false;
+                        } else {
+                                direct = true;
+                                remove(tmp_path);
                         }
-
-                        key += section_len + 1;
                 }
 
-                int n = fprintf(fp, "%s = %s%s%s\n", key, pair->string ? "\"" : "", value,
-                        pair->string ? "\"" : "");
-                if (n <= 0) {
-                        err = conf_parser_status__file_error;
-                        break;
-                }
-
-                next_line = true;
+                free(tmp_path);
         }
 
-        free(last_section);
-
-        fclose(fp);
+        if (direct) {
+                bool opened = false;
+                err = write_file(this, path, &opened);
+        }
 
         mutex_unlock(this->mutex);
 
@@ -525,29 +540,29 @@ int conf_parser__reload(conf_parser_t *this)
 //==============================================================================
 int conf_parser__save_buffer(conf_parser_t *this, char *buf, size_t bufsz)
 {
-        if (not this and not buf and not bufsz) {
+        if (not this or (not buf and bufsz)) {
                 return conf_parser_status__arg_error;
         }
 
-        int n = 0;
-
-        if (mutex_lock(this->mutex, MAX_DELAY_MS)) {
-
-                for (pair_t *pair = this->pair; pair; pair = pair->next) {
-                        n += snprintf(&buf[n], bufsz - n, "%s = %s%s%s\n", pair_get_key(pair),
-                                pair->string ? "\"" : "", pair_get_value(pair), pair->string ? "\"" : "");
-
-                        // snprintf() returns the length of not truncated output
-                        if ((size_t)n >= bufsz) {
-                                n = (bufsz > 0) ? bufsz - 1 : 0;
-                                break;
-                        }
-                }
-
-                mutex_unlock(this->mutex);
+        if (not mutex_lock(this->mutex, MAX_DELAY_MS)) {
+                return conf_parser_status__mutex_error;
         }
 
-        return n;
+        writer_t w = {.buf = buf, .bufsz = bufsz};
+        write_conf(this, &w);
+
+        mutex_unlock(this->mutex);
+
+        if (w.error) {
+                return conf_parser_status__arg_error;
+        }
+
+        // output truncated to buffer size
+        if (w.len >= bufsz) {
+                w.len = (bufsz > 0) ? bufsz - 1 : 0;
+        }
+
+        return w.len;
 }
 
 //==============================================================================
@@ -626,47 +641,35 @@ char *conf_parser__get_file_value(const char *path, const char *key)
 //==============================================================================
 int conf_parser__set_value(conf_parser_t *this, const char *key, const char *value)
 {
-        if (not this or not key or not value) {
+        if (not this or isstrempty(key) or not value) {
                 return conf_parser_status__arg_error;
+        }
+
+        size_t val_len = strlen(value);
+
+        while ((val_len > 0) and ((value[val_len - 1] == '\n') or (value[val_len - 1] == '\r'))) {
+                val_len--;
+        }
+
+        bool string = false;
+
+        if ((val_len >= 2) and
+                (((value[0] == '"') and (value[val_len - 1] == '"')) or
+                        ((value[0] == '\'') and (value[val_len - 1] == '\'')))) {
+                value++;
+                val_len -= 2;
+                string = true;
         }
 
         if (not mutex_lock(this->mutex, MAX_DELAY_MS)) {
                 return conf_parser_status__mutex_error;
         }
 
-        pair_t *pair_prev = NULL;
-
-        for (pair_t *pair = this->pair; pair; pair = pair->next) {
-                if (strcmp(pair_get_key(pair), key) == 0) {
-                        pair_t *p = pair_new(key, value);
-
-                        if (pair_prev) {
-                                pair_prev->next = p;
-                        } else {
-                                this->pair = p;
-                        }
-
-                        p->next = pair->next;
-                        free(pair);
-
-                        mutex_unlock(this->mutex);
-                        return conf_parser_status__success;
-                }
-
-                pair_prev = pair;
-        }
-
-        pair_t *new_pair = pair_new(key, value);
-
-        if (pair_prev) {
-                pair_prev->next = new_pair;
-        } else {
-                this->pair = new_pair;
-        }
+        int err = set_pair(this, key, value, val_len, string);
 
         mutex_unlock(this->mutex);
 
-        return conf_parser_status__success;
+        return err;
 }
 
 //==============================================================================
@@ -729,13 +732,27 @@ int conf_parser__set_value_vparse(conf_parser_t *this, const char *key_value_fmt
         char line[LINE_LEN];
         vsnprintf(line, sizeof(line), key_value_fmt, args);
 
+        if (not this) {
+                return conf_parser_status__arg_error;
+        }
+
         struct conf_parser parser = {0};
         int err = interpret_line(&parser, line, &parser.pair);
         if (err == interpret_pair) {
-                err = conf_parser__set_value(this, parser.pair->data,
-                        &parser.pair->data[parser.pair->value_offset]);
+                if (mutex_lock(this->mutex, MAX_DELAY_MS)) {
+                        const char *value = pair_get_value(parser.pair);
+                        err = set_pair(this, pair_get_key(parser.pair), value, strlen(value),
+                                parser.pair->string);
+                        mutex_unlock(this->mutex);
+                } else {
+                        err = conf_parser_status__mutex_error;
+                }
+
+        } else if (err == interpret_no_memory) {
+                err = conf_parser_status__no_memory;
+
         } else {
-                err = interpret_syntax_error;
+                err = conf_parser_status__syntax_error;
         }
 
         clear_conf(&parser);
@@ -799,7 +816,7 @@ int conf_parser__set_file_value(const char *path, const char *key, const char *v
                 err = conf_parser__set_value(p, key, value);
 
                 if (not err) {
-                        conf_parser__save_file(p, path);
+                        err = conf_parser__save_file(p, path);
                 }
 
                 conf_parser__delete(p);
@@ -861,7 +878,7 @@ int conf_parser__get_pair(conf_parser_t *this, size_t i, const char **key, const
 //==============================================================================
 bool conf_parser__is_value_true(const char *value)
 {
-        static const char *truths[] = {"yes", "true", "1", "set", "on", "active", "high", "positive",
+        static const char *const truths[] = {"yes", "true", "1", "set", "on", "active", "high", "positive",
                 "enable"};
 
         if (value) {
@@ -907,10 +924,18 @@ static int interpret_line(conf_parser_t *this, char *line, pair_t **pair)
 
                 *end = '\0';
 
+                key = skip_leading_spaces(key);
+                remove_trailing_spaces(key);
+
                 free(this->current_section);
-                this->current_section = strdup(key);
-                if (not this->current_section) {
-                        return interpret_no_memory;
+                this->current_section = NULL;
+
+                // empty section [] means keys without section
+                if (not isstrempty(key)) {
+                        this->current_section = strdup(key);
+                        if (not this->current_section) {
+                                return interpret_no_memory;
+                        }
                 }
 
                 return interpret_section;
@@ -936,26 +961,25 @@ static int interpret_line(conf_parser_t *this, char *line, pair_t **pair)
                 remove_trailing_spaces(key);
                 remove_trailing_spaces(val);
 
-                char first_char = FIRST_CHARACTER(val);
-                char last_char = LAST_CHARACTER(val);
+                if (isstrempty(key)) {
+                        return interpret_syntax_error;
+                }
 
-                if (((first_char == '\"') and (last_char == '\"')) or
-                        ((first_char == '\'') and (last_char == '\''))) {
+                size_t val_len = strlen(val);
+
+                if ((val_len >= 2) and
+                        (((val[0] == '\"') and (val[val_len - 1] == '\"')) or
+                                ((val[0] == '\'') and (val[val_len - 1] == '\'')))) {
                         val++;
-                        LAST_CHARACTER(val) = '\0';
+                        val_len -= 2;
                         string = true;
                 }
 
-                char section_key[LINE_LEN];
-                if (this->current_section) {
-                        snprintf(section_key, sizeof(section_key), "%s.%s", this->current_section, key);
-                } else {
-                        strlcpy(section_key, key, sizeof(section_key));
-                }
+                const char *section = this->current_section;
+                size_t section_len = section ? strlen(section) : 0;
 
-                pair_t *p = pair_new(section_key, val);
+                pair_t *p = pair_new(section, section_len, key, val, val_len, string);
                 if (p) {
-                        p->string = string;
                         *pair = p;
                         return interpret_pair;
                 } else {
@@ -966,16 +990,136 @@ static int interpret_line(conf_parser_t *this, char *line, pair_t **pair)
 
 //==============================================================================
 /**
+ * @brief  Interpret loaded line and append created pair to the list.
+ *
+ * @param  this         parser instance
+ * @param  line         line to interpret
+ * @param  pair         pointer to list link where new pair is stored
+ * @param  n            number of loaded pairs (incremented)
+ *
+ * @return One of conf_parser_status_t.
+ */
+//==============================================================================
+static int load_line(conf_parser_t *this, char *line, pair_t ***pair, int *n)
+{
+        switch (interpret_line(this, line, *pair)) {
+        case interpret_pair:
+                *pair = &(**pair)->next;
+                (*n)++;
+                return conf_parser_status__success;
+
+        case interpret_section:
+        case interpret_comment:
+        case interpret_empty_line:
+                return conf_parser_status__success;
+
+        case interpret_no_memory:
+                return conf_parser_status__no_memory;
+
+        default:
+                return conf_parser_status__syntax_error;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Set or create pair. New pair is placed at the end of own section to
+ *         keep sections continuous. Function must be called with locked mutex.
+ *
+ * @param  this         parser instance
+ * @param  key          key (section.key)
+ * @param  val          value (not terminated)
+ * @param  val_len      value length
+ * @param  string       value is a string (saved in quotes)
+ *
+ * @return One of conf_parser_status_t.
+ */
+//==============================================================================
+static int set_pair(conf_parser_t *this, const char *key, const char *val, size_t val_len, bool string)
+{
+        pair_t **link = &this->pair;
+
+        while (*link and (strcmp(pair_get_key(*link), key) != 0)) {
+                link = &(*link)->next;
+        }
+
+        pair_t *old = *link;
+        size_t section_len = 0;
+
+        if (old) {
+                section_len = old->section_len;
+                string = string or old->string;
+
+        } else {
+                // the longest existing section that matches key prefix
+                for (pair_t *p = this->pair; p; p = p->next) {
+                        if ((p->section_len > section_len) and isstreqn(key, p->data, p->section_len) and
+                                (key[p->section_len] == '.')) {
+                                section_len = p->section_len;
+                        }
+                }
+
+                // new section
+                if (section_len == 0) {
+                        const char *dot = strchr(key, '.');
+                        if (dot and (dot != key) and (dot[1] != '\0')) {
+                                section_len = dot - key;
+                        }
+                }
+        }
+
+        const char *name = section_len ? &key[section_len + 1] : key;
+
+        // line that does not fit to the line buffer cannot be loaded back
+        if ((section_len + strlen("[]\n") > LINE_LEN - 1) or
+                (strlen(name) + val_len + strlen(" = \"\"\n") > LINE_LEN - 1)) {
+                return conf_parser_status__arg_error;
+        }
+
+        pair_t *pair = pair_new(key, section_len, name, val, val_len, string);
+        if (not pair) {
+                return conf_parser_status__no_memory;
+        }
+
+        if (old) {
+                pair->next = old->next;
+                *link = pair;
+                free(old);
+                return conf_parser_status__success;
+        }
+
+        // insert after last pair of the same section (pairs without section are
+        // inserted before all sections, new section is added at the end)
+        pair_t **insert = NULL;
+
+        for (link = &this->pair; *link; link = &(*link)->next) {
+                if (pair_is_same_section(*link, pair)) {
+                        insert = &(*link)->next;
+                }
+        }
+
+        if (not insert) {
+                insert = (section_len == 0) ? &this->pair : link;
+        }
+
+        pair->next = *insert;
+        *insert = pair;
+
+        return conf_parser_status__success;
+}
+
+//==============================================================================
+/**
  * @brief  Skip leading spaces.
  *
  * @param  str          string
  *
- * @return New string position or NULL if string finished.
+ * @return New string position.
  */
 //==============================================================================
 static char *skip_leading_spaces(char *str)
 {
-        while (isspace(*str)) {
+        while (isspace((unsigned char)*str)) {
                 str++;
         }
 
@@ -991,64 +1135,56 @@ static char *skip_leading_spaces(char *str)
 //==============================================================================
 static void remove_trailing_spaces(char *str)
 {
-        if (isstrempty(str)) {
-                return;
-        }
+        size_t len = strlen(str);
 
-        str += strlen(str) - 1;
-
-        while (isspace(*str)) {
-                *str = '\0';
-                str--;
+        while ((len > 0) and isspace((unsigned char)str[len - 1])) {
+                str[--len] = '\0';
         }
 }
 
 //==============================================================================
 /**
- * @brief  Create new pair chain.
+ * @brief  Create new pair. Key is stored as "section.key".
  *
+ * @param  section      section name (can be NULL if section_len is 0)
+ * @param  section_len  section name length (0 if pair has no section)
  * @param  key          key
- * @param  val          value
+ * @param  val          value (not terminated)
+ * @param  val_len      value length
+ * @param  string       value is a string
  *
  * @return Pair object or NULL.
  */
 //==============================================================================
-static pair_t *pair_new(const char *key, const char *val)
+static pair_t *pair_new(const char *section, size_t section_len, const char *key, const char *val,
+        size_t val_len, bool string)
 {
-        size_t key_sz = strsize(key);
-        size_t val_sz = strsize(val);
-        bool string = false;
+        size_t key_len = strlen(key);
+        size_t full_key_len = section_len ? (section_len + 1 + key_len) : key_len;
 
-        for (int i = 0; i < 2; i++) {
-                if (val[val_sz - 2] == '\n') {
-                        val_sz--;
-                }
-
-                if (val[val_sz - 2] == '\r') {
-                        val_sz--;
-                }
-        }
-
-        if (((*val == '"') and (val[val_sz - 2] == '"')) or ((*val == '\'') or (val[val_sz - 2] == '\''))) {
-                val++;
-                val_sz -= 2;
-                string = true;
-        }
-
-        pair_t *pair = calloc(1, sizeof(*pair) + key_sz + val_sz + 1);
+        pair_t *pair = calloc(1, sizeof(*pair) + full_key_len + 1 + val_len + 1);
         if (pair) {
                 pair->string = string;
-                pair->value_offset = key_sz;
-                memcpy(&pair->data[0], key, key_sz);
-                memcpy(&pair->data[pair->value_offset], val, val_sz);
-                pair->data[pair->value_offset + val_sz - 1] = '\0';
+                pair->section_len = section_len;
+                pair->value_offset = full_key_len + 1;
+
+                char *dst = &pair->data[0];
+
+                if (section_len) {
+                        memcpy(dst, section, section_len);
+                        dst[section_len] = '.';
+                        dst += section_len + 1;
+                }
+
+                memcpy(dst, key, key_len);
 
                 char *value = &pair->data[pair->value_offset];
-                while (*value) {
-                        if (not(*value >= 32)) {
-                                *value = '_';
+                memcpy(value, val, val_len);
+
+                for (size_t i = 0; i < val_len; i++) {
+                        if ((unsigned char)value[i] < ' ') {
+                                value[i] = '_';
                         }
-                        value++;
                 }
         }
 
@@ -1057,21 +1193,17 @@ static pair_t *pair_new(const char *key, const char *val)
 
 //==============================================================================
 /**
- * @brief  Get pair key section.
+ * @brief  Check if pairs belong to the same section (or both have no section).
  *
- * @param  pair         pair
+ * @param  a            pair a
+ * @param  b            pair b
  *
- * @return Section name length.
+ * @return True if the same section.
  */
 //==============================================================================
-static size_t pair_get_section_length(const pair_t *pair)
+static bool pair_is_same_section(const pair_t *a, const pair_t *b)
 {
-        char *dot = strchr(pair->data, '.');
-        if (dot and (dot != pair->data)) {
-                return dot - pair->data;
-        } else {
-                return 0;
-        }
+        return (a->section_len == b->section_len) and isstreqn(a->data, b->data, a->section_len);
 }
 
 //==============================================================================
@@ -1123,6 +1255,159 @@ static void clear_conf(conf_parser_t *this)
 
         free(this->current_section);
         this->current_section = NULL;
+}
+
+//==============================================================================
+/**
+ * @brief  Write formatted text to file or buffer.
+ *
+ * @param  w            writer
+ * @param  fmt          format
+ * @param  ...          format arguments
+ */
+//==============================================================================
+static void writer_printf(writer_t *w, const char *fmt, ...)
+{
+        if (w->error) {
+                return;
+        }
+
+        va_list args;
+        va_start(args, fmt);
+
+        if (w->fp) {
+                if (vfprintf(w->fp, fmt, args) < 0) {
+                        w->error = true;
+                }
+
+        } else {
+                size_t free_sz = (w->len < w->bufsz) ? (w->bufsz - w->len) : 0;
+
+                int n = vsnprintf(free_sz ? &w->buf[w->len] : NULL, free_sz, fmt, args);
+                if (n < 0) {
+                        w->error = true;
+                } else {
+                        // vsnprintf() returns the length of not truncated output
+                        w->len += n;
+                }
+        }
+
+        va_end(args);
+}
+
+//==============================================================================
+/**
+ * @brief  Write single pair (key without section).
+ *
+ * @param  w            writer
+ * @param  pair         pair to write
+ */
+//==============================================================================
+static void write_pair(writer_t *w, const pair_t *pair)
+{
+        const char *key = pair_get_key(pair);
+        const char *value = pair_get_value(pair);
+
+        if (pair->section_len) {
+                key += pair->section_len + 1;
+        }
+
+        // value that would be changed by the parser must be written in quotes
+        bool quote = pair->string;
+        size_t len = strlen(value);
+
+        if (not quote and (len > 0)) {
+                char first = value[0];
+                char last = value[len - 1];
+
+                quote = isspace((unsigned char)first) or isspace((unsigned char)last) or
+                        ((len >= 2) and
+                                (((first == '"') and (last == '"')) or ((first == '\'') and (last == '\''))));
+        }
+
+        writer_printf(w, "%s = %s%s%s\n", key, quote ? "\"" : "", value, quote ? "\"" : "");
+}
+
+//==============================================================================
+/**
+ * @brief  Write whole configuration. Pairs without section are written first,
+ *         then all pairs grouped by section (each section is written once).
+ *
+ * @param  this         parser instance
+ * @param  w            writer
+ */
+//==============================================================================
+static void write_conf(conf_parser_t *this, writer_t *w)
+{
+        bool empty = true;
+
+        for (pair_t *pair = this->pair; pair; pair = pair->next) {
+                if (pair->section_len == 0) {
+                        write_pair(w, pair);
+                        empty = false;
+                }
+        }
+
+        for (pair_t *pair = this->pair; pair; pair = pair->next) {
+
+                if (pair->section_len == 0) {
+                        continue;
+                }
+
+                bool written = false;
+
+                for (pair_t *p = this->pair; p != pair; p = p->next) {
+                        if (pair_is_same_section(p, pair)) {
+                                written = true;
+                                break;
+                        }
+                }
+
+                if (written) {
+                        continue;
+                }
+
+                writer_printf(w, "%s[%.*s]\n", empty ? "" : "\n", (int)pair->section_len, pair->data);
+                empty = false;
+
+                for (pair_t *p = pair; p; p = p->next) {
+                        if (pair_is_same_section(p, pair)) {
+                                write_pair(w, p);
+                        }
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Write whole configuration to selected file.
+ *
+ * @param  this         parser instance
+ * @param  path         file path
+ * @param  opened       true if file was opened
+ *
+ * @return One of conf_parser_status_t.
+ */
+//==============================================================================
+static int write_file(conf_parser_t *this, const char *path, bool *opened)
+{
+        FILE *fp = fopen(path, "w");
+        *opened = (fp != NULL);
+
+        if (not fp) {
+                return conf_parser_status__file_error;
+        }
+
+        writer_t w = {.fp = fp};
+        write_conf(this, &w);
+
+        int err = w.error ? conf_parser_status__file_error : conf_parser_status__success;
+
+        if (fclose(fp) != 0) {
+                err = conf_parser_status__file_error;
+        }
+
+        return err;
 }
 
 /*==============================================================================

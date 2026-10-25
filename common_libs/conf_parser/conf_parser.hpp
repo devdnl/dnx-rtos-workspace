@@ -68,6 +68,9 @@ public:
                 conf_parser__delete(this->parser);
         }
 
+        conf_parser(const conf_parser &) = delete;
+        conf_parser &operator=(const conf_parser &) = delete;
+
         int set_file_path(const char *path)
         {
                 return conf_parser__set_file_path(this->parser, path);
