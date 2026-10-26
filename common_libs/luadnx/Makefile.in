@@ -1,0 +1,8 @@
+# Makefile for GNU make
+
+CSRC_LIB   += $(LIB_ROOT_LUADNX)luadnx/luadnx.c
+CSRC_LIB   += $(LIB_ROOT_LUADNX)luadnx/lfs.c
+CSRC_LIB   += $(LIB_ROOT_LUADNX)luadnx/ldnx_sys.c
+CSRC_LIB   += $(LIB_ROOT_LUADNX)luadnx/ldnx_proc.c
+CXXSRC_LIB +=
+HDRLOC_LIB += $(LIB_ROOT_LUADNX)luadnx

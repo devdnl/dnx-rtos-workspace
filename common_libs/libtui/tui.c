@@ -58,6 +58,8 @@
 #define CSI_MAX_LEN           16
 #define CSI_MAX_PARAMS        4
 #define REPRINT_LIMIT         4 /* max. gap reprinted instead of cursor move */
+#define ERASE_MIN             4 /* min. blank line end erased instead of printed */
+#define ERASE_ATTR_CANDIDATES 8 /* attributes counted to select screen clear color */
 #define KEY_IGNORE            (-2)
 #define ESC                   "\033"
 
@@ -65,7 +67,8 @@
 #define SEQ_SIZE_QUERY  ESC "7" ESC "[999;999H" ESC "[6n" ESC "8"
 #define SEQ_INIT        ESC "[?1049h" ESC "[?7l"
 #define SEQ_EXIT        ESC "[0m" ESC "[2J" ESC "[H" ESC "[?7h" ESC "[?25h" ESC "[?1049l"
-#define SEQ_FULL_REDRAW ESC "[?25l" ESC "[0m" ESC "[H" ESC "[2J"
+#define SEQ_CLEAR       ESC "[H" ESC "[2J"
+#define SEQ_ERASE_EOL   ESC "[K"
 #define SEQ_CURSOR_HIDE ESC "[?25l"
 #define SEQ_CURSOR_SHOW ESC "[?25h"
 
@@ -93,6 +96,7 @@ struct tui {
         int cursor_x;
         int cursor_y;
         bool ascii_lines;
+        bool bce; /* terminal erases with current background color */
 
         /* terminal output state */
         int out_x; /* -1: position not known */
@@ -423,6 +427,7 @@ tui_t *tui_init_stream(FILE *in, FILE *out)
         }
 
         tui->attr = TUI_ATTR_DEFAULT;
+        tui->bce = true;
         tui->esc_delay = DEFAULT_ESC_DELAY_MS;
         tui->esc_prefix = DEFAULT_ESC_PREFIX_MS;
         tui->cursor_x = -1;
@@ -775,6 +780,90 @@ void tui_set_cursor(tui_t *tui, int x, int y)
 
 //==============================================================================
 /**
+ * @brief  Check if blank cells of selected attribute can be created by erase
+ *         sequences (screen clear, erase to end of line). Erased cells have
+ *         background color of current attribute (BCE terminals) or default
+ *         color. Underline and reverse are not used by erase.
+ *
+ * @param  tui          TUI object
+ * @param  attr         attribute of blank cells
+ *
+ * @return true if erase can be used.
+ */
+//==============================================================================
+static bool can_erase(tui_t *tui, uint16_t attr)
+{
+        if (attr & (TUI_UNDERLINE | TUI_REVERSE)) {
+                return false;
+        }
+
+        return tui->bce || (TUI_ATTR_BG(attr) == TUI_DEFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief  Clear whole screen with the most common attribute of blank cells,
+ *         so these cells are not sent again.
+ *
+ * @param  tui          TUI object
+ */
+//==============================================================================
+static void clear_screen(tui_t *tui)
+{
+        uint16_t attr[ERASE_ATTR_CANDIDATES];
+        size_t count[ERASE_ATTR_CANDIDATES];
+        int n = 0;
+
+        size_t cells = (size_t)tui->cols * tui->rows;
+
+        for (size_t i = 0; i < cells; i++) {
+                if ((tui->back[i].ch != ' ') || !can_erase(tui, tui->back[i].attr)) {
+                        continue;
+                }
+
+                int k = 0;
+                while ((k < n) && (attr[k] != tui->back[i].attr)) {
+                        k++;
+                }
+
+                if (k == n) {
+                        if (n == ERASE_ATTR_CANDIDATES) {
+                                continue;
+                        }
+
+                        attr[n] = tui->back[i].attr;
+                        count[n++] = 0;
+                }
+
+                count[k]++;
+        }
+
+        uint16_t clear_attr = TUI_ATTR_DEFAULT;
+        size_t best = 0;
+
+        for (int k = 0; k < n; k++) {
+                if (count[k] > best) {
+                        best = count[k];
+                        clear_attr = attr[k];
+                }
+        }
+
+        out_cstr(tui, SEQ_CURSOR_HIDE);
+        out_attr(tui, clear_attr);
+        out_cstr(tui, SEQ_CLEAR);
+
+        tui->out_cursor_visible = false;
+        tui->out_x = 0;
+        tui->out_y = 0;
+
+        for (size_t i = 0; i < cells; i++) {
+                tui->front[i].ch = ' ';
+                tui->front[i].attr = clear_attr;
+        }
+}
+
+//==============================================================================
+/**
  * @brief  Send changed part of screen to terminal.
  *
  * @param  tui          TUI object
@@ -785,30 +874,32 @@ void tui_refresh(tui_t *tui)
         tui->refresh_bytes = 0;
 
         if (tui->full_redraw) {
-                out_cstr(tui, SEQ_FULL_REDRAW);
-
-                tui->out_cursor_visible = false;
-                tui->out_attr = TUI_ATTR_DEFAULT;
-                tui->out_attr_valid = true;
-                tui->out_x = 0;
-                tui->out_y = 0;
+                clear_screen(tui);
                 tui->full_redraw = false;
-
-                size_t cells = (size_t)tui->cols * tui->rows;
-                for (size_t i = 0; i < cells; i++) {
-                        tui->front[i].ch = ' ';
-                        tui->front[i].attr = TUI_ATTR_DEFAULT;
-                }
         }
 
         for (int y = 0; y < tui->rows; y++) {
                 cell_t *back = &tui->back[y * tui->cols];
                 cell_t *front = &tui->front[y * tui->cols];
 
+                /* blank end of line (the same attribute) can be erased */
+                int cols = tui->cols;
+                int tail = cols;
+                uint16_t tail_attr = back[cols - 1].attr;
+
+                if ((back[cols - 1].ch == ' ') && can_erase(tui, tail_attr)) {
+                        while ((tail > 0) && (back[tail - 1].ch == ' ') &&
+                                (back[tail - 1].attr == tail_attr)) {
+                                tail--;
+                        }
+                }
+
                 for (int x = 0; x < tui->cols; x++) {
                         if ((back[x].ch == front[x].ch) && (back[x].attr == front[x].attr)) {
                                 continue;
                         }
+
+                        bool erase = (x >= tail) && ((cols - x) >= ERASE_MIN);
 
                         if (tui->out_cursor_visible) {
                                 out_cstr(tui, SEQ_CURSOR_HIDE);
@@ -841,6 +932,12 @@ void tui_refresh(tui_t *tui)
 
                         if (!tui->out_attr_valid || (back[x].attr != tui->out_attr)) {
                                 out_attr(tui, back[x].attr);
+                        }
+
+                        if (erase) {
+                                out_cstr(tui, SEQ_ERASE_EOL);
+                                memcpy(&front[x], &back[x], (size_t)(cols - x) * sizeof(cell_t));
+                                break;
                         }
 
                         out_char(tui, back[x].ch);
@@ -884,6 +981,21 @@ void tui_redraw(tui_t *tui)
 {
         tui->full_redraw = true;
         request_size(tui);
+}
+
+//==============================================================================
+/**
+ * @brief  Select if terminal erases screen with current background color
+ *         (BCE, enabled by default: xterm, Konsole, minicom, PuTTY, tmux).
+ *         When disabled, erase sequences are used only for default background.
+ *
+ * @param  tui          TUI object
+ * @param  enable       true: terminal supports BCE
+ */
+//==============================================================================
+void tui_set_bce(tui_t *tui, bool enable)
+{
+        tui->bce = enable;
 }
 
 //==============================================================================

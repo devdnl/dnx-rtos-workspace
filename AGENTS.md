@@ -185,7 +185,10 @@ both C preprocessor and make**. Rules:
   screen buffers with differential refresh (slow serial links), key decoder
   (xterm/VT100/minicom sequences, Esc+digit as F key), modal boxes
   (`tui_msgbox`, `tui_question`, `tui_inputbox`, …) and `tui_suspend`/
-  `tui_resume` for starting other programs. `keytest` shows raw key codes.
+  `tui_resume` for starting other programs. Blank areas are sent as screen
+  clear / erase to end of line with background color (BCE terminals;
+  `tui_set_bce(tui, false)` limits it to default background). `keytest` shows
+  raw key codes.
   libtui and its programs can be built and tested on Linux with
   `-DTUI_PORT_POSIX` (termios port); dnx program macros need a small shim.
 - The kernel splits a command line into arguments with shell quoting rules
@@ -194,9 +197,15 @@ both C preprocessor and make**. Rules:
   argument.
 - Lua (third-party, keep changes minimal): `common_libs/lua/ldnxlib.c` adds
   `io.popen()` (program started without shell; output/input through a
-  temporary file in `/run`, so it is not streamed) and the `lfs` module
-  (preloaded by the `lua` program). configtool runs on the target with
-  `lua configtool-cli.lua <config.h>` and the `dialog` program.
+  temporary file in `/run`, so it is not streamed). configtool runs on the
+  target with `lua configtool-cli.lua <config.h>` and the `dialog` program.
+- `common_libs/luadnx` (MIT) contains Lua bindings to dnx services, preloaded
+  by the `lua` program with `luadnx_openlibs()`: `lfs` (LuaFileSystem 1.8
+  compatible), `dnx.sys` (system info, memory, CPU load, syslog, reboot,
+  sleep) and `dnx.proc` (spawn/run/wait/kill, process and thread statistics).
+  Functions return `nil, message, errno` on error. Do not duplicate Lua
+  standard library functionality there. Test script:
+  `common_libs/luadnx/test/luadnx_test.lua` (run on target).
 
 ## Working rules for agents
 

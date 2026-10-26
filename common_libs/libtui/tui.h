@@ -155,6 +155,7 @@ extern void tui_set_cursor(tui_t *tui, int x, int y);
 extern void tui_refresh(tui_t *tui);
 extern void tui_redraw(tui_t *tui);
 extern size_t tui_last_refresh_bytes(tui_t *tui);
+extern void tui_set_bce(tui_t *tui, bool enable);
 
 /* input: timeout_ms < 0 waits forever, returns key or TUI_KEY_NONE */
 extern int tui_getkey(tui_t *tui, int timeout_ms);
