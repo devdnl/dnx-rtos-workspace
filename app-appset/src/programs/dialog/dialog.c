@@ -162,6 +162,7 @@ GLOBAL_VARIABLES_SECTION {
         button_t buttons[MAX_BUTTONS];
         int nbuttons;
         int button;
+        bool on_buttons;
         int sel;
         int top;
         char input[INPUT_LEN];
@@ -765,7 +766,7 @@ static void draw_buttons(void)
         tui_hline(tui, global->x + 1, by - 1, global->w - 2, TUI_BOX_SINGLE);
 
         for (int i = 0; i < global->nbuttons; i++) {
-                bool sel = (i == global->button);
+                bool sel = (i == global->button) && ((global->box != BOX_INPUT) || global->on_buttons);
                 const char *label = global->buttons[i].label;
 
                 tui_move(tui, bx, by);
@@ -902,7 +903,9 @@ static void draw_input(void)
         tui_move(tui, fx + 1, fy + 1);
         print_clip(p, vis);
 
-        tui_set_cursor(tui, fx + 1 + cur - global->input_off, fy + 1);
+        if (!global->on_buttons) {
+                tui_set_cursor(tui, fx + 1 + cur - global->input_off, fy + 1);
+        }
 }
 
 //==============================================================================
@@ -1239,6 +1242,75 @@ static int hotkey_button(int key)
 
 //==============================================================================
 /**
+ * @brief Handle keys of inputbox. Focus is moved between input field and
+ *         buttons by Tab, Shift+Tab, Down and Up keys (as in dialog(1)).
+ *
+ * @param  key          key
+ *
+ * @return Exit code when box is closed, otherwise -1.
+ */
+//==============================================================================
+static int inputbox_key(int key)
+{
+        int last = global->nbuttons - 1;
+
+        switch (key) {
+        case TUI_KEY_ENTER:
+                return global->buttons[global->on_buttons ? global->button : 0].code;
+
+        case TUI_KEY_TAB:
+                if (!global->on_buttons) {
+                        global->on_buttons = true;
+                        global->button = 0;
+                } else if (global->button < last) {
+                        global->button++;
+                } else {
+                        global->on_buttons = false;
+                }
+                return -1;
+
+        case TUI_KEY_SHIFT_TAB:
+                if (!global->on_buttons) {
+                        global->on_buttons = true;
+                        global->button = last;
+                } else if (global->button > 0) {
+                        global->button--;
+                } else {
+                        global->on_buttons = false;
+                }
+                return -1;
+
+        case TUI_KEY_DOWN:
+                if (!global->on_buttons) {
+                        global->on_buttons = true;
+                        global->button = 0;
+                }
+                return -1;
+
+        case TUI_KEY_UP:
+                global->on_buttons = false;
+                return -1;
+        }
+
+        if (global->on_buttons) {
+                if (key == TUI_KEY_RIGHT) {
+                        global->button = (global->button + 1) % global->nbuttons;
+                } else if (key == TUI_KEY_LEFT) {
+                        global->button = (global->button + last) % global->nbuttons;
+                } else if ((key >= ' ') && (key <= 0x10FFFF)) {
+                        /* typing returns to input field */
+                        global->on_buttons = false;
+                        input_key(key);
+                }
+        } else {
+                input_key(key);
+        }
+
+        return -1;
+}
+
+//==============================================================================
+/**
  * @brief Run box.
  *
  * @return Exit code.
@@ -1277,6 +1349,12 @@ static int run(void)
                         continue;
                 } else if (key == TUI_KEY_RESIZE) {
                         continue;
+                } else if (global->box == BOX_INPUT) {
+                        int code = inputbox_key(key);
+                        if (code >= 0) {
+                                return code;
+                        }
+                        continue;
                 } else if (key == TUI_KEY_ENTER) {
                         return global->buttons[global->button].code;
                 } else if ((key == TUI_KEY_TAB) || ((key == TUI_KEY_RIGHT) && (global->box != BOX_INPUT))) {
@@ -1289,10 +1367,6 @@ static int run(void)
                 }
 
                 if (has_list() && list_key(key)) {
-                        continue;
-                }
-
-                if ((global->box == BOX_INPUT) && input_key(key)) {
                         continue;
                 }
 
