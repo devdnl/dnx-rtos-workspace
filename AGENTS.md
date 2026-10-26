@@ -180,6 +180,23 @@ both C preprocessor and make**. Rules:
 - A shared library lives in `common_libs/<lib>/` with a `Makefile.in`
   (`CSRC_LIB`, `CXXSRC_LIB`, `HDRLOC_LIB`) and is linked into an appset by
   `src/libs/<lib>.mk`. Changes in `common_libs` affect both appsets.
+- Full-screen terminal programs (`nano`, `mc`, `dialog`, `tuidemo`) use
+  `common_libs/libtui` (`tui.h`): tty raw mode (`IOCTL_TTY__RAW_MODE_ON/OFF`),
+  screen buffers with differential refresh (slow serial links), key decoder
+  (xterm/VT100/minicom sequences, Esc+digit as F key), modal boxes
+  (`tui_msgbox`, `tui_question`, `tui_inputbox`, …) and `tui_suspend`/
+  `tui_resume` for starting other programs. `keytest` shows raw key codes.
+  libtui and its programs can be built and tested on Linux with
+  `-DTUI_PORT_POSIX` (termios port); dnx program macros need a small shim.
+- The kernel splits a command line into arguments with shell quoting rules
+  (single/double quotes, backslash; quoted parts are joined). `system()` passes
+  the command to `__LIBC_SYSTEM_PROG__` (`dsh -e`) as one single-quoted
+  argument.
+- Lua (third-party, keep changes minimal): `common_libs/lua/ldnxlib.c` adds
+  `io.popen()` (program started without shell; output/input through a
+  temporary file in `/run`, so it is not streamed) and the `lfs` module
+  (preloaded by the `lua` program). configtool runs on the target with
+  `lua configtool-cli.lua <config.h>` and the `dialog` program.
 
 ## Working rules for agents
 

@@ -70,27 +70,53 @@ Brief   system() function implementation.
  * @brief Function executes specified command.
  *
  * The system() executes a command specified in <i>command</i> and returns after
- * the command has been completed.
+ * the command has been completed. The command is passed to the shell as one
+ * argument (in single quotes, quote characters are escaped).
  *
- * @param command       command to execute
+ * @param command       command to execute (NULL: check if shell is available)
+ *
+ * @return Command exit status, -1 on error. For NULL command non-zero value
+ *         (shell is available).
  */
 //==============================================================================
 int system(const char *command)
 {
+        if (!command) {
+                return 1;
+        }
+
         int status = -1;
 
-        size_t len = strlen(__LIBC_SYSTEM_PROG__) + strlen(command) + 4;
+        /* each quote is written as '\'' (4 characters) */
+        size_t len = strlen(__LIBC_SYSTEM_PROG__) + 4;
+        for (const char *p = command; *p; p++) {
+                len += (*p == '\'') ? 4 : 1;
+        }
 
         static const int CWDLEN = 256;
         char *cwd = malloc(CWDLEN);
         char *cmd = calloc(1, len);
         if (cmd && cwd) {
-                strcpy(cmd, __LIBC_SYSTEM_PROG__);
-                strcat(cmd, " '");
-                strcat(cmd, command);
-                strcat(cmd, "'");
+                char *dst = cmd;
 
-                getcwd(cwd, CWDLEN);
+                strcpy(dst, __LIBC_SYSTEM_PROG__ " '");
+                dst += strlen(dst);
+
+                for (const char *p = command; *p; p++) {
+                        if (*p == '\'') {
+                                memcpy(dst, "'\\''", 4);
+                                dst += 4;
+                        } else {
+                                *dst++ = *p;
+                        }
+                }
+
+                *dst++ = '\'';
+                *dst = '\0';
+
+                if (!getcwd(cwd, CWDLEN)) {
+                        strcpy(cwd, "/");
+                }
 
                 process_attr_t attr = {
                       .fd_stdin  = 0,
@@ -104,19 +130,14 @@ int system(const char *command)
                       .detached  = false
                 };
 
-                process_wait(process_create(cmd, &attr), &status, MAX_DELAY_MS);
-
-                free(cmd);
-                free(cwd);
-        } else {
-                if (cwd) {
-                        free(cwd);
-                }
-
-                if (cmd) {
-                        free(cmd);
+                pid_t pid = process_create(cmd, &attr);
+                if (pid) {
+                        process_wait(pid, &status, MAX_DELAY_MS);
                 }
         }
+
+        free(cmd);
+        free(cwd);
 
         return status;
 }

@@ -51,6 +51,13 @@ static int l_checkmode (const char *mode) {
 ** =======================================================
 */
 
+#if !defined(l_popen) && !defined(LUA_USE_POSIX) && !defined(LUA_USE_WINDOWS)
+/* dnx RTOS: program is started by kernel (see ldnxlib.c) */
+#include "ldnxlib.h"
+#define l_popen(L,c,m)		luadnx_popen(L,c,m)
+#define l_pclose(L,file)	luadnx_pclose(L,file)
+#endif
+
 #if !defined(l_popen)		/* { */
 
 #if defined(LUA_USE_POSIX)	/* { */

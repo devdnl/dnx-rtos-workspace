@@ -217,6 +217,10 @@ static void print_prompt(void)
 {
         if (global->prompt_enable && global->input == stdin) {
 
+                int err = errno;
+                ioctl(fileno(stdin), IOCTL_TTY__RAW_MODE_OFF);
+                errno = err;
+
                 if (global->continuation) {
                         printf(VT100_FONT_COLOR_GREEN "> " VT100_RESET_ATTRIBUTES);
                         fflush(stdout);

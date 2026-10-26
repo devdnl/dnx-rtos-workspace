@@ -6,6 +6,7 @@ CSRC_LIB   += $(LIB_ROOT_LUA)lua/lcorolib.c
 CSRC_LIB   += $(LIB_ROOT_LUA)lua/lctype.c
 CSRC_LIB   += $(LIB_ROOT_LUA)lua/ldblib.c
 CSRC_LIB   += $(LIB_ROOT_LUA)lua/ldebug.c
+CSRC_LIB   += $(LIB_ROOT_LUA)lua/ldnxlib.c
 CSRC_LIB   += $(LIB_ROOT_LUA)lua/ldo.c
 CSRC_LIB   += $(LIB_ROOT_LUA)lua/ldump.c
 CSRC_LIB   += $(LIB_ROOT_LUA)lua/lfunc.c

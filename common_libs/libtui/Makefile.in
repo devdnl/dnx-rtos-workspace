@@ -1,0 +1,7 @@
+# Makefile for GNU make
+
+CSRC_LIB   += $(LIB_ROOT_LIBTUI)libtui/tui.c
+CSRC_LIB   += $(LIB_ROOT_LIBTUI)libtui/tui_port.c
+CSRC_LIB   += $(LIB_ROOT_LIBTUI)libtui/tui_widgets.c
+CXXSRC_LIB +=
+HDRLOC_LIB += $(LIB_ROOT_LIBTUI)libtui
