@@ -58,6 +58,9 @@
 #define FIRST_DATA_HOST_DISK 1
 #define LAST_DATA_HOST_DISK  3
 
+/* network configuration file (ROMFS) */
+#define NETMGR_CONFIG_FILE "/etc/netmgr.conf"
+
 /* number of primary partitions in MBR */
 #define NUMBER_OF_PARTITIONS 4
 
@@ -312,6 +315,26 @@ static void initialize_network(void)
 {
         ifadd("unix", NET_FAMILY__UNIX, NULL);
         ifup("unix", NULL, 0);
+
+        /*
+         * Ethernet interface is available when simulator is started with
+         * --tap <name> option. Interface is configured by the netmgr program.
+         */
+        if (driver_init("ETH", 0, 0, "/dev/eth") == 0) {
+                static const process_attr_t attr = {
+                        .cwd = "/",
+                        .fd_stderr = -1,
+                        .fd_stdin = -1,
+                        .fd_stdout = -1,
+                        .detached = true,
+                        .p_stderr = "/dev/tty0",
+                        .p_stdin = "/dev/null",
+                        .p_stdout = "/dev/tty0",
+                        .priority = PRIORITY_NORMAL,
+                };
+
+                process_create("netmgr --daemon " NETMGR_CONFIG_FILE, &attr);
+        }
 }
 
 //==============================================================================

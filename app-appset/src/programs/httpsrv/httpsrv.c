@@ -871,7 +871,8 @@ static int parser_on_headers_complete(http_parser *parser)
         const char *boundary_hdr = "multipart/form-data; boundary=";
         const size_t boundary_hdr_len = strlen(boundary_hdr);
 
-        if (isstreqn(http->header.content_type.value, boundary_hdr, boundary_hdr_len)) {
+        if (http->header.content_type.value &&
+                isstreqn(http->header.content_type.value, boundary_hdr, boundary_hdr_len)) {
 
                 http->content_type = content_type__multipart_form_data;
 
@@ -1203,7 +1204,9 @@ static int multipart_on_headers_complete(multipartparser *parser)
         struct multipart *multipart = &self->multipart;
 
         const char *name_token = "name=";
-        char *name_start = strstr(multipart->content_disposition.value, name_token);
+        char *name_start = multipart->content_disposition.value
+                ? strstr(multipart->content_disposition.value, name_token)
+                : NULL;
 
         if (name_start) {
                 name_start += strlen(name_token);

@@ -626,7 +626,7 @@
 #         this:AddItem("Priority 0", "0")
 #     end
 #
-#     uC.PERIPH["POSIX"]={"GPIO", "UART", "HOSTDISK", "RTC"}
+#     uC.PERIPH["POSIX"]={"GPIO", "UART", "HOSTDISK", "RTC", "ETH"}
 # end
 #++*/
 
@@ -730,6 +730,7 @@ include $(CONFIG_DIR)/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "posix/cpu_flags.h"
 #include "posix/gpio_flags.h"
 #include "posix/uart_flags.h"
+#include "posix/eth_flags.h"
 #endif
 
 #/*--
@@ -877,9 +878,9 @@ __ENABLE_EMI__=_NO_
 #     this:SetFlagValue("__ENABLE_ETH__", "_NO_")
 # end
 #--*/
-#define __ENABLE_ETH__ _NO_
+#define __ENABLE_ETH__ _YES_
 #/*
-__ENABLE_ETH__=_NO_
+__ENABLE_ETH__=_YES_
 #*/
 
 #/*--

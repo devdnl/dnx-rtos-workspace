@@ -21,3 +21,16 @@ that contains ROMFS file system.
                     mount("romfs", "/dev/romfs", "/mnt", "validate");
             }
     }
+
+POSIX simulator
+---------------
+The same image is used by the simulator (build/sim-romfs.bin), it is connected
+as host disk 0 and mounted by the siminit program in the /etc folder:
+
+    build/dnx-sim --disk 0=build/sim-romfs.bin:ro
+
+Files:
+    netmgr.conf  - network configuration used by the netmgr program when the
+                   simulator is started with the --tap <name> option,
+    dns.conf     - DNS servers (one address per line, max 128 bytes), used
+                   when the host routes traffic of the TAP interface (NAT).

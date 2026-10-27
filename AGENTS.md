@@ -120,6 +120,10 @@ Notes:
   port (UART0 is the simulator terminal by default). `uart/posix` sends data in
   chunks (writer or service thread), host writes are non-blocking except the
   simulator terminal. `siminit` initializes `/dev/ttyS1..3` (raw, no shell).
+- `--tap <name>` connects `eth/posix` (`/dev/eth`, frames via
+  `/dev/net/tun`, software MAC filter) to the host TAP interface; `siminit`
+  starts `netmgr --daemon /etc/netmgr.conf` (ROMFS content `app-romfs/content`
+  is shared with the application, `config/sim-romfs` sets image parameters).
 - `siminit` connects `--disk 1..3` as `/dev/sda..sdc` with MBR partitions
   (`PART`) and mounts FAT/ext4 in `/mnt/sdXn` (or whole disk in `/mnt/sdX`).
 - Appset is linked as a relocatable object (`ld -r`), only

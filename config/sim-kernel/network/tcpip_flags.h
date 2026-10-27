@@ -498,7 +498,7 @@ this:SetToolTip("Set this to 1 to enable querying \".local\" names via mDNS usin
 this:AddWidget("Editline", true, "LWIP_DNS_LIST_PATH")
 this:SetToolTip("Set path to DNS server list. Each DNS IP address should be added in seperated line.")
 --*/
-#define __NETWORK_LWIP_DNS_LIST_PATH__ "/sd/conf/dns.conf"
+#define __NETWORK_LWIP_DNS_LIST_PATH__ "/etc/dns.conf"
 
 /*--
 this:AddWidget("Combobox", "LWIP_UDP")

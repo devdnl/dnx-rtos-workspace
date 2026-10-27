@@ -187,7 +187,8 @@ The system terminal can be opened by `./tools/terminal.sh [/dev/ttyUSBx]`.
 ### POSIX simulator (Linux)
 dnx RTOS can be started on PC as a Linux program (FreeRTOS POSIX port, 32-bit
 x86 executable). The simulator uses its own configuration: `config/sim-kernel`,
-`config/sim-appset`, `config/sim-romfs`.
+`config/sim-appset`, `config/sim-romfs` (ROMFS content `app-romfs/content` is
+shared with the application).
 ```
 make build-sim      # creates build/dnx-sim and build/sim-romfs.bin
 make run-sim        # builds and starts simulator in the current terminal
@@ -197,7 +198,7 @@ in the Docker image) as a static executable, so it can be started also outside
 the container. Program options:
 ```
 build/dnx-sim [--ram <MiB>] [--disk <n>=<file>[:ro]] [--hostfs <dir>]
-              [--uart <n>=pty[:<link>]|<device>]
+              [--uart <n>=pty[:<link>]|<device>] [--tap <name>]
 make run-sim SIM_OPTS="--hostfs ."
 ```
 - `--disk` connects host file to the `HOSTDISK` driver (major number `<n>`);
@@ -218,6 +219,9 @@ make run-sim SIM_OPTS="--hostfs ."
   stop bits are configured by UART `ioctl()`); not connected UART drops
   transmitted data (also when PTY is not opened by any program);
   `--uart 0=pty` moves the system console from the simulator terminal to PTY,
+- `--tap` connects the `ETH` driver (`/dev/eth`) to the host TAP interface,
+  `siminit` starts `netmgr` with `/etc/netmgr.conf` (static address
+  192.168.77.2/24, gateway 192.168.77.1, file `app-romfs/content/netmgr.conf`),
 - RTC (`/dev/rtc`) uses the host clock, time set in dnx is kept as offset to
   the host time (until simulator restart),
 - `Ctrl+\` terminates the simulator.
@@ -230,6 +234,22 @@ sudo losetup -P -f --show sd.img      # e.g. /dev/loop0
 sudo mkfs.vfat /dev/loop0p1 && sudo mkfs.ext4 /dev/loop0p2
 sudo losetup -d /dev/loop0
 build/dnx-sim --disk 0=build/sim-romfs.bin:ro --disk 1=sd.img
+```
+
+Network example (Linux, TAP interface is created once, the simulator does not
+need root privileges):
+```
+sudo ip tuntap add tap0 mode tap user $USER
+sudo ip addr add 192.168.77.1/24 dev tap0
+sudo ip link set tap0 up
+make run-sim SIM_OPTS="--tap tap0"
+ping 192.168.77.2                     # e.g. also telnet, ftp, http servers
+```
+Internet access of the simulator requires NAT on the host (DNS servers are
+listed in `/etc/dns.conf`), e.g.:
+```
+sudo sysctl -w net.ipv4.ip_forward=1
+sudo iptables -t nat -A POSTROUTING -s 192.168.77.0/24 ! -o tap0 -j MASQUERADE
 ```
 
 # Memory layout
