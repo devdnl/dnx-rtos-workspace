@@ -124,6 +124,9 @@ Notes:
   `/dev/net/tun`, software MAC filter) to the host TAP interface; `siminit`
   starts `netmgr --daemon /etc/netmgr.conf` (ROMFS content `app-romfs/content`
   is shared with the application, `config/sim-romfs` sets image parameters).
+- `make test-sim` (`tools/simtest.py`) runs `fstest` (ramfs, hostfs, FAT/ext4
+  image), `udstest` and `inettest` (`--tap`) in the simulator and checks
+  their `SUMMARY:` lines; use it to verify kernel/appset changes on PC.
 - `siminit` connects `--disk 1..3` as `/dev/sda..sdc` with MBR partitions
   (`PART`) and mounts FAT/ext4 in `/mnt/sdXn` (or whole disk in `/mnt/sdX`).
 - Appset is linked as a relocatable object (`ld -r`), only

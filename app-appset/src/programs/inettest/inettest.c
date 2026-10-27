@@ -116,6 +116,14 @@ Brief   TCP/IP (INET) socket test and benchmark program. All tests use the
 #define CMD_BUF_SIZE         64
 #define KERNEL_MEM_TOLERANCE 64 /* [B] */
 
+/*
+ * Memory usage is counted by real size of heap blocks. Heap does not split
+ * block when the rest is too small (near fit), so the same allocations can
+ * use a little more memory when heap is fragmented differently (e.g. the
+ * first test after system start). Real leak is much bigger (20 iterations).
+ */
+#define NETWORK_MEM_TOLERANCE 64 /* [B] */
+
 /*==============================================================================
   Include files
 ==============================================================================*/
@@ -2571,8 +2579,8 @@ static const char *test_memory_leak(void)
 
         msleep(200);
         CHECK(mem_usage(&net_end, &krn_end), "get_memory_usage_details()");
-        CHECK(net_end <= net_start, "network memory: %u B before, %u B after (+%u B)", (unsigned)net_start,
-                (unsigned)net_end, (unsigned)(net_end - net_start));
+        CHECK(net_end <= net_start + NETWORK_MEM_TOLERANCE, "network memory: %u B before, %u B after (+%u B)",
+                (unsigned)net_start, (unsigned)net_end, (unsigned)(net_end - net_start));
 
         // connected stream sockets (first connection creates lazy objects)
         int err = sock_pair(next_port(), &srv, &cli, &acc);

@@ -221,6 +221,9 @@
 #define SKIP_PREFIX   "SKIP: "
 #define SKIP(_reason) (SKIP_PREFIX _reason)
 
+/* network file system type (kernel enum SYS_FS_TYPE__NET, see struct statfs) */
+#define FS_TYPE_NET 4
+
 /**
  * Check condition. On failure set error message (with errno) and jump to
  * cleanup label. errno is cleared before condition evaluation.
@@ -2531,6 +2534,15 @@ static const char *test_free_space(void)
         CHECK(statfs(cwd, &sfs) == 0, "statfs(\"%s\") failed", cwd);
         CHECK((sfs.f_bsize > 0) && (sfs.f_blocks > 0) && (sfs.f_bfree <= sfs.f_blocks),
                 "statfs() returned inconsistent values");
+
+        /*
+         * Free space of network/shared file system (e.g. hostfs) is changed
+         * also by other clients (host processes), so exact accounting cannot
+         * be checked.
+         */
+        if (sfs.f_type == FS_TYPE_NET) {
+                return SKIP("free space of shared file system is changed by other clients");
+        }
 
         bsize = (u64_t)sfs.f_bsize;
         free0 = (u64_t)sfs.f_bfree * bsize;
