@@ -626,7 +626,7 @@
 #         this:AddItem("Priority 0", "0")
 #     end
 #
-#     uC.PERIPH["POSIX"]={"GPIO", "UART", "HOSTDISK"}
+#     uC.PERIPH["POSIX"]={"GPIO", "UART", "HOSTDISK", "RTC"}
 # end
 #++*/
 
@@ -1048,9 +1048,9 @@ __ENABLE_PWM__=_NO_
 #     this:SetFlagValue("__ENABLE_RTC__", "_NO_")
 # end
 #--*/
-#define __ENABLE_RTC__ _NO_
+#define __ENABLE_RTC__ _YES_
 #/*
-__ENABLE_RTC__=_NO_
+__ENABLE_RTC__=_YES_
 #*/
 
 #/*--

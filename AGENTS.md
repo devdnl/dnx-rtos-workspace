@@ -109,13 +109,15 @@ Notes:
   dnx code is compiled with `-funsigned-char` (the same `char` as on ARM).
 - Kernel parts: `src/cpu/posix` (`cpuctl.c`, `host/host.c`), FreeRTOS port
   `src/kernel/dnx-ports/GCC/Posix`, drivers `uart/posix`, `gpio/posix`,
-  `hostdisk/posix`, file system `fs/hostfs` (host directory selected by
+  `hostdisk/posix`, `rtc/posix` (host clock + offset), file system `fs/hostfs` (host directory selected by
   `--hostfs`, mounted by `siminit` in `/host`; paths cannot leave this
   directory). Files using host headers are listed as `CSRC_HOST` and
   compiled without dnx `lib/` headers (dnx redefines `pid_t`, `time_t`,
   `struct timeval`, ...). The only interface between both sides is
   `src/cpu/posix/host/host.h` (basic C types only). Host calls are short,
   non-blocking and executed in the critical section.
+- `siminit` connects `--disk 1..3` as `/dev/sda..sdc` with MBR partitions
+  (`PART`) and mounts FAT/ext4 in `/mnt/sdXn` (or whole disk in `/mnt/sdX`).
 - Appset is linked as a relocatable object (`ld -r`), only
   `_program_table_desc` stays global, so appset symbols do not conflict with
   kernel and host library symbols. libc calls kernel by `_dnx_syscall` when

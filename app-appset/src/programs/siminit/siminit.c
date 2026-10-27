@@ -54,6 +54,13 @@
 /* host disk connected by the simulator --rom option */
 #define ROMFS_HOST_DISK 0
 
+/* host disks connected by the simulator --disk option (1 -> sda, 2 -> sdb, ...) */
+#define FIRST_DATA_HOST_DISK 1
+#define LAST_DATA_HOST_DISK  3
+
+/* number of primary partitions in MBR */
+#define NUMBER_OF_PARTITIONS 4
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -67,7 +74,12 @@
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
         char str[100];
+        char disk_path[16];
+        char part_path[16];
+        char mnt_path[24];
 };
+
+static const char *const FILE_SYSTEMS[] = {"fatfs", "ext4fs"};
 
 /*==============================================================================
   Exported object definitions
@@ -105,6 +117,8 @@ static void create_base_file_system_structure(void)
 //==============================================================================
 static void initialize_basic_drivers(void)
 {
+        driver_init("RTC", 0, 0, "/dev/rtc");
+
         driver_init("GPIO", 0, 0, "/dev/gpio");
 
         driver_init("UART", 0, 0, "/dev/ttyS0");
@@ -145,9 +159,89 @@ static void initialize_additional_drivers(void)
 
 //==============================================================================
 /**
+ * @brief Function try to mount device by using all known file systems.
+ *
+ * @param dev           device path
+ * @param mnt           mount point path
+ *
+ * @return On success true is returned, otherwise false.
+ */
+//==============================================================================
+static bool mount_device(const char *dev, const char *mnt)
+{
+        struct stat info;
+        if ((stat(dev, &info) != 0) || (info.st_size == 0)) {
+                return false;
+        }
+
+        mkdir(mnt, 0777);
+
+        for (size_t i = 0; i < ARRAY_SIZE(FILE_SYSTEMS); i++) {
+                if (mount(FILE_SYSTEMS[i], dev, mnt, "") == 0) {
+                        return true;
+                }
+        }
+
+        remove(mnt);
+
+        return false;
+}
+
+//==============================================================================
+/**
+ * @brief Function initialize data disk connected by the simulator --disk
+ *        option. Partitions are created according to MBR (/dev/sdX1..4) and
+ *        mounted in the /mnt/sdX1..4 folders. If disk has not partitions then
+ *        entire disk is mounted in the /mnt/sdX folder.
+ *
+ * @param disk          host disk number
+ */
+//==============================================================================
+static void mount_data_disk(u8_t disk)
+{
+        char letter = 'a' + (disk - FIRST_DATA_HOST_DISK);
+
+        snprintf(global->disk_path, sizeof(global->disk_path), "/dev/sd%c", letter);
+
+        if (driver_init("HOSTDISK", disk, 0, global->disk_path) != 0) {
+                return;
+        }
+
+        for (u8_t i = 0; i < NUMBER_OF_PARTITIONS; i++) {
+                snprintf(global->part_path, sizeof(global->part_path), "%s%u", global->disk_path, i + 1);
+                driver_init2("PART", disk, i, global->part_path,
+                        &(const PART_config_t) {.path = global->disk_path});
+        }
+
+        bool mounted = false;
+
+        snprintf(global->part_path, sizeof(global->part_path), "%s1", global->disk_path);
+        int fd = open(global->part_path, O_RDWR);
+        if (fd >= 0) {
+                if (ioctl(fd, IOCTL_PART__READ_MBR) == 0) {
+                        for (u8_t i = 0; i < NUMBER_OF_PARTITIONS; i++) {
+                                snprintf(global->part_path, sizeof(global->part_path), "%s%u",
+                                        global->disk_path, i + 1);
+                                snprintf(global->mnt_path, sizeof(global->mnt_path), "/mnt/sd%c%u", letter,
+                                        i + 1);
+                                mounted |= mount_device(global->part_path, global->mnt_path);
+                        }
+                }
+                close(fd);
+        }
+
+        if (!mounted) {
+                snprintf(global->mnt_path, sizeof(global->mnt_path), "/mnt/sd%c", letter);
+                mount_device(global->disk_path, global->mnt_path);
+        }
+}
+
+//==============================================================================
+/**
  * @brief Mount file systems. ROMFS image is connected by the simulator --rom
  *        option and it is mounted in the /etc folder. Host directory selected
- *        by the --hostfs option is mounted in the /host folder.
+ *        by the --hostfs option is mounted in the /host folder. Disks selected
+ *        by the --disk 1..3 options are mounted in the /mnt folder.
  */
 //==============================================================================
 static void mount_file_systems(void)
@@ -162,6 +256,11 @@ static void mount_file_systems(void)
         mkdir("/host", 0777);
         if (mount("hostfs", "", "/host", "") != 0) {
                 remove("/host");
+        }
+
+        /* disks selected by the --disk option */
+        for (u8_t disk = FIRST_DATA_HOST_DISK; disk <= LAST_DATA_HOST_DISK; disk++) {
+                mount_data_disk(disk);
         }
 }
 

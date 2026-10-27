@@ -626,7 +626,7 @@
 #         this:AddItem("Priority 0", "0")
 #     end
 #
-#     uC.PERIPH["POSIX"]={"GPIO", "UART", "HOSTDISK"}
+#     uC.PERIPH["POSIX"]={"GPIO", "UART", "HOSTDISK", "RTC"}
 # end
 #++*/
 
