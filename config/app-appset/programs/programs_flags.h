@@ -58,9 +58,9 @@ __PROGRAMS_LIST__="*"
 # this:AddWidget("Editline", true, "Exclude")
 # this:SetToolTip("Select programs that be excluded from the project.")
 #--*/
-#define __PROGRAMS_EXCLUDE_LIST__ ""
+#define __PROGRAMS_EXCLUDE_LIST__ "siminit"
 #/*
-__PROGRAMS_EXCLUDE_LIST__=""
+__PROGRAMS_EXCLUDE_LIST__="siminit"
 #*/
 
 #endif /* _PROGRAMS_FLAGS_H_ */

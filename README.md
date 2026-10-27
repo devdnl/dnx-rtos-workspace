@@ -184,6 +184,25 @@ make install-app        # or: install, install-btl, install-app-kernel,
 ```
 The system terminal can be opened by `./tools/terminal.sh [/dev/ttyUSBx]`.
 
+### POSIX simulator (Linux)
+dnx RTOS can be started on PC as a Linux program (FreeRTOS POSIX port, 32-bit
+x86 executable). The simulator uses its own configuration: `config/sim-kernel`,
+`config/sim-appset`, `config/sim-romfs`.
+```
+make build-sim      # creates build/dnx-sim and build/sim-romfs.bin
+make run-sim        # builds and starts simulator in the current terminal
+```
+The simulator is built by the `i686-unknown-linux-musl-` toolchain (installed
+in the Docker image) as a static executable, so it can be started also outside
+the container. Program options:
+```
+build/dnx-sim [--ram <MiB>] [--rom <file>] [--disk <n>=<file>[:ro]]
+```
+- `--rom` connects ROMFS image (host disk 0) mounted by `siminit` in `/etc`,
+- `--disk` connects host file to the `HOSTDISK` driver (major number `<n>`),
+- the simulator terminal is connected to `UART0` (`/dev/ttyS0`),
+- `Ctrl+\` terminates the simulator.
+
 # Memory layout
 There is many possibilities of memory layout configuration. The simplest is when
 whole flash is used for operating system and application set (with or without

@@ -96,6 +96,26 @@ define build_appset
 	$(COPY) ${$@_APP_NAME}/build/output/appset.bin $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.bin
 endef
 
+# define macro used to build POSIX simulator kernel
+define build_sim_kernel
+	$(eval $@_APP_NAME = $(1))
+	$(ECHO) "Start building dnx RTOS simulator kernel..."
+	$(REMOVE) kernel/build/ioctl
+	$(MAKE) -C kernel -s -j 1 -fMakefile all CONFIG_DIR=../config/${$@_APP_NAME}
+	$(COPY) kernel/build/output/dnx.a $(TARGET_DIR_NAME)/${$@_APP_NAME}.a
+	$(MKDIR) $(TARGET_DIR_NAME)/ioctl
+	$(SYNCDIR) kernel/build/ioctl/ $(TARGET_DIR_NAME)/ioctl/
+	$(REMOVE) kernel/build/ioctl
+endef
+
+# define macro used to build POSIX simulator appset
+define build_sim_appset
+	$(eval $@_APP_NAME = $(1))
+	$(eval $@_CONFIG_NAME = $(2))
+	$(MAKE) -C ${$@_APP_NAME} -s -j 1 -fMakefile all BOARD_NAME=posix CONFIG_DIR=../config/${$@_CONFIG_NAME} PROJECT_OPTS=sim
+	$(COPY) ${$@_APP_NAME}/build/output/appset.o $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.o
+endef
+
 # define macro used to create ROMFS
 define build_romfs
 	$(eval $@_ROMFS_NAME = $(1))
@@ -163,6 +183,8 @@ help :
 	@$(ECHO) "   build-all           build application with bootloader in single hex file"
 	@$(ECHO) "   build-btl           build bootloader (kernel + appset)"
 	@$(ECHO) "   build-btl-kernel    build bootloader's kernel"
+	@$(ECHO) "   build-sim           build POSIX simulator (Linux): build/dnx-sim"
+	@$(ECHO) "   run-sim             build and start POSIX simulator"
 	@$(ECHO) "   build-btl-appset    build bootloader's appset"
 	@$(ECHO) "   build-app           build application (kernel + appset)"
 	@$(ECHO) "   build-app-kernel    build application's kernel"
@@ -208,6 +230,30 @@ build-app : _build_prepare build-app-romfs build-app-kernel build-app-appset
 	@$(MKFPKG) $(TARGET_DIR_NAME)/app-dist $(TARGET_DIR_NAME)/$(PROJECT)-app.fpkg
 	@$(ECHO) "Target app built successfully."
 
+
+.PHONY : build-sim
+build-sim : _build_prepare build-sim-romfs build-sim-kernel build-sim-appset
+	@$(MAKE) -C kernel -s -j 1 -fMakefile link-sim CONFIG_DIR=../config/sim-kernel \
+	         APPSET_OBJ=../$(TARGET_DIR_NAME)/sim-appset.o OUTPUT=../$(TARGET_DIR_NAME)/dnx-sim
+	@$(ECHO) "Target sim built successfully: $(TARGET_DIR_NAME)/dnx-sim --rom $(TARGET_DIR_NAME)/sim-romfs.bin"
+
+.PHONY : build-sim-kernel
+build-sim-kernel : _build_prepare
+	@$(call clean_kernel)
+	@$(call build_sim_kernel, sim-kernel)
+
+.PHONY : build-sim-appset
+build-sim-appset : _build_prepare
+	@$(call clean_appset, app-appset)
+	@$(call build_sim_appset, app-appset, sim-appset)
+
+.PHONY : build-sim-romfs
+build-sim-romfs : _build_prepare
+	@$(call build_romfs, app-romfs, sim-romfs)
+
+.PHONY : run-sim
+run-sim : build-sim
+	@$(TARGET_DIR_NAME)/dnx-sim --rom $(TARGET_DIR_NAME)/sim-romfs.bin
 
 .PHONY : build-btl
 build-btl : _build_prepare build-btl-kernel build-btl-appset
@@ -304,6 +350,21 @@ config-btl-kernel :
 .PHONY : config-btl-appset
 config-btl-appset :
 	@$(call config_appset, btl-appset)
+
+
+.PHONY : config-sim-kernel
+config-sim-kernel :
+	@$(call config_kernel, sim-kernel)
+
+
+.PHONY : config-sim-appset
+config-sim-appset :
+	@$(call config_appset, sim-appset)
+
+
+.PHONY : config-sim-romfs
+config-sim-romfs :
+	@$(call config_romfs, sim-romfs)
 
 
 .PHONY : appset-rungens

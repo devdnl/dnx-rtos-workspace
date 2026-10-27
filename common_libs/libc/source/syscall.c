@@ -46,7 +46,16 @@ Brief   Syscall handling.
  * The syscall section compiled is in the Thumb mode. To indicate this mode jump
  * address is incremented by 1.
  */
+#if __LIBC_DNX_RTOS_ADDRESS__ == 0
+/*
+ * Kernel address 0 means that appset is linked with kernel (POSIX simulator).
+ * Syscall entry is resolved by linker.
+ */
+extern int _dnx_syscall(_libc_syscall_t, va_list);
+#define dnx_syscall _dnx_syscall
+#else
 #define dnx_syscall ((syscall_func)(__LIBC_DNX_RTOS_ADDRESS__ + 0x401))
+#endif
 
 /*==============================================================================
   Local object types

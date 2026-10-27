@@ -34,3 +34,7 @@ CSRC_LIB   += $(LIB_ROOT_LIBC)libc/source/vsnprintf.c
 CSRC_LIB   += $(LIB_ROOT_LIBC)libc/source/vsscanf.c
 CXXSRC_LIB +=
 HDRLOC_LIB += $(LIB_ROOT_LIBC)libc/include
+
+ifeq ($(__CPU_ARCH__), posix)
+HDRLOC_LIB += $(LIB_ROOT_LIBC)libc/posix
+endif

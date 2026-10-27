@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 FILE=$1
-NM="arm-none-eabi-nm"
+NM="${NM:-arm-none-eabi-nm}"
 
 search_global_variables() {
 

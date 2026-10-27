@@ -73,8 +73,6 @@ PROGRAM_PARAMS(free, STACK_DEPTH_LOW);
 //==============================================================================
 int main(int argc, char *argv[])
 {
-        (void)argc;
-
         uint32_t drv_count = get_number_of_drivers();
         int32_t *modmem = malloc(drv_count * sizeof(int32_t));
         if (!modmem) {
@@ -99,7 +97,7 @@ int main(int argc, char *argv[])
         printf("Used: %u\n", m_used);
         printf("Memory usage: %u.%u%%\n", m_perc / 10, m_perc % 10);
 
-        if (strcmp(argv[1], "-d") == 0) {
+        if ((argc > 1) && (strcmp(argv[1], "-d") == 0)) {
                 printf("\nDetailed memory usage:\n");
                 printf("  Kernel: %d\n", sysmem.kernel_memory_usage);
                 printf("  Filesystems: %d\n", sysmem.filesystems_memory_usage);

@@ -56,6 +56,17 @@ RUN tar -jxf gcc-arm-none-eabi-10.3-2021.10-${ARCHITECTURE}-linux.tar.bz2 -C /ho
 RUN rm gcc-arm-none-eabi-10.3-2021.10-${ARCHITECTURE}-linux.tar.bz2
 RUN echo 'export PATH=$PATH:/home/developer/bin/gcc-arm-none-eabi-10.3-2021.10/bin' >> /home/developer/.bashrc
 
+# i686-unknown-linux-musl-gcc (POSIX simulator, x86_64 hosts only)
+WORKDIR /home/developer
+RUN if [ "${ARCHITECTURE}" = "x86_64" ]; then \
+        wget https://github.com/cross-tools/musl-cross/releases/download/20261001/i686-unknown-linux-musl.tar.xz && \
+        echo "d433bfbe9e5f7daea61e76fbe5ba28050750ec853cc69a2311fe3479ec3f7f34  i686-unknown-linux-musl.tar.xz" | sha256sum -c && \
+        tar -Jxf i686-unknown-linux-musl.tar.xz -C /home/developer/bin/ && \
+        rm i686-unknown-linux-musl.tar.xz && \
+        echo 'export PATH=$PATH:/home/developer/bin/i686-unknown-linux-musl/bin' >> /home/developer/.bashrc; \
+    fi
+ENV PATH="$PATH:/home/developer/bin/i686-unknown-linux-musl/bin"
+
 # oh-my-zsh
 WORKDIR /home/developer
 RUN ZSH=/home/developer/.oh-my-zsh sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"

@@ -99,6 +99,28 @@ Notes:
 - `kernel/tools/tests.sh` builds the kernel for all test configurations in
   `kernel/tools/test_bsp/` and restores the kernel's default `config/`.
 
+## POSIX simulator
+
+- `make build-sim` builds dnx RTOS as a Linux program `build/dnx-sim`
+  (kernel `__CPU_ARCH__ posix`, configs `config/sim-kernel`, `config/sim-appset`,
+  `config/sim-romfs`, init program `siminit`). `make run-sim` starts it.
+- Toolchain: `i686-unknown-linux-musl-` (static 32-bit executable). The kernel
+  and appset assume 32-bit pointers, so the simulator is always built as i386.
+  dnx code is compiled with `-funsigned-char` (the same `char` as on ARM).
+- Kernel parts: `src/cpu/posix` (`cpuctl.c`, `host/host.c`), FreeRTOS port
+  `src/kernel/dnx-ports/GCC/Posix`, drivers `uart/posix`, `gpio/posix`,
+  `hostdisk/posix`. Files using host headers are listed as `CSRC_HOST` and
+  compiled without dnx `lib/` headers (dnx redefines `pid_t`, `time_t`,
+  `struct timeval`, ...). The only interface between both sides is
+  `src/cpu/posix/host/host.h` (basic C types only). Host calls are short,
+  non-blocking and executed in the critical section.
+- Appset is linked as a relocatable object (`ld -r`), only
+  `_program_table_desc` stays global, so appset symbols do not conflict with
+  kernel and host library symbols. libc calls kernel by `_dnx_syscall` when
+  `__LIBC_DNX_RTOS_ADDRESS__` is 0.
+- A program fault (SIGSEGV, ...) is reported as APP CRASH like a CPU exception
+  on the microcontroller; the simulator keeps running.
+
 ## Configuration files (important)
 
 Files under `config/**` (`config.h`, `*_flags.h`) are **hybrid files read by

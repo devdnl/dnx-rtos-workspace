@@ -49,6 +49,15 @@ PROJECT = $(__PROJECT_NAME__)
 TOOLCHAIN = $(__PROJECT_TOOLCHAIN__)
 CC_WRAPPER = 
 
+# microcontroller specific flags (not used by the POSIX simulator)
+ifeq ($(__CPU_ARCH__), posix)
+MCU_CFLAGS =
+MCU_LFLAGS =
+else
+MCU_CFLAGS = -mno-unaligned-access
+MCU_LFLAGS = -mno-unaligned-access -Wl,-u,vectors -specs=nano.specs -specs=rdimon.specs -Wl,--print-memory-usage
+endif
+
 AFLAGS   = -c -MMD -MP \
            -g \
            -ggdb3 \
@@ -64,7 +73,7 @@ CFLAGS   = -c -MMD -MP \
            -Wall \
            -Wextra \
            -Wparentheses \
-           -mno-unaligned-access \
+           $(MCU_CFLAGS) \
            -Werror=implicit-function-declaration \
            -Werror=int-conversion \
            -Werror=incompatible-pointer-types \
@@ -96,7 +105,7 @@ CXXFLAGS = -c -MMD -MP \
            -fno-rtti \
            -fno-exceptions \
            -fno-unwind-tables \
-           -mno-unaligned-access \
+           $(MCU_CFLAGS) \
            -Wall \
            -Wextra \
            -Wparentheses \
@@ -118,13 +127,20 @@ CXXFLAGS = -c -MMD -MP \
 LFLAGS   = -g \
            $(CPUCONFIG_LDFLAGS) \
            -Wl,--gc-sections \
-           -mno-unaligned-access \
-           -Wl,-u,vectors \
            -Wl,-Map=$(TARGET_PATH)/$(PROJECT).map,--cref,--no-warn-mismatch \
            -Wall \
-           -specs=nano.specs -specs=rdimon.specs \
-           -Wl,--print-memory-usage \
+           $(MCU_LFLAGS) \
            -lm
+
+# POSIX simulator: appset is a relocatable object linked with kernel. Only the
+# program table is exported, all other symbols are local (no conflicts with
+# kernel and host library symbols).
+POSIX_OBJCOPY_FLAGS = --keep-global-symbol=_program_table_desc \
+                      --redefine-sym __data_init_start=_appset_data_init_start \
+                      --redefine-sym __data_start=_appset_data_start \
+                      --redefine-sym __data_size=_appset_data_size \
+                      --redefine-sym __bss_start=_appset_bss_start \
+                      --redefine-sym __bss_size=_appset_bss_size
 
 #---------------------------------------------------------------------------------------------------
 # FILE EXTENSIONS CONFIGURATION
@@ -185,7 +201,7 @@ RESET_CPU  = $(SHELL) ./tools/reset.sh
 GIT_HOOKS  = $(SHELL) ./tools/apply_git_hooks.sh
 DOXYGEN    = $(SHELL) ./tools/doxygen.sh
 RUNGENS    = $(SHELL) ./tools/rungens.sh
-FINDGVAR   = $(SHELL) ./tools/find_global_vars.sh
+FINDGVAR   = NM=$(TOOLCHAIN)nm $(SHELL) ./tools/find_global_vars.sh
 MKFPKG     = $(PYTHON3) ../kernel/tools/mkfpkg.py
 
 #---------------------------------------------------------------------------------------------------
@@ -331,11 +347,15 @@ quickcheck :
 ####################################################################################################
 .PHONY : hex
 hex :
+ifeq ($(TARGET), posix)
+	@$(ECHO) 'Appset object is ready to link with kernel (POSIX simulator).'
+else
 	@$(ECHO) 'Creating IHEX image...'
 	@$(OBJCOPY) $(TARGET_PATH)/$(PROJECT).elf -R .bss -O ihex $(TARGET_PATH)/$(PROJECT).hex
 
 	@$(ECHO) 'Creating binary image...'
 	@$(OBJCOPY) $(TARGET_PATH)/$(PROJECT).elf -R .bss -O binary $(TARGET_PATH)/$(PROJECT).bin
+endif
 
 	#@$(ECHO) 'Creating memory dump...'
 	#@$(OBJDUMP) -x --syms $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).dmp
@@ -406,8 +426,15 @@ $(TARGET_PATH)/objects.list : $(OBJECTS_ALL)
 
 .PHONY : linkobjects
 linkobjects : $(TARGET_PATH)/objects.list
+ifeq ($(TARGET), posix)
+	@$(ECHO) "Linking (relocatable object)..."
+	@$(LD) -r -nostdlib $(CPUCONFIG_LDFLAGS) @$(TARGET_PATH)/objects.list -o $(TARGET_PATH)/$(PROJECT)_r.o
+	@$(OBJCOPY) $(POSIX_OBJCOPY_FLAGS) $(TARGET_PATH)/$(PROJECT)_r.o $(TARGET_PATH)/$(PROJECT).o
+	@$(RM) $(TARGET_PATH)/$(PROJECT)_r.o
+else
 	@$(ECHO) "Linking..."
 	@$(LD) @$(TARGET_PATH)/objects.list $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
+endif
 
 ####################################################################################################
 # build objects
