@@ -34,6 +34,8 @@
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <stdint.h>
+#include <errno.h>
 #include <dnx/misc.h>
 #include "common.h"
 
@@ -116,13 +118,22 @@ int check_heap_consistency(void)
 //==============================================================================
 void *_libc_malloc(size_t size)
 {
+        if (size == 0) {
+                return NULL;
+        }
+
         _libc_heap_t *heap = get_heap();
         if (!heap) {
                 heap = _libc_heap_new(ALLOC_BLOCK_SIZE);
                 get_heap() = heap;
         }
 
-        return _libc_heap_malloc(heap, size);
+        void *ptr = _libc_heap_malloc(heap, size);
+        if (!ptr) {
+                errno = ENOMEM;
+        }
+
+        return ptr;
 }
 
 //==============================================================================
@@ -144,11 +155,16 @@ void *_libc_malloc(size_t size)
  * a <i>n</i> or <i>size</i> of zero.
  */
 //==============================================================================
-void *_libc_zalloc(size_t size)
+void *_libc_calloc(size_t n, size_t size)
 {
-        void *ptr = _libc_malloc(size);
+        if ((size != 0) && (n > (SIZE_MAX / size))) {
+                errno = ENOMEM;
+                return NULL;
+        }
+
+        void *ptr = _libc_malloc(n * size);
         if (ptr) {
-                memset(ptr, 0, size);
+                memset(ptr, 0, n * size);
         }
         return ptr;
 }
@@ -163,19 +179,18 @@ void *_libc_zalloc(size_t size)
  *
  * @param ptr       pointer to memory space to be freed
  *
- * @exception | @ref ESRCH
- * @exception | @ref ENOENT
  * @exception | @ref EFAULT
- * @exception | @ref EINVAL
  */
 //==============================================================================
 void _libc_free(void *ptr)
 {
         if (ptr) {
                 _libc_heap_t *heap = get_heap();
-                _libc_heap_free(heap, ptr);
-        } else {
-                errno = EINVAL;
+                if (heap) {
+                        _libc_heap_free(heap, ptr);
+                } else {
+                        errno = EFAULT;
+                }
         }
 }
 
@@ -192,7 +207,8 @@ void _libc_free(void *ptr)
  * zero, and <i>ptr</i> is not @ref NULL, then the call is equivalent to free(ptr).
  * Unless <i>ptr</i> is @ref NULL, it must have been returned by an earlier call to
  * malloc(), calloc() or realloc().  If the area pointed to was moved, a
- * free(ptr) is done.
+ * free(ptr) is done. If the allocation fails, the original block is left
+ * untouched and @ref NULL is returned.
  *
  * @param ptr       pointer to memory space
  * @param size      size of new memory space
@@ -206,16 +222,14 @@ void *_libc_realloc(void *ptr, size_t size)
 
         if (size) {
                 mem = _libc_malloc(size);
-                if (mem) {
-                        if (ptr) {
-                                _libc_heap_t *heap = get_heap();
-                                size_t len = _libc_heap_get_block_size(heap, ptr);
-                                memcpy(mem, ptr, min(len, size));
-                                _libc_free(ptr);
-                        }
-                } else {
+                if (mem && ptr) {
+                        _libc_heap_t *heap = get_heap();
+                        size_t len = _libc_heap_get_block_size(heap, ptr);
+                        memcpy(mem, ptr, min(len, size));
                         _libc_free(ptr);
                 }
+
+                /* on allocation failure the original block is left untouched */
         } else {
                 _libc_free(ptr);
         }

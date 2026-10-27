@@ -514,8 +514,8 @@ static inline void *malloc(size_t size)
 //==============================================================================
 static inline void *calloc(size_t n, size_t size)
 {
-        extern void *_libc_zalloc(size_t size);
-        return _libc_zalloc(n * size);
+        extern void *_libc_calloc(size_t n, size_t size);
+        return _libc_calloc(n, size);
 }
 
 //==============================================================================
