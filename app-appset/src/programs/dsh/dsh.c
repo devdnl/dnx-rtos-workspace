@@ -1868,6 +1868,17 @@ static bool run_pipeline(char **cmds, size_t count, char *std_in, char *file,
                         goto free_resources;
                 }
 
+        } else if (file and detached) {
+                /* file is opened by kernel without creation: create/truncate it now */
+                fout = fopen(file, fmode);
+                if (!fout) {
+                        perror(file);
+                        goto free_resources;
+                }
+
+                fclose(fout);
+                fout = NULL;
+
         } else if (not file and not detached and global->capture_file) {
                 /* command substitution $(...): output to temporary file */
                 fout = fopen(global->capture_file, "a");

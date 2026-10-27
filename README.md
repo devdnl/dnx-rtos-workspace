@@ -196,11 +196,13 @@ The simulator is built by the `i686-unknown-linux-musl-` toolchain (installed
 in the Docker image) as a static executable, so it can be started also outside
 the container. Program options:
 ```
-build/dnx-sim [--ram <MiB>] [--rom <file>] [--disk <n>=<file>[:ro]] [--hostfs <dir>]
+build/dnx-sim [--ram <MiB>] [--disk <n>=<file>[:ro]] [--hostfs <dir>]
+              [--uart <n>=pty[:<link>]|<device>]
 make run-sim SIM_OPTS="--hostfs ."
 ```
-- `--rom` connects ROMFS image (host disk 0) mounted by `siminit` in `/etc`,
 - `--disk` connects host file to the `HOSTDISK` driver (major number `<n>`);
+  disk 0 is ROMFS image mounted by `siminit` in `/etc`
+  (`--disk 0=build/sim-romfs.bin:ro`, used by `make run-sim`),
   disks 1..3 are initialized by `siminit` as `/dev/sda`..`/dev/sdc`, MBR
   partitions as `/dev/sdX1`..`/dev/sdX4` (`PART` driver), FAT and ext4 file
   systems are mounted in `/mnt/sdXn` (or `/mnt/sdX` when disk has no
@@ -209,6 +211,13 @@ make run-sim SIM_OPTS="--hostfs ."
   file system, its subdirectory can be mounted too:
   `mount /sub/dir hostfs /mnt ro`),
 - the simulator terminal is connected to `UART0` (`/dev/ttyS0`),
+- `--uart` connects `UART<n>` (`/dev/ttyS<n>`, n = 0..3) to the new pseudo
+  terminal (its path is printed at start, optional `<link>` is a symbolic link
+  to it, e.g. `--uart 1=pty:/tmp/ttyDNX1`, then `picocom /tmp/ttyDNX1`) or to
+  the host serial port (e.g. `--uart 2=/dev/ttyUSB0`, baud rate, parity and
+  stop bits are configured by UART `ioctl()`); not connected UART drops
+  transmitted data (also when PTY is not opened by any program);
+  `--uart 0=pty` moves the system console from the simulator terminal to PTY,
 - RTC (`/dev/rtc`) uses the host clock, time set in dnx is kept as offset to
   the host time (until simulator restart),
 - `Ctrl+\` terminates the simulator.
@@ -220,7 +229,7 @@ printf 'label: dos\n2048,32M,6\n,,83\n' | sfdisk sd.img
 sudo losetup -P -f --show sd.img      # e.g. /dev/loop0
 sudo mkfs.vfat /dev/loop0p1 && sudo mkfs.ext4 /dev/loop0p2
 sudo losetup -d /dev/loop0
-build/dnx-sim --rom build/sim-romfs.bin --disk 1=sd.img
+build/dnx-sim --disk 0=build/sim-romfs.bin:ro --disk 1=sd.img
 ```
 
 # Memory layout

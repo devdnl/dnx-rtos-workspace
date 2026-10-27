@@ -51,7 +51,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-/* host disk connected by the simulator --rom option */
+/* host disk with ROMFS image (simulator option: --disk 0=<file>:ro) */
 #define ROMFS_HOST_DISK 0
 
 /* host disks connected by the simulator --disk option (1 -> sda, 2 -> sdb, ...) */
@@ -148,6 +148,11 @@ static void open_output_stream(void)
 //==============================================================================
 static void initialize_additional_drivers(void)
 {
+        /* UARTs connected by the simulator --uart option (not connected UART drops data) */
+        driver_init("UART", 1, 0, "/dev/ttyS1");
+        driver_init("UART", 2, 0, "/dev/ttyS2");
+        driver_init("UART", 3, 0, "/dev/ttyS3");
+
         driver_init("TTY", 0, 1, "/dev/tty1");
         driver_init("TTY", 0, 2, "/dev/tty2");
         driver_init("TTY", 0, 3, "/dev/tty3");
@@ -238,8 +243,8 @@ static void mount_data_disk(u8_t disk)
 
 //==============================================================================
 /**
- * @brief Mount file systems. ROMFS image is connected by the simulator --rom
- *        option and it is mounted in the /etc folder. Host directory selected
+ * @brief Mount file systems. ROMFS image is connected by the simulator
+ *        --disk 0=<file>:ro option and it is mounted in the /etc folder. Host directory selected
  *        by the --hostfs option is mounted in the /host folder. Disks selected
  *        by the --disk 1..3 options are mounted in the /mnt folder.
  */

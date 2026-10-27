@@ -116,6 +116,10 @@ Notes:
   `struct timeval`, ...). The only interface between both sides is
   `src/cpu/posix/host/host.h` (basic C types only). Host calls are short,
   non-blocking and executed in the critical section.
+- `--uart <n>=pty[:<link>]|<device>` connects UART0..3 to PTY or host serial
+  port (UART0 is the simulator terminal by default). `uart/posix` sends data in
+  chunks (writer or service thread), host writes are non-blocking except the
+  simulator terminal. `siminit` initializes `/dev/ttyS1..3` (raw, no shell).
 - `siminit` connects `--disk 1..3` as `/dev/sda..sdc` with MBR partitions
   (`PART`) and mounts FAT/ext4 in `/mnt/sdXn` (or whole disk in `/mnt/sdX`).
 - Appset is linked as a relocatable object (`ld -r`), only
