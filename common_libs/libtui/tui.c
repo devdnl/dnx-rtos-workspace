@@ -283,8 +283,15 @@ static void out_attr(tui_t *tui, uint16_t attr)
 {
         char seq[32];
         int n = snprintf(seq, sizeof(seq), ESC "[0");
+        int fg = TUI_ATTR_FG(attr);
+        int bg = TUI_ATTR_BG(attr);
 
-        if (attr & TUI_BOLD) {
+        /*
+         * Bright colors (SGR 90-97, 100-107) are not supported by VT100/VT102
+         * terminals (e.g. minicom): bright foreground is sent as bold (shown
+         * bright by terminals), bright background as normal color.
+         */
+        if ((attr & TUI_BOLD) || ((fg >= 8) && (fg < 16))) {
                 n += snprintf(&seq[n], sizeof(seq) - n, ";1");
         }
 
@@ -296,18 +303,12 @@ static void out_attr(tui_t *tui, uint16_t attr)
                 n += snprintf(&seq[n], sizeof(seq) - n, ";7");
         }
 
-        int fg = TUI_ATTR_FG(attr);
-        if (fg < 8) {
-                n += snprintf(&seq[n], sizeof(seq) - n, ";%d", 30 + fg);
-        } else if (fg < 16) {
-                n += snprintf(&seq[n], sizeof(seq) - n, ";%d", 90 + fg - 8);
+        if (fg < 16) {
+                n += snprintf(&seq[n], sizeof(seq) - n, ";%d", 30 + (fg & 7));
         }
 
-        int bg = TUI_ATTR_BG(attr);
-        if (bg < 8) {
-                n += snprintf(&seq[n], sizeof(seq) - n, ";%d", 40 + bg);
-        } else if (bg < 16) {
-                n += snprintf(&seq[n], sizeof(seq) - n, ";%d", 100 + bg - 8);
+        if (bg < 16) {
+                n += snprintf(&seq[n], sizeof(seq) - n, ";%d", 40 + (bg & 7));
         }
 
         n += snprintf(&seq[n], sizeof(seq) - n, "m");
@@ -776,6 +777,71 @@ void tui_set_cursor(tui_t *tui, int x, int y)
 {
         tui->cursor_x = x;
         tui->cursor_y = y;
+}
+
+//==============================================================================
+/**
+ * @brief  Scroll rows of terminal (whole width) instead of sending them again.
+ *         Program informs that content of rows top..bottom was moved by n
+ *         rows (n > 0: up, n < 0: down) and draws screen as usual. Terminal
+ *         is scrolled on next refresh, so only new rows are sent.
+ *
+ * @param  tui          TUI object
+ * @param  top          first row of region
+ * @param  bottom       last row of region
+ * @param  n            number of rows (positive: content moves up)
+ */
+//==============================================================================
+void tui_scroll(tui_t *tui, int top, int bottom, int n)
+{
+        int height = bottom - top + 1;
+
+        if (tui->full_redraw || (top < 0) || (bottom >= tui->rows) || (height < 2) || (n == 0) ||
+                (n >= height) || (-n >= height)) {
+                return;
+        }
+
+        if (tui->out_cursor_visible) {
+                out_cstr(tui, SEQ_CURSOR_HIDE);
+                tui->out_cursor_visible = false;
+        }
+
+        /* new rows are filled with current background */
+        if (!tui->out_attr_valid || (tui->out_attr != TUI_ATTR_DEFAULT)) {
+                out_attr(tui, TUI_ATTR_DEFAULT);
+        }
+
+        char seq[24];
+        int len = snprintf(seq, sizeof(seq), ESC "[%d;%dr", top + 1, bottom + 1);
+        out_str(tui, seq, len);
+
+        /* index at bottom margin scrolls up, reverse index at top margin scrolls down */
+        out_move(tui, 0, (n > 0) ? bottom : top);
+        for (int i = 0; i < ((n > 0) ? n : -n); i++) {
+                out_cstr(tui, (n > 0) ? ESC "D" : ESC "M");
+        }
+
+        /* reset scroll region (cursor position is not known) */
+        out_cstr(tui, ESC "[r");
+        tui->out_x = -1;
+        tui->out_y = -1;
+
+        /* front buffer follows terminal */
+        int cols = tui->cols;
+        int m = (n > 0) ? n : -n;
+        cell_t *f = tui->front;
+
+        if (n > 0) {
+                memmove(&f[top * cols], &f[(top + m) * cols], (size_t)(height - m) * cols * sizeof(cell_t));
+        } else {
+                memmove(&f[(top + m) * cols], &f[top * cols], (size_t)(height - m) * cols * sizeof(cell_t));
+        }
+
+        int blank = (n > 0) ? bottom - m + 1 : top;
+        for (int i = blank * cols; i < (blank + m) * cols; i++) {
+                f[i].ch = ' ';
+                f[i].attr = TUI_ATTR_DEFAULT;
+        }
 }
 
 //==============================================================================

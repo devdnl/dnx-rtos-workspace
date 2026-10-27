@@ -185,10 +185,11 @@ both C preprocessor and make**. Rules:
   screen buffers with differential refresh (slow serial links), key decoder
   (xterm/VT100/minicom sequences, Esc+digit as F key), modal boxes
   (`tui_msgbox`, `tui_question`, `tui_inputbox`, …) and `tui_suspend`/
-  `tui_resume` for starting other programs. Blank areas are sent as screen
-  clear / erase to end of line with background color (BCE terminals;
-  `tui_set_bce(tui, false)` limits it to default background). `keytest` shows
-  raw key codes.
+  `tui_resume` for starting other programs, `tui_scroll` (full-width scroll
+  hint: terminal scrolls rows instead of sending them). Blank areas are
+  sent as screen clear / erase to end of line with background color (BCE
+  terminals; `tui_set_bce(tui, false)` limits it to default background).
+  `keytest` shows raw key codes.
   libtui and its programs can be built and tested on Linux with
   `-DTUI_PORT_POSIX` (termios port); dnx program macros need a small shim.
 - The kernel splits a command line into arguments with shell quoting rules

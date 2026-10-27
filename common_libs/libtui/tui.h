@@ -53,7 +53,11 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/* colors (0-7 normal, 8-15 bright), TUI_DEFAULT is terminal default color */
+/*
+ * colors (0-7 normal, 8-15 bright), TUI_DEFAULT is terminal default color;
+ * bright foreground is sent as bold, bright background as normal color
+ * (VT100/VT102 compatibility)
+ */
 #define TUI_BLACK     0
 #define TUI_RED       1
 #define TUI_GREEN     2
@@ -154,6 +158,7 @@ extern void tui_set_cursor(tui_t *tui, int x, int y);
 /* screen update */
 extern void tui_refresh(tui_t *tui);
 extern void tui_redraw(tui_t *tui);
+extern void tui_scroll(tui_t *tui, int top, int bottom, int n);
 extern size_t tui_last_refresh_bytes(tui_t *tui);
 extern void tui_set_bce(tui_t *tui, bool enable);
 

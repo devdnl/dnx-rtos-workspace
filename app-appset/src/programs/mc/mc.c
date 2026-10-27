@@ -39,6 +39,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
@@ -55,6 +56,8 @@
 #define COPY_BUF_SIZE  4096
 #define MAX_DEPTH      32
 #define PROGRESS_MS    250
+#define PROGRESS_BAR_W 30
+#define ESC_PREFIX_MS  1000 /* Esc + digit as F key */
 #define VIEW_LINE_BUF  1024
 #define VIEW_MAX_LINES 65536
 #define TAB_WIDTH      8
@@ -77,6 +80,7 @@
 #define ATTR_KEY_LABEL   TUI_ATTR(TUI_BLACK, TUI_CYAN)
 #define ATTR_VIEW        TUI_ATTR(TUI_WHITE, TUI_BLUE)
 #define ATTR_VIEW_BAR    TUI_ATTR(TUI_BLACK, TUI_CYAN)
+#define ATTR_VIEW_FOUND  TUI_ATTR(TUI_BLACK, TUI_YELLOW)
 
 /*==============================================================================
   Local types, enums definitions
@@ -86,7 +90,14 @@ typedef struct {
         uint64_t size;
         mode_t mode;
         bool marked;
+        int order; /* position in directory (unsorted order) */
 } entry_t;
+
+typedef enum {
+        SORT_NAME,
+        SORT_SIZE,
+        SORT_NONE,
+} sort_t;
 
 typedef struct {
         char path[PATH_LEN];
@@ -94,6 +105,8 @@ typedef struct {
         int n;
         int cur;
         int top;
+        sort_t sort;
+        bool reverse;
 } panel_t;
 
 typedef enum {
@@ -107,6 +120,8 @@ typedef enum {
 ==============================================================================*/
 static void draw(void);
 static void set_msg_error(const char *what, const char *path);
+static char **read_names(const char *path);
+static void free_names(char **names);
 
 /*==============================================================================
   Local object definitions
@@ -120,6 +135,16 @@ GLOBAL_VARIABLES_SECTION {
         char input[PATH_LEN];
         char text[PATH_LEN * 2 + 64];
         bool quit;
+        bool hide_dot;
+        sort_t sort_mode; /* sort settings used by entry_cmp() */
+        bool sort_reverse;
+
+        /* quick search */
+        bool qs_active;
+        char qs[64];
+
+        /* viewer search */
+        char view_search[64];
 
         /* file operation state */
         char *copybuf;
@@ -129,6 +154,11 @@ GLOBAL_VARIABLES_SECTION {
         uint64_t progress_bytes;
         int progress_files;
         const char *progress_title;
+        bool progress_bytes_mode; /* total progress by bytes (copy) or by files (delete) */
+        uint64_t total_bytes;
+        int total_files;
+        uint64_t file_size;
+        uint64_t file_done;
 };
 
 static const char *const FKEY_LABEL[10] = {
@@ -140,7 +170,7 @@ static const char *const FKEY_LABEL[10] = {
         "RenMov",
         "Mkdir",
         "Delete",
-        "",
+        "Sort",
         "Quit",
 };
 
@@ -148,9 +178,12 @@ static const char *const HELP_TEXT = "Tab          switch panel\n"
                                      "Enter        enter directory / run program / view file\n"
                                      "Insert, ^T   mark file;  + mark all, - unmark all, * invert\n"
                                      "F3 View      F4 Edit      F5 Copy      F6 Rename/Move\n"
-                                     "F7 Mkdir     F8 Delete    F10 Quit\n"
+                                     "F7 Mkdir     F8 Delete    F9 Sort      F10 Quit\n"
+                                     "^S, Alt+S    quick search (^S again: next match)\n"
+                                     "Alt+.        show/hide files starting with dot\n"
                                      "^R reread    ^U swap panels    ^L redraw\n"
                                      "Alt+Enter    put file name to command line\n"
+                                     "Viewer: / search, n next, arrows/PgUp/PgDn, q quit\n"
                                      "Typed text is a command executed in the panel directory.\n"
                                      "Esc+digit works as F key.";
 
@@ -294,7 +327,8 @@ static bool is_exec(const entry_t *e)
 
 //==============================================================================
 /**
- * @brief Compare entries: ".." first, then directories, then files by name.
+ * @brief Compare entries: ".." first, then directories, then files (sort
+ *        mode and order from global->sort_mode and global->sort_reverse).
  */
 //==============================================================================
 static int entry_cmp(const void *a, const void *b)
@@ -316,7 +350,24 @@ static int entry_cmp(const void *a, const void *b)
                 return dir_b - dir_a;
         }
 
-        return strcmp(ea->name, eb->name);
+        int r;
+
+        switch (global->sort_mode) {
+        case SORT_SIZE:
+                /* the biggest first */
+                r = (ea->size < eb->size) ? 1 : (ea->size > eb->size) ? -1 : strcmp(ea->name, eb->name);
+                break;
+
+        case SORT_NONE:
+                r = ea->order - eb->order;
+                break;
+
+        default:
+                r = strcmp(ea->name, eb->name);
+                break;
+        }
+
+        return global->sort_reverse ? -r : r;
 }
 
 //==============================================================================
@@ -364,6 +415,7 @@ static bool panel_add(panel_t *p, int *cap, const char *name, mode_t mode, uint6
         p->e[p->n].mode = mode;
         p->e[p->n].size = size;
         p->e[p->n].marked = false;
+        p->e[p->n].order = p->n;
         p->n++;
 
         return true;
@@ -408,6 +460,10 @@ static bool panel_load(panel_t *p, const char *select)
                         continue;
                 }
 
+                if (global->hide_dot && (ent->d_name[0] == '.')) {
+                        continue;
+                }
+
                 mode_t mode = 0;
                 uint64_t size = 0;
 
@@ -431,6 +487,8 @@ static bool panel_load(panel_t *p, const char *select)
         }
 
         if (p->n > 1) {
+                global->sort_mode = p->sort;
+                global->sort_reverse = p->reverse;
                 qsort(p->e, p->n, sizeof(entry_t), entry_cmp);
         }
 
@@ -650,12 +708,15 @@ static void draw_panel(panel_t *p, int x, int w, bool active)
         print_path(p->path, path_w);
         tui_putc(tui, ' ');
 
-        /* header */
+        /* header, sort column is marked by arrow */
+        const char *arrow = p->reverse ? "\u2191" : "\u2193";
         tui_set_attr(tui, ATTR_HEADER);
         tui_move(tui, x + 1 + (name_w - 4) / 2, 1);
         tui_puts(tui, "Name");
+        tui_puts(tui, (p->sort == SORT_NAME) ? arrow : "");
         tui_move(tui, x + 2 + name_w + (SIZE_COL_W - 4) / 2, 1);
         tui_puts(tui, "Size");
+        tui_puts(tui, (p->sort == SORT_SIZE) ? arrow : "");
 
         /* entries */
         for (int r = 0; r < rows; r++) {
@@ -725,7 +786,12 @@ static void draw_panel(panel_t *p, int x, int w, bool active)
         uint64_t marked_size;
         int marked = panel_marked(p, &marked_size);
 
-        if (marked) {
+        if (active && global->qs_active) {
+                tui_set_attr(tui, ATTR_HEADER);
+                tui_puts(tui, "Search: ");
+                print_fit(global->qs, w - 2 - 8);
+
+        } else if (marked) {
                 char bytes[24];
                 format_bytes(marked_size, bytes, sizeof(bytes));
                 tui_set_attr(tui, ATTR_MARKED);
@@ -837,6 +903,12 @@ static void draw(void)
         draw_panel(&global->panel[0], 0, left_w, global->active == 0);
         draw_panel(&global->panel[1], left_w, cols - left_w, global->active == 1);
         draw_bottom();
+
+        /* quick search: cursor in mini status of active panel */
+        if (global->qs_active) {
+                int x = (global->active == 0) ? 0 : left_w;
+                tui_set_cursor(tui, x + 1 + 8 + tui_strwidth(global->qs), tui_rows(tui) - 4);
+        }
 }
 
 //==============================================================================
@@ -999,10 +1071,12 @@ static int view_read_line(FILE *f, uint32_t offset, uint32_t next, char *buf, in
 //==============================================================================
 /**
  * @brief Draw one viewer line from selected column. Binary file is shown
- *        as ASCII (other bytes as '.').
+ *        as ASCII (other bytes as '.'). Bytes hl_start..hl_end-1 are
+ *        highlighted (search result).
  */
 //==============================================================================
-static void view_draw_line(const char *buf, int len, int y, int hoff, int cols, bool binary)
+static void view_draw_line(const char *buf, int len, int y, int hoff, int cols, bool binary, int hl_start,
+        int hl_end)
 {
         tui_t *tui = global->tui;
         int col = 0;
@@ -1014,6 +1088,9 @@ static void view_draw_line(const char *buf, int len, int y, int hoff, int cols, 
         while ((p < end) && (col < hoff + cols)) {
                 uint32_t ch;
                 const char *start = p;
+                int offset = p - buf;
+
+                tui_set_attr(tui, ((offset >= hl_start) && (offset < hl_end)) ? ATTR_VIEW_FOUND : ATTR_VIEW);
 
                 if (((uint8_t)*p < 0x80) || binary) {
                         ch = (uint8_t)*p++;
@@ -1046,6 +1123,31 @@ static void view_draw_line(const char *buf, int len, int y, int hoff, int cols, 
 
                 col++;
         }
+}
+
+//==============================================================================
+/**
+ * @brief Find text in buffer (ASCII case insensitive).
+ *
+ * @return Offset or -1 if not found.
+ */
+//==============================================================================
+static int find_nocase(const char *buf, int len, int from, const char *pattern)
+{
+        int plen = strlen(pattern);
+
+        for (int i = (from < 0) ? 0 : from; i + plen <= len; i++) {
+                int k = 0;
+                while ((k < plen) && (tolower((uint8_t)buf[i + k]) == tolower((uint8_t)pattern[k]))) {
+                        k++;
+                }
+
+                if (k == plen) {
+                        return i;
+                }
+        }
+
+        return -1;
 }
 
 //==============================================================================
@@ -1134,6 +1236,11 @@ static void view_file(const char *path)
 
         int top = 0;
         int hoff = 0;
+        int drawn_top = -1;
+        int drawn_hoff = -1;
+        int hl_line = -1;
+        int hl_start = 0;
+        int hl_end = 0;
 
         for (;;) {
                 int cols = tui_cols(tui);
@@ -1144,6 +1251,14 @@ static void view_file(const char *path)
                 top = (top > max_top) ? max_top : top;
                 top = (top < 0) ? 0 : top;
                 hoff = (hoff < 0) ? 0 : hoff;
+
+                /* scrolled text: terminal moves rows, only new rows are sent */
+                if ((drawn_top >= 0) && (hoff == drawn_hoff) && (top != drawn_top)) {
+                        tui_scroll(tui, 1, rows - 1, top - drawn_top);
+                }
+
+                drawn_top = top;
+                drawn_hoff = hoff;
 
                 tui_set_attr(tui, ATTR_VIEW_BAR);
                 tui_fill(tui, 0, 0, cols, 1, ' ');
@@ -1163,7 +1278,9 @@ static void view_file(const char *path)
                 for (int r = 0; (r < text_rows) && (top + r < lines); r++) {
                         int idx = top + r;
                         int len = view_read_line(f, offs[idx], offs[idx + 1], buf, VIEW_LINE_BUF);
-                        view_draw_line(buf, len, 1 + r, hoff, cols, binary);
+                        bool hl = (idx == hl_line);
+                        view_draw_line(buf, len, 1 + r, hoff, cols, binary, hl ? hl_start : -1,
+                                hl ? hl_end : -1);
                 }
 
                 tui_set_cursor(tui, -1, -1);
@@ -1205,7 +1322,54 @@ static void view_file(const char *path)
                         break;
                 case TUI_KEY_CTRL('L'):
                         tui_redraw(tui);
+                        drawn_top = -1;
                         break;
+
+                case '/':
+                case TUI_KEY_F(7):
+                case 'n': {
+                        if ((key != 'n') || (global->view_search[0] == '\0')) {
+                                if (!tui_inputbox(tui, "Search", "Search for:", global->view_search,
+                                            sizeof(global->view_search)) ||
+                                        (global->view_search[0] == '\0')) {
+                                        break;
+                                }
+                        }
+
+                        /* search from the next character after last result or from top line */
+                        int line = (hl_line >= 0) ? hl_line : top;
+                        int from = (hl_line >= 0) ? hl_start + 1 : 0;
+                        bool found = false;
+
+                        for (; (line < lines) && !found; line++, from = 0) {
+                                int len = view_read_line(f, offs[line], offs[line + 1], buf, VIEW_LINE_BUF);
+                                int pos = find_nocase(buf, len, from, global->view_search);
+
+                                if (pos >= 0) {
+                                        hl_line = line;
+                                        hl_start = pos;
+                                        hl_end = pos + strlen(global->view_search);
+                                        found = true;
+
+                                        /* show result with some lines above */
+                                        if ((line < top) || (line >= top + text_rows)) {
+                                                top = line - text_rows / 3;
+                                        }
+
+                                        /* column of result (bytes as approximation) */
+                                        if ((pos < hoff) || (pos >= hoff + cols)) {
+                                                hoff = (pos > cols / 2) ? pos - cols / 2 : 0;
+                                        }
+                                }
+                        }
+
+                        if (!found) {
+                                tui_msgbox(tui, "Search", "Search string not found", false);
+                                drawn_top = -1;
+                        }
+                        break;
+                }
+
                 case TUI_KEY_F(3):
                 case TUI_KEY_F(10):
                 case TUI_KEY_ESC:
@@ -1225,7 +1389,79 @@ finish:
 
 //==============================================================================
 /**
+ * @brief Append text bar of percent value to string.
+ */
+//==============================================================================
+static void append_bar(char *dst, size_t size, const char *label, int percent)
+{
+        size_t n = strlen(dst);
+        int fill = (percent * PROGRESS_BAR_W) / 100;
+
+        n += snprintf(&dst[n], size - n, "%s ", label);
+
+        for (int i = 0; (i < PROGRESS_BAR_W) && (n + 4 < size); i++) {
+                /* UTF-8: full block, light shade */
+                n += snprintf(&dst[n], size - n, "%s", (i < fill) ? "█" : "░");
+        }
+
+        snprintf(&dst[n], size - n, " %3d%%\n", percent);
+}
+
+//==============================================================================
+/**
+ * @brief Append file name shortened or padded to fixed width (box size does
+ *        not change).
+ */
+//==============================================================================
+static void append_name(char *dst, size_t size, const char *path, int width)
+{
+        const char *name = strrchr(path, '/');
+        name = name ? name + 1 : path;
+
+        size_t n = strlen(dst);
+        int len = tui_strwidth(name);
+        int col = 0;
+
+        for (const char *p = name; *p && (col < width) && (n + 5 < size); col++) {
+                const char *c = p;
+                tui_utf8_decode(&p);
+
+                if ((len > width) && (col == width - 1)) {
+                        dst[n++] = '~';
+                } else {
+                        memcpy(&dst[n], c, p - c);
+                        n += p - c;
+                }
+        }
+
+        for (; (col < width) && (n + 2 < size); col++) {
+                dst[n++] = ' ';
+        }
+
+        dst[n++] = '\n';
+        dst[n] = '\0';
+}
+
+//==============================================================================
+/**
+ * @brief Percent value (0..100).
+ */
+//==============================================================================
+static int percent(uint64_t done, uint64_t total)
+{
+        if (total == 0) {
+                return 100;
+        }
+
+        return (done >= total) ? 100 : (int)((done * 100) / total);
+}
+
+//==============================================================================
+/**
  * @brief Show progress (rate limited) and check abort key.
+ *
+ * @param path          current file
+ * @param force         show without rate limit
  *
  * @return true if operation should be aborted.
  */
@@ -1240,10 +1476,31 @@ static bool progress(const char *path, bool force)
 
         global->progress_time = now;
 
-        char bytes[24];
-        format_bytes(global->progress_bytes, bytes, sizeof(bytes));
-        snprintf(global->text, sizeof(global->text), "%s\n%d files, %s\n\nEsc: abort", path,
-                global->progress_files, bytes);
+        char *t = global->text;
+        size_t size = sizeof(global->text);
+        t[0] = '\0';
+
+        append_name(t, size, path, PROGRESS_BAR_W + 11);
+
+        if (global->progress_bytes_mode) {
+                char done[24];
+                char total[24];
+                format_bytes(global->progress_bytes, done, sizeof(done));
+                format_bytes(global->total_bytes, total, sizeof(total));
+
+                append_bar(t, size, "File ", percent(global->file_done, global->file_size));
+                append_bar(t, size, "Total", percent(global->progress_bytes, global->total_bytes));
+
+                size_t n = strlen(t);
+                snprintf(&t[n], size - n, "%s of %s, %d of %d files\n\nEsc: abort", done, total,
+                        global->progress_files, global->total_files);
+        } else {
+                append_bar(t, size, "Total", percent(global->progress_files, global->total_files));
+
+                size_t n = strlen(t);
+                snprintf(&t[n], size - n, "%d of %d files\n\nEsc: abort", global->progress_files,
+                        global->total_files);
+        }
 
         draw();
         tui_infobox(global->tui, global->progress_title, global->text);
@@ -1255,6 +1512,49 @@ static bool progress(const char *path, bool force)
         }
 
         return global->abort;
+}
+
+//==============================================================================
+/**
+ * @brief Count files and bytes (recursive) for progress.
+ *
+ * @param path          file or directory
+ * @param with_dirs     directories are counted as files (delete)
+ * @param files         number of files (increased)
+ * @param bytes         number of bytes (increased)
+ * @param depth         recursion depth
+ */
+//==============================================================================
+static void count_any(const char *path, bool with_dirs, int *files, uint64_t *bytes, int depth)
+{
+        mode_t mode;
+        uint64_t size;
+
+        if (!file_info(path, &mode, &size)) {
+                return;
+        }
+
+        if (!S_ISDIR(mode)) {
+                (*files)++;
+                *bytes += size;
+                return;
+        }
+
+        if (with_dirs) {
+                (*files)++;
+        }
+
+        char **names = (depth < MAX_DEPTH) ? read_names(path) : NULL;
+
+        for (int i = 0; names && names[i]; i++) {
+                char *p = path_new(path, names[i]);
+                if (p) {
+                        count_any(p, with_dirs, files, bytes, depth + 1);
+                        free(p);
+                }
+        }
+
+        free_names(names);
 }
 
 //==============================================================================
@@ -1341,6 +1641,11 @@ static bool copy_file(const char *src, const char *dst, mode_t mode)
 
         bool ok = true;
 
+        global->file_done = 0;
+        if (!file_info(src, NULL, &global->file_size)) {
+                global->file_size = 0;
+        }
+
         for (;;) {
                 size_t n = fread(global->copybuf, 1, COPY_BUF_SIZE, in);
                 if (n == 0) {
@@ -1356,6 +1661,7 @@ static bool copy_file(const char *src, const char *dst, mode_t mode)
                 }
 
                 global->progress_bytes += n;
+                global->file_done += n;
 
                 if (progress(src, false)) {
                         ok = false;
@@ -1602,12 +1908,20 @@ static bool op_begin(const char *title)
                 return false;
         }
 
+        /* Esc aborts operation immediately (no waiting for Esc + digit) */
+        tui_set_esc_prefix_timeout(global->tui, 0);
+
         global->abort = false;
         global->overwrite = OVERWRITE_ASK;
         global->progress_time = 0;
         global->progress_bytes = 0;
         global->progress_files = 0;
         global->progress_title = title;
+        global->progress_bytes_mode = false;
+        global->total_bytes = 0;
+        global->total_files = 0;
+        global->file_size = 0;
+        global->file_done = 0;
 
         return true;
 }
@@ -1621,6 +1935,8 @@ static void op_end(void)
 {
         free(global->copybuf);
         global->copybuf = NULL;
+
+        tui_set_esc_prefix_timeout(global->tui, ESC_PREFIX_MS);
 
         for (int k = 0; k < 2; k++) {
                 for (int i = 0; i < global->panel[k].n; i++) {
@@ -1674,6 +1990,19 @@ static void cmd_copy_move(bool move)
                 errno = ENOTDIR;
                 set_msg_error("Destination must be a directory", dest);
         } else if (op_begin(title)) {
+                /* totals for progress */
+                draw();
+                tui_infobox(global->tui, title, "Counting files...");
+                global->progress_bytes_mode = true;
+
+                for (int i = 0; i < n; i++) {
+                        char *src = path_new(p->path, p->e[idx[i]].name);
+                        if (src) {
+                                count_any(src, false, &global->total_files, &global->total_bytes, 0);
+                                free(src);
+                        }
+                }
+
                 for (int i = 0; (i < n) && !global->abort; i++) {
                         const char *name = p->e[idx[i]].name;
                         char *src = path_new(p->path, name);
@@ -1685,7 +2014,9 @@ static void cmd_copy_move(bool move)
                                 errno = EEXIST;
                                 op_error("Source and destination are the same", src);
                         } else if (move && (rename(src, dst) == 0)) {
-                                global->progress_files++;
+                                /* renamed: whole tree is done */
+                                count_any(dst, false, &global->progress_files, &global->progress_bytes, 0);
+                                progress(dst, false);
                         } else if (copy_any(src, dst, 0) && move && !global->abort) {
                                 /* other file system: copy and delete */
                                 delete_any(src, 0);
@@ -1725,6 +2056,17 @@ static void cmd_delete(void)
         }
 
         if (tui_yesno(global->tui, "Delete", global->text, false) && op_begin("Delete")) {
+                draw();
+                tui_infobox(global->tui, "Delete", "Counting files...");
+
+                for (int i = 0; i < n; i++) {
+                        char *path = path_new(p->path, p->e[idx[i]].name);
+                        if (path) {
+                                count_any(path, true, &global->total_files, &global->total_bytes, 0);
+                                free(path);
+                        }
+                }
+
                 for (int i = 0; (i < n) && !global->abort; i++) {
                         char *path = path_new(p->path, p->e[idx[i]].name);
                         if (path) {
@@ -1954,6 +2296,103 @@ static void cmdline_insert(const char *text)
 
 //==============================================================================
 /**
+ * @brief Find entry starting with quick search text (case insensitive).
+ *
+ * @param next          search from the next entry (otherwise from current)
+ *
+ * @return true if found (cursor is moved).
+ */
+//==============================================================================
+static bool quick_search(bool next)
+{
+        panel_t *p = active_panel();
+        size_t len = strlen(global->qs);
+
+        for (int k = next ? 1 : 0; k <= p->n; k++) {
+                int i = (p->cur + k) % ((p->n > 0) ? p->n : 1);
+
+                if ((p->n > 0) && (strncasecmp(p->e[i].name, global->qs, len) == 0)) {
+                        p->cur = i;
+                        return true;
+                }
+        }
+
+        return false;
+}
+
+//==============================================================================
+/**
+ * @brief Handle key in quick search mode.
+ *
+ * @return true if key was handled (otherwise search ends and key should be
+ *         handled normally).
+ */
+//==============================================================================
+static bool quick_search_key(int key)
+{
+        size_t len = strlen(global->qs);
+
+        if ((key == TUI_KEY_CTRL('S')) || (key == (TUI_MOD_ALT | 's'))) {
+                quick_search(true);
+                return true;
+        }
+
+        if (key == TUI_KEY_BACKSPACE) {
+                while ((len > 0) && ((global->qs[--len] & 0xC0) == 0x80)) {
+                }
+                global->qs[len] = '\0';
+                return true;
+        }
+
+        if ((key > 0x20) && (key <= 0x10FFFF) && (key != TUI_KEY_BACKSPACE)) {
+                char utf8[4];
+                int n = tui_utf8_encode(key, utf8);
+
+                if (len + n < sizeof(global->qs)) {
+                        memcpy(&global->qs[len], utf8, n);
+                        global->qs[len + n] = '\0';
+
+                        /* not matching character is not accepted */
+                        if (!quick_search(false)) {
+                                global->qs[len] = '\0';
+                        }
+                }
+                return true;
+        }
+
+        global->qs_active = false;
+
+        return (key == TUI_KEY_ESC);
+}
+
+//==============================================================================
+/**
+ * @brief Select sort order of active panel (F9).
+ */
+//==============================================================================
+static void cmd_sort(void)
+{
+        static const char *const BUTTONS[] = {"Name", "Size", "Unsorted", "Reverse"};
+        panel_t *p = active_panel();
+
+        snprintf(global->text, sizeof(global->text), "Sort order of active panel%s",
+                p->reverse ? " (reversed)" : "");
+
+        int sel = tui_question(global->tui, "Sort", global->text, BUTTONS, 4, p->sort, false);
+
+        if (sel == 3) {
+                p->reverse = !p->reverse;
+        } else if (sel >= 0) {
+                p->sort = (sort_t)sel;
+        } else {
+                return;
+        }
+
+        panel_load(p, NULL);
+}
+
+//==============================================================================
+/**
  * @brief Handle key.
  */
 //==============================================================================
@@ -1964,7 +2403,26 @@ static void handle_key(int key)
         page = (page < 1) ? 1 : page;
         bool cmd_empty = (global->cmd[0] == '\0');
 
+        if (global->qs_active && quick_search_key(key)) {
+                return;
+        }
+
         switch (key) {
+        case TUI_KEY_CTRL('S'):
+        case TUI_MOD_ALT | 's':
+                global->qs_active = true;
+                global->qs[0] = '\0';
+                break;
+
+        case TUI_MOD_ALT | '.':
+                global->hide_dot = !global->hide_dot;
+                reload_panels();
+                break;
+
+        case TUI_KEY_F(9):
+                cmd_sort();
+                break;
+
         case TUI_KEY_F(10):
                 global->quit = tui_yesno(global->tui, "Midnight Commander", "Do you really want to quit?",
                         true);

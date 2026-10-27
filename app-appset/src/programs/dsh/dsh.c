@@ -2870,6 +2870,12 @@ int main(int argc, char *argv[])
         global->input = stdin;
         global->pipe_file = "/run/dsh-";
 
+        /* working directory and pipe directory are needed also by -e option */
+        mkdir("/run", 0666);
+
+        getcwd(global->cwd, CWD_PATH_LEN);
+        chdir(global->cwd);
+
         if (argc >= 2) {
                 for (int i = 1; i < argc; i++) {
                         if (isstreq(argv[i], "-e")) {
@@ -2895,11 +2901,6 @@ int main(int argc, char *argv[])
                         return EXIT_FAILURE;
                 }
         }
-
-        mkdir("/run", 0666);
-
-        getcwd(global->cwd, CWD_PATH_LEN);
-        chdir(global->cwd);
 
         for (;;) {
                 char *cmd = read_command();

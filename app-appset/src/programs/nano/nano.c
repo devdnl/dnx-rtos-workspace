@@ -45,7 +45,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define VERSION       "1.0"
+#define VERSION       "1.1"
 #define TAB_WIDTH     8
 #define LINE_MIN_CAP  16
 #define LINES_MIN_CAP 64
@@ -53,11 +53,13 @@
 #define MSG_LEN       128
 #define IO_BUF_SIZE   1024
 #define FKEY_ITEMS    6
+#define UNDO_MAX      1000
 
 #define ATTR_TEXT      TUI_ATTR_DEFAULT
 #define ATTR_BAR       (TUI_ATTR_DEFAULT | TUI_REVERSE)
 #define ATTR_KEY       (TUI_ATTR_DEFAULT | TUI_REVERSE)
 #define ATTR_KEY_LABEL TUI_ATTR_DEFAULT
+#define ATTR_SELECT    (TUI_ATTR_DEFAULT | TUI_REVERSE)
 
 /*==============================================================================
   Local types, enums definitions
@@ -78,7 +80,29 @@ typedef enum {
         BAR_EDIT,
         BAR_PROMPT,
         BAR_QUESTION,
+        BAR_REPLACE,
 } bar_t;
+
+/* undo record: text inserted at or deleted from position */
+typedef struct undo {
+        struct undo *next;
+        int group;   /* records of one user action */
+        bool insert; /* true: text was inserted, false: text was deleted */
+        bool typing; /* typed characters (next typed character is merged) */
+        int y;
+        int x;
+        int len;
+        char *text; /* can contain new lines */
+} undo_t;
+
+/* text region (mark or search result) */
+typedef struct {
+        bool on;
+        int y1;
+        int x1;
+        int y2;
+        int x2;
+} region_t;
 
 typedef struct {
         const char *key;
@@ -90,6 +114,8 @@ typedef struct {
 ==============================================================================*/
 static void set_msg(const char *fmt, ...) __attribute__((format(__printf__, 1, 2)));
 static void draw(bar_t bar);
+static int pos_cmp(int y1, int x1, int y2, int x2);
+static region_t mark_region(void);
 
 /*==============================================================================
   Local object definitions
@@ -97,7 +123,22 @@ static void draw(bar_t bar);
 GLOBAL_VARIABLES_SECTION {
         tui_t *tui;
         lines_t buf;
-        lines_t cut;
+        char *cut; /* cut buffer (text with new lines) */
+        int cut_len;
+        int cut_cap;
+        undo_t *undo;
+        undo_t *redo;
+        int undo_group;
+        int undo_count;
+        bool mark; /* region from mark to cursor */
+        int mark_y;
+        int mark_x;
+        bool hl; /* highlighted search result */
+        int hl_y;
+        int hl_x;
+        int hl_len;
+        int drawn_rowoff; /* text offsets of last drawn screen (-1: not known) */
+        int drawn_coloff;
         char *filename;
         int cy;
         int cx;
@@ -122,16 +163,16 @@ static const shortcut_t SHORTCUTS_EDIT[2][FKEY_ITEMS] = {
                 {"^O", "Write Out"},
                 {"^W", "Where Is"},
                 {"^K", "Cut"},
-                {"^C", "Location"},
-                {"M-\\", "Top"},
+                {"^\\", "Replace"},
+                {"M-U", "Undo"},
         },
         {
                 {"^X", "Exit"},
                 {"^S", "Save"},
-                {"^L", "Refresh"},
+                {"M-A", "Mark"},
                 {"^U", "Paste"},
                 {"^_", "Go To Line"},
-                {"M-/", "Bottom"},
+                {"M-E", "Redo"},
         },
 };
 
@@ -145,6 +186,11 @@ static const shortcut_t SHORTCUTS_QUESTION[2][FKEY_ITEMS] = {
         {{"^C", "Cancel"}},
 };
 
+static const shortcut_t SHORTCUTS_REPLACE[2][FKEY_ITEMS] = {
+        {{"Y", "Yes"}, {"N", "No"}, {"A", "All"}},
+        {{"^C", "Cancel"}},
+};
+
 static const char *const HELP_TEXT[] = {
         "nano (dnx) " VERSION " - simple text editor",
         "",
@@ -153,8 +199,12 @@ static const char *const HELP_TEXT[] = {
         "  ^O  F3          Write out (asks for file name)",
         "  ^S              Save to current file",
         "  ^W  F6          Search (case insensitive, empty: repeat last)",
-        "  ^K  F9          Cut current line (consecutive cuts are collected)",
-        "  ^U  F10         Paste cut lines",
+        "  ^\\  M-R         Replace (Y: this, N: skip, A: all)",
+        "  ^K  F9          Cut marked text or current line (lines are collected)",
+        "  M-^ M-C         Copy marked text or current line",
+        "  ^U  F10         Paste",
+        "  M-A ^^          Set/unset mark (select text with cursor keys)",
+        "  M-U  M-E        Undo, redo",
         "  ^C              Show cursor position",
         "  ^_  M-G         Go to line (\"line\" or \"line,column\")",
         "  ^L              Refresh screen",
@@ -640,10 +690,16 @@ static void scroll(int text_rows, int cols)
 
 //==============================================================================
 /**
- * @brief Draw text line.
+ * @brief Draw text line (characters in region are highlighted).
+ *
+ * @param line          line
+ * @param idx           line index
+ * @param y             screen row
+ * @param cols          screen columns
+ * @param r             region
  */
 //==============================================================================
-static void draw_line(const line_t *line, int y, int cols)
+static void draw_line(const line_t *line, int idx, int y, int cols, const region_t *r)
 {
         tui_t *tui = global->tui;
         int col = 0;
@@ -653,6 +709,10 @@ static void draw_line(const line_t *line, int y, int cols)
 
         for (int pos = 0; (pos < line->len) && (col < end);) {
                 int n = char_len(line, pos);
+
+                bool selected = r->on && (pos_cmp(idx, pos, r->y1, r->x1) >= 0) &&
+                        (pos_cmp(idx, pos, r->y2, r->x2) < 0);
+                tui_set_attr(tui, selected ? ATTR_SELECT : ATTR_TEXT);
 
                 if (line->s[pos] == '\t') {
                         int next = (col / TAB_WIDTH + 1) * TAB_WIDTH;
@@ -683,6 +743,7 @@ static void draw_shortcuts(bar_t bar, int rows, int cols)
         tui_t *tui = global->tui;
         const shortcut_t(*items)[FKEY_ITEMS] = (bar == BAR_PROMPT) ? SHORTCUTS_PROMPT
                 : (bar == BAR_QUESTION)                            ? SHORTCUTS_QUESTION
+                : (bar == BAR_REPLACE)                             ? SHORTCUTS_REPLACE
                                                                    : SHORTCUTS_EDIT;
         int w = cols / FKEY_ITEMS;
 
@@ -725,6 +786,22 @@ static void draw(bar_t bar)
 
         scroll(text_rows, cols);
 
+        /* text moved vertically: terminal scrolls, only new lines are sent */
+        if ((global->drawn_rowoff >= 0) && (global->coloff == global->drawn_coloff) &&
+                (global->rowoff != global->drawn_rowoff)) {
+                tui_scroll(tui, 1, text_rows, global->rowoff - global->drawn_rowoff);
+        }
+
+        global->drawn_rowoff = global->rowoff;
+        global->drawn_coloff = global->coloff;
+
+        /* highlighted region: mark or search result */
+        region_t region = mark_region();
+        if (!region.on && global->hl) {
+                region = (region_t) {true, global->hl_y, global->hl_x, global->hl_y,
+                        global->hl_x + global->hl_len};
+        }
+
         /* title bar */
         tui_set_attr(tui, ATTR_BAR);
         tui_fill(tui, 0, 0, cols, 1, ' ');
@@ -741,6 +818,11 @@ static void draw(bar_t bar)
                 tui_puts(tui, "Modified");
         }
 
+        if (global->mark) {
+                tui_move(tui, cols - 17, 0);
+                tui_puts(tui, "Mark");
+        }
+
         /* text */
         tui_set_attr(tui, ATTR_TEXT);
         tui_fill(tui, 0, 1, cols, text_rows, ' ');
@@ -748,7 +830,7 @@ static void draw(bar_t bar)
         for (int r = 0; r < text_rows; r++) {
                 int idx = global->rowoff + r;
                 if (idx < global->buf.n) {
-                        draw_line(&global->buf.v[idx], 1 + r, cols);
+                        draw_line(&global->buf.v[idx], idx, 1 + r, cols, &region);
                 }
         }
 
@@ -757,7 +839,7 @@ static void draw(bar_t bar)
         tui_set_attr(tui, ATTR_TEXT);
         tui_fill(tui, 0, status_y, cols, 1, ' ');
 
-        if (bar == BAR_PROMPT || bar == BAR_QUESTION) {
+        if ((bar == BAR_PROMPT) || (bar == BAR_QUESTION) || (bar == BAR_REPLACE)) {
                 tui_set_attr(tui, ATTR_BAR);
                 tui_fill(tui, 0, status_y, cols, 1, ' ');
                 tui_move(tui, 0, status_y);
@@ -872,17 +954,20 @@ static bool prompt(const char *label, const char *initial)
 
 //==============================================================================
 /**
- * @brief Ask Yes/No question.
+ * @brief Ask Yes/No (All) question.
  *
- * @return 1: yes, 0: no, -1: canceled.
+ * @param text          question
+ * @param all           "All" answer is possible
+ *
+ * @return 1: yes, 0: no, 2: all, -1: canceled.
  */
 //==============================================================================
-static int question(const char *text)
+static int question_ex(const char *text, bool all)
 {
         global->prompt_label = text;
 
         for (;;) {
-                draw(BAR_QUESTION);
+                draw(all ? BAR_REPLACE : BAR_QUESTION);
                 tui_refresh(global->tui);
 
                 int key = tui_getkey(global->tui, -1);
@@ -891,6 +976,8 @@ static int question(const char *text)
                         return 1;
                 } else if ((key == 'n') || (key == 'N')) {
                         return 0;
+                } else if (all && ((key == 'a') || (key == 'A'))) {
+                        return 2;
                 } else if ((key == TUI_KEY_CTRL('C')) || (key == TUI_KEY_ESC) || (key == TUI_KEY_NONE)) {
                         set_msg("Cancelled");
                         return -1;
@@ -898,6 +985,18 @@ static int question(const char *text)
                         tui_redraw(global->tui);
                 }
         }
+}
+
+//==============================================================================
+/**
+ * @brief Ask Yes/No question.
+ *
+ * @return 1: yes, 0: no, -1: canceled.
+ */
+//==============================================================================
+static int question(const char *text)
+{
+        return question_ex(text, false);
 }
 
 //==============================================================================
@@ -977,39 +1076,310 @@ static void cmd_exit(void)
 
 //==============================================================================
 /**
- * @brief Insert bytes at cursor.
+ * @brief Compare positions.
+ *
+ * @return <0, 0, >0 like strcmp().
  */
 //==============================================================================
-static void insert_bytes(const char *s, int n)
+static int pos_cmp(int y1, int x1, int y2, int x2)
 {
-        if (line_insert(cur_line(), global->cx, s, n)) {
-                global->cx += n;
-                global->modified = true;
-        } else {
-                set_msg("Not enough memory");
+        if (y1 != y2) {
+                return (y1 < y2) ? -1 : 1;
+        }
+
+        return (x1 < x2) ? -1 : (x1 > x2) ? 1 : 0;
+}
+
+//==============================================================================
+/**
+ * @brief Calculate end position of text inserted at selected position.
+ */
+//==============================================================================
+static void text_end(int y, int x, const char *text, int len, int *ey, int *ex)
+{
+        *ey = y;
+        *ex = x;
+
+        for (int i = 0; i < len; i++) {
+                if (text[i] == '\n') {
+                        (*ey)++;
+                        *ex = 0;
+                } else {
+                        (*ex)++;
+                }
         }
 }
 
 //==============================================================================
 /**
- * @brief Split line at cursor.
+ * @brief Insert text (can contain new lines) into document.
+ *
+ * @return true on success, false when there is no memory (document is not
+ *         changed).
  */
 //==============================================================================
-static bool insert_newline(void)
+static bool doc_insert(int y, int x, const char *text, int len)
 {
-        line_t *line = cur_line();
+        lines_t *b = &global->buf;
+        const char *first_nl = memchr(text, '\n', len);
 
-        if (!lines_insert(&global->buf, global->cy + 1, &line->s[global->cx], line->len - global->cx)) {
+        if (!first_nl) {
+                return line_insert(&b->v[y], x, text, len);
+        }
+
+        int extra = 0;
+        for (int i = 0; i < len; i++) {
+                extra += (text[i] == '\n');
+        }
+
+        /* line array is reserved first, so lines are moved only once */
+        if (b->n + extra > b->cap) {
+                int cap = (b->cap < LINES_MIN_CAP) ? LINES_MIN_CAP : b->cap;
+                while (cap < b->n + extra) {
+                        cap *= 2;
+                }
+
+                line_t *v = realloc(b->v, cap * sizeof(line_t));
+                if (!v) {
+                        return false;
+                }
+
+                b->v = v;
+                b->cap = cap;
+        }
+
+        line_t *nl = calloc(extra, sizeof(line_t));
+        if (!nl) {
+                return false;
+        }
+
+        line_t *line = &b->v[y];
+        int tail_len = line->len - x;
+        const char *end = text + len;
+        const char *seg = first_nl + 1;
+        bool ok = true;
+
+        /* new lines: segments after new lines, the last one gets tail of line */
+        for (int k = 0; (k < extra) && ok; k++) {
+                const char *e = memchr(seg, '\n', end - seg);
+                e = e ? e : end;
+
+                int slen = e - seg;
+                int need = slen + ((k == extra - 1) ? tail_len : 0);
+
+                if (line_reserve(&nl[k], need)) {
+                        memcpy(nl[k].s, seg, slen);
+                        if (k == extra - 1) {
+                                memcpy(&nl[k].s[slen], &line->s[x], tail_len);
+                        }
+                        nl[k].len = need;
+                        nl[k].s[need] = '\0';
+                } else {
+                        ok = false;
+                }
+
+                seg = e + 1;
+        }
+
+        int first_len = first_nl - text;
+        if (ok && !line_reserve(line, x + first_len)) {
+                ok = false;
+        }
+
+        if (!ok) {
+                for (int k = 0; k < extra; k++) {
+                        free(nl[k].s);
+                }
+                free(nl);
+                return false;
+        }
+
+        memcpy(&line->s[x], text, first_len);
+        line->len = x + first_len;
+        line->s[line->len] = '\0';
+
+        memmove(&b->v[y + 1 + extra], &b->v[y + 1], (b->n - y - 1) * sizeof(line_t));
+        memcpy(&b->v[y + 1], nl, extra * sizeof(line_t));
+        b->n += extra;
+
+        free(nl);
+
+        return true;
+}
+
+//==============================================================================
+/**
+ * @brief Copy text of region (lines are separated by new lines).
+ *
+ * @return Allocated text or NULL.
+ */
+//==============================================================================
+static char *doc_extract(int y1, int x1, int y2, int x2, int *len)
+{
+        size_t n = 0;
+
+        for (int y = y1; y <= y2; y++) {
+                int a = (y == y1) ? x1 : 0;
+                int b = (y == y2) ? x2 : global->buf.v[y].len;
+                n += (b - a) + ((y < y2) ? 1 : 0);
+        }
+
+        char *text = malloc(n + 1);
+        if (!text) {
+                return NULL;
+        }
+
+        size_t k = 0;
+        for (int y = y1; y <= y2; y++) {
+                int a = (y == y1) ? x1 : 0;
+                int b = (y == y2) ? x2 : global->buf.v[y].len;
+                memcpy(&text[k], &global->buf.v[y].s[a], b - a);
+                k += b - a;
+
+                if (y < y2) {
+                        text[k++] = '\n';
+                }
+        }
+
+        text[k] = '\0';
+        *len = n;
+
+        return text;
+}
+
+//==============================================================================
+/**
+ * @brief Remove region from document.
+ *
+ * @return true on success.
+ */
+//==============================================================================
+static bool doc_remove(int y1, int x1, int y2, int x2)
+{
+        lines_t *b = &global->buf;
+
+        if (y1 == y2) {
+                line_delete(&b->v[y1], x1, x2 - x1);
+                return true;
+        }
+
+        int tail = b->v[y2].len - x2;
+
+        if (!line_reserve(&b->v[y1], x1 + tail)) {
+                return false;
+        }
+
+        line_t *first = &b->v[y1];
+        memcpy(&first->s[x1], &b->v[y2].s[x2], tail);
+        first->len = x1 + tail;
+        first->s[first->len] = '\0';
+
+        for (int y = y1 + 1; y <= y2; y++) {
+                free(b->v[y].s);
+        }
+
+        memmove(&b->v[y1 + 1], &b->v[y2 + 1], (b->n - y2 - 1) * sizeof(line_t));
+        b->n -= (y2 - y1);
+
+        return true;
+}
+
+//==============================================================================
+/**
+ * @brief Release undo list.
+ */
+//==============================================================================
+static void undo_free(undo_t **list)
+{
+        while (*list) {
+                undo_t *u = *list;
+                *list = u->next;
+                free(u->text);
+                free(u);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Store undo record (redo list is cleared). Typed characters are
+ *        merged with previous typed text.
+ */
+//==============================================================================
+static void undo_record(bool insert, int y, int x, const char *text, int len, bool typing)
+{
+        undo_free(&global->redo);
+
+        undo_t *top = global->undo;
+
+        if (typing && insert && top && top->typing && top->insert && (top->y == y) &&
+                (top->x + top->len == x) && !memchr(text, '\n', len)) {
+
+                char *t = realloc(top->text, top->len + len + 1);
+                if (t) {
+                        memcpy(&t[top->len], text, len);
+                        top->len += len;
+                        t[top->len] = '\0';
+                        top->text = t;
+                        top->group = global->undo_group;
+                        return;
+                }
+        }
+
+        undo_t *u = calloc(1, sizeof(undo_t));
+        char *t = malloc(len + 1);
+
+        if (!u || !t) {
+                free(u);
+                free(t);
+                set_msg("Not enough memory for undo");
+                return;
+        }
+
+        memcpy(t, text, len);
+        t[len] = '\0';
+
+        u->group = global->undo_group;
+        u->insert = insert;
+        u->typing = typing;
+        u->y = y;
+        u->x = x;
+        u->len = len;
+        u->text = t;
+        u->next = global->undo;
+        global->undo = u;
+        global->undo_count++;
+
+        /* the oldest record is removed */
+        if (global->undo_count > UNDO_MAX) {
+                undo_t *prev = global->undo;
+                while (prev->next && prev->next->next) {
+                        prev = prev->next;
+                }
+
+                undo_free(&prev->next);
+                global->undo_count--;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Insert text at cursor (cursor is moved to the end of text).
+ *
+ * @return true on success.
+ */
+//==============================================================================
+static bool edit_insert(const char *text, int len, bool typing)
+{
+        int y = global->cy;
+        int x = global->cx;
+
+        if (!doc_insert(y, x, text, len)) {
                 set_msg("Not enough memory");
                 return false;
         }
 
-        line = cur_line(); /* lines array could be moved */
-        line->len = global->cx;
-        line->s[line->len] = '\0';
-
-        global->cy++;
-        global->cx = 0;
+        undo_record(true, y, x, text, len, typing);
+        text_end(y, x, text, len, &global->cy, &global->cx);
         global->modified = true;
 
         return true;
@@ -1017,20 +1387,248 @@ static bool insert_newline(void)
 
 //==============================================================================
 /**
- * @brief Join line with the next one.
+ * @brief Delete region (cursor is moved to the beginning of region).
+ *
+ * @return true on success.
  */
 //==============================================================================
-static void join_next_line(int idx)
+static bool edit_delete(int y1, int x1, int y2, int x2)
 {
-        line_t *line = &global->buf.v[idx];
-        line_t *next = &global->buf.v[idx + 1];
+        int len;
+        char *text = doc_extract(y1, x1, y2, x2, &len);
 
-        if (line_insert(line, line->len, next->s, next->len)) {
-                lines_delete(&global->buf, idx + 1);
-                global->modified = true;
-        } else {
+        if (!text || !doc_remove(y1, x1, y2, x2)) {
+                free(text);
                 set_msg("Not enough memory");
+                return false;
         }
+
+        undo_record(false, y1, x1, text, len, false);
+        free(text);
+
+        global->cy = y1;
+        global->cx = x1;
+        global->modified = true;
+
+        return true;
+}
+
+//==============================================================================
+/**
+ * @brief Undo (redo) last action.
+ *
+ * @param redo          true: redo, false: undo
+ */
+//==============================================================================
+static void cmd_undo(bool redo)
+{
+        undo_t **from = redo ? &global->redo : &global->undo;
+        undo_t **to = redo ? &global->undo : &global->redo;
+        undo_t *u = *from;
+
+        if (!u) {
+                set_msg(redo ? "Nothing to redo" : "Nothing to undo");
+                return;
+        }
+
+        int group = u->group;
+
+        /* undo goes from the newest record, redo from the oldest one */
+        while (u && (u->group == group)) {
+                int ey, ex;
+                text_end(u->y, u->x, u->text, u->len, &ey, &ex);
+
+                /* undo of insert and redo of delete remove text */
+                bool remove = (u->insert != redo);
+                bool ok = remove ? doc_remove(u->y, u->x, ey, ex) : doc_insert(u->y, u->x, u->text, u->len);
+
+                if (!ok) {
+                        set_msg("Not enough memory");
+                        break;
+                }
+
+                global->cy = remove ? u->y : ey;
+                global->cx = remove ? u->x : ex;
+
+                *from = u->next;
+                u->next = *to;
+                u->typing = false;
+                *to = u;
+                global->undo_count += redo ? 1 : -1;
+
+                u = *from;
+        }
+
+        global->modified = true;
+        global->mark = false;
+        set_msg(redo ? "Redid action" : "Undid action");
+}
+
+//==============================================================================
+/**
+ * @brief Selected region (mark to cursor) in order.
+ */
+//==============================================================================
+static region_t mark_region(void)
+{
+        region_t r = {.on = false};
+
+        if (!global->mark) {
+                return r;
+        }
+
+        /* mark could be moved out of text by editing */
+        if (global->mark_y >= global->buf.n) {
+                global->mark_y = global->buf.n - 1;
+        }
+
+        int len = global->buf.v[global->mark_y].len;
+        if (global->mark_x > len) {
+                global->mark_x = len;
+        }
+
+        r.on = true;
+
+        if (pos_cmp(global->mark_y, global->mark_x, global->cy, global->cx) <= 0) {
+                r.y1 = global->mark_y;
+                r.x1 = global->mark_x;
+                r.y2 = global->cy;
+                r.x2 = global->cx;
+        } else {
+                r.y1 = global->cy;
+                r.x1 = global->cx;
+                r.y2 = global->mark_y;
+                r.x2 = global->mark_x;
+        }
+
+        return r;
+}
+
+//==============================================================================
+/**
+ * @brief Set (append) cut buffer.
+ *
+ * @return true on success.
+ */
+//==============================================================================
+static bool cut_store(const char *text, int len, bool append)
+{
+        if (!append) {
+                global->cut_len = 0;
+        }
+
+        if (global->cut_len + len + 1 > global->cut_cap) {
+                int cap = (global->cut_len + len + 1) * 2;
+                char *c = realloc(global->cut, cap);
+                if (!c) {
+                        set_msg("Not enough memory");
+                        return false;
+                }
+
+                global->cut = c;
+                global->cut_cap = cap;
+        }
+
+        memcpy(&global->cut[global->cut_len], text, len);
+        global->cut_len += len;
+        global->cut[global->cut_len] = '\0';
+
+        return true;
+}
+
+//==============================================================================
+/**
+ * @brief Region of current line with line ending (last line: line content).
+ */
+//==============================================================================
+static region_t line_region(void)
+{
+        region_t r = {.on = true, .y1 = global->cy, .x1 = 0};
+
+        if (global->cy < global->buf.n - 1) {
+                r.y2 = global->cy + 1;
+                r.x2 = 0;
+        } else {
+                r.y2 = global->cy;
+                r.x2 = cur_line()->len;
+        }
+
+        return r;
+}
+
+//==============================================================================
+/**
+ * @brief Cut marked region or current line (consecutive line cuts are
+ *        collected).
+ *
+ * @return true if line was cut (for collecting).
+ */
+//==============================================================================
+static bool cmd_cut(bool collect)
+{
+        region_t r = mark_region();
+        bool line = !r.on;
+
+        if (line) {
+                r = line_region();
+        }
+
+        global->mark = false;
+
+        if (pos_cmp(r.y1, r.x1, r.y2, r.x2) == 0) {
+                return line;
+        }
+
+        int len;
+        char *text = doc_extract(r.y1, r.x1, r.y2, r.x2, &len);
+
+        if (text && cut_store(text, len, line && collect)) {
+                edit_delete(r.y1, r.x1, r.y2, r.x2);
+        }
+
+        free(text);
+
+        return line;
+}
+
+//==============================================================================
+/**
+ * @brief Copy marked region or current line to cut buffer.
+ */
+//==============================================================================
+static void cmd_copy(void)
+{
+        region_t r = mark_region();
+
+        if (!r.on) {
+                r = line_region();
+        }
+
+        global->mark = false;
+
+        int len;
+        char *text = doc_extract(r.y1, r.x1, r.y2, r.x2, &len);
+
+        if (text && cut_store(text, len, false)) {
+                set_msg("Copied %d bytes", len);
+        }
+
+        free(text);
+}
+
+//==============================================================================
+/**
+ * @brief Paste cut buffer at cursor.
+ */
+//==============================================================================
+static void cmd_paste(void)
+{
+        if (global->cut_len == 0) {
+                set_msg("Cutbuffer is empty");
+                return;
+        }
+
+        edit_insert(global->cut, global->cut_len, false);
 }
 
 //==============================================================================
@@ -1041,16 +1639,11 @@ static void join_next_line(int idx)
 static void cmd_backspace(void)
 {
         if (global->cx > 0) {
-                int start = prev_pos(cur_line(), global->cx);
-                line_delete(cur_line(), start, global->cx - start);
-                global->cx = start;
-                global->modified = true;
+                edit_delete(global->cy, prev_pos(cur_line(), global->cx), global->cy, global->cx);
 
         } else if (global->cy > 0) {
-                int len = global->buf.v[global->cy - 1].len;
-                join_next_line(global->cy - 1);
-                global->cy--;
-                global->cx = len;
+                int y = global->cy - 1;
+                edit_delete(y, global->buf.v[y].len, global->cy, 0);
         }
 }
 
@@ -1064,68 +1657,10 @@ static void cmd_delete(void)
         line_t *line = cur_line();
 
         if (global->cx < line->len) {
-                line_delete(line, global->cx, char_len(line, global->cx));
-                global->modified = true;
+                edit_delete(global->cy, global->cx, global->cy, global->cx + char_len(line, global->cx));
 
         } else if (global->cy < global->buf.n - 1) {
-                join_next_line(global->cy);
-        }
-}
-
-//==============================================================================
-/**
- * @brief Cut current line to cut buffer.
- */
-//==============================================================================
-static void cmd_cut(void)
-{
-        if (!global->cut_continue) {
-                lines_clear(&global->cut);
-        }
-
-        line_t *line = cur_line();
-
-        if (!lines_insert(&global->cut, global->cut.n, line->s, line->len)) {
-                set_msg("Not enough memory");
-                return;
-        }
-
-        if (global->buf.n > 1) {
-                lines_delete(&global->buf, global->cy);
-
-                if (global->cy >= global->buf.n) {
-                        global->cy = global->buf.n - 1;
-                }
-        } else {
-                line->len = 0;
-                line->s[0] = '\0';
-        }
-
-        global->cx = 0;
-        global->modified = true;
-        global->cut_continue = true;
-}
-
-//==============================================================================
-/**
- * @brief Paste cut lines at cursor.
- */
-//==============================================================================
-static void cmd_paste(void)
-{
-        if (global->cut.n == 0) {
-                set_msg("Cutbuffer is empty");
-                return;
-        }
-
-        for (int i = 0; i < global->cut.n; i++) {
-                const line_t *line = &global->cut.v[i];
-
-                insert_bytes(line->s, line->len);
-
-                if (!insert_newline()) {
-                        break;
-                }
+                edit_delete(global->cy, global->cx, global->cy + 1, 0);
         }
 }
 
@@ -1200,6 +1735,120 @@ static void cmd_search(void)
         }
 
         set_msg("\"%s\" not found", pattern);
+}
+
+//==============================================================================
+/**
+ * @brief Replace text (case insensitive search, asks for each occurrence).
+ */
+//==============================================================================
+static void cmd_replace(void)
+{
+        char label[PROMPT_LEN + 32];
+
+        if (global->search[0]) {
+                snprintf(label, sizeof(label), "Search (to replace) [%s]: ", global->search);
+        } else {
+                snprintf(label, sizeof(label), "Search (to replace): ");
+        }
+
+        if (!prompt(label, NULL)) {
+                return;
+        }
+
+        if (global->input[0]) {
+                snprintf(global->search, sizeof(global->search), "%s", global->input);
+        }
+
+        int plen = strlen(global->search);
+        if (plen == 0) {
+                set_msg("Cancelled");
+                return;
+        }
+
+        if (!prompt("Replace with: ", NULL)) {
+                return;
+        }
+
+        char *with = strdup(global->input);
+        if (!with) {
+                set_msg("Not enough memory");
+                return;
+        }
+
+        int wlen = strlen(with);
+        int count = 0;
+        bool all = false;
+        bool wrapped = false;
+        int sy = global->cy;
+        int sx = global->cx;
+        int y = sy;
+        int x = sx;
+
+        global->mark = false;
+
+        for (;;) {
+                int pos = find_in_line(&global->buf.v[y], x, global->search, plen);
+
+                /* after wrap the search ends at the start position */
+                if (wrapped && (y == sy) && ((pos < 0) || (pos >= sx))) {
+                        break;
+                }
+
+                if (pos < 0) {
+                        if (y + 1 < global->buf.n) {
+                                y++;
+                        } else if (!wrapped) {
+                                wrapped = true;
+                                y = 0;
+                        } else {
+                                break;
+                        }
+
+                        x = 0;
+                        continue;
+                }
+
+                global->cy = y;
+                global->cx = pos;
+
+                if (!all) {
+                        global->hl = true;
+                        global->hl_y = y;
+                        global->hl_x = pos;
+                        global->hl_len = plen;
+
+                        int answer = question_ex("Replace this instance?", true);
+
+                        global->hl = false;
+
+                        if (answer < 0) {
+                                break;
+                        } else if (answer == 0) {
+                                x = pos + char_len(&global->buf.v[y], pos);
+                                continue;
+                        } else if (answer == 2) {
+                                all = true;
+                        }
+                }
+
+                if (!edit_delete(y, pos, y, pos + plen) || !edit_insert(with, wlen, false)) {
+                        break;
+                }
+
+                count++;
+
+                /* replaced text before start position on the same line moves start */
+                if (wrapped && (y == sy) && (pos < sx)) {
+                        sx += wlen - plen;
+                }
+
+                x = pos + wlen;
+        }
+
+        free(with);
+
+        set_msg("Replaced %d occurrence%s", count, (count == 1) ? "" : "s");
 }
 
 //==============================================================================
@@ -1297,6 +1946,8 @@ static void cmd_help(void)
 
         while (tui_getkey(tui, -1) == TUI_KEY_RESIZE) {
         }
+
+        global->drawn_rowoff = -1;
 }
 
 //==============================================================================
@@ -1378,7 +2029,41 @@ static void handle_key(int key)
                 page = 1;
         }
 
+        /* each key is a separate undo action (typed text is merged) */
+        global->undo_group++;
+
         switch (key) {
+        case TUI_MOD_ALT | 'u':
+        case TUI_MOD_ALT | 'U':
+                cmd_undo(false);
+                break;
+
+        case TUI_MOD_ALT | 'e':
+        case TUI_MOD_ALT | 'E':
+                cmd_undo(true);
+                break;
+
+        case TUI_MOD_ALT | 'a':
+        case TUI_MOD_ALT | 'A':
+        case TUI_KEY_CTRL('^'):
+                global->mark = !global->mark;
+                global->mark_y = global->cy;
+                global->mark_x = global->cx;
+                set_msg(global->mark ? "Mark Set" : "Mark Unset");
+                break;
+
+        case TUI_MOD_ALT | '^':
+        case TUI_MOD_ALT | 'c':
+        case TUI_MOD_ALT | 'C':
+                cmd_copy();
+                break;
+
+        case TUI_KEY_CTRL('\\'):
+        case TUI_MOD_ALT | 'r':
+        case TUI_MOD_ALT | 'R':
+                cmd_replace();
+                break;
+
         case TUI_KEY_CTRL('X'):
         case TUI_KEY_F(2):
                 cmd_exit();
@@ -1405,8 +2090,7 @@ static void handle_key(int key)
 
         case TUI_KEY_CTRL('K'):
         case TUI_KEY_F(9):
-                cmd_cut();
-                cut = true;
+                cut = cmd_cut(global->cut_continue);
                 break;
 
         case TUI_KEY_CTRL('U'):
@@ -1426,9 +2110,11 @@ static void handle_key(int key)
 
         case TUI_KEY_CTRL('L'):
                 tui_redraw(global->tui);
+                global->drawn_rowoff = -1;
                 break;
 
         case TUI_KEY_RESIZE:
+                global->drawn_rowoff = -1;
                 break;
 
         case TUI_KEY_UP:
@@ -1514,7 +2200,7 @@ static void handle_key(int key)
                 break;
 
         case TUI_KEY_ENTER:
-                insert_newline();
+                edit_insert("\n", 1, false);
                 break;
 
         case TUI_KEY_BACKSPACE:
@@ -1527,13 +2213,13 @@ static void handle_key(int key)
                 break;
 
         case TUI_KEY_TAB:
-                insert_bytes("\t", 1);
+                edit_insert("\t", 1, true);
                 break;
 
         default:
                 if ((key >= 0x20) && (key <= 0x10FFFF)) {
                         char utf8[4];
-                        insert_bytes(utf8, tui_utf8_encode(key, utf8));
+                        edit_insert(utf8, tui_utf8_encode(key, utf8), true);
                 }
                 break;
         }
@@ -1583,6 +2269,8 @@ int main(int argc, char *argv[])
                 global->cy = (start_line > global->buf.n) ? global->buf.n - 1 : start_line - 1;
         }
 
+        global->drawn_rowoff = -1;
+
         global->tui = tui_init();
         if (!global->tui) {
                 perror(argv[0]);
@@ -1606,9 +2294,10 @@ int main(int argc, char *argv[])
         tui_deinit(global->tui);
 
         lines_clear(&global->buf);
-        lines_clear(&global->cut);
         free(global->buf.v);
-        free(global->cut.v);
+        free(global->cut);
+        undo_free(&global->undo);
+        undo_free(&global->redo);
         free(global->filename);
 
         return err ? EXIT_FAILURE : EXIT_SUCCESS;
