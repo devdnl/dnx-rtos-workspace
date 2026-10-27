@@ -109,7 +109,9 @@ Notes:
   dnx code is compiled with `-funsigned-char` (the same `char` as on ARM).
 - Kernel parts: `src/cpu/posix` (`cpuctl.c`, `host/host.c`), FreeRTOS port
   `src/kernel/dnx-ports/GCC/Posix`, drivers `uart/posix`, `gpio/posix`,
-  `hostdisk/posix`. Files using host headers are listed as `CSRC_HOST` and
+  `hostdisk/posix`, file system `fs/hostfs` (host directory selected by
+  `--hostfs`, mounted by `siminit` in `/host`; paths cannot leave this
+  directory). Files using host headers are listed as `CSRC_HOST` and
   compiled without dnx `lib/` headers (dnx redefines `pid_t`, `time_t`,
   `struct timeval`, ...). The only interface between both sides is
   `src/cpu/posix/host/host.h` (basic C types only). Host calls are short,

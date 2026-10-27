@@ -196,10 +196,14 @@ The simulator is built by the `i686-unknown-linux-musl-` toolchain (installed
 in the Docker image) as a static executable, so it can be started also outside
 the container. Program options:
 ```
-build/dnx-sim [--ram <MiB>] [--rom <file>] [--disk <n>=<file>[:ro]]
+build/dnx-sim [--ram <MiB>] [--rom <file>] [--disk <n>=<file>[:ro]] [--hostfs <dir>]
+make run-sim SIM_OPTS="--hostfs ."
 ```
 - `--rom` connects ROMFS image (host disk 0) mounted by `siminit` in `/etc`,
 - `--disk` connects host file to the `HOSTDISK` driver (major number `<n>`),
+- `--hostfs` shares host directory, `siminit` mounts it in `/host` (the `hostfs`
+  file system, its subdirectory can be mounted too:
+  `mount /sub/dir hostfs /mnt ro`),
 - the simulator terminal is connected to `UART0` (`/dev/ttyS0`),
 - `Ctrl+\` terminates the simulator.
 

@@ -146,6 +146,18 @@ __ENABLE_ROMFS__=_YES_
 __ENABLE_FLATFS__=_YES_
 #*/
 
+#/*--
+# this:AddWidget("Combobox", "hostfs: enable")
+# this:AddItem("Yes", "_YES_")
+# this:AddItem("No", "_NO_")
+# this:SetToolTip("The hostfs gives access to the host directory selected by\n"..
+#                 "the simulator --hostfs option (POSIX simulator only).")
+#--*/
+#define __ENABLE_HOSTFS__ _NO_
+#/*
+__ENABLE_HOSTFS__=_NO_
+#*/
+
 #endif /* _FILE_SYSTEMS_FLAGS_H_ */
 #/*=============================================================================
 #  End of file

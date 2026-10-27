@@ -620,6 +620,14 @@
 #
 #     uC.PERIPH["RP2040"]={"GPIO", "CLK", "UART"}
 # end
+#
+# if uC.ARCH == "posix" then
+#     uC.AddPriorityItems = function(this, no_default)
+#         this:AddItem("Priority 0", "0")
+#     end
+#
+#     uC.PERIPH["POSIX"]={"GPIO", "UART", "HOSTDISK"}
+# end
 #++*/
 
 #/* include of CPU mandatory file in Makefile
@@ -718,6 +726,10 @@ include $(CONFIG_DIR)/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "rpcm0/clk_flags.h"
 #include "rpcm0/gpio_flags.h"
 #include "rpcm0/uart_flags.h"
+#elif (__CPU_ARCH__ == posix)
+#include "posix/cpu_flags.h"
+#include "posix/gpio_flags.h"
+#include "posix/uart_flags.h"
 #endif
 
 #/*--
@@ -891,6 +903,20 @@ __ENABLE_FBRIDGE__=_YES_
 #define __ENABLE_GPIO__ _YES_
 #/*
 __ENABLE_GPIO__=_YES_
+#*/
+
+#/*--
+# if this:PeripheralExist("HOSTDISK") then
+#     this:PutWidgets("HOSTDISK")
+#     this:SetToolTip("Block device stored in the host file (POSIX simulator only).")
+# else
+#     this:AddWidget("Value")
+#     this:SetFlagValue("__ENABLE_HOSTDISK__", "_NO_")
+# end
+#--*/
+#define __ENABLE_HOSTDISK__ _NO_
+#/*
+__ENABLE_HOSTDISK__=_NO_
 #*/
 
 #/*--

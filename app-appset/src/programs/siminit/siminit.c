@@ -146,7 +146,8 @@ static void initialize_additional_drivers(void)
 //==============================================================================
 /**
  * @brief Mount file systems. ROMFS image is connected by the simulator --rom
- *        option and it is mounted in the /etc folder.
+ *        option and it is mounted in the /etc folder. Host directory selected
+ *        by the --hostfs option is mounted in the /host folder.
  */
 //==============================================================================
 static void mount_file_systems(void)
@@ -155,6 +156,12 @@ static void mount_file_systems(void)
                 if (mount("romfs", "/dev/rom", "/etc", "validate") != 0) {
                         perror("romfs");
                 }
+        }
+
+        /* host directory selected by the --hostfs option */
+        mkdir("/host", 0777);
+        if (mount("hostfs", "", "/host", "") != 0) {
+                remove("/host");
         }
 }
 

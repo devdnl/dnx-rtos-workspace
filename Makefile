@@ -184,7 +184,7 @@ help :
 	@$(ECHO) "   build-btl           build bootloader (kernel + appset)"
 	@$(ECHO) "   build-btl-kernel    build bootloader's kernel"
 	@$(ECHO) "   build-sim           build POSIX simulator (Linux): build/dnx-sim"
-	@$(ECHO) "   run-sim             build and start POSIX simulator"
+	@$(ECHO) "   run-sim             build and start POSIX simulator (options: SIM_OPTS=...)"
 	@$(ECHO) "   build-btl-appset    build bootloader's appset"
 	@$(ECHO) "   build-app           build application (kernel + appset)"
 	@$(ECHO) "   build-app-kernel    build application's kernel"
@@ -253,7 +253,7 @@ build-sim-romfs : _build_prepare
 
 .PHONY : run-sim
 run-sim : build-sim
-	@$(TARGET_DIR_NAME)/dnx-sim --rom $(TARGET_DIR_NAME)/sim-romfs.bin
+	@$(TARGET_DIR_NAME)/dnx-sim --rom $(TARGET_DIR_NAME)/sim-romfs.bin $(SIM_OPTS)
 
 .PHONY : build-btl
 build-btl : _build_prepare build-btl-kernel build-btl-appset
