@@ -16,6 +16,8 @@ device files, file systems are mounted in a single directory tree (VFS) and
 programs are started from a shell like on a PC. The program layer is mostly
 compatible with the C standard, so many PC programs can be ported with little
 effort. The system can be thought of as a FreeRTOS kernel distribution.
+The same system can be also started on PC as a Linux program (POSIX simulator),
+which is used for development and automatic tests without hardware.
 
 The operating system itself lives in the separate
 [dnx-rtos-kernel](https://github.com/devdnl/dnx-rtos-kernel) repository, which is
@@ -51,14 +53,14 @@ part that was changed, e.g. only the appset during application development.
 - dynamic memory allocation with simple garbage collector for programs,
 - modular driver layer; drivers are initialized at runtime (`driver_init()`,
   `modprobe`),
-- supported CPU families: STM32F1, STM32F3, STM32F4, STM32F7, STM32H7 and
-  Raspberry Pi RP2040 (Cortex-M0+),
+- supported CPU families: STM32F1, STM32F3, STM32F4, STM32F7, STM32H7,
+  Raspberry Pi RP2040 (Cortex-M0+) and PC (Linux POSIX simulator, x86),
 - drivers: GPIO, UART/TTY, SPI, I2C, CAN, ADC, PWM, DMA, RTC, WDG, CRC, SDMMC,
   SD over SPI, QSPI, ETH, ENC28J60, USB device and host, LTDC, DCI, external
   memory controller, I2C/SPI EEPROM, NVM, partitions, memory block, loop, sound,
-  DHT11, encoder timer, zero/urandom and others,
+  DHT11, encoder timer, zero/urandom, host disk (simulator) and others,
 - file systems: ramfs, procfs, romfs, FAT/exFAT (fatfs), EXT2/3/4 (ext4fs),
-  eefs (EEPROM file system), flatfs,
+  eefs (EEPROM file system), flatfs, hostfs (host directory, simulator),
 - network: TCP/IP (lwIP based inet), CAN network (cannet), simple IPC (sipc),
   Unix domain sockets (uds).
 
@@ -68,26 +70,36 @@ but the real needs depend on the configuration.
 ### Application set
 The `app-appset` contains a reference set of programs, e.g.:
 
-- shell and terminal: `dsh`, `login`, `tmux`, `ed`, `more`,
+- shell and terminal: `dsh`, `login`, `tmux`, `more`, `ed` (line editor),
+- full-screen (TUI) programs: `nano` (text editor), `mc` (file manager),
+  `dialog` (dialog boxes from scripts), `tuidemo`,
 - file tools: `ls`, `cat`, `cp`, `rm`, `mkdir`, `touch`, `chmod`, `dd`, `grep`,
-  `hexdump`, `md5sum`, `mount`, `umount`, `df`, `sync`, `mkfifo`, `mknod`,
-- file system formatters: `mkext`, `mkeefs`, `mkflatfs`, `fstest`,
-- system tools: `initd`, `top`, `free`, `dmesg`, `lsmod`, `modprobe`, `uptime`,
-  `uname`, `date`, `time`, `perf`, `reboot`, `shutdown`,
+  `hexdump`, `md5sum`, `echo`, `mount`, `umount`, `df`, `sync`, `mkfifo`,
+  `mknod`,
+- storage: `mkext`, `mkeefs`, `mkflatfs` (file system formatters), `storinit`
+  (storage initialization),
+- system tools: `initd`, `siminit`, `top`, `free`, `memmon`, `dmesg`, `lsmod`,
+  `modprobe`, `addappset`, `uptime`, `uname`, `date`, `dstd` (daylight saving
+  time), `time`, `perf`, `reboot`, `shutdown`,
 - network: `ifconfig`, `netmgr`, `ping`, `ethstat`, `canstat`, `httpsrv` (HTTP
   server with Lua scripting), `ftpd`, `telnetd`, `sntpd`, `mqtt_broker`,
-- interpreters: `lua`, `luac`, `tcl`.
+- interpreters: `lua`, `luac`, `tcl`,
+- tests: `fstest` (file systems), `udstest` (Unix domain sockets), `inettest`
+  (TCP/IP), `keytest` and `ttyread` (terminal),
+- examples: `usbdevmouse`.
 
 The `initd` program is started by the kernel as the first process and is
 responsible for initializing drivers, mounting file systems and starting the
-user programs. Programs can be enabled or disabled in the appset configuration.
+user programs (in the simulator the `siminit` program is used instead).
+Programs can be enabled or disabled in the appset configuration.
 
 ### Common libraries
 The `common_libs` directory contains libraries shared by all appsets (and by
 possible other sub projects): `libc` (dnx RTOS C library), `lua`, `zlib`,
-`fastlz`, `libmqtt`, `http-parser`, `http-multipart-parser`, `fpkg`, `bs`
-(binary serialization), `conf_parser`, `llist`, `tinyexpr`, `utcl`, `crc`,
-`chsum`, `md5`, `sha1` and `sha256`. Libraries are attached to particular appset by
+`luadnx` (Lua bindings to dnx RTOS services), `fastlz`, `libmqtt`,
+`http-parser`, `http-multipart-parser`, `fpkg`, `bs` (binary serialization),
+`conf_parser`, `libtui` (text user interface), `llist`, `tinyexpr`, `utcl`,
+`crc`, `chsum`, `md5`, `sha1` and `sha256`. Libraries are attached to particular appset by
 makefiles placed in `<appset>/src/libs`.
 
 ### Board Support Packages
@@ -109,11 +121,12 @@ BSP file (`bsp/*.bsp`). Included BSPs:
 - `build` – output binaries (created after compilation),
 - `common_libs` – libraries shared between appsets,
 - `config` – current configuration of all parts (`app-kernel`, `app-appset`,
-  `app-romfs`, `btl-kernel`, `btl-appset`),
+  `app-romfs`, `btl-kernel`, `btl-appset`) and of the POSIX simulator
+  (`sim-kernel`, `sim-appset`, `sim-romfs`),
 - `doc` – documentation,
 - `kernel` – dnx RTOS kernel (git submodule),
 - `tools` – helper scripts (BSP import/export, flashing, OpenOCD, terminal,
-  linker script generator, Docker image).
+  linker script generator, Docker image, simulator tests `simtest.py`).
 
 ## Getting started
 
@@ -130,7 +143,8 @@ git submodule update --init
 
 ### Build environment
 The recommended way is to use the prepared Docker image that contains all needed
-tools (ARM GCC toolchain, OpenOCD, srecord, Python, Lua, dialog, minicom, etc.):
+tools (ARM GCC toolchain, i686 musl toolchain for the simulator, OpenOCD,
+srecord, Python, Lua, dialog, minicom, dosfstools, e2fsprogs, etc.):
 ```
 cd tools
 ./build_docker_image.py
@@ -139,7 +153,11 @@ cd ..
 ./run_container.py make build-app   # run single command in the container
 ```
 The container is created once per workspace directory and the workspace is
-mounted at the same path as on the host.
+mounted at the same path as on the host. After the image is rebuilt (e.g.
+`tools/Dockerfile` was changed) the old container has to be removed
+(`docker rm <name>`), then it is created again from the new image. On Linux the
+container is started in privileged mode with the host network and `/dev`, so
+the host serial ports and TAP interfaces are available also in the container.
 
 ### Select board
 Import the BSP file of the selected board to the `config` directory:
@@ -188,60 +206,49 @@ The system terminal can be opened by `./tools/terminal.sh [/dev/ttyUSBx]`.
 dnx RTOS can be started on PC as a Linux program (FreeRTOS POSIX port, 32-bit
 x86 executable). The simulator uses its own configuration: `config/sim-kernel`,
 `config/sim-appset`, `config/sim-romfs` (ROMFS content `app-romfs/content` is
-shared with the application).
+shared with the application). The init program of the simulator is `siminit`.
 ```
 make build-sim      # creates build/dnx-sim and build/sim-romfs.bin
 make run-sim        # builds and starts simulator in the current terminal
 ```
 The simulator is built by the `i686-unknown-linux-musl-` toolchain (installed
-in the Docker image) as a static executable, so it can be started also outside
-the container. Program options:
+in the Docker image on x86_64 hosts) as a static executable, so it can be
+started also outside the container. Program options:
 ```
 build/dnx-sim [--ram <MiB>] [--disk <n>=<file>[:ro]] [--hostfs <dir>]
               [--uart <n>=pty[:<link>]|<device>] [--tap <name>]
 make run-sim SIM_OPTS="--hostfs ."
 ```
+- `--ram` sets size of RAM (in MiB),
 - `--disk` connects host file to the `HOSTDISK` driver (major number `<n>`);
   disk 0 is ROMFS image mounted by `siminit` in `/etc`
   (`--disk 0=build/sim-romfs.bin:ro`, used by `make run-sim`),
   disks 1..3 are initialized by `siminit` as `/dev/sda`..`/dev/sdc`, MBR
   partitions as `/dev/sdX1`..`/dev/sdX4` (`PART` driver), FAT and ext4 file
   systems are mounted in `/mnt/sdXn` (or `/mnt/sdX` when disk has no
-  partitions), e.g. `--disk 1=sd.img`,
+  partitions), e.g. `--disk 1=sd.img`; other file systems can be mounted
+  manually, e.g. `mount /dev/sdb1 flatfs /mnt/flatfs`,
 - `--hostfs` shares host directory, `siminit` mounts it in `/host` (the `hostfs`
   file system, its subdirectory can be mounted too:
   `mount /sub/dir hostfs /mnt ro`),
-- the simulator terminal is connected to `UART0` (`/dev/ttyS0`),
 - `--uart` connects `UART<n>` (`/dev/ttyS<n>`, n = 0..3) to the new pseudo
   terminal (its path is printed at start, optional `<link>` is a symbolic link
   to it, e.g. `--uart 1=pty:/tmp/ttyDNX1`, then `picocom /tmp/ttyDNX1`) or to
   the host serial port (e.g. `--uart 2=/dev/ttyUSB0`, baud rate, parity and
   stop bits are configured by UART `ioctl()`); not connected UART drops
-  transmitted data (also when PTY is not opened by any program);
-  `--uart 0=pty` moves the system console from the simulator terminal to PTY,
+  transmitted data (also when PTY is not opened by any program); the
+  simulator terminal is connected to `UART0` (`/dev/ttyS0`) by default,
+  `--uart 0=pty` moves the system console to PTY,
 - `--tap` connects the `ETH` driver (`/dev/eth`) to the host TAP interface,
   `siminit` starts `netmgr` with `/etc/netmgr.conf` (static address
-  192.168.77.2/24, gateway 192.168.77.1, file `app-romfs/content/netmgr.conf`),
-- RTC (`/dev/rtc`) uses the host clock, time set in dnx is kept as offset to
-  the host time (until simulator restart),
-- `Ctrl+\` terminates the simulator.
+  192.168.77.2/24, gateway 192.168.77.1, file `app-romfs/content/netmgr.conf`).
 
-Automatic tests (CI, no hardware needed) are started by `make test-sim`
-(script `tools/simtest.py`). The system is started in the simulator and the
-test programs are executed in the shell: `fstest` on ramfs, hostfs, FAT and
-ext4 partitions of temporary disk image (also checked by `fsck.fat` and
-`e2fsck`), flatfs and eefs partitions (formatted by `mkflatfs` and `mkeefs`),
-`fstest -r` on romfs image with reference data (`fstest_ref.py`, `mkfpkg.py`),
-`udstest` and `inettest` (only with TAP interface). Exit status is
-0 when all tests passed, the simulator output is saved in `build/simtest.log`.
-```
-make test-sim
-make test-sim SIMTEST_OPTS="--tap tap0 --perf"   # network tests and measurements
-python3 tools/simtest.py -h                       # options (e.g. test filter)
-```
-FAT and ext4 tests require `dosfstools` and `e2fsprogs`, otherwise are skipped.
+RTC (`/dev/rtc`) uses the host clock, time set in dnx is kept as offset to the
+host time (until simulator restart). `Ctrl+\` terminates the simulator,
+`reboot` restarts it with the same options.
 
-Disk image example (Linux):
+#### Disk images
+Disk image with FAT and ext4 partitions can be created e.g. by:
 ```
 truncate -s 64M sd.img
 printf 'label: dos\n2048,32M,6\n,,83\n' | sfdisk sd.img
@@ -250,9 +257,11 @@ sudo mkfs.vfat /dev/loop0p1 && sudo mkfs.ext4 /dev/loop0p2
 sudo losetup -d /dev/loop0
 build/dnx-sim --disk 0=build/sim-romfs.bin:ro --disk 1=sd.img
 ```
+Images of flatfs and eefs are formatted in the simulator by `mkflatfs` and
+`mkeefs` programs (e.g. on empty image connected by `--disk 2=raw.img`).
 
-Network example (Linux, TAP interface is created once, the simulator does not
-need root privileges):
+#### Network
+TAP interface is created once (the simulator does not need root privileges):
 ```
 sudo ip tuntap add tap0 mode tap user $USER
 sudo ip addr add 192.168.77.1/24 dev tap0
@@ -266,6 +275,38 @@ listed in `/etc/dns.conf`), e.g.:
 sudo sysctl -w net.ipv4.ip_forward=1
 sudo iptables -t nat -A POSTROUTING -s 192.168.77.0/24 ! -o tap0 -j MASQUERADE
 ```
+
+### Automatic tests
+The system can be tested without hardware (e.g. in CI) by `make test-sim`
+(script `tools/simtest.py`). The simulator is started in a pseudo terminal, the
+test programs are executed in the shell and their `SUMMARY:` lines are checked:
+
+| Test             | Description |
+|------------------|-------------|
+| boot             | system starts, shell responds |
+| `fstest: ramfs`  | `fstest` in `/tmp` |
+| `fstest: hostfs` | `fstest` in temporary host directory (`/host`) |
+| `fstest: fatfs`  | `fstest` on FAT partition of temporary disk image, checked by `fsck.fat` after test |
+| `fstest: ext4fs` | `fstest` on ext4 partition of temporary disk image, checked by `e2fsck` after test |
+| `fstest: flatfs` | partition formatted by `mkflatfs`, then `fstest` |
+| `fstest: eefs`   | partition formatted by `mkeefs`, then `fstest` |
+| `fstest: romfs`  | `fstest -r` (read tests and read-only checks) on romfs image with reference data (`fstest_ref.py`, `mkfpkg.py`) |
+| `udstest`        | Unix domain sockets |
+| `inettest`       | TCP/IP (only with `--tap`) |
+| no crash/panic   | no APP CRASH or KERNEL PANIC during tests |
+
+```
+make test-sim
+make test-sim SIMTEST_OPTS="--tap tap0"          # also network tests
+make test-sim SIMTEST_OPTS="--tap tap0 --perf"   # also network measurements
+make test-sim SIMTEST_OPTS="ext4"                # only tests which name contains text
+python3 tools/simtest.py -h                      # all options (e.g. -v, --keep)
+```
+Exit status is 0 when all executed tests passed, the simulator output is saved
+in `build/simtest.log`. FAT and ext4 tests require `dosfstools` and
+`e2fsprogs` (installed in the Docker image), otherwise are skipped. All tests
+take about 4 minutes (most of the time takes eefs test, because of small
+blocks of the file system).
 
 # Memory layout
 There is many possibilities of memory layout configuration. The simplest is when
