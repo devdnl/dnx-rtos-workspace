@@ -39,6 +39,7 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <sys/mount.h>
+#include <sys/ioctl.h>
 #include <dnx/os.h>
 
 /*==============================================================================
@@ -76,9 +77,36 @@ static void show_help(const char *name)
 {
         printf("Usage: %s <flag> [OPTIONS]\n", name);
         puts("  -i            initialize module <module name> <major> <minor> [node path]");
+        puts("                [-c <config>] (configuration string of the module, e.g.");
+        puts("                address=0xA0,sub_addr_mode=2, node path is required)");
         puts("  -r            release module <module name> <major> <minor>");
         puts("  -R            release module <module path>");
         puts("  -h, --help    this help");
+}
+
+//==============================================================================
+/**
+ * @brief  Configure module by configuration string (IOCTL_DEVICE__CONFIGURE_STR).
+ *
+ * @param  path         node path
+ * @param  config       configuration string
+ *
+ * @return On success 0 is returned, otherwise -1 and errno is set.
+ */
+//==============================================================================
+static int configure(const char *path, const char *config)
+{
+        FILE *f = fopen(path, "r+");
+        if (!f) {
+                return -1;
+        }
+
+        int err = ioctl(fileno(f), IOCTL_DEVICE__CONFIGURE_STR, config);
+        int errsv = errno;
+        fclose(f);
+        errno = errsv;
+
+        return err;
 }
 
 //==============================================================================
@@ -93,6 +121,7 @@ int main(int argc, char *argv[])
         const char *action = NULL;
         const char *modname = NULL;
         const char *path = NULL;
+        const char *config = NULL;
         int major = 0;
         int minor = 0;
 
@@ -108,10 +137,28 @@ int main(int argc, char *argv[])
                 modname = argv[2];
                 major = atoi(argv[3]);
                 minor = atoi(argv[4]);
-                path = argc >= 6 ? argv[5] : NULL;
 
-                if (driver_init(modname, major, minor, path) >= 0) {
+                for (int i = 5; i < argc; i++) {
+                        if ((strcmp(argv[i], "-c") == 0) && (i + 1 < argc)) {
+                                config = argv[++i];
+                        } else if (!path) {
+                                path = argv[i];
+                        } else {
+                                action = NULL;
+                        }
+                }
+
+                if (!action || (config && !path)) {
+                        action = NULL;
+                        show_help(argv[0]);
+
+                } else if (driver_init(modname, major, minor, path) >= 0) {
                         err = EXIT_SUCCESS;
+
+                        if (config && (configure(path, config) != 0)) {
+                                action = "configure";
+                                err = EXIT_FAILURE;
+                        }
                 }
 
         } else if ((strcmp(argv[1], "-r") == 0) && (argc == 5)) {

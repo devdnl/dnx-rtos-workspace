@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
 
         fclose(global->dev);
 
-        return EXIT_SUCCESS;
+        return err ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 //==============================================================================

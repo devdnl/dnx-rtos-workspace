@@ -9,12 +9,16 @@
 #         The simulator is started in the pseudo terminal, test programs are executed in the dsh
 #         shell and their SUMMARY lines are checked. Tests:
 #           - boot (shell available, simulator platform),
+#           - board model (sim-env/boards/test.lua): GPIO, I2C, I2CEE/eefs, SPI, SPIEE/eefs and
+#             SDSPI/ext2 tests (sim-env/tests/*.lua) executed by dnx Lua interpreter, fstest on ext2
+#             on SD card model (SDSPI driver),
 #           - fstest on ramfs (/tmp) and hostfs (/host, temporary host directory),
 #           - fstest on FAT and ext4 partitions of temporary disk image (/mnt/sda1, /mnt/sda2),
 #             image is checked by fsck.fat and e2fsck after test (requires dosfstools and
 #             e2fsprogs, otherwise tests are skipped),
-#           - fstest on flatfs and eefs partitions of the second disk (formatted by mkflatfs and
-#             mkeefs programs),
+#           - fstest on flatfs, eefs, ext2 and ext3 (journal) partitions of the second disk
+#             (formatted by mkflatfs, mkeefs and mkext programs), ext2 and ext3 are checked by
+#             e2fsck after test (requires e2fsprogs, otherwise check is skipped),
 #           - fstest -r (read tests and read-only checks) on romfs image with reference data
 #             created by fstest_ref.py and mkfpkg.py,
 #           - udstest (UNIX domain sockets),
@@ -23,7 +27,8 @@
 #
 #         Usage:
 #           tools/simtest.py [--sim build/dnx-sim] [--rom build/sim-romfs.bin] [--tap tap0]
-#                            [--perf] [--log build/simtest.log] [-v] [filter]
+#                            [--board sim-env/boards/test.lua|none] [--perf]
+#                            [--log build/simtest.log] [-v] [filter]
 #
 #         Exit status: 0 if all executed tests passed, otherwise 1.
 #
@@ -72,6 +77,7 @@ BOOT_TIMEOUT = 30           # seconds
 NETWORK_TIMEOUT = 20        # seconds
 DEFAULT_TIMEOUT = 60        # seconds
 FSTEST_TIMEOUT = 300        # seconds
+SDSPI_FSTEST_TIMEOUT = 600  # seconds (SD card model over SPI, about 2.5 minutes)
 NETTEST_TIMEOUT = 600       # seconds
 QUIET_TIME = 0.3            # seconds without output after prompt
 
@@ -82,13 +88,18 @@ PART1_SIZE = 32 * 1024 * 1024 // SECTOR_SIZE
 PART2_START = PART1_START + PART1_SIZE
 PART2_SIZE = DISK_SIZE // SECTOR_SIZE - PART2_START
 
-# second disk: partition 1 flatfs, partition 2 eefs (formatted by simulator)
-RAW_DISK_SIZE = 20 * 1024 * 1024
+# second disk (formatted by simulator): partition 1 flatfs, partition 2 eefs, partition 3 ext2,
+# partition 4 ext3 (mkext program)
+RAW_DISK_SIZE = 50 * 1024 * 1024
 FLATFS_START = 2048         # sectors
 FLATFS_SIZE = 16 * 1024 * 1024 // SECTOR_SIZE
 FLATFS_MAX_FILE_KIB = 64    # flatfs file slot size
 EEFS_START = FLATFS_START + FLATFS_SIZE
 EEFS_SIZE = 1024 * 1024 // SECTOR_SIZE
+EXT2_START = EEFS_START + EEFS_SIZE
+EXT2_SIZE = 16 * 1024 * 1024 // SECTOR_SIZE
+EXT3_START = EXT2_START + EXT2_SIZE
+EXT3_SIZE = RAW_DISK_SIZE // SECTOR_SIZE - EXT3_START
 
 ANSI_ESCAPE = re.compile(rb"\x1b\[[0-9;?]*[a-zA-Z]|\x1b[78]")
 ANSI_INCOMPLETE = re.compile(rb"\x1b(\[[0-9;?]*)?$")
@@ -244,6 +255,8 @@ def create_raw_disk_image(path):
         mbr = bytearray(SECTOR_SIZE)
         mbr[446:462] = mbr_entry(0xda, FLATFS_START, FLATFS_SIZE)  # non-FS data
         mbr[462:478] = mbr_entry(0xda, EEFS_START, EEFS_SIZE)
+        mbr[478:494] = mbr_entry(0x83, EXT2_START, EXT2_SIZE)     # Linux
+        mbr[494:510] = mbr_entry(0x83, EXT3_START, EXT3_SIZE)
         mbr[510:512] = b"\x55\xaa"
         f.write(mbr)
 
@@ -343,6 +356,7 @@ class TestRunner:
         tmpdir = tempfile.mkdtemp(prefix="dnx-simtest-")
         hostfs_dir = os.path.join(tmpdir, "hostfs")
         os.mkdir(hostfs_dir)
+        args.hostfs_dir = hostfs_dir
 
         disk = None
         if mkfs_fat and mkfs_ext4:
@@ -371,6 +385,10 @@ class TestRunner:
             argv += ["--disk", "3=%s:ro" % romfs]
         if args.tap:
             argv += ["--tap", args.tap]
+        if args.board:
+            # test programs of board are available in the /host/sim-env directory
+            shutil.copytree(os.path.join(args.root, "sim-env", "tests"), os.path.join(hostfs_dir, "sim-env"))
+            argv += ["--board", args.board]
 
         os.makedirs(os.path.dirname(os.path.abspath(args.log)), exist_ok=True)
         with open(args.log, "w", buffering=1) as log:
@@ -385,7 +403,8 @@ class TestRunner:
                     if disk:
                         sim.run("umount /mnt/sda1", 10)
                         sim.run("umount /mnt/sda2", 10)
-                    for mnt in ("/mnt/flatfs", "/mnt/eefs", "/mnt/romfs"):
+                    for mnt in ("/mnt/i2cee", "/mnt/spiee", "/mnt/sdcard", "/mnt/flatfs", "/mnt/eefs", "/mnt/ext2",
+                                "/mnt/ext3", "/mnt/romfs"):
                         sim.run("umount " + mnt, 10)
                     sim.run("sync", 10)
                 sim.stop()
@@ -410,6 +429,16 @@ class TestRunner:
                 self.result("ext4fs: e2fsck", PASS if ok else FAIL, "" if ok else out.strip().splitlines()[-1])
             else:
                 self.result("ext4fs: e2fsck", SKIP, "e2fsck not found (e2fsprogs)")
+
+        # ext2/ext3 created by mkext and modified by fstest
+        for name, start, size in (("ext2", EXT2_START, EXT2_SIZE), ("ext3", EXT3_START, EXT3_SIZE)):
+            if self.selected("fstest: %s (mkext)" % name):
+                if e2fsck:
+                    ok, out = check_partition(raw_disk, start, size, tmpdir, [e2fsck, "-f", "-n"])
+                    self.result("%s: e2fsck" % name, PASS if ok else FAIL,
+                                "" if ok else out.strip().splitlines()[-1])
+                else:
+                    self.result("%s: e2fsck" % name, SKIP, "e2fsck not found (e2fsprogs)")
 
         if args.keep:
             print("Temporary files: %s" % tmpdir)
@@ -441,6 +470,30 @@ class TestRunner:
             self.result("boot", FAIL, "unexpected uname output")
             return
 
+        # board model (before fstest on hostfs, test files are removed after test)
+        board_tests = ("board: gpio", "board: i2c", "board: i2cee", "board: spi", "board: spiee",
+                       "board: sdcard", "fstest: ext2 on sdspi")
+        if args.board:
+            self.summary_test(sim, "board: gpio", "/host/sim-env", "lua gpio.lua", DEFAULT_TIMEOUT)
+            self.summary_test(sim, "board: i2c", "/host/sim-env", "lua i2c.lua", DEFAULT_TIMEOUT)
+
+            self.summary_test(sim, "board: i2cee", "/host/sim-env", "lua i2cee.lua", FSTEST_TIMEOUT)
+            self.summary_test(sim, "board: spi", "/host/sim-env", "lua spi.lua", DEFAULT_TIMEOUT)
+            self.summary_test(sim, "board: spiee", "/host/sim-env", "lua spiee.lua", FSTEST_TIMEOUT)
+            self.summary_test(sim, "board: sdcard", "/host/sim-env", "lua sdcard.lua", FSTEST_TIMEOUT)
+
+            # SD card (SDSPI driver) formatted by sdcard.lua
+            if self.selected("board: sdcard"):
+                self.summary_test(sim, "fstest: ext2 on sdspi", "/mnt/sdcard", "fstest", SDSPI_FSTEST_TIMEOUT,
+                                  ("mount /dev/sdcard ext4fs /mnt/sdcard",))
+            elif self.selected("fstest: ext2 on sdspi"):
+                self.result("fstest: ext2 on sdspi", SKIP, "requires 'board: sdcard' test")
+            shutil.rmtree(os.path.join(args.hostfs_dir, "sim-env"), ignore_errors=True)
+        else:
+            for name in board_tests:
+                if self.selected(name):
+                    self.result(name, SKIP, "board model not selected (--board none)")
+
         # file systems
         self.summary_test(sim, "fstest: ramfs", "/tmp", "fstest", FSTEST_TIMEOUT)
         self.summary_test(sim, "fstest: hostfs", "/host", "fstest", FSTEST_TIMEOUT)
@@ -458,6 +511,12 @@ class TestRunner:
                            "mount /dev/sdb1 flatfs /mnt/flatfs"))
         self.summary_test(sim, "fstest: eefs", "/mnt/eefs", "fstest", FSTEST_TIMEOUT,
                           ("mkeefs /dev/sdb2", "mkdir /mnt/eefs", "mount /dev/sdb2 eefs /mnt/eefs"))
+        self.summary_test(sim, "fstest: ext2 (mkext)", "/mnt/ext2", "fstest", FSTEST_TIMEOUT,
+                          ("mkext -e 2 -l dnxext2 -i /dev/sdb3", "mkdir /mnt/ext2",
+                           "mount /dev/sdb3 ext4fs /mnt/ext2"))
+        self.summary_test(sim, "fstest: ext3 (mkext)", "/mnt/ext3", "fstest", FSTEST_TIMEOUT,
+                          ("mkext -e 3 -j -l dnxext3 -i /dev/sdb4", "mkdir /mnt/ext3",
+                           "mount /dev/sdb4 ext4fs /mnt/ext3"))
 
         if romfs:
             self.summary_test(sim, "fstest: romfs", "/mnt/romfs", "fstest -r", FSTEST_TIMEOUT,
@@ -501,6 +560,8 @@ def main():
     parser.add_argument("--sim", default=os.path.join(root, "build", "dnx-sim"), help="simulator program")
     parser.add_argument("--rom", default=os.path.join(root, "build", "sim-romfs.bin"), help="ROMFS image")
     parser.add_argument("--tap", default=None, help="TAP interface (enables inettest)")
+    parser.add_argument("--board", default=os.path.join(root, "sim-env", "boards", "test.lua"),
+                        help="board model script, 'none' disables board tests")
     parser.add_argument("--perf", action="store_true", help="also performance measurements of network tests")
     parser.add_argument("--log", default=os.path.join(root, "build", "simtest.log"), help="log file")
     parser.add_argument("--keep", action="store_true", help="keep temporary files (disk image, hostfs)")
@@ -508,8 +569,10 @@ def main():
     parser.add_argument("filter", nargs="?", default=None, help="run only tests which name contains text")
     args = parser.parse_args()
     args.root = root
+    if args.board == "none":
+        args.board = None
 
-    for path in (args.sim, args.rom):
+    for path in [args.sim, args.rom] + ([args.board] if args.board else []):
         if not os.path.isfile(path):
             print("File not found: %s (run: make build-sim)" % path)
             return 1

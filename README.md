@@ -125,6 +125,9 @@ BSP file (`bsp/*.bsp`). Included BSPs:
   (`sim-kernel`, `sim-appset`, `sim-romfs`),
 - `doc` – documentation,
 - `kernel` – dnx RTOS kernel (git submodule),
+- `sim-env` – simulation environment of the POSIX simulator (board model:
+  Lua description of hardware connected to the microcontroller, see
+  `sim-env/README.md`),
 - `tools` – helper scripts (BSP import/export, flashing, OpenOCD, terminal,
   linker script generator, Docker image, simulator tests `simtest.py`).
 
@@ -217,6 +220,7 @@ started also outside the container. Program options:
 ```
 build/dnx-sim [--ram <MiB>] [--disk <n>=<file>[:ro]] [--hostfs <dir>]
               [--uart <n>=pty[:<link>]|<device>] [--tap <name>]
+              [--board <script>]
 make run-sim SIM_OPTS="--hostfs ."
 ```
 - `--ram` sets size of RAM (in MiB),
@@ -241,7 +245,14 @@ make run-sim SIM_OPTS="--hostfs ."
   `--uart 0=pty` moves the system console to PTY,
 - `--tap` connects the `ETH` driver (`/dev/eth`) to the host TAP interface,
   `siminit` starts `netmgr` with `/etc/netmgr.conf` (static address
-  192.168.77.2/24, gateway 192.168.77.1, file `app-romfs/content/netmgr.conf`).
+  192.168.77.2/24, gateway 192.168.77.1, file `app-romfs/content/netmgr.conf`),
+- `--board` loads the board model – Lua script which describes hardware
+  connected to the microcontroller (e.g. LEDs, buttons, connections between
+  GPIO pins, I2C devices: EEPROM, I/O expander, temperature sensor, SPI
+  devices: EEPROM, SD card, shift register), e.g.
+  `--board sim-env/boards/example.lua`; API and device models are described
+  in `sim-env/README.md`. I2C devices are created in dnx RTOS e.g. by
+  `modprobe -i I2C 0 0 /dev/i2c-ee -c address=0xA0,sub_addr_mode=2`.
 
 RTC (`/dev/rtc`) uses the host clock, time set in dnx is kept as offset to the
 host time (until simulator restart). `Ctrl+\` terminates the simulator,
@@ -284,12 +295,21 @@ test programs are executed in the shell and their `SUMMARY:` lines are checked:
 | Test             | Description |
 |------------------|-------------|
 | boot             | system starts, shell responds |
+| `board: gpio`    | GPIO test (`sim-env/tests/gpio.lua`) with board model `sim-env/boards/test.lua` |
+| `board: i2c`     | I2C test (`sim-env/tests/i2c.lua`): EEPROM, PCF8574, LM75 models, not connected device |
+| `board: i2cee`   | I2CEE driver and eefs on 24C256 model (`sim-env/tests/i2cee.lua`) |
+| `board: spi`     | SPI test (`sim-env/tests/spi.lua`): CS selection, bit order, mode, 74HC595 |
+| `board: spiee`   | SPIEE driver and eefs on 25LC256 model (`sim-env/tests/spiee.lua`) |
+| `board: sdcard`  | SDSPI driver on SD card models (SDHC, SD v1), ext2 created by `mkext` (`sim-env/tests/sdcard.lua`) |
+| `fstest: ext2 on sdspi` | `fstest` on ext2 file system of the SD card model (SDSPI driver) |
 | `fstest: ramfs`  | `fstest` in `/tmp` |
 | `fstest: hostfs` | `fstest` in temporary host directory (`/host`) |
 | `fstest: fatfs`  | `fstest` on FAT partition of temporary disk image, checked by `fsck.fat` after test |
 | `fstest: ext4fs` | `fstest` on ext4 partition of temporary disk image, checked by `e2fsck` after test |
 | `fstest: flatfs` | partition formatted by `mkflatfs`, then `fstest` |
 | `fstest: eefs`   | partition formatted by `mkeefs`, then `fstest` |
+| `fstest: ext2 (mkext)` | partition formatted by `mkext -e 2`, then `fstest`, checked by `e2fsck` after test |
+| `fstest: ext3 (mkext)` | partition formatted by `mkext -e 3 -j` (journal), then `fstest`, checked by `e2fsck` after test |
 | `fstest: romfs`  | `fstest -r` (read tests and read-only checks) on romfs image with reference data (`fstest_ref.py`, `mkfpkg.py`) |
 | `udstest`        | Unix domain sockets |
 | `inettest`       | TCP/IP (only with `--tap`) |
@@ -304,9 +324,10 @@ python3 tools/simtest.py -h                      # all options (e.g. -v, --keep)
 ```
 Exit status is 0 when all executed tests passed, the simulator output is saved
 in `build/simtest.log`. FAT and ext4 tests require `dosfstools` and
-`e2fsprogs` (installed in the Docker image), otherwise are skipped. All tests
-take about 4 minutes (most of the time takes eefs test, because of small
-blocks of the file system).
+`e2fsprogs` (installed in the Docker image), otherwise are skipped (ext2 and
+ext3 tests are executed, only `e2fsck` check is skipped). All tests
+take about 7 minutes (most of the time take fstest on eefs, because of small
+blocks of the file system, and fstest on the SD card model over SPI).
 
 # Memory layout
 There is many possibilities of memory layout configuration. The simplest is when

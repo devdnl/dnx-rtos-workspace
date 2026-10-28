@@ -83,6 +83,7 @@ int main(int argc, char *argv[])
 
         if (mount(argv[2], src_path, argv[3], argv[4]) != 0) {
                 perror("Mount error");
+                return EXIT_FAILURE;
         }
 
         return EXIT_SUCCESS;

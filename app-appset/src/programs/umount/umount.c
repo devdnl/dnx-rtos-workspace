@@ -72,10 +72,12 @@ int main(int argc, char *argv[])
 {
         if (argc == 1) {
                 printf("Usage: %s [mount point]\n", argv[0]);
-        } else {
-                if (umount(argv[1]) != 0) {
-                        perror(argv[1]);
-                }
+                return EXIT_FAILURE;
+        }
+
+        if (umount(argv[1]) != 0) {
+                perror(argv[1]);
+                return EXIT_FAILURE;
         }
 
         return EXIT_SUCCESS;

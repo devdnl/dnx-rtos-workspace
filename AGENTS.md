@@ -124,10 +124,30 @@ Notes:
   `/dev/net/tun`, software MAC filter) to the host TAP interface; `siminit`
   starts `netmgr --daemon /etc/netmgr.conf` (ROMFS content `app-romfs/content`
   is shared with the application, `config/sim-romfs` sets image parameters).
-- `make test-sim` (`tools/simtest.py`) runs `fstest` (ramfs, hostfs, FAT/ext4
-  image, flatfs/eefs partitions, read-only romfs image), `udstest` and
-  `inettest` (`--tap`) in the simulator and checks
-  their `SUMMARY:` lines; use it to verify kernel/appset changes on PC.
+- `make test-sim` (`tools/simtest.py`) runs board tests (`sim-env/tests/*.lua`:
+  GPIO, I2C, I2CEE, SPI, SPIEE, SDSPI), `fstest` (ramfs, hostfs, FAT/ext4
+  image, flatfs/eefs/ext2/ext3 partitions formatted in dnx, ext2 on the SD
+  card model, read-only romfs image), `udstest` and `inettest` (`--tap`) in
+  the simulator and checks their `SUMMARY:` lines (ext2/ext3/ext4/FAT images
+  are checked by e2fsck/fsck.fat); use it to verify kernel/appset changes on
+  PC.
+- `--board <script>` loads the board model: kernel
+  `src/cpu/posix/host/board.c` (interface `board.h`) with unmodified Lua 5.5
+  sources in `src/cpu/posix/host/lua` (`CSRC_HOST_LIB`: compiled for the
+  host without warnings, do not edit them). Board scripts, device models and
+  tests are in the workspace `sim-env`. Lua runs in its own host thread,
+  system events are queued. `gpio/posix` reports output changes and
+  reads pins driven by the board. `i2c/posix` (master only) forwards bus
+  primitives (start, address, write, read, stop) as synchronous requests to
+  the board thread (Lua device models `i2c.attach()`, `sim-env/models`);
+  without the board buses are empty (address NACK -> ENXIO). Devices are
+  created by `modprobe -i I2C <bus> <n> <path> -c <config string>`.
+  `spi/posix` sends each transceive as one synchronous request (mode and bit
+  order in flags); CS is a GPIO pin set by the generic SPI driver, the board
+  thread handles queued GPIO events before a request, so models see CS
+  changes in order (`spi.attach(bus, cs, dev)`). Device models: `sim-env/models`. Boards in
+  `sim-env/boards`, tests run in dnx in `sim-env/tests`, API in
+  `sim-env/README.md`.
 - `siminit` connects `--disk 1..3` as `/dev/sda..sdc` with MBR partitions
   (`PART`) and mounts FAT/ext4 in `/mnt/sdXn` (or whole disk in `/mnt/sdX`).
 - Appset is linked as a relocatable object (`ld -r`), only

@@ -235,7 +235,8 @@ build-app : _build_prepare build-app-romfs build-app-kernel build-app-appset
 .PHONY : build-sim
 build-sim : _build_prepare build-sim-romfs build-sim-kernel build-sim-appset
 	@$(MAKE) -C kernel -s -j 1 -fMakefile link-sim CONFIG_DIR=../config/sim-kernel \
-	         APPSET_OBJ=../$(TARGET_DIR_NAME)/sim-appset.o OUTPUT=../$(TARGET_DIR_NAME)/dnx-sim
+	         APPSET_OBJ=../$(TARGET_DIR_NAME)/sim-appset.o \
+	         OUTPUT=../$(TARGET_DIR_NAME)/dnx-sim
 	@$(ECHO) "Target sim built successfully: $(TARGET_DIR_NAME)/dnx-sim --disk 0=$(TARGET_DIR_NAME)/sim-romfs.bin:ro"
 
 .PHONY : build-sim-kernel

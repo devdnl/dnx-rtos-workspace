@@ -82,8 +82,12 @@ int main(int argc, char *argv[])
         FILE *storage = fopen(argv[1], "r");
         if (storage) {
                 if (ioctl(fileno(storage), IOCTL_STORAGE__INITIALIZE) == 0) {
-                        if (ioctl(fileno(storage), IOCTL_STORAGE__READ_MBR) != 0) {
+                        status = EXIT_SUCCESS;
+
+                        /* partition table is read only by drivers that support it (PART) */
+                        if ((ioctl(fileno(storage), IOCTL_STORAGE__READ_MBR) != 0) && (errno != EBADRQC)) {
                                 perror(argv[1]);
+                                status = EXIT_FAILURE;
                         }
 
                 } else {

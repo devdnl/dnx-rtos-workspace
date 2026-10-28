@@ -75,6 +75,7 @@ __PROJECT_TOOLCHAIN__=arm-none-eabi-
 #define stm32f7 0x3cb2ba7c
 #define stm32h7 0x56A5cde6
 #define rpcm0   0x60b36426
+#define posix   0x7a3c51e9
 #/*--
 # this:AddWidget("Combobox", "CPU architecture")
 # this:AddItem("STMicroelectronics STM32F1", "stm32f1")
@@ -83,6 +84,7 @@ __PROJECT_TOOLCHAIN__=arm-none-eabi-
 # this:AddItem("STMicroelectronics STM32F7", "stm32f7")
 # this:AddItem("STMicroelectronics STM32H7", "stm32h7")
 # this:AddItem("Raspberry Pi Pico M0+", "rpcm0")
+# this:AddItem("POSIX simulator (Linux)", "posix")
 #--*/
 #define __CPU_ARCH__ stm32f1
 #/*
@@ -189,6 +191,16 @@ CPUCONFIG_CFLAGS=-mcpu=cortex-m0plus -mthumb -ffast-math -fno-math-errno -mthumb
 CPUCONFIG_CXXFLAGS=-mcpu=cortex-m0plus -mthumb -ffast-math -fno-math-errno -mthumb-interwork
 CPUCONFIG_LDFLAGS=-mcpu=cortex-m0plus -mthumb -mthumb-interwork -nostartfiles
 CPUCONFIG_LDFLAGS += -T./build/program/layout.ld
+endif
+#*/
+#elif (__CPU_ARCH__ == posix)
+#define ARCH_posix
+#/*
+ifeq ($(__CPU_ARCH__), posix)
+CPUCONFIG_AFLAGS=-m32 -fno-pie
+CPUCONFIG_CFLAGS=-m32 -fno-pie -fno-strict-aliasing -funsigned-char
+CPUCONFIG_CXXFLAGS=-m32 -fno-pie -fno-strict-aliasing -funsigned-char
+CPUCONFIG_LDFLAGS=-m32
 endif
 #*/
 #endif

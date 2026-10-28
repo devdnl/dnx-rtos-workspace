@@ -626,7 +626,7 @@
 #         this:AddItem("Priority 0", "0")
 #     end
 #
-#     uC.PERIPH["POSIX"]={"GPIO", "UART", "HOSTDISK", "RTC", "ETH"}
+#     uC.PERIPH["POSIX"]={"GPIO", "UART", "HOSTDISK", "RTC", "ETH", "I2C", "SPI"}
 # end
 #++*/
 
@@ -731,6 +731,8 @@ include $(CONFIG_DIR)/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "posix/gpio_flags.h"
 #include "posix/uart_flags.h"
 #include "posix/eth_flags.h"
+#include "posix/i2c_flags.h"
+#include "posix/spi_flags.h"
 #endif
 
 #/*--
@@ -929,18 +931,18 @@ __ENABLE_HOSTDISK__=_YES_
 #     this:SetFlagValue("__ENABLE_I2C__", "_NO_")
 # end
 #--*/
-#define __ENABLE_I2C__ _NO_
+#define __ENABLE_I2C__ _YES_
 #/*
-__ENABLE_I2C__=_NO_
+__ENABLE_I2C__=_YES_
 #*/
 
 #/*--
 # this:PutWidgets("I2CEE")
 # this:SetToolTip("I2C EEPROM driver for 24Cxx devices.")
 #--*/
-#define __ENABLE_I2CEE__ _NO_
+#define __ENABLE_I2CEE__ _YES_
 #/*
-__ENABLE_I2CEE__=_NO_
+__ENABLE_I2CEE__=_YES_
 #*/
 
 #/*--
@@ -1074,9 +1076,9 @@ __ENABLE_SDMMC__=_NO_
 #                 "Note: make sure that the MISO pin is set to input "..
 #                 "pulled-up mode or is connected to external pull-up resistor.")
 #--*/
-#define __ENABLE_SDSPI__ _NO_
+#define __ENABLE_SDSPI__ _YES_
 #/*
-__ENABLE_SDSPI__=_NO_
+__ENABLE_SDSPI__=_YES_
 #*/
 
 #/*--
@@ -1102,18 +1104,18 @@ __ENABLE_SND__=_NO_
 #     this:SetFlagValue("__ENABLE_SPI__", "_NO_")
 # end
 #--*/
-#define __ENABLE_SPI__ _NO_
+#define __ENABLE_SPI__ _YES_
 #/*
-__ENABLE_SPI__=_NO_
+__ENABLE_SPI__=_YES_
 #*/
 
 #/*--
 # this:PutWidgets("SPIEE")
 # this:SetToolTip("SPI EEPROM driver.")
 #--*/
-#define __ENABLE_SPIEE__ _NO_
+#define __ENABLE_SPIEE__ _YES_
 #/*
-__ENABLE_SPIEE__=_NO_
+__ENABLE_SPIEE__=_YES_
 #*/
 
 #/*--
