@@ -230,7 +230,9 @@ Automatic tests (CI, no hardware needed) are started by `make test-sim`
 (script `tools/simtest.py`). The system is started in the simulator and the
 test programs are executed in the shell: `fstest` on ramfs, hostfs, FAT and
 ext4 partitions of temporary disk image (also checked by `fsck.fat` and
-`e2fsck`), `udstest` and `inettest` (only with TAP interface). Exit status is
+`e2fsck`), flatfs and eefs partitions (formatted by `mkflatfs` and `mkeefs`),
+`fstest -r` on romfs image with reference data (`fstest_ref.py`, `mkfpkg.py`),
+`udstest` and `inettest` (only with TAP interface). Exit status is
 0 when all tests passed, the simulator output is saved in `build/simtest.log`.
 ```
 make test-sim

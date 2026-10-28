@@ -13,6 +13,10 @@
 #           - fstest on FAT and ext4 partitions of temporary disk image (/mnt/sda1, /mnt/sda2),
 #             image is checked by fsck.fat and e2fsck after test (requires dosfstools and
 #             e2fsprogs, otherwise tests are skipped),
+#           - fstest on flatfs and eefs partitions of the second disk (formatted by mkflatfs and
+#             mkeefs programs),
+#           - fstest -r (read tests and read-only checks) on romfs image with reference data
+#             created by fstest_ref.py and mkfpkg.py,
 #           - udstest (UNIX domain sockets),
 #           - inettest (TCP/IP, only with --tap option, TAP interface must be prepared),
 #           - no application crash and kernel panic.
@@ -77,6 +81,14 @@ PART1_START = 2048          # sectors
 PART1_SIZE = 32 * 1024 * 1024 // SECTOR_SIZE
 PART2_START = PART1_START + PART1_SIZE
 PART2_SIZE = DISK_SIZE // SECTOR_SIZE - PART2_START
+
+# second disk: partition 1 flatfs, partition 2 eefs (formatted by simulator)
+RAW_DISK_SIZE = 20 * 1024 * 1024
+FLATFS_START = 2048         # sectors
+FLATFS_SIZE = 16 * 1024 * 1024 // SECTOR_SIZE
+FLATFS_MAX_FILE_KIB = 64    # flatfs file slot size
+EEFS_START = FLATFS_START + FLATFS_SIZE
+EEFS_SIZE = 1024 * 1024 // SECTOR_SIZE
 
 ANSI_ESCAPE = re.compile(rb"\x1b\[[0-9;?]*[a-zA-Z]|\x1b[78]")
 ANSI_INCOMPLETE = re.compile(rb"\x1b(\[[0-9;?]*)?$")
@@ -226,6 +238,24 @@ def create_disk_image(path, mkfs_fat, mkfs_ext4):
         run(ext4 + size)
 
 
+def create_raw_disk_image(path):
+    with open(path, "wb") as f:
+        f.truncate(RAW_DISK_SIZE)
+        mbr = bytearray(SECTOR_SIZE)
+        mbr[446:462] = mbr_entry(0xda, FLATFS_START, FLATFS_SIZE)  # non-FS data
+        mbr[462:478] = mbr_entry(0xda, EEFS_START, EEFS_SIZE)
+        mbr[510:512] = b"\x55\xaa"
+        f.write(mbr)
+
+
+def create_romfs_image(path, root, tmpdir):
+    content = os.path.join(tmpdir, "romfs")
+    os.mkdir(content)
+    run = lambda args: subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True)
+    run([sys.executable, os.path.join(root, "app-appset", "src", "programs", "fstest", "fstest_ref.py"), content])
+    run([sys.executable, os.path.join(root, "kernel", "tools", "mkfpkg.py"), content, path])
+
+
 def extract_partition(image, start, size, path):
     with open(image, "rb") as src, open(path, "wb") as dst:
         src.seek(start * SECTOR_SIZE)
@@ -258,10 +288,17 @@ class TestRunner:
     def selected(self, name):
         return (not self.args.filter) or (self.args.filter.lower() in name.lower())
 
-    # run program which prints SUMMARY line
-    def summary_test(self, sim, name, cwd, cmd, timeout):
+    # run program which prints SUMMARY line, setup commands are executed before (e.g. format, mount)
+    def summary_test(self, sim, name, cwd, cmd, timeout, setup=()):
         if not self.selected(name):
             return
+
+        for c in setup:
+            ok, out = sim.run(c, timeout)
+            if not ok or ("rror" in out) or ("Usage" in out) or ("No such" in out):
+                lines = out.strip().splitlines()
+                self.result(name, FAIL, "'%s' failed: %s" % (c, lines[-2] if len(lines) > 1 else ""))
+                return
 
         if cwd:
             ok, out = sim.run("cd " + cwd)
@@ -316,9 +353,22 @@ class TestRunner:
                 print("Disk image error: %s" % e.stderr.decode(errors="replace").strip())
                 disk = None
 
+        raw_disk = os.path.join(tmpdir, "raw.img")
+        create_raw_disk_image(raw_disk)
+
+        romfs = os.path.join(tmpdir, "romfs.img")
+        try:
+            create_romfs_image(romfs, args.root, tmpdir)
+        except (subprocess.CalledProcessError, OSError) as e:
+            print("ROMFS image error: %s" % e)
+            romfs = None
+
         argv = [args.sim, "--disk", "0=%s:ro" % args.rom, "--hostfs", hostfs_dir]
         if disk:
             argv += ["--disk", "1=%s" % disk]
+        argv += ["--disk", "2=%s" % raw_disk]
+        if romfs:
+            argv += ["--disk", "3=%s:ro" % romfs]
         if args.tap:
             argv += ["--tap", args.tap]
 
@@ -328,13 +378,15 @@ class TestRunner:
 
             sim = Simulator(argv, log, args.verbose)
             try:
-                self.tests(sim, disk)
+                self.tests(sim, disk, romfs)
             finally:
                 if sim.is_alive():
                     sim.run("cd /", 5)
                     if disk:
                         sim.run("umount /mnt/sda1", 10)
                         sim.run("umount /mnt/sda2", 10)
+                    for mnt in ("/mnt/flatfs", "/mnt/eefs", "/mnt/romfs"):
+                        sim.run("umount " + mnt, 10)
                     sim.run("sync", 10)
                 sim.stop()
 
@@ -364,7 +416,7 @@ class TestRunner:
         else:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
-    def tests(self, sim, disk):
+    def tests(self, sim, disk, romfs):
         args = self.args
 
         # boot: the first prompt can be followed by messages of daemons (netmgr), so empty command is
@@ -400,6 +452,18 @@ class TestRunner:
             for name in ("fstest: fatfs", "fstest: ext4fs"):
                 if self.selected(name):
                     self.result(name, SKIP, "mkfs.fat or mkfs.ext4 not found (dosfstools, e2fsprogs)")
+
+        self.summary_test(sim, "fstest: flatfs", "/mnt/flatfs", "fstest", FSTEST_TIMEOUT,
+                          ("mkflatfs /dev/sdb1 %u" % FLATFS_MAX_FILE_KIB, "mkdir /mnt/flatfs",
+                           "mount /dev/sdb1 flatfs /mnt/flatfs"))
+        self.summary_test(sim, "fstest: eefs", "/mnt/eefs", "fstest", FSTEST_TIMEOUT,
+                          ("mkeefs /dev/sdb2", "mkdir /mnt/eefs", "mount /dev/sdb2 eefs /mnt/eefs"))
+
+        if romfs:
+            self.summary_test(sim, "fstest: romfs", "/mnt/romfs", "fstest -r", FSTEST_TIMEOUT,
+                              ("mkdir /mnt/romfs", "mount /dev/sdc romfs /mnt/romfs"))
+        elif self.selected("fstest: romfs"):
+            self.result("fstest: romfs", SKIP, "ROMFS image not created")
 
         # network
         opt = "" if args.perf else "-t"
@@ -443,6 +507,7 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true", help="show simulator output")
     parser.add_argument("filter", nargs="?", default=None, help="run only tests which name contains text")
     args = parser.parse_args()
+    args.root = root
 
     for path in (args.sim, args.rom):
         if not os.path.isfile(path):

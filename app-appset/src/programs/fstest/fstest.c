@@ -35,7 +35,9 @@
         file system name returned by statfs() (FAT/exFAT: case insensitive,
         only read-only attribute; EEFS: names up to 20 characters). Detection
         can be overridden by FSTEST_CASE_SENSITIVE, FSTEST_FULL_PERMISSIONS
-        and FSTEST_NAME_MAX configuration.
+        and FSTEST_NAME_MAX configuration. Empty directories are not stored by
+        ROMFS (FPKG image), so fst_ref/empty.dir is not checked on ROMFS
+        (FSTEST_EMPTY_DIRS configuration).
 
         Testing of read-only file system:
           1. mount file system read-write (or use image generator on host
@@ -127,6 +129,15 @@
  */
 #ifndef FSTEST_FULL_PERMISSIONS
 #define FSTEST_FULL_PERMISSIONS -1
+#endif
+
+/**
+ * File system stores empty directories (read tests of reference data).
+ *  1: yes, 0: no (ROMFS image skips empty directories),
+ * -1: detect at run time by file system name (statfs()).
+ */
+#ifndef FSTEST_EMPTY_DIRS
+#define FSTEST_EMPTY_DIRS -1
 #endif
 
 /** errno expected when read-only file system rejects modification (0: any). */
@@ -379,6 +390,7 @@ GLOBAL_VARIABLES_SECTION {
         bool case_sensitive;    //!< file names are case sensitive
         bool full_permissions;  //!< all permission bits are stored
         size_t name_max;        //!< maximum tested file name length
+        bool empty_dirs;        //!< empty directories are stored (reference data)
         char msg_buf[192];
         char path[2][FSTEST_PATH_BUF_LEN];
         u8_t wbuf[FSTEST_IO_BUF_SIZE];
@@ -689,6 +701,7 @@ static void detect_fs_caps(void)
 {
         bool fat = false;
         bool eefs = false;
+        bool romfs = false;
         const char *fsname = "?";
 
 #if FSTEST_USE_STATFS
@@ -699,6 +712,7 @@ static void detect_fs_caps(void)
                 fsname = sfs.f_fsname;
                 fat = (strstr(fsname, "FAT") != NULL) || (strstr(fsname, "fat") != NULL);
                 eefs = (strcmp(fsname, "eefs") == 0);
+                romfs = (strcmp(fsname, "romfs") == 0);
         }
 #endif
 
@@ -721,13 +735,21 @@ static void detect_fs_caps(void)
 #endif
         (void)eefs;
 
+#if FSTEST_EMPTY_DIRS < 0
+        global->empty_dirs = !romfs;
+#else
+        global->empty_dirs = FSTEST_EMPTY_DIRS;
+#endif
+        (void)romfs;
+
         if (global->name_max > FSTEST_LONG_NAME_MAX) {
                 global->name_max = FSTEST_LONG_NAME_MAX;
         }
 
-        printf("File system: %s (names: %s, max %u chars, permissions: %s)\n", fsname,
+        printf("File system: %s (names: %s, max %u chars, permissions: %s%s)\n", fsname,
                 global->case_sensitive ? "case sensitive" : "case insensitive", (unsigned)global->name_max,
-                global->full_permissions ? "full" : "write bit only");
+                global->full_permissions ? "full" : "write bit only",
+                global->empty_dirs ? "" : ", no empty directories");
 }
 
 //==============================================================================
@@ -1323,6 +1345,19 @@ static void remove_leftovers(void)
                 remove(THREAD_FILE[i]);
         }
 #endif
+}
+
+//==============================================================================
+/**
+ * @brief  Number of reference root directory entries (empty directory is not
+ *         stored by some file systems).
+ *
+ * @return Number of entries.
+ */
+//==============================================================================
+static int ref_root_items(void)
+{
+        return global->empty_dirs ? REF_ROOT_ITEMS : (REF_ROOT_ITEMS - 1);
 }
 
 //==============================================================================
@@ -2708,6 +2743,10 @@ static const char *test_ref_structure(void)
         int r;
 
         for (size_t i = 0; i < ARRAY_SIZE(REF_DIRS); i++) {
+                if (!global->empty_dirs && (strcmp(REF_DIRS[i], REF_EMPTY_DIR) == 0)) {
+                        continue;
+                }
+
                 CHECK(stat(REF_DIRS[i], &st) == 0, "directory '%s' not found", REF_DIRS[i]);
                 CHECK(S_ISDIR(st.st_mode), "'%s' is not a directory (mode: %lo)", REF_DIRS[i],
                         (unsigned long)st.st_mode);
@@ -3086,12 +3125,18 @@ static const char *test_ref_listing(void)
 
         CHECK((err = scan_listing(REF_LIST_DIR, all)) == NULL, "%s: %s", REF_LIST_DIR, err);
         CHECK((err = scan_listing(REF_LIST_DIR, all)) == NULL, "%s (second pass): %s", REF_LIST_DIR, err);
-        CHECK((err = scan_listing(REF_EMPTY_DIR, 0)) == NULL, "%s: %s", REF_EMPTY_DIR, err);
+        if (global->empty_dirs) {
+                CHECK((err = scan_listing(REF_EMPTY_DIR, 0)) == NULL, "%s: %s", REF_EMPTY_DIR, err);
+        }
 
-        CHECK((n = count_entries(REF_DIR)) == REF_ROOT_ITEMS, "%s: %d entries, expected %d", REF_DIR, n,
-                REF_ROOT_ITEMS);
+        CHECK((n = count_entries(REF_DIR)) == ref_root_items(), "%s: %d entries, expected %d", REF_DIR, n,
+                ref_root_items());
 
         for (size_t i = 0; i < ARRAY_SIZE(REF_ROOT_NAMES); i++) {
+                if (!global->empty_dirs && (strcmp(REF_ROOT_NAMES[i], "empty.dir") == 0)) {
+                        continue;
+                }
+
                 CHECK(dir_contains(REF_DIR, REF_ROOT_NAMES[i]), "%s: entry '%s' not listed", REF_DIR,
                         REF_ROOT_NAMES[i]);
         }
@@ -3130,9 +3175,9 @@ static const char *test_ref_listing(void)
                 }
 
                 CHECK(ok, "unable to open two directories at the same time");
-                CHECK((n1 == FSTEST_DIR_FILES) && (n2 == REF_ROOT_ITEMS),
+                CHECK((n1 == FSTEST_DIR_FILES) && (n2 == ref_root_items()),
                         "interleaved listing: %d and %d entries, expected %d and %d", n1, n2,
-                        FSTEST_DIR_FILES, REF_ROOT_ITEMS);
+                        FSTEST_DIR_FILES, ref_root_items());
         }
 
 cleanup:
@@ -3400,15 +3445,22 @@ static const char *test_ro_dir_ops(void)
         EXPECT_FAIL((fp = fopen(REF_LIST_DIR "/new.file", "w")) == NULL, FSTEST_RO_ERRNO,
                 "fopen(\"w\") in subdirectory");
         EXPECT_FAIL(mkdir(REF_NEST_3 "/new.dir", 0777) != 0, FSTEST_RO_ERRNO, "mkdir() in nested directory");
-        EXPECT_FAIL(remove(REF_EMPTY_DIR) != 0, FSTEST_RO_ERRNO, "remove() of empty directory");
-        EXPECT_FAIL(rename(REF_EMPTY_DIR, REF_NEW_DIR) != 0, FSTEST_RO_ERRNO, "rename() of directory");
-        EXPECT_FAIL(chmod(REF_EMPTY_DIR, 0) != 0, FSTEST_RO_ERRNO, "chmod() of directory");
+        // empty directory is used if file system stores it, otherwise directory with files
+        const char *dir = global->empty_dirs ? REF_EMPTY_DIR : REF_LIST_DIR;
+
+        if (global->empty_dirs) {
+                EXPECT_FAIL(remove(REF_EMPTY_DIR) != 0, FSTEST_RO_ERRNO, "remove() of empty directory");
+        }
+        EXPECT_FAIL(rename(dir, REF_NEW_DIR) != 0, FSTEST_RO_ERRNO, "rename() of directory");
+        EXPECT_FAIL(chmod(dir, 0) != 0, FSTEST_RO_ERRNO, "chmod() of directory");
 
         // nothing changed
-        CHECK(stat(REF_EMPTY_DIR, &st) == 0 && S_ISDIR(st.st_mode), "directory '%s' damaged", REF_EMPTY_DIR);
+        CHECK(stat(dir, &st) == 0 && S_ISDIR(st.st_mode), "directory '%s' damaged", dir);
         CHECK(stat(REF_NEW_DIR, &st) != 0, "new directory exists");
         CHECK((err = scan_listing(REF_LIST_DIR, all)) == NULL, "%s: %s", REF_LIST_DIR, err);
-        CHECK((err = scan_listing(REF_EMPTY_DIR, 0)) == NULL, "%s: %s", REF_EMPTY_DIR, err);
+        if (global->empty_dirs) {
+                CHECK((err = scan_listing(REF_EMPTY_DIR, 0)) == NULL, "%s: %s", REF_EMPTY_DIR, err);
+        }
 
 cleanup:
         fclose_null(&fp);
