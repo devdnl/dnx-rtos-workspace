@@ -51,10 +51,10 @@ __CPU_NAME__=POSIX
 #*/
 
 #/*--
-# this:AddWidget("Spinbox", 1, 1024, "Default RAM size [MiB]")
+# this:AddWidget("Spinbox", 64, 1048576, "Default RAM size [KiB]")
 # this:SetToolTip("Size of RAM region used as kernel heap. Can be changed by the --ram program option.")
 #--*/
-#define __CPU_RAM_SIZE_MIB__ 16
+#define __CPU_RAM_SIZE_KIB__ 1024
 
 #/*--
 # this:AddWidget("Editline", false, "Preffered application RAM")
