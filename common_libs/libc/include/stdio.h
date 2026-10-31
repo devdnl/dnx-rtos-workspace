@@ -189,17 +189,19 @@ extern "C" {
 
 #define S_ISREG(mode_t_m)                       ((mode_t_m & S_IFMT) == S_IFREG)
 #define S_ISDIR(mode_t_m)                       ((mode_t_m & S_IFMT) == S_IFDIR)
-#define S_ISDEV(mode_t_m)                       ((mode_t_m & S_IFMT) == S_IFDEV)
+#define S_ISCHR(mode_t_m)                       ((mode_t_m & S_IFMT) == S_IFCHR)
 #define S_ISLNK(mode_t_m)                       ((mode_t_m & S_IFMT) == S_IFLNK)
 #define S_ISPROG(mode_t_m)                      ((mode_t_m & S_IFMT) == S_IFPROG)
 #define S_ISFIFO(mode_t_m)                      ((mode_t_m & S_IFMT) == S_IFIFO)
+#define S_ISBLK(mode_t_m)                       ((mode_t_m & S_IFMT) == S_IFBLK)
 
 #define S_IFREG                                 0000000
 #define S_IFDIR                                 0010000
-#define S_IFDEV                                 0020000
+#define S_IFCHR                                 0020000
 #define S_IFLNK                                 0030000
 #define S_IFPROG                                0040000
 #define S_IFIFO                                 0050000
+#define S_IFBLK                                 0060000
 
 
 

@@ -85,8 +85,10 @@ extern "C" {
 #define S_ISREG(mode_t_m)
 /** @brief Check if file is a dir. */
 #define S_ISDIR(mode_t_m)
-/** @brief Check if file is a device. */
-#define S_ISDEV(mode_t_m)
+/** @brief Check if file is a character device. */
+#define S_ISCHR(mode_t_m)
+/** @brief Check if file is a block device. */
+#define S_ISBLK(mode_t_m)
 /** @brief Check if file is a link. */
 #define S_ISLNK(mode_t_m)
 /** @brief Check if file is a built-in program. */

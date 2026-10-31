@@ -737,7 +737,7 @@ static void draw_panel(panel_t *p, int x, int w, bool active)
                         attr = ATTR_DIR;
                 } else if (is_exec(e)) {
                         attr = ATTR_EXEC;
-                } else if (S_ISDEV(e->mode)) {
+                } else if (S_ISCHR(e->mode) || S_ISBLK(e->mode)) {
                         attr = ATTR_DEVICE;
                 }
 
@@ -746,7 +746,9 @@ static void draw_panel(panel_t *p, int x, int w, bool active)
                         prefix = '/';
                 } else if (is_exec(e)) {
                         prefix = '*';
-                } else if (S_ISDEV(e->mode)) {
+                } else if (S_ISCHR(e->mode)) {
+                        prefix = '-';
+                } else if (S_ISBLK(e->mode)) {
                         prefix = '+';
                 } else if (S_ISFIFO(e->mode)) {
                         prefix = '|';

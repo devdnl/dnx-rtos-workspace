@@ -170,8 +170,11 @@ int main(int argc, char *argv[])
                                         case S_IFDIR:
                                                 type = VT100_FONT_COLOR_LIGHT_BLUE "d";
                                                 break;
-                                        case S_IFDEV:
+                                        case S_IFCHR:
                                                 type = VT100_FONT_COLOR_MAGENTA "c";
+                                                break;
+                                        case S_IFBLK:
+                                                type = VT100_FONT_COLOR_YELLOW "b";
                                                 break;
                                         case S_IFLNK:
                                                 type = VT100_FONT_COLOR_CYAN "l";
@@ -225,7 +228,7 @@ int main(int argc, char *argv[])
                                         char mod[12];
                                         memset(mod, 0, sizeof(mod));
 
-                                        if (S_ISDEV(st.st_mode)) {
+                                        if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode)) {
                                                 snprintf(mod, sizeof(mod), "%2d,%2d,%2d", mod_id, mod_major,
                                                         mod_minor);
                                         }

@@ -151,8 +151,10 @@ static const char *mode_to_str(mode_t mode)
                 return "directory";
         } else if (S_ISLNK(mode)) {
                 return "link";
-        } else if (S_ISDEV(mode)) {
+        } else if (S_ISCHR(mode)) {
                 return "char device";
+        } else if (S_ISBLK(mode)) {
+                return "block device";
         } else if (S_ISFIFO(mode)) {
                 return "named pipe";
         } else if (S_ISPROG(mode)) {
@@ -204,7 +206,7 @@ static void push_gid(lua_State *L, const struct stat *st)
 
 static void push_rdev(lua_State *L, const struct stat *st)
 {
-        lua_pushinteger(L, S_ISDEV(st->st_mode) ? st->st_dev : 0);
+        lua_pushinteger(L, (S_ISCHR(st->st_mode) || S_ISBLK(st->st_mode)) ? st->st_dev : 0);
 }
 
 static void push_access(lua_State *L, const struct stat *st)

@@ -97,7 +97,7 @@ char *fgets_buffered(char *str, int size, FILE *stream, char *buf, size_t buflen
 
                 size--;
 
-                if (S_ISFIFO(file_stat.st_mode) || S_ISDEV(file_stat.st_mode)) {
+                if (S_ISFIFO(file_stat.st_mode) || S_ISCHR(file_stat.st_mode) || S_ISBLK(file_stat.st_mode)) {
 
                         while ((c != '\n') && size--) {
 

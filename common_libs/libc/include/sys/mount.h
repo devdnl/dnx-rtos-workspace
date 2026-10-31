@@ -558,7 +558,7 @@ static inline int driver_release2(const char *path)
         struct stat buf;
         if (stat(path, &buf) == 0) {
 
-                if (S_ISDEV(buf.st_mode)) {
+                if (S_ISCHR(buf.st_mode) || S_ISBLK(buf.st_mode)) {
 
                         uint8_t  major = get_driver_major(buf.st_dev);
                         uint8_t  minor = get_driver_minor(buf.st_dev);
