@@ -9,6 +9,8 @@
 #         The simulator is started in the pseudo terminal, test programs are executed in the dsh
 #         shell and their SUMMARY lines are checked. Tests:
 #           - boot (shell available, simulator platform),
+#           - driver configuration strings (sim-env/tests/devcfg.lua, modprobe -c), UART1 is
+#             connected to the host pseudo terminal and its configuration is checked by termios,
 #           - board model (sim-env/boards/test.lua): GPIO, I2C, I2CEE/eefs, SPI, SPIEE/eefs and
 #             SDSPI/ext2 tests (sim-env/tests/*.lua) executed by dnx Lua interpreter, fstest on ext2
 #             on SD card model (SDSPI driver),
@@ -68,6 +70,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import termios
 import time
 
 # --------------------------------------------------------------------------------------------------
@@ -345,6 +348,18 @@ class TestRunner:
                 if line.startswith("  ") and ((" KiB/s" in line) or (" us " in line) or ("/s" in line)):
                     print("    " + line.strip())
 
+    # UART1 configured by devcfg.lua: baud=9600,parity=even,stop_bits=2 (parity is not checked:
+    # Linux pseudo terminal does not keep the PARENB flag)
+    def check_uart_config(self):
+        attr = termios.tcgetattr(self.uart_slave)
+        cflag, ispeed = attr[2], attr[4]
+        errors = []
+        if ispeed != termios.B9600:
+            errors.append("baud rate is not 9600")
+        if not (cflag & termios.CSTOPB):
+            errors.append("stop bits are not 2")
+        self.result("devcfg: uart termios", FAIL if errors else PASS, ", ".join(errors))
+
     def execute(self):
         args = self.args
 
@@ -385,10 +400,14 @@ class TestRunner:
             argv += ["--disk", "3=%s:ro" % romfs]
         if args.tap:
             argv += ["--tap", args.tap]
+        # test programs (Lua) are available in the /host/sim-env directory
+        shutil.copytree(os.path.join(args.root, "sim-env", "tests"), os.path.join(hostfs_dir, "sim-env"))
         if args.board:
-            # test programs of board are available in the /host/sim-env directory
-            shutil.copytree(os.path.join(args.root, "sim-env", "tests"), os.path.join(hostfs_dir, "sim-env"))
             argv += ["--board", args.board]
+
+        # UART1 is connected to the host pseudo terminal as serial device (configuration test)
+        self.uart_master, self.uart_slave = os.openpty()
+        argv += ["--uart", "1=%s" % os.ttyname(self.uart_slave)]
 
         os.makedirs(os.path.dirname(os.path.abspath(args.log)), exist_ok=True)
         with open(args.log, "w", buffering=1) as log:
@@ -440,6 +459,9 @@ class TestRunner:
                 else:
                     self.result("%s: e2fsck" % name, SKIP, "e2fsck not found (e2fsprogs)")
 
+        os.close(self.uart_master)
+        os.close(self.uart_slave)
+
         if args.keep:
             print("Temporary files: %s" % tmpdir)
         else:
@@ -470,6 +492,11 @@ class TestRunner:
             self.result("boot", FAIL, "unexpected uname output")
             return
 
+        # driver configuration strings (modprobe -c), UART configuration is checked on host side
+        self.summary_test(sim, "devcfg: config strings", "/host/sim-env", "lua devcfg.lua", DEFAULT_TIMEOUT)
+        if self.selected("devcfg: config strings"):
+            self.check_uart_config()
+
         # board model (before fstest on hostfs, test files are removed after test)
         board_tests = ("board: gpio", "board: i2c", "board: i2cee", "board: spi", "board: spiee",
                        "board: sdcard", "fstest: ext2 on sdspi")
@@ -488,11 +515,12 @@ class TestRunner:
                                   ("mount /dev/sdcard ext4fs /mnt/sdcard",))
             elif self.selected("fstest: ext2 on sdspi"):
                 self.result("fstest: ext2 on sdspi", SKIP, "requires 'board: sdcard' test")
-            shutil.rmtree(os.path.join(args.hostfs_dir, "sim-env"), ignore_errors=True)
         else:
             for name in board_tests:
                 if self.selected(name):
                     self.result(name, SKIP, "board model not selected (--board none)")
+
+        shutil.rmtree(os.path.join(args.hostfs_dir, "sim-env"), ignore_errors=True)
 
         # file systems
         self.summary_test(sim, "fstest: ramfs", "/tmp", "fstest", FSTEST_TIMEOUT)

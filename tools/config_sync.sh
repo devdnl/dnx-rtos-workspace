@@ -8,10 +8,13 @@
 #            1. config/*-kernel  is synchronized with kernel/config
 #            2. config/*-appset  is synchronized with app-appset/config
 #            3. config/*-romfs   is synchronized with app-romfs/config
-#            4. every BSP file is imported and exported again (export is
-#               optimized for the CPU architecture selected by the BSP)
+#            4. every BSP file is imported (its configuration directories are
+#               reset to the default configuration before import) and exported
+#               again with the same configuration directories (each directory
+#               is optimized for its CPU architecture)
 #            5. bsp/stm32h747i-disc1.bsp is applied to set the default
-#               configuration of the project
+#               configuration of the project, bsp/posix-sim.bsp is applied to
+#               set the configuration of the simulator (config/sim-*)
 #
 # @note    All paths are relative to the workspace root (the parent
 #          directory of this script).
@@ -44,7 +47,8 @@ set -euo pipefail
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-CONFIGTOOL="kernel/tools/configtool.sh"
+source tools/bsp_common.sh
+
 
 #--- Step 1: sync kernel configurations ---------------------------------------
 for target in config/*-kernel; do
@@ -56,7 +60,7 @@ for target in config/*-kernel; do
         exit 1
     fi
     echo "==> Sync $target with default from kernel/config"
-    cp -r kernel/config/. "$target"/
+    bsp_copy_defaults kernel/config "$target"
 done
 
 #--- Step 2: sync appset configurations ---------------------------------------
@@ -69,7 +73,7 @@ for target in config/*-appset; do
         exit 1
     fi
     echo "==> Sync $target with default from app-appset/config"
-    cp -r app-appset/config/. "$target"/
+    bsp_copy_defaults app-appset/config "$target"
 done
 
 #--- Step 3: sync romfs configurations ----------------------------------------
@@ -82,7 +86,7 @@ for target in config/*-romfs; do
         exit 1
     fi
     echo "==> Sync $target with default from app-romfs/config"
-    cp -r app-romfs/config/. "$target"/
+    bsp_copy_defaults app-romfs/config "$target"
 done
 
 #--- Step 4: re-import and re-export every BSP file ---------------------------
@@ -91,25 +95,25 @@ for bsp in bsp/*.bsp; do
         continue
     fi
 
-    # Apply the BSP to configuration directories.
+    # configuration directories included in the BSP file
+    dirs=$(bsp_dirs "$bsp" | paste -sd'|')
+    if [ -z "$dirs" ]; then
+        echo "[warning] $bsp: no configuration directories" >&2
+        continue
+    fi
+
     echo "==> Import $bsp"
     bash tools/bsp_import.sh "$bsp"
 
-    # Get the CPU architecture selected by this BSP.
-    cpu=$(bash "$CONFIGTOOL" getvalue=config/app-kernel/project/project_flags.h:__CPU_ARCH__)
-
-    # Export the BSP back, optimized for the selected architecture.
-    if [ -n "${cpu}" ] && [ "${cpu}" != "nil" ]; then
-        echo "==> Export $bsp (optimized for $cpu)"
-        bash tools/bsp_export.sh "$bsp" "$cpu"
-    else
-        echo "==> Export $bsp"
-        bash tools/bsp_export.sh "$bsp"
-    fi
+    echo "==> Export $bsp ($dirs)"
+    bash tools/bsp_export.sh "$bsp" "$dirs"
 done
 
 #--- Step 5: apply the default BSP of the project -----------------------------
 echo "==> Apply default BSP bsp/stm32h747i-disc1.bsp"
 bash tools/bsp_import.sh bsp/stm32h747i-disc1.bsp
+
+echo "==> Apply simulator BSP bsp/posix-sim.bsp"
+bash tools/bsp_import.sh bsp/posix-sim.bsp
 
 echo "== Configuration synchronized."

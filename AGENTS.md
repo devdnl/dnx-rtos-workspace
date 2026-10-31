@@ -43,7 +43,12 @@ The default configuration targets **stm32h7** (`__CPU_ARCH__` in
   libc: `stdio.h`, `dnx/misc.h`, `dnx/os.h`, `dnx/thread.h`, …), `bs`, `lua`,
   `zlib`, `llist`, `fpkg`, `crc`, `md5`, `sha*`, `http-parser`, `libmqtt`, …
 - `config/` — the actual configuration of each partition (see below).
-- `bsp/` — exported board configurations (`*.bsp`), applied with `tools/bsp_import.sh`.
+- `bsp/` — exported board configurations (`*.bsp`), applied with `tools/bsp_import.sh`
+  (directories of the BSP are reset to defaults before import); `bsp/posix-sim.bsp`
+  holds the simulator configuration (`config/sim-*`). `tools/bsp_export.sh <bsp>
+  ["app*|btl*"]` exports selected directories, each optimized for its own
+  `__CPU_ARCH__`; `tools/config_sync.sh` re-syncs all configs and BSPs with the
+  defaults (run it after adding a configuration flag).
 - `app-romfs/content/` — files packed into the ROMFS image.
 - `app-dist/` — manifest for the `.fpkg` update package.
 - `tools/` — Dockerfile, flashing (`flash.sh`, `runocd.sh`), linker-script
@@ -124,6 +129,11 @@ Notes:
   `/dev/net/tun`, software MAC filter) to the host TAP interface; `siminit`
   starts `netmgr --daemon /etc/netmgr.conf` (ROMFS content `app-romfs/content`
   is shared with the application, `config/sim-romfs` sets image parameters).
+- Drivers are configured by structures (`IOCTL_<DRV>__CONFIGURE`) or by
+  configuration strings (`IOCTL_<DRV>__CONFIGURE_STR` = `IOCTL_DEVICE__CONFIGURE_STR`,
+  "key=value,key=value", parsed by `sys_stropt_*()`, enumerations by
+  `sys_stropt_get_enum()`); from shell: `modprobe -i <drv> <major> <minor> <path>
+  -c <config>` (new device) or `modprobe -c <path> <config>` (existing device).
 - `make test-sim` (`tools/simtest.py`) runs board tests (`sim-env/tests/*.lua`:
   GPIO, I2C, I2CEE, SPI, SPIEE, SDSPI), `fstest` (ramfs, hostfs, FAT/ext4
   image, flatfs/eefs/ext2/ext3 partitions formatted in dnx, ext2 on the SD

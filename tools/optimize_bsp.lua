@@ -169,14 +169,44 @@ function Optimize(tab, arch)
 end
 
 --------------------------------------------------------------------------------
+-- @brief  Optimize each configuration directory (config/<dir>/) to its own
+--         architecture (__CPU_ARCH__ of config/<dir>/project/project_flags.h).
+--         Directories without architecture are not changed.
+-- @param  tab      table to optimize
+--------------------------------------------------------------------------------
+function OptimizeAuto(tab)
+    local arch_of = {}
+
+    for f, v in pairs(tab) do
+        local dir = f:match("^(config/[^/]+/)project/project_flags%.h$")
+        if dir and type(v) == "table" and v.__CPU_ARCH__ then
+            arch_of[dir] = v.__CPU_ARCH__
+        end
+    end
+
+    for f, _ in pairs(tab) do
+        local dir, arch_dir = f:match("^(config/[^/]+/)arch/([^/]+)/")
+        if dir and arch_of[dir] and arch_dir ~= "noarch" and arch_dir ~= arch_of[dir] then
+            tab[f] = nil
+        end
+    end
+end
+
+--------------------------------------------------------------------------------
 -- @brief  Main loop.
 -- @param  arg[1]   BSP file path
--- @param  arg[2]   architecture filter
+-- @param  arg[2]   architecture filter (optional, all directories are optimized
+--                  to this architecture), without it each configuration
+--                  directory is optimized to its own architecture
 --------------------------------------------------------------------------------
 if #arg == 2 then
     local tab = LoadTable(arg[1])
     Optimize(tab, arg[2])
     SaveTable(tab, arg[1])
+elseif #arg == 1 then
+    local tab = LoadTable(arg[1])
+    OptimizeAuto(tab)
+    SaveTable(tab, arg[1])
 else
-    print("Usage: ./optimize.lua <bsp-file> <architecture>")
+    print("Usage: ./optimize_bsp.lua <bsp-file> [architecture]")
 end

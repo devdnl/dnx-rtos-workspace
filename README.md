@@ -167,7 +167,28 @@ Import the BSP file of the selected board to the `config` directory:
 ```
 ./tools/bsp_import.sh bsp/stm32f746g-disco.bsp
 ```
-The current configuration can be saved as a new BSP by `./tools/bsp_export.sh`.
+Configuration directories included in the BSP file (e.g. `config/app-*` and
+`config/btl-*` of a board) are reset to the default configuration before
+import, so the result does not depend on the previous configuration; other
+directories are not changed (`--no-reset` applies the BSP values on the current
+configuration). The simulator configuration (`config/sim-*`) is stored in
+`bsp/posix-sim.bsp`.
+
+The current configuration can be saved as a BSP by `./tools/bsp_export.sh`:
+```
+./tools/bsp_export.sh bsp/my-board.bsp "app*|btl*"   # selected directories
+./tools/bsp_export.sh bsp/all.bsp                    # all directories (*)
+```
+Directories are given as patterns separated by `|` (pattern with `*` is a shell
+pattern, other patterns are prefixes, e.g. `app-|sim-`). Each directory is
+optimized for its CPU architecture (`__CPU_ARCH__`): files of other
+architectures are not exported, they have default values after import.
+
+`./tools/config_sync.sh` synchronizes all configuration directories and BSP
+files with the default configurations (after a new configuration flag is added
+to the kernel, appset or romfs): BSP files are imported and exported again
+with the same directories, then the default BSP (`bsp/stm32h747i-disc1.bsp`)
+and the simulator BSP (`bsp/posix-sim.bsp`) are applied.
 
 ### Configuration
 Each part has its own configuration (TUI configtool):
@@ -295,6 +316,8 @@ test programs are executed in the shell and their `SUMMARY:` lines are checked:
 | Test             | Description |
 |------------------|-------------|
 | boot             | system starts, shell responds |
+| `devcfg: config strings` | driver configuration strings (`sim-env/tests/devcfg.lua`, `modprobe -c`): PART, FBRIDGE, UART, MEMBLOCK, invalid values |
+| `devcfg: uart termios` | UART1 configured in dnx (baud rate, stop bits) is checked on the host pseudo terminal |
 | `board: gpio`    | GPIO test (`sim-env/tests/gpio.lua`) with board model `sim-env/boards/test.lua` |
 | `board: i2c`     | I2C test (`sim-env/tests/i2c.lua`): EEPROM, PCF8574, LM75 models, not connected device |
 | `board: i2cee`   | I2CEE driver and eefs on 24C256 model (`sim-env/tests/i2cee.lua`) |

@@ -889,9 +889,9 @@ __ENABLE_ETH__=_YES_
 # this:PutWidgets("FBRIDGE")
 # this:SetToolTip("File Bridge driver.")
 #--*/
-#define __ENABLE_FBRIDGE__ _NO_
+#define __ENABLE_FBRIDGE__ _YES_
 #/*
-__ENABLE_FBRIDGE__=_NO_
+__ENABLE_FBRIDGE__=_YES_
 #*/
 
 #/*--

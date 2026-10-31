@@ -102,7 +102,7 @@ __CPU_EXTRA_LDFLAGS__=-static
 #define _CPU_IRQ_RTOS_KERNEL_PRIORITY_  (0)
 #define _CPU_IRQ_RTOS_APICALL_PRIORITY_ (0)
 #define _CPU_IRQ_SAFE_PRIORITY_         (0)
-#define __CPU_DEFAULT_IRQ_PRIORITY__    (0)
+#define __CPU_DEFAULT_IRQ_PRIORITY__ (0)
 #define ARCH_posix
 #/*
 CPUCONFIG_AFLAGS=-m32 -fno-pie

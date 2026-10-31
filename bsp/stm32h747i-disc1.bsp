@@ -11,7 +11,7 @@
 		["__LIBC_SYSTEM_PROG__"]="\"dsh -e\"";
 	};
 	["config/app-appset/programs/programs_flags.h"]={
-		["__PROGRAMS_EXCLUDE_LIST__"]="\"\"";
+		["__PROGRAMS_EXCLUDE_LIST__"]="\"siminit\"";
 		["__PROGRAMS_LIST__"]="\"*\"";
 	};
 	["config/app-appset/project/project_flags.h"]={
@@ -39,6 +39,7 @@
 		["__ENABLE_ETH__"]="_YES_";
 		["__ENABLE_FBRIDGE__"]="_YES_";
 		["__ENABLE_GPIO__"]="_YES_";
+		["__ENABLE_HOSTDISK__"]="_NO_";
 		["__ENABLE_I2CEE__"]="_NO_";
 		["__ENABLE_I2C__"]="_YES_";
 		["__ENABLE_IRQ__"]="_NO_";
@@ -1314,7 +1315,7 @@
 	};
 	["config/app-kernel/filesystems/eefs_flags.h"]={
 		["__EEFS_CACHE_SIZE__"]="8";
-        ["__EEFS_CHECK_ENABLE__"]="_YES_";
+		["__EEFS_CHECK_ENABLE__"]="_YES_";
 		["__EEFS_LOG_ENABLE__"]="_NO_";
 	};
 	["config/app-kernel/filesystems/ext4fs_flags.h"]={
@@ -1329,10 +1330,11 @@
 		["__FATFS_LFN_CODEPAGE__"]="852";
 	};
 	["config/app-kernel/filesystems/filesystems_flags.h"]={
-		["__ENABLE_EEFS__"]="_NO_";
+		["__ENABLE_EEFS__"]="_YES_";
 		["__ENABLE_EXT4FS__"]="_YES_";
 		["__ENABLE_FATFS__"]="_YES_";
 		["__ENABLE_FLATFS__"]="_YES_";
+		["__ENABLE_HOSTFS__"]="_NO_";
 		["__ENABLE_PROCFS__"]="_YES_";
 		["__ENABLE_RAMFS__"]="_YES_";
 		["__ENABLE_ROMFS__"]="_YES_";
@@ -1623,6 +1625,7 @@
 		["__ENABLE_ETH__"]="_YES_";
 		["__ENABLE_FBRIDGE__"]="_NO_";
 		["__ENABLE_GPIO__"]="_YES_";
+		["__ENABLE_HOSTDISK__"]="_NO_";
 		["__ENABLE_I2CEE__"]="_NO_";
 		["__ENABLE_I2C__"]="_YES_";
 		["__ENABLE_IRQ__"]="_NO_";
@@ -2898,7 +2901,7 @@
 	};
 	["config/btl-kernel/filesystems/eefs_flags.h"]={
 		["__EEFS_CACHE_SIZE__"]="8";
-        ["__EEFS_CHECK_ENABLE__"]="_YES_";
+		["__EEFS_CHECK_ENABLE__"]="_YES_";
 		["__EEFS_LOG_ENABLE__"]="_NO_";
 	};
 	["config/btl-kernel/filesystems/ext4fs_flags.h"]={
@@ -2917,6 +2920,7 @@
 		["__ENABLE_EXT4FS__"]="_YES_";
 		["__ENABLE_FATFS__"]="_NO_";
 		["__ENABLE_FLATFS__"]="_YES_";
+		["__ENABLE_HOSTFS__"]="_NO_";
 		["__ENABLE_PROCFS__"]="_YES_";
 		["__ENABLE_RAMFS__"]="_YES_";
 		["__ENABLE_ROMFS__"]="_YES_";

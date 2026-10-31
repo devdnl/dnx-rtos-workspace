@@ -79,6 +79,7 @@ static void show_help(const char *name)
         puts("  -i            initialize module <module name> <major> <minor> [node path]");
         puts("                [-c <config>] (configuration string of the module, e.g.");
         puts("                address=0xA0,sub_addr_mode=2, node path is required)");
+        puts("  -c            configure initialized module <node path> <config>");
         puts("  -r            release module <module name> <major> <minor>");
         puts("  -R            release module <module path>");
         puts("  -h, --help    this help");
@@ -159,6 +160,15 @@ int main(int argc, char *argv[])
                                 action = "configure";
                                 err = EXIT_FAILURE;
                         }
+                }
+
+        } else if ((strcmp(argv[1], "-c") == 0) && (argc == 4)) {
+
+                action = "configure";
+                path = argv[2];
+
+                if (configure(path, argv[3]) == 0) {
+                        err = EXIT_SUCCESS;
                 }
 
         } else if ((strcmp(argv[1], "-r") == 0) && (argc == 5)) {
