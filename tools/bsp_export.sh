@@ -8,8 +8,9 @@
 #          Usage: tools/bsp_export.sh <bsp-file> [dirs]
 #            dirs   configuration directories (names of config/*): patterns
 #                   separated by '|', pattern with '*' is a shell pattern,
-#                   other patterns are prefixes, e.g. "*" (default: all),
-#                   "app*|btl*", "app-|sim-", "sim-"
+#                   other patterns are prefixes, e.g. "all" or "*" (default),
+#                   "app*|btl*", "app-|sim-", "sim-" (quote patterns with '*'
+#                   or '|' in the shell)
 #
 #          MIT License, Copyright (C) 2026 Daniel Zorychta <daniel.zorychta@gmail.com>
 #          (license text: tools/bsp_common.sh)

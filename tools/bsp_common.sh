@@ -31,13 +31,13 @@ BSP_ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 BSP_CONFIGTOOL="$BSP_ROOT_DIR/kernel/tools/configtool.sh"
 
 #-------------------------------------------------------------------------------
-# @brief  Absolute path of file given relative to the workspace root (or absolute).
+# @brief  Absolute path of file given relative to the current directory (or absolute).
 #-------------------------------------------------------------------------------
 bsp_abspath()
 {
     case "$1" in
         /*) echo "$1" ;;
-        *)  echo "$BSP_ROOT_DIR/$1" ;;
+        *)  echo "$PWD/$1" ;;
     esac
 }
 
@@ -65,14 +65,23 @@ bsp_dirs()
 #-------------------------------------------------------------------------------
 # @brief  Check if configuration directory name matches the specification.
 #         Specification: patterns separated by '|', pattern with '*' or '?' is
-#         a shell pattern, other patterns are prefixes, e.g. "*", "app*|btl*",
-#         "app-|sim-", "sim-kernel".
+#         a shell pattern, other patterns are prefixes, e.g. "*" or "all",
+#         "app*|btl*", "app-|sim-", "sim-kernel".
 #-------------------------------------------------------------------------------
 bsp_match()
 {
     local name="$1" spec="$2" pat
-    local IFS='|'
-    for pat in $spec; do
+    local -a pats
+
+    # "all" is the same as "*" (no shell quoting needed)
+    if [ "$spec" == "all" ]; then
+        spec="*"
+    fi
+
+    # split without pathname expansion ("*" must not be expanded to file names)
+    IFS='|' read -r -a pats <<< "$spec"
+
+    for pat in "${pats[@]}"; do
         case "$pat" in
             *[\*\?]*) [[ "$name" == $pat ]] && return 0 ;;
             *)        [[ "$name" == "$pat"* ]] && return 0 ;;

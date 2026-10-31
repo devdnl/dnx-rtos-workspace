@@ -176,11 +176,14 @@ configuration). The simulator configuration (`config/sim-*`) is stored in
 
 The current configuration can be saved as a BSP by `./tools/bsp_export.sh`:
 ```
-./tools/bsp_export.sh bsp/my-board.bsp "app*|btl*"   # selected directories
-./tools/bsp_export.sh bsp/all.bsp                    # all directories (*)
+./tools/bsp_export.sh ~/my-project.bsp               # all directories (default, same as "all")
+./tools/bsp_export.sh bsp/my-board.bsp "app*|btl*"   # only application and bootloader
+./tools/bsp_export.sh my-sim.bsp sim-                # only simulator
 ```
 Directories are given as patterns separated by `|` (pattern with `*` is a shell
-pattern, other patterns are prefixes, e.g. `app-|sim-`). Each directory is
+pattern, other patterns are prefixes, e.g. `app-|sim-`); patterns with `*` or
+`|` must be quoted in the shell. Relative paths of BSP files are relative to the
+current directory. Each directory is
 optimized for its CPU architecture (`__CPU_ARCH__`): files of other
 architectures are not exported, they have default values after import.
 
