@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <stdbool.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -66,30 +67,77 @@ PROGRAM_PARAMS(echo, STACK_DEPTH_LOW);
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Cat main function
+ * @brief Convert escape sequences in place (option -e): \\ \n \r \t \xHH.
+ *
+ * @param str           string
+ *
+ * @return Length of converted string (can contain zero bytes).
+ */
+//==============================================================================
+static size_t unescape(char *str)
+{
+        char *dst = str;
+
+        for (char *src = str; *src; src++) {
+                if (*src != '\\' || src[1] == '\0') {
+                        *dst++ = *src;
+                        continue;
+                }
+
+                switch (*++src) {
+                case 'n': *dst++ = '\n'; break;
+                case 'r': *dst++ = '\r'; break;
+                case 't': *dst++ = '\t'; break;
+                case 'x': {
+                        char hex[3] = {0};
+                        int n = 0;
+                        while (n < 2 && strchr("0123456789abcdefABCDEF", src[1]) && src[1]) {
+                                hex[n++] = *++src;
+                        }
+                        *dst++ = n ? (char)strtol(hex, NULL, 16) : 'x';
+                        break;
+                }
+                default: *dst++ = *src; break;
+                }
+        }
+
+        return dst - str;
+}
+
+//==============================================================================
+/**
+ * @brief Echo main function. Options: -n (no new line), -e (escape sequences).
  */
 //==============================================================================
 int main(int argc, char *argv[])
 {
-        int err = 0;
+        bool newline = true;
+        bool escape = false;
+        int i = 1;
 
-        for (int i = 1; i < argc; i++) {
-                if (i == argc - 1) {
-                        printf("%s", argv[i]);
-                } else {
-                        printf("%s ", argv[i]);
-                }
-
-                if (ferror(stdout)) {
-                        err = errno;
-                        break;
-                }
+        for (; i < argc && argv[i][0] == '-' && argv[i][1] && strspn(&argv[i][1], "ne") == strlen(&argv[i][1]); i++) {
+                newline = newline && !strchr(argv[i], 'n');
+                escape  = escape  || strchr(argv[i], 'e');
         }
 
-        putchar('\n');
+        for (int first = i; i < argc; i++) {
+                if (i > first) {
+                        putchar(' ');
+                }
 
-        if (err) {
-                fprintf(stderr, "echo: %s\n", strerror(err));
+                size_t len = escape ? unescape(argv[i]) : strlen(argv[i]);
+                fwrite(argv[i], 1, len, stdout);
+        }
+
+        if (newline) {
+                putchar('\n');
+        }
+
+        fflush(stdout);
+
+        if (ferror(stdout)) {
+                fprintf(stderr, "echo: %s\n", strerror(errno));
+                return EXIT_FAILURE;
         }
 
         return EXIT_SUCCESS;

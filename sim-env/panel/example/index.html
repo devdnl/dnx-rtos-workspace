@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<!--
+  Panel of the example board (sim-env/boards/example.lua).
+
+  Elements are connected to signals of the board script by attributes:
+    data-signal="<id>"   value of signal: class "on", attribute data-value,
+                         images data-on/data-off, text data-format
+    data-input="<id>"    control: button (data-mode="push"/"toggle"),
+                         checkbox, slider, field
+  More complex elements are handled by board.js (panel.on(), panel.set()).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Example board</title>
+<link rel="stylesheet" href="style.css">
+<script src="/panel.js"></script>
+<script src="board.js" defer></script>
+</head>
+<body>
+<div class="pcb">
+    <header>
+        <h1>dnx RTOS <span>example board</span></h1>
+        <span class="status" data-panel-status>disconnected</span>
+    </header>
+
+    <div class="blocks">
+        <section class="block">
+            <h2>GPIO</h2>
+            <div class="items">
+                <figure>
+                    <img class="led-img" src="img/led-off.svg" data-signal="LED"
+                         data-on="img/led-on.svg" data-off="img/led-off.svg" alt="LED">
+                    <figcaption>LED <code>PA0</code></figcaption>
+                </figure>
+                <figure>
+                    <button class="tact" data-input="BUTTON" aria-label="Button"></button>
+                    <figcaption>Button <code>PA1</code></figcaption>
+                </figure>
+                <figure>
+                    <span class="led blue" data-signal="HEARTBEAT"></span>
+                    <figcaption>Heartbeat <code>PA4</code></figcaption>
+                </figure>
+            </div>
+            <div class="inverter">
+                <span class="led small" data-signal="PA2"></span><code>PA2</code>
+                <svg viewBox="0 0 60 30" aria-hidden="true">
+                    <path d="M0 15H14M14 3V27L40 15Z M44 15H60" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="42" cy="15" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <code>PA3</code><span class="led small" data-signal="PA3"></span>
+            </div>
+        </section>
+
+        <section class="block">
+            <h2>LM75 <small>I2C1 0x48</small></h2>
+            <div class="temp">
+                <div class="thermo"><div class="fill" id="thermo-fill"></div></div>
+                <div>
+                    <div class="temp-value"><span data-signal="TEMP" data-format="%.1f">–</span> °C</div>
+                    <div class="os"><span class="led amber small" data-signal="OS"></span> OS alarm <code>PA6</code></div>
+                </div>
+            </div>
+            <label class="check"><input type="checkbox" data-input="TEMP_AUTO"> automatic</label>
+            <div class="slider">
+                <input type="range" min="-20" max="100" step="0.5" data-input="TEMP_SET" aria-label="Temperature">
+                <span data-signal="TEMP_SET" data-format="%.1f °C"></span>
+            </div>
+        </section>
+
+        <section class="block wide">
+            <h2>PCF8574 <small>I2C1 0x20, active low</small>
+                <code class="hex" data-signal="LEDS1" data-format="0x%02X"></code></h2>
+            <div class="bar" data-bits="LEDS1" data-active-low></div>
+            <h2>74HC595 <small>SPI2, CS PA16</small>
+                <code class="hex" data-signal="LEDS2" data-format="0x%02X"></code></h2>
+            <div class="bar red" data-bits="LEDS2"></div>
+        </section>
+    </div>
+
+    <footer>Board: <span id="board"></span></footer>
+</div>
+</body>
+</html>

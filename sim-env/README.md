@@ -17,7 +17,10 @@ Directories:
   sensor), `25xx` (SPI EEPROM), `sdcard` (SD card in SPI mode, host image
   file), `74hc595` (SPI shift register), the description of options and
   methods is in the model file,
-- `tests/` – test programs executed in dnx RTOS (e.g. `lua /host/gpio.lua`).
+- `tests/` – test programs executed in dnx RTOS (e.g. `lua /host/gpio.lua`),
+- `panel/` – pages of the board panel shown in a web browser (`default/` –
+  generic page, `example/` – page of `boards/example.lua`), see
+  [Board panel](#board-panel).
 
 The board engine is a part of the simulator in the kernel
 (`kernel/src/cpu/posix/host/board.c`, Lua 5.5 in
@@ -44,6 +47,7 @@ directory and in its parent directory (`sim-env`).
 | `host.timer(ms, fn [, periodic])` | call `fn(timer)` after `ms` (every `ms` if `periodic`), returns timer, `timer:stop()` stops it |
 | `host.log(...)`, `print(...)` | print message |
 | `host.on_exit(fn)` | call `fn()` at simulator exit or restart (e.g. save model state) |
+| `host.script`, `host.dir` | path of board script and its directory (absolute), e.g. for files of models: relative paths are relative to the current directory of the simulator |
 
 ### gpio
 Pins are named in STM32 style: `PA0` (port A, pin 0) .. `PZ31`. The port index
@@ -173,3 +177,107 @@ storinit /dev/sdcard
 modprobe -i SPI 0 1 /dev/spi-ee -c cs_port=0,cs_pin=7,mode=0
 modprobe -i SPIEE 0 0 /dev/ee1 -c spi_path=/dev/spi-ee,memory_size=32768,page_size=64,address_size=2
 ```
+
+## Board panel
+The board can be visualized in a web browser: LEDs, buttons, switches, values
+of device models, etc. The board script defines *signals* of the panel (what
+is shown and controlled), the look of the panel is defined by HTML pages in
+`panel/<page>/` (fully defined by the user: images, CSS, JavaScript).
+```
+make run-sim PANEL=1 SIM_OPTS="--board sim-env/boards/example.lua"
+```
+then open `http://localhost:8080` (the Docker container uses the host
+network on Linux). `PANEL=1` starts `tools/simpanel.py` in background (log:
+`build/simpanel.log`) and the simulator with option `--panel
+build/dnx-panel.sock`. Options: `SIM_PANEL_PORT=<port>` (default 8080),
+`PANEL_OPTS="..."` (options of `simpanel.py`, e.g. `--bind 0.0.0.0` to open
+the panel from other computers, `--page <name>`).
+
+The panel can be also started manually (e.g. in other terminal):
+```
+build/dnx-sim --disk 0=build/sim-romfs.bin:ro --board sim-env/boards/example.lua --panel /tmp/dnx-panel.sock
+tools/simpanel.py --socket /tmp/dnx-panel.sock [--port 8080] [--bind 127.0.0.1] [--page <name>] [-v]
+```
+The panel reconnects automatically after simulator restart (`reboot`); more
+browsers can show the panel at the same time.
+
+```
+dnx-sim (board script) --Unix socket, JSON lines--> simpanel.py --HTTP, SSE--> browser
+                       <------- control changes ---             <--- POST ---
+```
+
+### panel (board script)
+Signal identifiers contain letters, digits, `_`, `.` and `-`. Values are
+booleans, numbers or strings. Options (`opts` table) are sent to the page
+(e.g. `label`, `color`, `unit`, `format`, `min`, `max`, `step`), so the page
+can use them; options used by the board are described below.
+
+| Function | Description |
+|----------|-------------|
+| `panel.output(id, pin [, opts])` | shows level of pin seen by the system (e.g. LED), `opts.active_low`: inverted |
+| `panel.input(id, pin [, opts])` | control of the panel drives input pin of the system (button, switch), `opts.active_low`: inverted, `opts.value`: initial state |
+| `panel.value(id, v [, opts])` | value shown by the panel: initial value or function polled every `opts.period` ms (default 500) |
+| `panel.control(id, fn [, opts])` | control of the panel (slider, field, checkbox): `fn(value, id)` is called when the value is changed by the panel, `opts.value`: initial value |
+| `panel.set(id, v)` | set value of signal (e.g. in model callback) |
+| `panel.get(id)` | current value of signal |
+| `panel.page(name)` | page of the panel: directory `panel/<name>/` (default: name of board script, e.g. `example` for `boards/example.lua`) |
+| `panel.connected()` | `true` when the panel is connected |
+
+Changes are sent to the panel at most every 20 ms (the last value of signal
+is sent), so very short pulses are not visible.
+
+Example:
+```lua
+panel.output("LED", "PA0", {active_low = true, color = "#22c55e"})
+panel.input("BUTTON", "PA1", {active_low = true})
+panel.value("TEMP", function() return sensor:temperature() end, {period = 200, unit = "°C"})
+panel.control("TEMP_SET", function(v) sensor:set_temperature(v) end, {min = -20, max = 100, value = 25})
+leds:on_change(function(latch) panel.set("LEDS", latch) end)     -- value from model
+```
+
+### Pages
+The page `panel/<page>/index.html` is served with its files (images, CSS,
+scripts) at `/p/<page>/`. Board without its own page is shown by the generic
+page `panel/default/` (all signals, open `/p/default/?all` to see it also for
+a board with its own page). The page includes the panel client script:
+```html
+<script src="/panel.js"></script>
+```
+Elements are connected to signals by attributes (dynamically created elements
+are connected by `panel.bind(element)`):
+
+| Attribute | Description |
+|-----------|-------------|
+| `data-signal="<id>"` | shows value: class `on` (value is true, not zero, not empty), attribute `data-value`; `<img>` with `data-on`/`data-off` changes image; `data-format` sets text (printf-like format, e.g. `%.1f °C`, `0x%02X`, empty: value) |
+| `data-input="<id>"` | control: button or other element (`data-mode="push"`: `true` while pressed (default), `"toggle"`: changed by click), checkbox (boolean), slider and number field (number), text field and select (string, `data-type="number"`: number); shows current value too |
+
+Classes of `<html>`: `panel-connected`, `panel-disconnected`; elements with
+`data-panel-status` show connection state.
+
+JavaScript API (object `panel`):
+
+| Function | Description |
+|----------|-------------|
+| `panel.on(id, fn)` | call `fn(value, id)` when signal is changed (and immediately with current value), `"*"`: all signals |
+| `panel.set(id, value)` | send value of control to the board (`panel.input()`, `panel.control()`) |
+| `panel.get(id)` | current value |
+| `panel.onInit(fn)` | call `fn(signals)` when board definition is received (also after restart), `signals`: `[{id, kind, ui}]` (`kind`: `output`, `input`, `value`, `control`; `ui`: options) |
+| `panel.onStatus(fn)` | call `fn(connected)` when connection with simulator is changed |
+| `panel.format(fmt, value)` | printf-like formatting |
+| `panel.bind(root)` | connect `data-signal`/`data-input` elements of `root` |
+
+Example (`panel/example/`):
+```html
+<img src="img/led-off.svg" data-signal="LED" data-on="img/led-on.svg" data-off="img/led-off.svg">
+<button data-input="BUTTON">Button</button>
+<span data-signal="TEMP" data-format="%.1f °C"></span>
+<input type="range" min="-20" max="100" data-input="TEMP_SET">
+<script>
+    panel.on("LEDS", function (v) { /* draw 8 LEDs from bits of v */ });
+</script>
+```
+
+The HTTP interface of `simpanel.py`: `/api/state` (GET, JSON: signals and
+values), `/api/set` (POST, JSON `{"id": "...", "value": ...}`), `/events`
+(server-sent events), e.g. `curl -d '{"id":"BUTTON","value":true}'
+localhost:8080/api/set`.

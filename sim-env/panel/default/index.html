@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<!--
+  Generic panel page: shows all signals defined by the board script (used when
+  the board has no own page in sim-env/panel/<page>/).
+
+  Options of signals (opts table of panel.* functions in board script):
+    label           shown name (default: signal id)
+    color           LED color (CSS color, panel.output)
+    mode            "push" (default) or "toggle" (panel.input)
+    unit, format    unit and printf-like format of value (panel.value, panel.control)
+    min, max, step  slider (panel.control)
+    options         "a,b,c" list of values (panel.control)
+    type            "text", "number" or "bool" (panel.control)
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dnx RTOS board panel</title>
+<script src="/panel.js"></script>
+<style>
+    :root {
+        --bg: #f4f5f7; --card: #ffffff; --text: #1d2330; --muted: #6b7280; --line: #dfe3ea;
+        --accent: #2563eb; --led-off: #c9ced8;
+    }
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --bg: #14171c; --card: #1d2128; --text: #e6e9ef; --muted: #8b93a3; --line: #2c323c;
+            --accent: #5b8def; --led-off: #3a414d;
+        }
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0; padding: 24px 16px; background: var(--bg); color: var(--text);
+        font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; max-width: 1100px; margin: 0 auto 20px; }
+    h1 { font-size: 20px; margin: 0; }
+    #board { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+    .status { margin-left: auto; font-size: 13px; padding: 3px 10px; border-radius: 999px; background: #b4232c22; color: #d6454f; }
+    .status.on { background: #16803c22; color: #22a355; }
+    main { max-width: 1100px; margin: 0 auto; display: grid; gap: 20px; }
+    section h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 8px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+    .card {
+        background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px;
+        display: flex; flex-direction: column; gap: 8px; min-width: 0;
+    }
+    .name { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row { display: flex; align-items: center; gap: 10px; min-height: 32px; }
+    .led {
+        width: 22px; height: 22px; border-radius: 50%; flex: none;
+        background: var(--led-off); box-shadow: inset 0 -2px 3px #0003; transition: background .05s;
+    }
+    .led.on { background: var(--c, #ef4444); box-shadow: 0 0 10px var(--c, #ef4444), inset 0 -2px 3px #0003; }
+    .val { font: 600 20px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+    button {
+        font: inherit; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--line);
+        background: var(--bg); color: var(--text); cursor: pointer; user-select: none; touch-action: none;
+    }
+    button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+    input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); }
+    input[type=text], input[type=number], select {
+        font: inherit; width: 100%; padding: 5px 8px; border-radius: 6px;
+        border: 1px solid var(--line); background: var(--bg); color: var(--text);
+    }
+    input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); }
+    .empty { color: var(--muted); }
+    code { font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+    <h1>Board panel</h1>
+    <span id="board"></span>
+    <span class="status" data-panel-status>disconnected</span>
+</header>
+<main id="main">
+    <p class="empty">Waiting for the simulator&hellip; Start it with
+       <code>--board &lt;script&gt; --panel &lt;socket&gt;</code>.</p>
+</main>
+
+<script>
+(function () {
+    const GROUPS = [
+        ["output", "Outputs"],
+        ["input", "Inputs"],
+        ["value", "Values"],
+        ["control", "Controls"],
+    ];
+
+    function el(tag, attrs, ...children) {
+        const e = document.createElement(tag);
+        for (const k in attrs || {}) {
+            if (k === "class") e.className = attrs[k];
+            else if (k === "style") e.style.cssText = attrs[k];
+            else e.setAttribute(k, attrs[k]);
+        }
+        for (const c of children) if (c !== null && c !== undefined) e.append(c);
+        return e;
+    }
+
+    function valueFormat(ui) {
+        if (ui.format) return ui.format + (ui.unit ? " " + ui.unit : "");
+        return "%s" + (ui.unit ? " " + ui.unit : "");
+    }
+
+    function widget(sig) {
+        const ui = sig.ui || {};
+        const label = el("div", { class: "name", title: sig.id }, ui.label || sig.id);
+        let body;
+
+        switch (sig.kind) {
+        case "output":
+            body = el("div", { class: "row" },
+                el("span", { class: "led", "data-signal": sig.id, style: ui.color ? "--c:" + ui.color : "" }));
+            break;
+
+        case "input":
+            body = el("div", { class: "row" },
+                el("button", { "data-input": sig.id, "data-mode": ui.mode || "push" },
+                   ui.mode === "toggle" ? "Toggle" : "Press"),
+                el("span", { class: "led", "data-signal": sig.id, style: ui.color ? "--c:" + ui.color : "" }));
+            break;
+
+        case "value":
+            body = el("div", { class: "row" },
+                el("span", { class: "val", "data-signal": sig.id, "data-format": valueFormat(ui) }, "–"));
+            break;
+
+        case "control": {
+            const v = panelValue(sig.id);
+            if (ui.options) {
+                const s = el("select", { "data-input": sig.id });
+                for (const o of String(ui.options).split(",")) s.append(el("option", { value: o.trim() }, o.trim()));
+                if (typeof v === "number") s.dataset.type = "number";
+                body = el("div", { class: "row" }, s);
+            } else if (ui.type === "bool" || typeof v === "boolean") {
+                body = el("label", { class: "row" }, el("input", { type: "checkbox", "data-input": sig.id }));
+            } else if (typeof ui.min === "number" && typeof ui.max === "number") {
+                body = el("div", { class: "row" },
+                    el("input", { type: "range", min: ui.min, max: ui.max, step: ui.step || "any", "data-input": sig.id }),
+                    el("span", { class: "val", style: "font-size:15px", "data-signal": sig.id,
+                                 "data-format": valueFormat(ui) }));
+            } else if (ui.type === "text" || typeof v === "string") {
+                body = el("div", { class: "row" }, el("input", { type: "text", "data-input": sig.id }));
+            } else {
+                body = el("div", { class: "row" }, el("input", { type: "number", step: ui.step || "any", "data-input": sig.id }));
+            }
+            break;
+        }
+
+        default:
+            body = el("div", { class: "row" }, el("span", { "data-signal": sig.id, "data-format": "" }));
+        }
+
+        return el("div", { class: "card" }, label, body);
+    }
+
+    function panelValue(id) { return panel.get(id); }
+
+    panel.onInit(function (signals) {
+        document.getElementById("board").textContent = panel.board || "";
+        const main = document.getElementById("main");
+        main.replaceChildren();
+
+        if (signals.length === 0) {
+            main.append(el("p", { class: "empty" }, "The board script does not define panel signals ",
+                           "(panel.output(), panel.input(), panel.value(), panel.control())."));
+            return;
+        }
+
+        for (const [kind, title] of GROUPS) {
+            const list = signals.filter(function (s) { return s.kind === kind; });
+            if (list.length === 0) continue;
+            const grid = el("div", { class: "grid" });
+            for (const s of list) grid.append(widget(s));
+            main.append(el("section", {}, el("h2", {}, title), grid));
+        }
+
+        panel.bind(main);
+    });
+})();
+</script>
+</body>
+</html>

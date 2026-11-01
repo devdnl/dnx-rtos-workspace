@@ -32,6 +32,8 @@
 PROJECT = project
 TOOLCHAIN = arm-none-eabi-
 TARGET_DIR_NAME = build
+SIM_PANEL_SOCKET = $(TARGET_DIR_NAME)/dnx-panel.sock
+SIM_PANEL_PORT ?= 8080
 
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
@@ -184,7 +186,8 @@ help :
 	@$(ECHO) "   build-btl           build bootloader (kernel + appset)"
 	@$(ECHO) "   build-btl-kernel    build bootloader's kernel"
 	@$(ECHO) "   build-sim           build POSIX simulator (Linux): build/dnx-sim"
-	@$(ECHO) "   run-sim             build and start POSIX simulator (options: SIM_OPTS=...)"
+	@$(ECHO) "   run-sim             build and start POSIX simulator (options: SIM_OPTS=..., PANEL=1"
+	@$(ECHO) "                       board panel in web browser, needs --board, PANEL_OPTS=...)"
 	@$(ECHO) "   test-sim            build and test system in POSIX simulator (options: SIMTEST_OPTS=...)"
 	@$(ECHO) "   build-btl-appset    build bootloader's appset"
 	@$(ECHO) "   build-app           build application (kernel + appset)"
@@ -255,7 +258,16 @@ build-sim-romfs : _build_prepare
 
 .PHONY : run-sim
 run-sim : build-sim
+ifeq ($(PANEL),1)
+	@$(PYTHON3) tools/simpanel.py --exit-with-parent --socket $(SIM_PANEL_SOCKET) --port $(SIM_PANEL_PORT)\
+	 $(PANEL_OPTS) >$(TARGET_DIR_NAME)/simpanel.log 2>&1 & pid=$$!;\
+	 sleep 0.5; if ! kill -0 $$pid 2>/dev/null; then $(CAT) $(TARGET_DIR_NAME)/simpanel.log; exit 1; fi;\
+	 $(ECHO) "Board panel: http://localhost:$(SIM_PANEL_PORT) (log: $(TARGET_DIR_NAME)/simpanel.log)";\
+	 $(TARGET_DIR_NAME)/dnx-sim --disk 0=$(TARGET_DIR_NAME)/sim-romfs.bin:ro --panel $(SIM_PANEL_SOCKET) $(SIM_OPTS);\
+	 st=$$?; kill $$pid 2>/dev/null; exit $$st
+else
 	@$(TARGET_DIR_NAME)/dnx-sim --disk 0=$(TARGET_DIR_NAME)/sim-romfs.bin:ro $(SIM_OPTS)
+endif
 
 .PHONY : test-sim
 test-sim : build-sim

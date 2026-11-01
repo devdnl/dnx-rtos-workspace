@@ -13,7 +13,7 @@
 #             connected to the host pseudo terminal and its configuration is checked by termios,
 #           - board model (sim-env/boards/test.lua): GPIO, I2C, I2CEE/eefs, SPI, SPIEE/eefs and
 #             SDSPI/ext2 tests (sim-env/tests/*.lua) executed by dnx Lua interpreter, fstest on ext2
-#             on SD card model (SDSPI driver),
+#             on SD card model (SDSPI driver), board panel protocol (socket of tools/simpanel.py),
 #           - fstest on ramfs (/tmp) and hostfs (/host, temporary host directory),
 #           - fstest on FAT and ext4 partitions of temporary disk image (/mnt/sda1, /mnt/sda2),
 #             image is checked by fsck.fat and e2fsck after test (requires dosfstools and
@@ -65,12 +65,14 @@
 # ==================================================================================================
 
 import argparse
+import json
 import os
 import pty
 import re
 import select
 import shutil
 import signal
+import socket
 import struct
 import subprocess
 import sys
@@ -369,6 +371,83 @@ class TestRunner:
                 if line.startswith("  ") and ((" KiB/s" in line) or (" us " in line) or ("/s" in line)):
                     print("    " + line.strip())
 
+    # board panel: the test connects to the panel socket like tools/simpanel.py, signals of board
+    # boards/test.lua: P_OUT shows PA18, P_IN drives PA19, P_CTL sets P_VAL = 2 * P_CTL
+    def panel_test(self, sim):
+        name = "board: panel"
+        if not self.selected(name):
+            return
+
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            s.settimeout(5)
+            s.connect(self.args.panel_socket)
+        except OSError as e:
+            self.result(name, FAIL, "cannot connect to panel socket: %s" % e)
+            return
+
+        state, signals, buf = {}, [], [b""]
+
+        def wait(cond, timeout=3):
+            end = time.time() + timeout
+            while not cond():
+                left = end - time.time()
+                if left <= 0:
+                    return False
+                s.settimeout(left)
+                try:
+                    data = s.recv(65536)
+                except socket.timeout:
+                    return cond()
+                if not data:
+                    return cond()
+                buf[0] += data
+                while b"\n" in buf[0]:
+                    line, buf[0] = buf[0].split(b"\n", 1)
+                    msg = json.loads(line)
+                    if msg.get("t") == "init":
+                        signals[:] = [x["id"] for x in msg.get("signals", [])]
+                        state.clear()
+                    state.update(msg.get("state", {}))
+            return True
+
+        def dnx(level):
+            ok, out = sim.run("lua panel.lua %s" % level)
+            m = re.search(r"PA19=(\d)", out)
+            return m.group(1) if (ok and m) else None
+
+        errors = []
+        try:
+            if not wait(lambda: {"P_OUT", "P_IN", "P_VAL", "P_CTL"} <= set(signals)):
+                errors.append("init message without signals of test board")
+            else:
+                sim.run("cd /host/sim-env")
+
+                if dnx(1) != "0" or not wait(lambda: state.get("P_OUT") is True):
+                    errors.append("P_OUT does not show PA18 = 1")
+
+                s.sendall(b"set P_IN b1\n")
+                if not wait(lambda: state.get("P_IN") is True) or dnx(0) != "1":
+                    errors.append("P_IN does not drive PA19")
+                if not wait(lambda: state.get("P_OUT") is False):
+                    errors.append("P_OUT does not show PA18 = 0")
+
+                s.sendall(b"set P_CTL n21\n")
+                if not wait(lambda: state.get("P_VAL") == 42):
+                    errors.append("P_CTL handler not called (P_VAL = %r)" % state.get("P_VAL"))
+
+                s.sendall(b"set P_IN b0\n")
+                if not wait(lambda: state.get("P_IN") is False) or dnx("") != "0":
+                    errors.append("P_IN does not release PA19")
+
+                sim.run("cd /")
+        except (OSError, ValueError) as e:
+            errors.append(str(e))
+        finally:
+            s.close()
+
+        self.result(name, FAIL if errors else PASS, ", ".join(errors))
+
     # UART1 configured by devcfg.lua: baud=9600,parity=even,stop_bits=2 (parity is not checked:
     # Linux pseudo terminal does not keep the PARENB flag)
     def check_uart_config(self):
@@ -429,7 +508,8 @@ class TestRunner:
         # test programs (Lua) are available in the /host/sim-env directory
         shutil.copytree(os.path.join(args.root, "sim-env", "tests"), os.path.join(hostfs_dir, "sim-env"))
         if args.board:
-            argv += ["--board", args.board]
+            args.panel_socket = os.path.join(tmpdir, "panel.sock")
+            argv += ["--board", args.board, "--panel", args.panel_socket]
 
         # UART1 is connected to the host pseudo terminal as serial device (configuration test)
         self.uart_master, self.uart_slave = os.openpty()
@@ -532,7 +612,7 @@ class TestRunner:
 
         # board model (before fstest on hostfs, test files are removed after test)
         board_tests = ("board: gpio", "board: i2c", "board: i2cee", "board: spi", "board: spiee",
-                       "board: sdcard", "fstest: ext2 on sdspi")
+                       "board: sdcard", "fstest: ext2 on sdspi", "board: panel")
         if args.board:
             self.summary_test(sim, "board: gpio", "/host/sim-env", "lua gpio.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: i2c", "/host/sim-env", "lua i2c.lua", DEFAULT_TIMEOUT)
@@ -548,6 +628,8 @@ class TestRunner:
                                   ("mount /dev/sdcard ext4fs /mnt/sdcard",), "/dev/sdcard")
             elif self.selected("fstest: ext2 on sdspi"):
                 self.result("fstest: ext2 on sdspi", SKIP, "requires 'board: sdcard' test")
+
+            self.panel_test(sim)
         else:
             for name in board_tests:
                 if self.selected(name):

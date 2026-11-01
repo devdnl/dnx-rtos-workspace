@@ -126,10 +126,11 @@ BSP file (`bsp/*.bsp`). Included BSPs:
 - `doc` – documentation,
 - `kernel` – dnx RTOS kernel (git submodule),
 - `sim-env` – simulation environment of the POSIX simulator (board model:
-  Lua description of hardware connected to the microcontroller, see
-  `sim-env/README.md`),
+  Lua description of hardware connected to the microcontroller, pages of the
+  board panel, see `sim-env/README.md`),
 - `tools` – helper scripts (BSP import/export, flashing, OpenOCD, terminal,
-  linker script generator, Docker image, simulator tests `simtest.py`).
+  linker script generator, Docker image, simulator tests `simtest.py`, board
+  panel `simpanel.py`).
 
 ## Getting started
 
@@ -244,7 +245,7 @@ started also outside the container. Program options:
 ```
 build/dnx-sim [--ram <KiB>] [--disk <n>=<file>[:ro]] [--hostfs <dir>]
               [--uart <n>=pty[:<link>]|<device>] [--tap <name>]
-              [--board <script>]
+              [--board <script> [--panel <socket>]]
 make run-sim SIM_OPTS="--hostfs ."
 ```
 - `--ram` sets size of RAM (in KiB),
@@ -276,7 +277,12 @@ make run-sim SIM_OPTS="--hostfs ."
   devices: EEPROM, SD card, shift register), e.g.
   `--board sim-env/boards/example.lua`; API and device models are described
   in `sim-env/README.md`. I2C devices are created in dnx RTOS e.g. by
-  `modprobe -i I2C 0 0 /dev/i2c-ee -c address=0xA0,sub_addr_mode=2`.
+  `modprobe -i I2C 0 0 /dev/i2c-ee -c address=0xA0,sub_addr_mode=2`,
+- `--panel` creates socket of the board panel – visualization of the board
+  (LEDs, buttons, values of models) in a web browser by `tools/simpanel.py`,
+  e.g. `make run-sim PANEL=1 SIM_OPTS="--board sim-env/boards/example.lua"`
+  and `http://localhost:8080`; pages are defined in `sim-env/panel/`
+  (see `sim-env/README.md`).
 
 RTC (`/dev/rtc`) uses the host clock, time set in dnx is kept as offset to the
 host time (until simulator restart). `Ctrl+\` terminates the simulator,
@@ -328,6 +334,7 @@ test programs are executed in the shell and their `SUMMARY:` lines are checked:
 | `board: spiee`   | SPIEE driver and eefs on 25LC256 model (`sim-env/tests/spiee.lua`) |
 | `board: sdcard`  | SDSPI driver on SD card models (SDHC, SD v1), ext2 created by `mkext` (`sim-env/tests/sdcard.lua`) |
 | `fstest: ext2 on sdspi` | `fstest` on ext2 file system of the SD card model (SDSPI driver) |
+| `board: panel`   | board panel protocol: socket of `tools/simpanel.py`, output, input and control signals (`sim-env/tests/panel.lua`) |
 | `fstest: ramfs`  | `fstest` in `/tmp` |
 | `fstest: hostfs` | `fstest` in temporary host directory (`/host`) |
 | `fstest: fatfs`  | `fstest` on FAT partition of temporary disk image, checked by `fsck.fat` after test |

@@ -78,16 +78,18 @@ int getc(FILE *stream)
                 return EOF;
         }
 
-        char chr = 0;
-        if (fread(&chr, sizeof(char), 1, stream) != 0) {
-                if (ferror(stream) || feof(stream)) {
-                        return EOF;
-                }
-        } else {
-                return EOF;
+        /*
+         * Character is returned when it was read: EOF indicator can be set by
+         * previous read (e.g. non-blocking read of terminal without data), so
+         * it cannot be checked here (CTRL+C was lost in programs that poll
+         * keyboard, e.g. hexdump).
+         */
+        unsigned char chr = 0;
+        if (fread(&chr, sizeof(char), 1, stream) == 1) {
+                return chr;
         }
 
-        return chr;
+        return EOF;
 }
 
 /*==============================================================================

@@ -27,6 +27,11 @@
   SPI2:
     PA16  74HC595 (CS = RCLK), outputs QA..QH -> PA20..PA27
   SPI3:   no devices
+
+  Panel (tools/simtest.py, test of panel protocol, tests/panel.lua):
+    P_OUT  shows PA18 (system output)
+    P_IN   drives PA19 (system input)
+    P_VAL  value, P_CTL control (P_VAL = 2 * P_CTL)
 ------------------------------------------------------------------------------]]
 
 local eeprom = require("models.24cxx")
@@ -98,5 +103,11 @@ sdcard.new{type = "sdv1", size = 2 * 1024 * 1024}:attach("SPI1", "PA17")
 
 -- SPI2
 hc595.new{outputs = {"PA20", "PA21", "PA22", "PA23", "PA24", "PA25", "PA26", "PA27"}}:attach("SPI2", "PA16")
+
+-- panel
+panel.output("P_OUT", "PA18")
+panel.input("P_IN", "PA19")
+panel.value("P_VAL", 0)
+panel.control("P_CTL", function(v) panel.set("P_VAL", v * 2) end)
 
 print("test board loaded")
