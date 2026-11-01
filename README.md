@@ -91,7 +91,14 @@ The `app-appset` contains a reference set of programs, e.g.:
 The `initd` program is started by the kernel as the first process and is
 responsible for initializing drivers, mounting file systems and starting the
 user programs (in the simulator the `siminit` program is used instead).
-Programs can be enabled or disabled in the appset configuration.
+
+Sources of programs shared by appsets are placed in `common_apps/<name>/`. An
+appset contains a program by the file `<appset>/src/programs/<name>.mk`
+(includes `common_apps/<name>/Makefile.in`); programs specific to a single
+appset are directories in `<appset>/src/programs/` (`initd`, `siminit`,
+`bootloader`). All programs of the appset are built except programs listed in
+`__PROGRAMS_EXCLUDE_LIST__` of the appset configuration
+(`config/<appset>/programs/programs_flags.h`).
 
 ### Common libraries
 The `common_libs` directory contains libraries shared by all appsets (and by
@@ -106,11 +113,11 @@ makefiles placed in `<appset>/src/libs`.
 Configuration of the whole workspace for a selected board is stored in a single
 BSP file (`bsp/*.bsp`). Included BSPs:
 
-- `default.bsp` – generic STM32F1 configuration,
 - `stm32f746g-disco.bsp` – STM32F746G-DISCO board,
 - `stm32h747i-disc1.bsp` – STM32H747I-DISCO board,
 - `stm32h747i-disc1_with_btl.bsp` – STM32H747I-DISCO board with boot loader,
-- `Raspberry-Pi-Pico.bsp` – Raspberry Pi Pico (RP2040).
+- `Raspberry-Pi-Pico.bsp` – Raspberry Pi Pico (RP2040),
+- `posix-sim.bsp` – POSIX simulator (`config/sim-*`).
 
 ### Workspace structure
 - `app-appset` – application set sources,
@@ -119,11 +126,11 @@ BSP file (`bsp/*.bsp`). Included BSPs:
 - `bsp` – board support packages,
 - `btl-appset` – boot loader application set sources,
 - `build` – output binaries (created after compilation),
+- `common_apps` – programs shared between appsets,
 - `common_libs` – libraries shared between appsets,
 - `config` – current configuration of all parts (`app-kernel`, `app-appset`,
   `app-romfs`, `btl-kernel`, `btl-appset`) and of the POSIX simulator
   (`sim-kernel`, `sim-appset`, `sim-romfs`),
-- `doc` – documentation,
 - `kernel` – dnx RTOS kernel (git submodule),
 - `sim-env` – simulation environment of the POSIX simulator (board model:
   Lua description of hardware connected to the microcontroller, pages of the
@@ -256,7 +263,11 @@ make run-sim SIM_OPTS="--hostfs ."
   partitions as `/dev/sdX1`..`/dev/sdX4` (`PART` driver), FAT and ext4 file
   systems are mounted in `/mnt/sdXn` (or `/mnt/sdX` when disk has no
   partitions), e.g. `--disk 1=sd.img`; other file systems can be mounted
-  manually, e.g. `mount /dev/sdb1 flatfs /mnt/flatfs`,
+  manually, e.g. `mount /dev/sdb1 flatfs /mnt/flatfs`; disks 4..7 are not
+  initialized by `siminit`, the driver can emulate hardware constraints of
+  block devices, e.g. `modprobe -i HOSTDISK 4 0 /dev/blk -c
+  block_size=512,buffer_align=32` (the kernel block layer splits unaligned
+  requests and uses bounce buffers),
 - `--hostfs` shares host directory, `siminit` mounts it in `/host` (the `hostfs`
   file system, its subdirectory can be mounted too:
   `mount /sub/dir hostfs /mnt ro`),
@@ -344,6 +355,8 @@ test programs are executed in the shell and their `SUMMARY:` lines are checked:
 | `fstest: eefs`   | partition formatted by `mkeefs`, then `fstest` |
 | `fstest: ext2 (mkext)` | partition formatted by `mkext -e 2`, then `fstest`, checked by `e2fsck` after test |
 | `fstest: ext3 (mkext)` | partition formatted by `mkext -e 3 -j` (journal), then `fstest`, checked by `e2fsck` after test |
+| `blkdev: constraints` | block layer on host disk with emulated constraints (block size 512 B, buffer alignment 32 B): unaligned requests, bounce buffers (`sim-env/tests/blkdev.lua`) |
+| `fstest: ext2 on blkdev` | `fstest` on ext2 file system of that disk, checked by `e2fsck` after test |
 | `fstest: romfs`  | `fstest -r` (read tests and read-only checks) on romfs image with reference data (`fstest_ref.py`, `mkfpkg.py`) |
 | `udstest`        | Unix domain sockets |
 | `inettest`       | TCP/IP (only with `--tap`) |
@@ -354,6 +367,7 @@ make test-sim
 make test-sim SIMTEST_OPTS="--tap tap0"          # also network tests
 make test-sim SIMTEST_OPTS="--tap tap0 --perf"   # also network measurements
 make test-sim SIMTEST_OPTS="ext4"                # only tests which name contains text
+make test-sim SIMTEST_OPTS="--iostat"            # block device statistics of file system tests
 python3 tools/simtest.py -h                      # all options (e.g. -v, --keep)
 ```
 Exit status is 0 when all executed tests passed, the simulator output is saved

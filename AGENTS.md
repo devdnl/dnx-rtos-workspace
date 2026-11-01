@@ -36,9 +36,13 @@ The default configuration targets **stm32h7** (`__CPU_ARCH__` in
   - `config/` default kernel config (the workspace overrides it via `config/app-kernel`)
   - `tools/` configtool-cli (Lua), `mkfpkg.py`, `syncdir.py`, helper scripts
 - `app-appset/`, `btl-appset/` — user-space application sets
-  - `src/programs/<prog>/` one directory per program (`Makefile.in` + sources)
+  - `src/programs/<prog>.mk` pulls in a program from `common_apps/`;
+    `src/programs/<prog>/` program specific to this appset (`initd`, `siminit`,
+    `bootloader`)
   - `src/libs/<lib>.mk` pulls in libraries from `common_libs/`; `src/libs/liblocal/` local lib
   - `tools/` `addapps.sh` (generates program registration), `find_global_vars.sh`
+- `common_apps/` — programs shared by appsets, one directory per program
+  (`Makefile.in` + sources).
 - `common_libs/` — libraries shared by appsets: `libc` (the dnx user-space
   libc: `stdio.h`, `dnx/misc.h`, `dnx/os.h`, `dnx/thread.h`, …), `bs`, `lua`,
   `zlib`, `llist`, `fpkg`, `crc`, `md5`, `sha*`, `http-parser`, `libmqtt`, …
@@ -50,9 +54,13 @@ The default configuration targets **stm32h7** (`__CPU_ARCH__` in
   `__CPU_ARCH__`; `tools/config_sync.sh` re-syncs all configs and BSPs with the
   defaults (run it after adding a configuration flag).
 - `app-romfs/content/` — files packed into the ROMFS image.
+- `sim-env/` — POSIX simulator environment: board models (`boards/`), device
+  models (`models/`), tests and demos executed in dnx (`tests/`, `demos/`),
+  pages of the board panel (`panel/`); API in `sim-env/README.md`.
 - `app-dist/` — manifest for the `.fpkg` update package.
 - `tools/` — Dockerfile, flashing (`flash.sh`, `runocd.sh`), linker-script
-  generator, BSP import/export.
+  generator, BSP import/export, simulator tests (`simtest.py`) and board panel
+  (`simpanel.py`).
 - `build/` — output (git-ignored). Never edit or commit.
 
 ## Build environment
@@ -114,7 +122,9 @@ Notes:
   dnx code is compiled with `-funsigned-char` (the same `char` as on ARM).
 - Kernel parts: `src/cpu/posix` (`cpuctl.c`, `host/host.c`), FreeRTOS port
   `src/kernel/dnx-ports/GCC/Posix`, drivers `uart/posix`, `gpio/posix`,
-  `hostdisk/posix`, `rtc/posix` (host clock + offset), file system `fs/hostfs` (host directory selected by
+  `i2c/posix`, `spi/posix`, `ltdc/posix`, `eth/posix`, `hostdisk/posix`
+  (optional emulated block size and buffer alignment constraints for tests of
+  the block layer), `rtc/posix` (host clock + offset), file system `fs/hostfs` (host directory selected by
   `--hostfs`, mounted by `siminit` in `/host`; paths cannot leave this
   directory). Files using host headers are listed as `CSRC_HOST` and
   compiled without dnx `lib/` headers (dnx redefines `pid_t`, `time_t`,
@@ -134,13 +144,16 @@ Notes:
   "key=value,key=value", parsed by `sys_stropt_*()`, enumerations by
   `sys_stropt_get_enum()`); from shell: `modprobe -i <drv> <major> <minor> <path>
   -c <config>` (new device) or `modprobe -c <path> <config>` (existing device).
-- `make test-sim` (`tools/simtest.py`) runs board tests (`sim-env/tests/*.lua`:
-  GPIO, I2C, I2CEE, SPI, SPIEE, SDSPI), `fstest` (ramfs, hostfs, FAT/ext4
-  image, flatfs/eefs/ext2/ext3 partitions formatted in dnx, ext2 on the SD
-  card model, read-only romfs image), `udstest` and `inettest` (`--tap`) in
-  the simulator and checks their `SUMMARY:` lines (ext2/ext3/ext4/FAT images
-  are checked by e2fsck/fsck.fat); use it to verify kernel/appset changes on
-  PC.
+- `make test-sim` (`tools/simtest.py`) runs driver configuration string tests
+  (`devcfg`), board tests (`sim-env/tests/*.lua`: GPIO, I2C, I2CEE, SPI, SPIEE,
+  SDSPI, board panel protocol with LCD and touch), the block layer test
+  (`blkdev`: host disk with emulated constraints), `fstest` (ramfs, hostfs,
+  FAT/ext4 image, flatfs/eefs/ext2/ext3 partitions formatted in dnx, ext2 on
+  the SD card model and on the constrained disk, read-only romfs image),
+  `udstest` and `inettest` (`--tap`) in the simulator and checks their
+  `SUMMARY:` lines (ext2/ext3/ext4/FAT images are checked by e2fsck/fsck.fat);
+  use it to verify kernel/appset changes on PC. A test name filter runs a
+  subset, e.g. `make test-sim SIMTEST_OPTS=board`.
 - `--board <script>` loads the board model: kernel
   `src/cpu/posix/host/board.c` (interface `board.h`) with unmodified Lua 5.5
   sources in `src/cpu/posix/host/lua` (`CSRC_HOST_LIB`: compiled for the
@@ -151,13 +164,29 @@ Notes:
   primitives (start, address, write, read, stop) as synchronous requests to
   the board thread (Lua device models `i2c.attach()`, `sim-env/models`);
   without the board buses are empty (address NACK -> ENXIO). Devices are
-  created by `modprobe -i I2C <bus> <n> <path> -c <config string>`.
+  created by `modprobe -i I2C <bus> <n> <path> -c <config string>`. I2C
+  device addresses are 7-bit (as in datasheets, e.g. EEPROM `address=0x50`)
+  in the driver configuration and in board models; 10-bit addresses use
+  `addr_10bit`.
   `spi/posix` sends each transceive as one synchronous request (mode and bit
   order in flags); CS is a GPIO pin set by the generic SPI driver, the board
   thread handles queued GPIO events before a request, so models see CS
   changes in order (`spi.attach(bus, cs, dev)`). Device models: `sim-env/models`. Boards in
   `sim-env/boards`, tests run in dnx in `sim-env/tests`, API in
   `sim-env/README.md`.
+- `--panel <socket>` (needs `--board`) creates a Unix socket of the board
+  panel; `tools/simpanel.py` (Python standard library only) connects to it
+  and serves the panel in a web browser (`make run-sim PANEL=1
+  SIM_OPTS="--board ..."`, http://localhost:8080). Protocol: JSON lines
+  (signal definitions and changes, LCD frames) from the simulator, `set
+  <id> <value>` and `touch <x> <y> <0|1>` lines to the simulator. Board
+  scripts define signals (`panel.output/input/value/control`,
+  `panel.on_touch`), pages in `sim-env/panel/<page>/` define the look
+  (`/panel.js`: `data-signal`, `data-input`, `<canvas data-lcd>`).
+  `ltdc/posix` registers its framebuffer by `_host_lcd_attach()`; an LCD
+  thread in `board.c` sends changed lines (base64) every 50 ms. Touch goes to
+  the board script, usually to the FT5336 model (`sim-env/models/ft5336.lua`)
+  read by the system through the `I2C` driver.
 - `siminit` connects `--disk 1..3` as `/dev/sda..sdc` with MBR partitions
   (`PART`) and mounts FAT/ext4 in `/mnt/sdXn` (or whole disk in `/mnt/sdX`).
 - Appset is linked as a relocatable object (`ld -r`), only
@@ -227,13 +256,23 @@ both C preprocessor and make**. Rules:
 
 ## Appset-side conventions (programs and libraries)
 
-- A program is a directory in `src/programs/<name>/` with a `Makefile.in`
-  listing sources:
+- A program shared by appsets is a directory `common_apps/<name>/` with a
+  `Makefile.in` listing sources:
   ```make
   CSRC_PROGRAMS   += $(PROG_ROOT_<NAME>)<name>/<name>.c
   CXXSRC_PROGRAMS +=
   HDRLOC_PROGRAMS +=
   ```
+  An appset contains it by `src/programs/<name>.mk` (add the file to each
+  appset that should have the program):
+  ```make
+  PROG_ROOT_<NAME> = ../../../common_apps/
+  include ../common_apps/<name>/Makefile.in
+  ```
+  A program specific to one appset is a directory `src/programs/<name>/` with
+  the same `Makefile.in` (`PROG_ROOT_<NAME>` is not defined there, so it is
+  empty). `addapps.sh` registers
+  all programs found in `src/programs/` except `__PROGRAMS_EXCLUDE_LIST__`.
 - Declare the program with `PROGRAM_PARAMS(<name>, STACK_DEPTH_…);` and an
   ordinary `int main(int argc, char *argv[])`.
 - **No global or static variables in programs and libraries.** Each program
