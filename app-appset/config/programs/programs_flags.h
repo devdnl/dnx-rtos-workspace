@@ -42,17 +42,8 @@
 #define _PROGRAMS_FLAGS_H_
 
 #/*--
-# this:SetTitle("Home > Programs", "List of programs to be included in the compilation. In the 'Add' field, use '*' to add all programs; otherwise, enter each program name separated by a space.\nThe 'Exclude' field removes selected programs from compilation; enter each program name separated by a space.")
+# this:SetTitle("Home > Programs", "List of programs to be included in the compilation. The 'Exclude' field removes selected programs from compilation; enter each program name separated by a space.")
 #++*/
-
-#/*--
-# this:AddWidget("Editline", true, "Add")
-# this:SetToolTip("List of programs to be added to the compilation. Use * to add all programs.")
-#--*/
-#define __PROGRAMS_LIST__ "*"
-#/*
-__PROGRAMS_LIST__="*"
-#*/
 
 #/*--
 # this:AddWidget("Editline", true, "Exclude")

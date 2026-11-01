@@ -12,7 +12,6 @@
 	};
 	["config/app-appset/programs/programs_flags.h"]={
 		["__PROGRAMS_EXCLUDE_LIST__"]="\"siminit\"";
-		["__PROGRAMS_LIST__"]="\"*\"";
 	};
 	["config/app-appset/project/project_flags.h"]={
 		["__CPU_ARCH__"]="stm32h7";

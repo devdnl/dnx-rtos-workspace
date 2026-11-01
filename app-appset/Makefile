@@ -389,7 +389,7 @@ generate :
 	@$(MKDIR) $(GEN_PROG_DIR)
 	@$(MKDIR) $(GEN_PROG_DIR)-tmp
 	@$(ECHO) "Adding user's programs and libraries to the project..."
-	@$(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR)-tmp $(__PROGRAMS_LIST__) $(__PROGRAMS_EXCLUDE_LIST__) $(CONFIG_DIR)
+	@$(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR)-tmp "*" $(__PROGRAMS_EXCLUDE_LIST__) $(CONFIG_DIR)
 	@$(SYNCDIR) $(GEN_PROG_DIR)-tmp/ $(GEN_PROG_DIR)/
 
 	@$(ECHO) "Obtaining git hash..."

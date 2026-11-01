@@ -182,7 +182,7 @@ both C preprocessor and make**. Rules:
 - Do not run `clang-format` on configuration files.
 - Workspace configuration lives in `config/`; `kernel/config/` is only the
   kernel's default and is not used by the workspace build.
-- Program selection: `__PROGRAMS_LIST__` / `__PROGRAMS_EXCLUDE_LIST__` in
+- Program selection: `__PROGRAMS_EXCLUDE_LIST__` in
   `config/*-appset/programs/programs_flags.h`.
 
 ## Coding style

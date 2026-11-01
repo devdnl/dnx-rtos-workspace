@@ -12,7 +12,6 @@
 	};
 	["config/sim-appset/programs/programs_flags.h"]={
 		["__PROGRAMS_EXCLUDE_LIST__"]="\"initd\"";
-		["__PROGRAMS_LIST__"]="\"*\"";
 	};
 	["config/sim-appset/project/project_flags.h"]={
 		["__CPU_ARCH__"]="posix";
