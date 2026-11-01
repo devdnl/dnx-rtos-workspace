@@ -220,7 +220,7 @@ OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
 -include $(GEN_PROG_DIR)/Makefile   # file is created in the addapps script
 
 # defines objects localizations
-_HDRLOC_PROGRAMS = $(foreach file, $(HDRLOC_PROGRAMS),$(APP_PRG_LOC)/$(file))
+_HDRLOC_PROGRAMS = $(foreach file, $(HDRLOC_PROGRAMS),$(APP_PRG_LOC)/$(file)) ../common_apps/
 _HDRLOC_LIB      = $(foreach file, $(HDRLOC_LIB),$(APP_LIB_LOC)/$(file))
 HDRLOC           = src/ $(_HDRLOC_PROGRAMS) $(_HDRLOC_LIB)
 
