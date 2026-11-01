@@ -58,7 +58,7 @@ local FILES = {
 
 test("Create I2C and I2CEE devices (modprobe -c)", function()
     if not exists(I2C_DEV) then
-        run("modprobe -i I2C 0 0 " .. I2C_DEV .. " -c address=0xA0,sub_addr_mode=2")
+        run("modprobe -i I2C 0 0 " .. I2C_DEV .. " -c address=0x50,sub_addr_mode=2")
     end
     if not exists(EE_DEV) then
         run("modprobe -i I2CEE 0 0 " .. EE_DEV .. " -c i2c_path=" .. I2C_DEV

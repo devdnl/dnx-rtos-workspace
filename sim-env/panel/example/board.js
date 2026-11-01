@@ -35,6 +35,11 @@ panel.on("TEMP", function (v) {
     document.getElementById("thermo-fill").style.height = pct + "%";
 });
 
+// LCD block: information when LTDC driver is not initialized
+panel.onLcd(function (lcd) {
+    document.querySelector(".lcd").classList.toggle("off", !lcd);
+});
+
 // board script name
 panel.onInit(function () {
     document.getElementById("board").textContent = panel.board || "";

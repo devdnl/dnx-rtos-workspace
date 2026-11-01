@@ -15,9 +15,11 @@ Directories:
 - `models/` – library of device models used by boards (`require("models.<name>")`):
   `24cxx` (I2C EEPROM), `pcf8574` (I2C I/O expander), `lm75` (I2C temperature
   sensor), `25xx` (SPI EEPROM), `sdcard` (SD card in SPI mode, host image
-  file), `74hc595` (SPI shift register), the description of options and
-  methods is in the model file,
+  file), `74hc595` (SPI shift register), `ft5336` (I2C touch panel
+  controller), the description of options and methods is in the model file,
 - `tests/` – test programs executed in dnx RTOS (e.g. `lua /host/gpio.lua`),
+- `demos/` – demo programs executed in dnx RTOS, e.g. `lcdpaint.lua` (drawing
+  on the LCD of the board panel, see [LCD and touch](#lcd-and-touch)),
 - `panel/` – pages of the board panel shown in a web browser (`default/` –
   generic page, `example/` – page of `boards/example.lua`), see
   [Board panel](#board-panel).
@@ -73,9 +75,9 @@ host.timer(500, function() gpio.set("PA4", not gpio.get("PA4")) end, true)
 
 ### i2c
 Buses are named in STM32 style: `I2C1` (major 0 of the `I2C` driver) ..
-`I2C16`. The I2C driver of the simulator supports master mode only, the
-device address of driver configuration is 8-bit (e.g. `0xA0` is the 7-bit
-address `0x50` of the board model).
+`I2C16`. The I2C driver of the simulator supports master mode only. Device
+addresses are 7-bit (as in datasheets), the same in the board model and in
+the driver configuration (e.g. `0x50`).
 
 | Function | Description |
 |----------|-------------|
@@ -125,7 +127,7 @@ host.timer(1000, function() sensor:set_temperature(20 + math.random() * 5) end, 
 Devices are created in dnx RTOS by the `I2C` driver, e.g. by `modprobe` with
 configuration string (driver `ioctl()` `IOCTL_DEVICE__CONFIGURE_STR`):
 ```
-modprobe -i I2C 0 0 /dev/i2c-ee -c address=0xA0,sub_addr_mode=2
+modprobe -i I2C 0 0 /dev/i2c-ee -c address=0x50,sub_addr_mode=2
 modprobe -i I2CEE 0 0 /dev/ee0 -c i2c_path=/dev/i2c-ee,memory_size=32768,page_size=64,page_prog_time_ms=5
 mkeefs /dev/ee0
 mkdir /mnt/ee && mount /dev/ee0 eefs /mnt/ee
@@ -222,6 +224,7 @@ can use them; options used by the board are described below.
 | `panel.get(id)` | current value of signal |
 | `panel.page(name)` | page of the panel: directory `panel/<name>/` (default: name of board script, e.g. `example` for `boards/example.lua`) |
 | `panel.connected()` | `true` when the panel is connected |
+| `panel.on_touch(fn)` | call `fn(x, y, pressed)` when the LCD of the panel is touched (`pressed`: `false` – released), see [LCD and touch](#lcd-and-touch) |
 
 Changes are sent to the panel at most every 20 ms (the last value of signal
 is sent), so very short pulses are not visible.
@@ -264,7 +267,9 @@ JavaScript API (object `panel`):
 | `panel.onInit(fn)` | call `fn(signals)` when board definition is received (also after restart), `signals`: `[{id, kind, ui}]` (`kind`: `output`, `input`, `value`, `control`; `ui`: options) |
 | `panel.onStatus(fn)` | call `fn(connected)` when connection with simulator is changed |
 | `panel.format(fmt, value)` | printf-like formatting |
-| `panel.bind(root)` | connect `data-signal`/`data-input` elements of `root` |
+| `panel.bind(root)` | connect `data-signal`/`data-input`/`data-lcd` elements of `root` |
+| `panel.onLcd(fn)` | call `fn(lcd)` when LCD is changed, `lcd`: `{w, h, fmt, bg}` or `null` (LTDC driver not active) |
+| `panel.touch(x, y, pressed)` | touch of LCD (pixels of LCD), as touch of `<canvas data-lcd>` |
 
 Example (`panel/example/`):
 ```html
@@ -278,6 +283,35 @@ Example (`panel/example/`):
 ```
 
 The HTTP interface of `simpanel.py`: `/api/state` (GET, JSON: signals and
-values), `/api/set` (POST, JSON `{"id": "...", "value": ...}`), `/events`
-(server-sent events), e.g. `curl -d '{"id":"BUTTON","value":true}'
-localhost:8080/api/set`.
+values), `/api/set` (POST, JSON `{"id": "...", "value": ...}`), `/api/touch`
+(POST, JSON `{"x": ..., "y": ..., "pressed": true}`), `/events` (server-sent
+events), e.g. `curl -d '{"id":"BUTTON","value":true}' localhost:8080/api/set`.
+
+### LCD and touch
+The `LTDC` driver of the simulator (enabled in `config/sim-kernel`, size of
+the display: `__LTDC_WIDTH__`, `__LTDC_HEIGHT__` in
+`config/sim-kernel/arch/posix/ltdc_flags.h`, default 480×272) allocates the
+framebuffer in the system memory, the simulator sends changed lines of the
+framebuffer to the panel every 50 ms. The API is the same as on STM32F7/H7:
+the framebuffer is written by `write()` (file position is offset in the
+framebuffer) or directly by its address (`IOCTL_LTDC__GET_FEATURES`), all pixel
+formats are shown (`l8` without CLUT: gray scale, alpha is blended with the
+background color):
+```
+modprobe -i LTDC 0 0 /dev/lcd -c pixel_format=rgb565
+```
+The LCD is shown by `<canvas data-lcd>` (the generic page shows it
+automatically). Touch of the canvas (mouse or touch screen) is sent to the
+board script (`panel.on_touch()`), usually to the model of touch panel
+controller which is read by the system, e.g. FT5336 (as on STM32F746G-DISCO):
+```lua
+local ft5336 = require("models.ft5336")
+local ts = ft5336.new{int = "PA9"}:attach("I2C1", 0x38)
+panel.on_touch(function(x, y, pressed) ts:touch(x, y, pressed) end)
+```
+The controller is read in dnx RTOS by the `I2C` driver, registers 0x02..0x06:
+number of points, X and Y (12 bits), e.g. in the demo:
+```
+make run-sim PANEL=1 SIM_OPTS="--board sim-env/boards/example.lua --hostfs sim-env"
+lua /host/demos/lcdpaint.lua
+```

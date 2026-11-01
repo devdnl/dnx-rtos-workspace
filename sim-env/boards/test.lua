@@ -32,6 +32,7 @@
     P_OUT  shows PA18 (system output)
     P_IN   drives PA19 (system input)
     P_VAL  value, P_CTL control (P_VAL = 2 * P_CTL)
+    touch of LCD (LTDC driver) -> FT5336 (I2C1 0x38, INT -> PA28), tests/lcd.lua
 ------------------------------------------------------------------------------]]
 
 local eeprom = require("models.24cxx")
@@ -40,6 +41,7 @@ local lm75 = require("models.lm75")
 local spiee = require("models.25xx")
 local sdcard = require("models.sdcard")
 local hc595 = require("models.74hc595")
+local ft5336 = require("models.ft5336")
 
 gpio.connect("PA0", "PA8", true)
 gpio.connect("PA1", "PA9")
@@ -109,5 +111,8 @@ panel.output("P_OUT", "PA18")
 panel.input("P_IN", "PA19")
 panel.value("P_VAL", 0)
 panel.control("P_CTL", function(v) panel.set("P_VAL", v * 2) end)
+
+local ts = ft5336.new{int = "PA28"}:attach("I2C1", 0x38)
+panel.on_touch(function(x, y, pressed) ts:touch(x, y, pressed) end)
 
 print("test board loaded")

@@ -78,7 +78,7 @@ static void show_help(const char *name)
         printf("Usage: %s <flag> [OPTIONS]\n", name);
         puts("  -i            initialize module <module name> <major> <minor> [node path]");
         puts("                [-c <config>] (configuration string of the module, e.g.");
-        puts("                address=0xA0,sub_addr_mode=2, node path is required)");
+        puts("                address=0x50,sub_addr_mode=2, node path is required)");
         puts("  -c            configure initialized module <node path> <config>");
         puts("  -r            release module <module name> <major> <minor>");
         puts("  -R            release module <module path>");

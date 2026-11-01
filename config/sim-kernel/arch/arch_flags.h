@@ -626,7 +626,7 @@
 #         this:AddItem("Priority 0", "0")
 #     end
 #
-#     uC.PERIPH["POSIX"]={"GPIO", "UART", "HOSTDISK", "RTC", "ETH", "I2C", "SPI"}
+#     uC.PERIPH["POSIX"]={"GPIO", "UART", "HOSTDISK", "RTC", "ETH", "I2C", "SPI", "LTDC"}
 # end
 #++*/
 
@@ -733,6 +733,7 @@ include $(CONFIG_DIR)/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "posix/eth_flags.h"
 #include "posix/i2c_flags.h"
 #include "posix/spi_flags.h"
+#include "posix/ltdc_flags.h"
 #endif
 
 #/*--
@@ -977,9 +978,9 @@ __ENABLE_LOOP__=_YES_
 #     this:SetFlagValue("__ENABLE_LTDC__", "_NO_")
 # end
 #--*/
-#define __ENABLE_LTDC__ _NO_
+#define __ENABLE_LTDC__ _YES_
 #/*
-__ENABLE_LTDC__=_NO_
+__ENABLE_LTDC__=_YES_
 #*/
 
 #/*--

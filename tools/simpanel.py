@@ -18,21 +18,26 @@
 #         Pages use the script /panel.js served by this program:
 #           - attributes: data-signal="<id>" (shows value: class "on", attribute data-value,
 #             data-on/data-off images, data-format text), data-input="<id>" (controls: buttons,
-#             checkboxes, sliders, fields),
+#             checkboxes, sliders, fields), <canvas data-lcd> (LCD of the LTDC driver, touch),
 #           - API: panel.on(id, fn), panel.set(id, value), panel.get(id), panel.onInit(fn),
-#             panel.onStatus(fn), panel.format(fmt, value), panel.bind(root).
+#             panel.onStatus(fn), panel.onLcd(fn), panel.touch(x, y, pressed),
+#             panel.format(fmt, value), panel.bind(root).
 #
 #         Protocol of the simulator socket (one message per line):
 #           simulator -> panel: JSON objects {"t": "init", "page": ..., "board": ..., "signals": [...],
-#                               "state": {...}}, {"t": "state", "state": {...}}
-#           panel -> simulator: set <id> <type><value>, type: b (0/1), n (number), s (string)
+#                               "state": {...}}, {"t": "state", "state": {...}}, {"t": "lcd", "w": ...,
+#                               "h": ..., "fmt": ..., "bg": [r, g, b], "y": ..., "n": ..., "data": ...}
+#                               (changed lines of LCD framebuffer, LTDC driver, base64)
+#           panel -> simulator: set <id> <type><value>, type: b (0/1), n (number), s (string),
+#                               touch <x> <y> <0|1> (LCD touched/released)
 #
 #         Usage:
 #           tools/simpanel.py [--socket build/dnx-panel.sock] [--dir sim-env/panel] [--port 8080]
 #                             [--bind 127.0.0.1] [--page <name>]
 #
 #         HTTP interface: / (panel page), /p/<page>/... (page files), /panel.js, /events (server
-#         sent events), /api/state (GET, JSON), /api/set (POST, JSON {"id": ..., "value": ...}).
+#         sent events), /api/state (GET, JSON), /api/set (POST, JSON {"id": ..., "value": ...}),
+#         /api/touch (POST, JSON {"x": ..., "y": ..., "pressed": true|false}).
 #
 #         MIT License
 #
@@ -56,6 +61,7 @@
 # ==================================================================================================
 
 import argparse
+import base64
 import json
 import mimetypes
 import os
@@ -70,6 +76,9 @@ from urllib.parse import urlparse, unquote
 
 ID_RE = re.compile(r"^[A-Za-z0-9_.\-]+$")
 RECONNECT_DELAY = 0.5   # s
+QUEUE_SIZE = 100        # max messages waiting for browser (LCD frames can be large)
+PIXEL_SIZE = {"argb8888": 4, "rgb888": 3, "rgb565": 2, "argb1555": 2, "argb4444": 2, "l8": 1, "al44": 1,
+              "al88": 2}
 KEEPALIVE = 15          # s, SSE comment sent to detect closed browser connections
 
 # ==================================================================================================
@@ -140,14 +149,161 @@ PANEL_JS = r"""
 
     panel.get = function (id) { return panel.state[id]; };
 
+    // requests are sent in order (e.g. press and release of button)
+    let requests = Promise.resolve();
+    function post(url, data) {
+        requests = requests.then(function () {
+            return fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+            });
+        }).catch(function (e) { console.error(e); });
+        return requests;
+    }
+
     // send value of control to the board (panel.input()/panel.control() of board script)
     panel.set = function (id, value) {
-        return fetch("/api/set", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: id, value: value }),
-        }).catch(function (e) { console.error(e); });
+        return post("/api/set", { id: id, value: value });
     };
+
+    // LCD ---------------------------------------------------------------------------------------------
+    const lcdListeners = [];
+    const lcdCanvases = [];
+    let lcdImage = null;    // whole frame (ImageData)
+    panel.lcd = null;       // {w, h, fmt, bg} or null (no LCD)
+
+    // call fn(lcd) when LCD is changed, lcd: {w, h, fmt, bg} or null
+    panel.onLcd = function (fn) {
+        lcdListeners.push(fn);
+        safe(fn, panel.lcd);
+    };
+
+    // touch of LCD (x, y in pixels of LCD, pressed: false is release)
+    panel.touch = function (x, y, pressed) {
+        return post("/api/touch", { x: x, y: y, pressed: !!pressed });
+    };
+
+    // convert pixels of LTDC format to RGBA (alpha is blended with background color)
+    function decode(fmt, s, bg, d) {
+        const n = d.length / 4;
+        const put = function (i, r, g, b, a) {
+            const o = i * 4;
+            d[o] = (r * a + bg[0] * (255 - a)) / 255;
+            d[o + 1] = (g * a + bg[1] * (255 - a)) / 255;
+            d[o + 2] = (b * a + bg[2] * (255 - a)) / 255;
+            d[o + 3] = 255;
+        };
+        let v;
+        for (let i = 0; i < n; i++) {
+            switch (fmt) {
+            case "argb8888": put(i, s[i * 4 + 2], s[i * 4 + 1], s[i * 4], s[i * 4 + 3]); break;
+            case "rgb888": put(i, s[i * 3 + 2], s[i * 3 + 1], s[i * 3], 255); break;
+            case "rgb565":
+                v = s[i * 2] | (s[i * 2 + 1] << 8);
+                put(i, ((v >> 11) & 31) * 255 / 31, ((v >> 5) & 63) * 255 / 63, (v & 31) * 255 / 31, 255);
+                break;
+            case "argb1555":
+                v = s[i * 2] | (s[i * 2 + 1] << 8);
+                put(i, ((v >> 10) & 31) * 255 / 31, ((v >> 5) & 31) * 255 / 31, (v & 31) * 255 / 31,
+                    (v >> 15) ? 255 : 0);
+                break;
+            case "argb4444":
+                v = s[i * 2] | (s[i * 2 + 1] << 8);
+                put(i, ((v >> 8) & 15) * 17, ((v >> 4) & 15) * 17, (v & 15) * 17, (v >> 12) * 17);
+                break;
+            case "l8": put(i, s[i], s[i], s[i], 255); break;       // without CLUT: gray scale
+            case "al44": v = (s[i] & 15) * 17; put(i, v, v, v, (s[i] >> 4) * 17); break;
+            case "al88": put(i, s[i * 2], s[i * 2], s[i * 2], s[i * 2 + 1]); break;
+            }
+        }
+    }
+
+    function drawLcd(canvas, y, n) {
+        if (!lcdImage) {
+            canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+            return;
+        }
+        if (canvas.width !== lcdImage.width || canvas.height !== lcdImage.height) {
+            canvas.width = lcdImage.width;
+            canvas.height = lcdImage.height;
+            y = 0;
+            n = lcdImage.height;
+        }
+        canvas.getContext("2d").putImageData(lcdImage, 0, 0, 0, y, lcdImage.width, n);
+    }
+
+    function lcdMessage(msg) {
+        const old = panel.lcd;
+        if (!msg.w || !msg.h) {
+            panel.lcd = null;
+            lcdImage = null;
+        } else {
+            panel.lcd = { w: msg.w, h: msg.h, fmt: msg.fmt, bg: msg.bg || [0, 0, 0] };
+            if (!lcdImage || lcdImage.width !== msg.w || lcdImage.height !== msg.h) {
+                lcdImage = new ImageData(msg.w, msg.h);
+            }
+            if (msg.data) {
+                const bin = atob(msg.data);
+                const src = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) src[i] = bin.charCodeAt(i);
+                const off = msg.y * msg.w * 4;
+                decode(msg.fmt, src, panel.lcd.bg, lcdImage.data.subarray(off, off + msg.n * msg.w * 4));
+            }
+        }
+        for (let i = lcdCanvases.length - 1; i >= 0; i--) {
+            if (!lcdCanvases[i].isConnected) { lcdCanvases.splice(i, 1); continue; }
+            drawLcd(lcdCanvases[i], msg.y || 0, msg.n || 0);
+        }
+        if (JSON.stringify(old) !== JSON.stringify(panel.lcd)) {
+            for (const fn of lcdListeners) safe(fn, panel.lcd);
+        }
+    }
+
+    // <canvas data-lcd>: LCD image, pointer is the touch of LCD
+    function bindLcd(el) {
+        lcdCanvases.push(el);
+        el.style.touchAction = "none";
+        if (!el.style.imageRendering) el.style.imageRendering = "pixelated";
+        drawLcd(el, 0, lcdImage ? lcdImage.height : 0);
+
+        let pressed = false, pos = [0, 0], pending = false, timer = null;
+        const point = function (e) {
+            // image area of canvas (without border and padding, e.g. bezel of LCD)
+            const r = el.getBoundingClientRect(), s = getComputedStyle(el);
+            const px = function (v) { return parseFloat(v) || 0; };
+            const left = r.left + px(s.borderLeftWidth) + px(s.paddingLeft);
+            const top = r.top + px(s.borderTopWidth) + px(s.paddingTop);
+            const w = r.width - px(s.borderLeftWidth) - px(s.paddingLeft) - px(s.paddingRight) - px(s.borderRightWidth);
+            const h = r.height - px(s.borderTopWidth) - px(s.paddingTop) - px(s.paddingBottom) - px(s.borderBottomWidth);
+            return [Math.min(el.width - 1, Math.max(0, Math.floor((e.clientX - left) * el.width / w))),
+                    Math.min(el.height - 1, Math.max(0, Math.floor((e.clientY - top) * el.height / h)))];
+        };
+        const release = function () {
+            if (pressed) { pressed = false; panel.touch(pos[0], pos[1], false); }
+        };
+        el.addEventListener("pointerdown", function (e) {
+            if (e.button !== 0 || !panel.lcd) return;
+            pressed = true;
+            pos = point(e);
+            try { el.setPointerCapture(e.pointerId); } catch (_) { }
+            panel.touch(pos[0], pos[1], true);
+            e.preventDefault();
+        });
+        el.addEventListener("pointermove", function (e) {
+            if (!pressed) return;
+            pos = point(e);
+            if (timer) { pending = true; return; }
+            panel.touch(pos[0], pos[1], true);
+            timer = setTimeout(function tick() {
+                if (pending && pressed) { pending = false; panel.touch(pos[0], pos[1], true); timer = setTimeout(tick, 30); }
+                else timer = null;
+            }, 30);
+        });
+        el.addEventListener("pointerup", release);
+        el.addEventListener("pointercancel", release);
+        el.addEventListener("lostpointercapture", release);
+    }
 
     // printf-like formatting: %d %i %f %.Nf %e %x %X %o %b %s %% (flags: - 0 +, width)
     panel.format = function (fmt, v) {
@@ -264,11 +420,12 @@ PANEL_JS = r"""
         root = root || document;
         const all = [];
         if (root.matches) all.push(root);
-        root.querySelectorAll("[data-signal], [data-input]").forEach(function (el) { all.push(el); });
+        root.querySelectorAll("[data-signal], [data-input], canvas[data-lcd]").forEach(function (el) { all.push(el); });
         for (const el of all) {
             if (el.__panelBound) continue;
             if (el.dataset.signal) { bindSignal(el); el.__panelBound = true; }
             else if (el.dataset.input) { bindInput(el); el.__panelBound = true; }
+            else if (el.tagName === "CANVAS" && el.dataset.lcd !== undefined) { bindLcd(el); el.__panelBound = true; }
         }
     };
 
@@ -299,6 +456,7 @@ PANEL_JS = r"""
                 return;
             }
             setStatus(!!msg.connected);
+            if (!msg.lcd) lcdMessage({ w: 0, h: 0 });
             for (const fn of initListeners) safe(fn, panel.signals);
             for (const k in panel.state) emit(k, panel.state[k]);
             for (const k in old) if (!(k in panel.state)) emit(k, undefined);
@@ -309,6 +467,8 @@ PANEL_JS = r"""
             }
         } else if (msg.t === "status") {
             setStatus(!!msg.connected);
+        } else if (msg.t === "lcd") {
+            lcdMessage(msg);
         }
     }
 
@@ -348,6 +508,7 @@ class Panel:
         self.signals = []
         self.state = {}
         self.clients = []
+        self.lcd = None         # LCD: {"w", "h", "fmt", "bg", "frame"}
 
     def log(self, msg):
         if self.verbose:
@@ -361,14 +522,26 @@ class Panel:
         return "/p/default/"
 
     def init_message(self):
+        lcd = {k: self.lcd[k] for k in ("w", "h", "fmt", "bg")} if self.lcd else None
         return {"t": "init", "connected": self.connected, "page": self.page, "board": self.board,
-                "page_url": self.page_url(), "signals": self.signals, "state": self.state}
+                "page_url": self.page_url(), "signals": self.signals, "state": self.state, "lcd": lcd}
+
+    def lcd_message(self):
+        # whole LCD frame (called with lock)
+        if not self.lcd:
+            return {"t": "lcd", "w": 0, "h": 0}
+        msg = {k: self.lcd[k] for k in ("w", "h", "fmt", "bg")}
+        msg.update({"t": "lcd", "y": 0, "n": self.lcd["h"],
+                    "data": base64.b64encode(self.lcd["frame"]).decode("ascii")})
+        return msg
 
     def subscribe(self):
-        q = queue.Queue(maxsize=1000)
+        q = queue.Queue(maxsize=QUEUE_SIZE)
         with self.lock:
             self.clients.append(q)
             q.put(self.init_message())
+            if self.lcd:
+                q.put(self.lcd_message())
         return q
 
     def unsubscribe(self, q):
@@ -404,6 +577,26 @@ class Panel:
                 state = msg.get("state") or {}
                 self.state.update(state)
                 self.broadcast({"t": "state", "state": state})
+            elif msg.get("t") == "lcd":
+                self.handle_lcd(msg)
+
+    def handle_lcd(self, msg):
+        # changed lines of LCD (called with lock): the whole frame is kept for new browsers
+        w, h, fmt = msg.get("w", 0), msg.get("h", 0), msg.get("fmt")
+        if not w or not h or fmt not in PIXEL_SIZE:
+            self.lcd = None
+            self.broadcast({"t": "lcd", "w": 0, "h": 0})
+            return
+        line = w * PIXEL_SIZE[fmt]
+        lcd = self.lcd
+        if not lcd or (lcd["w"], lcd["h"], lcd["fmt"]) != (w, h, fmt):
+            lcd = self.lcd = {"w": w, "h": h, "fmt": fmt, "frame": bytearray(line * h)}
+            self.log("LCD %ux%u %s" % (w, h, fmt))
+        lcd["bg"] = msg.get("bg", [0, 0, 0])
+        y, data = msg.get("y", 0), base64.b64decode(msg.get("data", ""))
+        if 0 <= y and y * line + len(data) <= len(lcd["frame"]):
+            lcd["frame"][y * line:y * line + len(data)] = data
+        self.broadcast(msg)
 
     def set_connected(self, connected):
         with self.lock:
@@ -430,20 +623,27 @@ class Panel:
                 self.sock = s
             self.set_connected(True)
 
-            buf = b""
+            buf = bytearray()
             try:
                 while True:
-                    data = s.recv(65536)
+                    data = s.recv(262144)
                     if not data:
                         break
+                    start = len(buf)
                     buf += data
-                    while b"\n" in buf:
-                        line, buf = buf.split(b"\n", 1)
+                    pos = 0
+                    while True:
+                        end = buf.find(b"\n", max(pos, start))
+                        if end < 0:
+                            break
+                        line = bytes(buf[pos:end])
+                        pos = end + 1
                         if line.strip():
                             try:
                                 self.handle(json.loads(line))
                             except ValueError:
                                 self.log("invalid message: %r" % line[:200])
+                    del buf[:pos]
             except OSError:
                 pass
 
@@ -452,6 +652,27 @@ class Panel:
             s.close()
             self.set_connected(False)
             self.log("simulator disconnected")
+
+    def send_line(self, line):
+        with self.lock:
+            s = self.sock
+            if not s:
+                return False, "simulator is not connected"
+            try:
+                s.sendall(line.encode("utf-8"))
+            except OSError as e:
+                return False, str(e)
+        return True, ""
+
+    def touch(self, x, y, pressed):
+        lcd = self.lcd
+        if not lcd:
+            return False, "LCD is not active"
+        if not all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in (x, y)):
+            return False, "invalid coordinates"
+        x = min(max(int(x), 0), lcd["w"] - 1)
+        y = min(max(int(y), 0), lcd["h"] - 1)
+        return self.send_line("touch %d %d %d\n" % (x, y, 1 if pressed else 0))
 
     def send(self, sig_id, value):
         if not isinstance(sig_id, str) or not ID_RE.match(sig_id):
@@ -465,16 +686,7 @@ class Panel:
         else:
             return False, "unsupported value type"
 
-        line = ("set %s %s\n" % (sig_id, enc)).encode("utf-8")
-        with self.lock:
-            s = self.sock
-            if not s:
-                return False, "simulator is not connected"
-            try:
-                s.sendall(line)
-            except OSError as e:
-                return False, str(e)
-        return True, ""
+        return self.send_line("set %s %s\n" % (sig_id, enc))
 
 
 # ==================================================================================================
@@ -525,13 +737,16 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = urlparse(self.path).path
-        if path != "/api/set":
+        if path not in ("/api/set", "/api/touch"):
             self.reply(404, "not found\n")
             return
         try:
             length = int(self.headers.get("Content-Length", "0"))
             req = json.loads(self.rfile.read(length) or b"{}")
-            ok, err = self.panel.send(req.get("id"), req.get("value"))
+            if path == "/api/set":
+                ok, err = self.panel.send(req.get("id"), req.get("value"))
+            else:
+                ok, err = self.panel.touch(req.get("x"), req.get("y"), bool(req.get("pressed")))
         except (ValueError, AttributeError):
             ok, err = False, "invalid request"
         if ok:

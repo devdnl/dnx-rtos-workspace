@@ -12,11 +12,11 @@ local WRITE_TIME = 6 -- ms, EEPROM write cycle (model: 5 ms)
 
 -- I2C devices: path, major (bus), minor, configuration
 local DEVICES = {
-    {"/dev/i2c-io",   0, 10, "address=0x40"},                   -- PCF8574
-    {"/dev/i2c-temp", 0, 11, "address=0x90,sub_addr_mode=1"},   -- LM75
-    {"/dev/i2c-ee",   0, 12, "address=0xA2,sub_addr_mode=2"},   -- 24C32
-    {"/dev/i2c-none", 0, 13, "address=0xAE,sub_addr_mode=2"},   -- not connected
-    {"/dev/i2c2-ee",  1, 10, "address=0xA0,sub_addr_mode=1"},   -- 24C02 on I2C2
+    {"/dev/i2c-io",   0, 10, "address=0x20"},                   -- PCF8574
+    {"/dev/i2c-temp", 0, 11, "address=0x48,sub_addr_mode=1"},   -- LM75
+    {"/dev/i2c-ee",   0, 12, "address=0x51,sub_addr_mode=2"},   -- 24C32
+    {"/dev/i2c-none", 0, 13, "address=0x57,sub_addr_mode=2"},   -- not connected
+    {"/dev/i2c2-ee",  1, 10, "address=0x50,sub_addr_mode=1"},   -- 24C02 on I2C2
 }
 
 local function exists(path)

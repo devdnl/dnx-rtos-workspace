@@ -77,6 +77,16 @@
                 <code class="hex" data-signal="LEDS2" data-format="0x%02X"></code></h2>
             <div class="bar red" data-bits="LEDS2"></div>
         </section>
+
+        <section class="block wide">
+            <h2>LCD <small>LTDC driver, touch: FT5336 I2C1 0x38, INT PA9</small>
+                <span class="led small touch" data-signal="TOUCH"></span></h2>
+            <div class="lcd">
+                <canvas data-lcd></canvas>
+                <p class="lcd-off">LCD is not active: <code>modprobe -i LTDC 0 0 /dev/lcd -c pixel_format=rgb565</code>,
+                    demo: <code>lua /host/demos/lcdpaint.lua</code> (option <code>--hostfs sim-env</code>)</p>
+            </div>
+        </section>
     </div>
 
     <footer>Board: <span id="board"></span></footer>

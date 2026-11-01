@@ -277,9 +277,10 @@ make run-sim SIM_OPTS="--hostfs ."
   devices: EEPROM, SD card, shift register), e.g.
   `--board sim-env/boards/example.lua`; API and device models are described
   in `sim-env/README.md`. I2C devices are created in dnx RTOS e.g. by
-  `modprobe -i I2C 0 0 /dev/i2c-ee -c address=0xA0,sub_addr_mode=2`,
+  `modprobe -i I2C 0 0 /dev/i2c-ee -c address=0x50,sub_addr_mode=2`,
 - `--panel` creates socket of the board panel – visualization of the board
-  (LEDs, buttons, values of models) in a web browser by `tools/simpanel.py`,
+  (LEDs, buttons, values of models, LCD of the `LTDC` driver with touch panel)
+  in a web browser by `tools/simpanel.py`,
   e.g. `make run-sim PANEL=1 SIM_OPTS="--board sim-env/boards/example.lua"`
   and `http://localhost:8080`; pages are defined in `sim-env/panel/`
   (see `sim-env/README.md`).
@@ -334,7 +335,7 @@ test programs are executed in the shell and their `SUMMARY:` lines are checked:
 | `board: spiee`   | SPIEE driver and eefs on 25LC256 model (`sim-env/tests/spiee.lua`) |
 | `board: sdcard`  | SDSPI driver on SD card models (SDHC, SD v1), ext2 created by `mkext` (`sim-env/tests/sdcard.lua`) |
 | `fstest: ext2 on sdspi` | `fstest` on ext2 file system of the SD card model (SDSPI driver) |
-| `board: panel`   | board panel protocol: socket of `tools/simpanel.py`, output, input and control signals (`sim-env/tests/panel.lua`) |
+| `board: panel`   | board panel protocol: socket of `tools/simpanel.py`, output, input and control signals (`sim-env/tests/panel.lua`), LCD frame of `LTDC` driver and touch read from FT5336 model (`sim-env/tests/lcd.lua`) |
 | `fstest: ramfs`  | `fstest` in `/tmp` |
 | `fstest: hostfs` | `fstest` in temporary host directory (`/host`) |
 | `fstest: fatfs`  | `fstest` on FAT partition of temporary disk image, checked by `fsck.fat` after test |

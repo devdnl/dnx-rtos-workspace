@@ -7,7 +7,7 @@
 
   The board panel (PANEL=1, web browser: http://localhost:8080) shows page
   sim-env/panel/example/: LEDs, button, temperature, LEDs of the I/O expander
-  and shift register.
+  and shift register, LCD (LTDC driver) with touch panel.
 
   Pins (port A):
     PA0  LED (output of the system, active low)
@@ -17,6 +17,8 @@
 
   I2C1:
     0x20  PCF8574 with 8 LEDs (printed when changed), INT -> PA5
+    0x38  FT5336 touch panel controller (touch of the LCD in the panel),
+          INT -> PA9
     0x48  LM75 temperature sensor (slowly changing temperature or set by the
           panel), OS -> PA6
     0x50  24C256 EEPROM, content is kept in the host file
@@ -29,7 +31,7 @@
     PA16  74HC595 with 8 LEDs (printed when changed)
 
   dnx RTOS (shell), I2C EEPROM:
-    modprobe -i I2C 0 0 /dev/i2c-ee -c address=0xA0,sub_addr_mode=2
+    modprobe -i I2C 0 0 /dev/i2c-ee -c address=0x50,sub_addr_mode=2
     modprobe -i I2CEE 0 0 /dev/ee0 -c i2c_path=/dev/i2c-ee,memory_size=32768,page_size=64,page_prog_time_ms=5
     mkeefs /dev/ee0   (only once, EEPROM content is kept in the file)
     mkdir /mnt/ee; mount /dev/ee0 eefs /mnt/ee
@@ -43,6 +45,12 @@
     mkext -i /dev/sdcard   (only once, card content is kept in the file)
     mkdir /mnt/sd; mount /dev/sdcard ext4fs /mnt/sd
 
+  dnx RTOS (shell), LCD and touch panel (demo sim-env/demos/lcdpaint.lua,
+  simulator option --hostfs sim-env):
+    modprobe -i LTDC 0 0 /dev/lcd -c pixel_format=rgb565
+    modprobe -i I2C 0 5 /dev/i2c-ts -c address=0x38,sub_addr_mode=1
+    lua /host/demos/lcdpaint.lua
+
   dnx RTOS (shell), SPI EEPROM and LEDs:
     modprobe -i SPIEE 0 0 /dev/ee1 -c spi_path=/dev/spi-ee,memory_size=32768,page_size=64,address_size=2
     modprobe -i SPI 1 0 /dev/leds2 -c cs_port=0,cs_pin=16
@@ -52,6 +60,7 @@ local eeprom = require("models.24cxx")
 local pcf8574 = require("models.pcf8574")
 local lm75 = require("models.lm75")
 local spiee = require("models.25xx")
+local ft5336 = require("models.ft5336")
 local sdcard = require("models.sdcard")
 local hc595 = require("models.74hc595")
 
@@ -107,6 +116,12 @@ panel.control("TEMP_SET", function(v)
     sensor:set_temperature(v)
 end, {value = 25, min = -20, max = 100, step = 0.5, label = "Set temperature", unit = "°C"})
 panel.output("OS", "PA6", {active_low = true, label = "LM75 OS (PA6)", color = "#f59e0b"})
+
+-- I2C1: touch panel controller of the LCD (LTDC driver), touch of the LCD in
+-- the board panel
+local ts = ft5336.new({ int = "PA9" }):attach("I2C1", 0x38)
+panel.on_touch(function(x, y, pressed) ts:touch(x, y, pressed) end)
+panel.output("TOUCH", "PA9", {active_low = true, label = "Touch INT (PA9)", color = "#a855f7"})
 
 -- I2C1: EEPROM
 -- files with content of memories are kept in the build directory of the

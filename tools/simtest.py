@@ -65,6 +65,7 @@
 # ==================================================================================================
 
 import argparse
+import base64
 import json
 import os
 import pty
@@ -78,6 +79,7 @@ import subprocess
 import sys
 import tempfile
 import termios
+import threading
 import time
 
 # --------------------------------------------------------------------------------------------------
@@ -372,7 +374,8 @@ class TestRunner:
                     print("    " + line.strip())
 
     # board panel: the test connects to the panel socket like tools/simpanel.py, signals of board
-    # boards/test.lua: P_OUT shows PA18, P_IN drives PA19, P_CTL sets P_VAL = 2 * P_CTL
+    # boards/test.lua: P_OUT shows PA18, P_IN drives PA19, P_CTL sets P_VAL = 2 * P_CTL; LCD of LTDC
+    # driver (frame sent to the panel) and touch of LCD read from FT5336 model by I2C driver
     def panel_test(self, sim):
         name = "board: panel"
         if not self.selected(name):
@@ -386,30 +389,67 @@ class TestRunner:
             self.result(name, FAIL, "cannot connect to panel socket: %s" % e)
             return
 
-        state, signals, buf = {}, [], [b""]
+        state, signals, lcd = {}, [], {}
+        lock = threading.Lock()
+
+        # messages are read all the time (the simulator closes connection of panel that does not read)
+        def reader():
+            buf = bytearray()
+            s.settimeout(None)
+            while True:
+                try:
+                    data = s.recv(262144)
+                except OSError:
+                    return
+                if not data:
+                    return
+                buf += data
+                while b"\n" in buf:
+                    end = buf.index(b"\n")
+                    msg = json.loads(bytes(buf[:end]))
+                    del buf[:end + 1]
+                    with lock:
+                        if msg.get("t") == "lcd":
+                            lcd_update(msg)
+                        else:
+                            if msg.get("t") == "init":
+                                signals[:] = [x["id"] for x in msg.get("signals", [])]
+                                state.clear()
+                            state.update(msg.get("state", {}))
 
         def wait(cond, timeout=3):
             end = time.time() + timeout
-            while not cond():
-                left = end - time.time()
-                if left <= 0:
-                    return False
-                s.settimeout(left)
-                try:
-                    data = s.recv(65536)
-                except socket.timeout:
-                    return cond()
-                if not data:
-                    return cond()
-                buf[0] += data
-                while b"\n" in buf[0]:
-                    line, buf[0] = buf[0].split(b"\n", 1)
-                    msg = json.loads(line)
-                    if msg.get("t") == "init":
-                        signals[:] = [x["id"] for x in msg.get("signals", [])]
-                        state.clear()
-                    state.update(msg.get("state", {}))
-            return True
+            while time.time() < end:
+                with lock:
+                    if cond():
+                        return True
+                time.sleep(0.02)
+            with lock:
+                return cond()
+
+        threading.Thread(target=reader, daemon=True).start()
+
+        # whole LCD frame assembled from changed lines
+        def lcd_update(msg):
+            if not msg.get("w"):
+                lcd.clear()
+                return
+            line = msg["w"] * 2 if msg.get("fmt") == "rgb565" else 0
+            if lcd.get("geometry") != (msg["w"], msg["h"], msg.get("fmt")):
+                lcd["geometry"] = (msg["w"], msg["h"], msg.get("fmt"))
+                lcd["frame"] = bytearray(line * msg["h"])
+            data = base64.b64decode(msg.get("data", ""))
+            lcd["frame"][msg["y"] * line:msg["y"] * line + len(data)] = data
+
+        def lcd_pixel(x, y):
+            frame = lcd.get("frame")
+            w = lcd["geometry"][0] if frame else 0
+            return frame[(y * w + x) * 2] | (frame[(y * w + x) * 2 + 1] << 8) if frame else None
+
+        def touch_state():
+            ok, out = sim.run("lua lcd.lua touch")
+            m = re.search(r"TOUCH n=(\d+) x=(\d+) y=(\d+) ev=(\d) int=(\d) id=0x51", out)
+            return tuple(int(v) for v in m.groups()) if (ok and m) else None
 
         def dnx(level):
             ok, out = sim.run("lua panel.lua %s" % level)
@@ -439,6 +479,33 @@ class TestRunner:
                 s.sendall(b"set P_IN b0\n")
                 if not wait(lambda: state.get("P_IN") is False) or dnx("") != "0":
                     errors.append("P_IN does not release PA19")
+
+                # LCD (LTDC driver): line 10 is red, touch is read from FT5336 by I2C driver
+                ok, out = sim.run("lua lcd.lua init")
+                if "LCD=261120" not in out:
+                    errors.append("LTDC device not created")
+                elif not wait(lambda: lcd_pixel(5, 10) == 0xF800 and lcd_pixel(5, 11) == 0, 5):
+                    errors.append("LCD frame not received (geometry %r)" % (lcd.get("geometry"),))
+                elif lcd["geometry"] != (480, 272, "rgb565"):
+                    errors.append("LCD geometry %r" % (lcd["geometry"],))
+                else:
+                    s.sendall(b"touch 123 45 1\n")
+                    time.sleep(0.1)
+                    st = touch_state()
+                    if not st or st[:3] != (1, 123, 45) or st[4] != 0:
+                        errors.append("touch not reported by FT5336: %r" % (st,))
+                    s.sendall(b"touch 123 45 0\n")
+                    time.sleep(0.1)
+                    st = touch_state()
+                    if not st or st[0] != 0 or st[3] != 1 or st[4] != 1:
+                        errors.append("release not reported by FT5336: %r" % (st,))
+
+                # framebuffer memory is needed by next tests
+                ok, out = sim.run("lua lcd.lua release")
+                if "RELEASED" not in out:
+                    errors.append("LTDC device not released")
+                elif not wait(lambda: not lcd, 3):
+                    errors.append("LCD not detached from panel after release")
 
                 sim.run("cd /")
         except (OSError, ValueError) as e:

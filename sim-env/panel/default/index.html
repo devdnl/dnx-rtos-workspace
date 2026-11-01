@@ -66,6 +66,11 @@
     }
     input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); }
     .empty { color: var(--muted); }
+    #lcd-section[hidden] { display: none; }
+    canvas[data-lcd] {
+        display: block; max-width: 100%; height: auto; background: #000; border-radius: 6px;
+        border: 1px solid var(--line); cursor: crosshair;
+    }
     code { font-size: 13px; }
 </style>
 </head>
@@ -75,6 +80,11 @@
     <span id="board"></span>
     <span class="status" data-panel-status>disconnected</span>
 </header>
+<section id="lcd-section" hidden style="max-width:1100px;margin:0 auto 20px">
+    <h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px">
+        Display <span id="lcd-info" style="text-transform:none;letter-spacing:0"></span></h2>
+    <canvas data-lcd></canvas>
+</section>
 <main id="main">
     <p class="empty">Waiting for the simulator&hellip; Start it with
        <code>--board &lt;script&gt; --panel &lt;socket&gt;</code>.</p>
@@ -159,14 +169,22 @@
 
     function panelValue(id) { return panel.get(id); }
 
+    // display of LTDC driver (touch: panel.on_touch() in board script)
+    panel.onLcd(function (lcd) {
+        document.getElementById("lcd-section").hidden = !lcd;
+        document.getElementById("lcd-info").textContent = lcd ? lcd.w + "×" + lcd.h + " " + lcd.fmt : "";
+    });
+
     panel.onInit(function (signals) {
         document.getElementById("board").textContent = panel.board || "";
         const main = document.getElementById("main");
         main.replaceChildren();
 
         if (signals.length === 0) {
-            main.append(el("p", { class: "empty" }, "The board script does not define panel signals ",
-                           "(panel.output(), panel.input(), panel.value(), panel.control())."));
+            if (!panel.lcd) {
+                main.append(el("p", { class: "empty" }, "The board script does not define panel signals ",
+                               "(panel.output(), panel.input(), panel.value(), panel.control())."));
+            }
             return;
         }
 

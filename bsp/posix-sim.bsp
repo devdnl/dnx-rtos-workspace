@@ -44,7 +44,7 @@
 		["__ENABLE_I2C__"]="_YES_";
 		["__ENABLE_IRQ__"]="_NO_";
 		["__ENABLE_LOOP__"]="_YES_";
-		["__ENABLE_LTDC__"]="_NO_";
+		["__ENABLE_LTDC__"]="_YES_";
 		["__ENABLE_MEMBLOCK__"]="_YES_";
 		["__ENABLE_NVM__"]="_NO_";
 		["__ENABLE_PART__"]="_YES_";
@@ -87,6 +87,10 @@
 		["__GPIO_POSIX_NUMBER_OF_PORTS__"]="4";
 	};
 	["config/sim-kernel/arch/posix/i2c_flags.h"]={
+	};
+	["config/sim-kernel/arch/posix/ltdc_flags.h"]={
+		["__LTDC_HEIGHT__"]="272";
+		["__LTDC_WIDTH__"]="480";
 	};
 	["config/sim-kernel/arch/posix/spi_flags.h"]={
 	};

@@ -126,6 +126,18 @@ figcaption { font-size: 13px; color: var(--muted); }
 .cell { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .cell small { font-size: 11px; color: var(--muted); }
 
+/* LCD: bezel around the display, image is scaled to the block width */
+.lcd { display: flex; justify-content: center; }
+.lcd canvas {
+    display: block; max-width: 100%; height: auto; cursor: crosshair;
+    padding: 10px; border-radius: 8px; background: #050807;
+    box-shadow: inset 0 0 0 1px #ffffff1a, 0 4px 12px #0007;
+}
+.lcd .lcd-off { display: none; margin: 0; color: var(--muted); font-size: 13px; }
+.lcd.off canvas { display: none; }
+.lcd.off .lcd-off { display: block; }
+.led.touch { --c: #a855f7; margin-left: auto; }
+
 footer { margin: 16px 8px 0; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
 
 html.panel-disconnected .blocks { opacity: .55; }
