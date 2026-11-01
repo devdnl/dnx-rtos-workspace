@@ -88,6 +88,48 @@ test("SDHC multiple sectors write and read", function()
     expect(dev_rw(SD, 32767, data:sub(1, SECTOR)) == data:sub(1, SECTOR), "last sector")
 end)
 
+-- returns read or write counters of iostat output: requests, bytes, driver calls, unaligned
+local function iostat(path, dir)
+    local out = run("iostat " .. path)
+    local req, bytes, drv, unal = out:match(dir .. "%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)")
+    if not req then error("iostat output: " .. out, 2) end
+    return tonumber(req), tonumber(bytes), tonumber(drv), tonumber(unal)
+end
+
+test("SDHC unaligned write and read (block layer)", function()
+    local base = 2000 * SECTOR
+    local old = pattern(4 * SECTOR, 4)
+    expect(dev_rw(SD, 2000, old) == old, "aligned data mismatch")
+
+    run("iostat -e " .. SD)
+
+    -- 1300 bytes from offset 100 of sector 2000: head, aligned and tail part
+    local data = pattern(1300, 5)
+    local f = assert(io.open(SD, "r+b"))
+    f:setvbuf("no")
+    f:seek("set", base + 100)
+    assert(f:write(data))
+    f:seek("set", base + 100)
+    local rd = f:read(#data)
+    f:close()
+
+    expect(rd == data, "unaligned read data mismatch")
+
+    local expected = old:sub(1, 100) .. data .. old:sub(101 + #data)
+    expect(dev_rw(SD, 2000, expected) == expected, "data outside written range changed")
+
+    local rreq, rbytes, rdrv, runal = iostat(SD, "read")
+    local wreq, wbytes, wdrv, wunal = iostat(SD, "write")
+    expect(runal >= 1 and wunal >= 1, "unaligned requests: " .. runal .. "/" .. wunal)
+    expect(rreq >= 2 and rbytes >= 1300 + #expected, "read requests: " .. rreq .. ", bytes: " .. rbytes)
+    expect(wreq >= 2 and wbytes >= 1300 + #expected, "write requests: " .. wreq .. ", bytes: " .. wbytes)
+    expect(rdrv > rreq and wdrv > wreq, "driver calls: " .. rdrv .. "/" .. wdrv)
+
+    run("iostat -d " .. SD)
+    local out = run("iostat " .. SD)
+    expect(out:find("disabled", 1, true) ~= nil, "statistics not disabled: " .. out)
+end)
+
 test("SD v1 card initialization, size and sectors", function()
     run("storinit " .. SD_V1)
     local size = lfs.attributes(SD_V1, "size")

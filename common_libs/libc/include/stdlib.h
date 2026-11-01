@@ -524,7 +524,8 @@ static inline void *calloc(size_t n, size_t size)
  *
  * The free() function frees the memory space pointed to by <i>ptr</i>, which
  * must have been returned by a previous call to malloc(), calloc(),
- * realloc(). If <i>ptr</i> is @ref NULL, no operation is performed.
+ * realloc(), posix_memalign() or aligned_alloc(). If <i>ptr</i> is @ref NULL,
+ * no operation is performed.
  *
  * @param ptr       pointer to memory space to be freed
  *
@@ -552,6 +553,76 @@ static inline void free(void *ptr)
 {
         extern void _libc_free(void *ptr);
         _libc_free(ptr);
+}
+
+//==============================================================================
+/**
+ * @brief Function allocates aligned memory block.
+ *
+ * The posix_memalign() function allocates <i>size</i> bytes and places the
+ * address of the allocated memory in <i>*memptr</i>. The address of the
+ * allocated memory will be a multiple of <i>alignment</i>, which must be a
+ * power of two and a multiple of sizeof(void *). Memory is released by free().
+ *
+ * Aligned buffers allow direct (DMA) transfers of block devices on CPUs with
+ * data cache, see sysconf(_SC_LEVEL1_DCACHE_LINESIZE).
+ *
+ * @param memptr        pointer to allocated memory pointer
+ * @param alignment     alignment
+ * @param size          block size
+ *
+ * @return On success 0 is returned, otherwise EINVAL (incorrect alignment) or
+ *         ENOMEM. The value of errno is not changed.
+ *
+ * @b Example
+ * @code
+        #include <stdlib.h>
+        #include <unistd.h>
+
+        // ...
+        long line = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+        size_t align = (line > (long)sizeof(void *)) ? (size_t)line : sizeof(void *);
+
+        void *buf = NULL;
+        if (posix_memalign(&buf, align, 4096) == 0) {
+                // ...
+                free(buf);
+        }
+        // ...
+   @endcode
+ *
+ * @see aligned_alloc(), free(), sysconf()
+ */
+//==============================================================================
+static inline int posix_memalign(void **memptr, size_t alignment, size_t size)
+{
+        extern int _libc_posix_memalign(void **memptr, size_t alignment, size_t size);
+        return _libc_posix_memalign(memptr, alignment, size);
+}
+
+//==============================================================================
+/**
+ * @brief Function allocates aligned memory block (C11).
+ *
+ * The aligned_alloc() function allocates <i>size</i> bytes aligned to
+ * <i>alignment</i> (power of two). Memory is released by free().
+ *
+ * @param alignment     alignment
+ * @param size          block size
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ *
+ * @return On success pointer to allocated memory is returned, otherwise
+ *         @ref NULL and @ref errno is set.
+ *
+ * @see posix_memalign(), free()
+ */
+//==============================================================================
+static inline void *aligned_alloc(size_t alignment, size_t size)
+{
+        extern void *_libc_aligned_alloc(size_t alignment, size_t size);
+        return _libc_aligned_alloc(alignment, size);
 }
 
 //==============================================================================

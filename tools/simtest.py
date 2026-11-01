@@ -21,15 +21,20 @@
 #           - fstest on flatfs, eefs, ext2 and ext3 (journal) partitions of the second disk
 #             (formatted by mkflatfs, mkeefs and mkext programs), ext2 and ext3 are checked by
 #             e2fsck after test (requires e2fsprogs, otherwise check is skipped),
+#           - block layer (sim-env/tests/blkdev.lua): unaligned requests and bounce buffers on host disk
+#             with emulated constraints (block size, buffer alignment), fstest on ext2 on that disk,
+#             image is checked by e2fsck,
 #           - fstest -r (read tests and read-only checks) on romfs image with reference data
 #             created by fstest_ref.py and mkfpkg.py,
 #           - udstest (UNIX domain sockets),
 #           - inettest (TCP/IP, only with --tap option, TAP interface must be prepared),
 #           - no application crash and kernel panic.
 #
+#         Option --iostat prints block device statistics (iostat) of file system tests.
+#
 #         Usage:
 #           tools/simtest.py [--sim build/dnx-sim] [--rom build/sim-romfs.bin] [--tap tap0]
-#                            [--board sim-env/boards/test.lua|none] [--perf]
+#                            [--board sim-env/boards/test.lua|none] [--perf] [--iostat]
 #                            [--log build/simtest.log] [-v] [filter]
 #
 #         Exit status: 0 if all executed tests passed, otherwise 1.
@@ -103,6 +108,10 @@ EXT2_START = EEFS_START + EEFS_SIZE
 EXT2_SIZE = 16 * 1024 * 1024 // SECTOR_SIZE
 EXT3_START = EXT2_START + EXT2_SIZE
 EXT3_SIZE = RAW_DISK_SIZE // SECTOR_SIZE - EXT3_START
+
+# block layer test disk (HOSTDISK with emulated constraints, ext2 created by mkext)
+BLK_DISK = 4
+BLK_DISK_SIZE = 16 * 1024 * 1024
 
 ANSI_ESCAPE = re.compile(rb"\x1b\[[0-9;?]*[a-zA-Z]|\x1b[78]")
 ANSI_INCOMPLETE = re.compile(rb"\x1b(\[[0-9;?]*)?$")
@@ -305,7 +314,7 @@ class TestRunner:
         return (not self.args.filter) or (self.args.filter.lower() in name.lower())
 
     # run program which prints SUMMARY line, setup commands are executed before (e.g. format, mount)
-    def summary_test(self, sim, name, cwd, cmd, timeout, setup=()):
+    def summary_test(self, sim, name, cwd, cmd, timeout, setup=(), device=None):
         if not self.selected(name):
             return
 
@@ -321,6 +330,11 @@ class TestRunner:
             if not ok or ("No such" in out) or ("rror" in out):
                 self.result(name, FAIL, "cannot enter %s" % cwd)
                 return
+
+        # block device statistics of the test only (after setup)
+        iostat = self.args.iostat and device
+        if iostat:
+            sim.run("iostat -e " + device)
 
         t = time.time()
         ok, out = sim.run(cmd, timeout)
@@ -341,6 +355,13 @@ class TestRunner:
             info = "executed: %u, passed: %u, failed: %u, skipped: %u (%.1f s)" % (
                 executed, passed, failed, skipped, dt)
             self.result(name, PASS if (failed == 0 and executed > 0) else FAIL, info)
+
+        if iostat:
+            _, stat = sim.run("iostat " + device)
+            sim.run("iostat -d " + device)
+            for line in stat.splitlines()[1:]:
+                if line.startswith(device) or line.startswith("  "):
+                    print("    " + line.rstrip())
 
         # performance measurements (results of the PERFORMANCE section)
         if self.args.perf and ok:
@@ -385,6 +406,10 @@ class TestRunner:
         raw_disk = os.path.join(tmpdir, "raw.img")
         create_raw_disk_image(raw_disk)
 
+        blk_disk = os.path.join(tmpdir, "blk.img")
+        with open(blk_disk, "wb") as f:
+            f.truncate(BLK_DISK_SIZE)
+
         romfs = os.path.join(tmpdir, "romfs.img")
         try:
             create_romfs_image(romfs, args.root, tmpdir)
@@ -396,6 +421,7 @@ class TestRunner:
         if disk:
             argv += ["--disk", "1=%s" % disk]
         argv += ["--disk", "2=%s" % raw_disk]
+        argv += ["--disk", "%u=%s" % (BLK_DISK, blk_disk)]
         if romfs:
             argv += ["--disk", "3=%s:ro" % romfs]
         if args.tap:
@@ -423,7 +449,7 @@ class TestRunner:
                         sim.run("umount /mnt/sda1", 10)
                         sim.run("umount /mnt/sda2", 10)
                     for mnt in ("/mnt/i2cee", "/mnt/spiee", "/mnt/sdcard", "/mnt/flatfs", "/mnt/eefs", "/mnt/ext2",
-                                "/mnt/ext3", "/mnt/romfs"):
+                                "/mnt/ext3", "/mnt/romfs", "/mnt/blk"):
                         sim.run("umount " + mnt, 10)
                     sim.run("sync", 10)
                 sim.stop()
@@ -458,6 +484,13 @@ class TestRunner:
                                 "" if ok else out.strip().splitlines()[-1])
                 else:
                     self.result("%s: e2fsck" % name, SKIP, "e2fsck not found (e2fsprogs)")
+
+        if self.selected("fstest: ext2 on blkdev"):
+            if e2fsck:
+                ok, out = check_partition(blk_disk, 0, BLK_DISK_SIZE // SECTOR_SIZE, tmpdir, [e2fsck, "-f", "-n"])
+                self.result("blkdev: e2fsck", PASS if ok else FAIL, "" if ok else out.strip().splitlines()[-1])
+            else:
+                self.result("blkdev: e2fsck", SKIP, "e2fsck not found (e2fsprogs)")
 
         os.close(self.uart_master)
         os.close(self.uart_slave)
@@ -512,13 +545,21 @@ class TestRunner:
             # SD card (SDSPI driver) formatted by sdcard.lua
             if self.selected("board: sdcard"):
                 self.summary_test(sim, "fstest: ext2 on sdspi", "/mnt/sdcard", "fstest", SDSPI_FSTEST_TIMEOUT,
-                                  ("mount /dev/sdcard ext4fs /mnt/sdcard",))
+                                  ("mount /dev/sdcard ext4fs /mnt/sdcard",), "/dev/sdcard")
             elif self.selected("fstest: ext2 on sdspi"):
                 self.result("fstest: ext2 on sdspi", SKIP, "requires 'board: sdcard' test")
         else:
             for name in board_tests:
                 if self.selected(name):
                     self.result(name, SKIP, "board model not selected (--board none)")
+
+        # block layer: HOSTDISK with emulated constraints (block size, buffer alignment), formatted by blkdev.lua
+        self.summary_test(sim, "blkdev: constraints", "/host/sim-env", "lua blkdev.lua", FSTEST_TIMEOUT)
+        if self.selected("blkdev: constraints"):
+            self.summary_test(sim, "fstest: ext2 on blkdev", "/mnt/blk", "fstest", FSTEST_TIMEOUT,
+                              ("mount /dev/blk ext4fs /mnt/blk",), "/dev/blk")
+        elif self.selected("fstest: ext2 on blkdev"):
+            self.result("fstest: ext2 on blkdev", SKIP, "requires 'blkdev: constraints' test")
 
         shutil.rmtree(os.path.join(args.hostfs_dir, "sim-env"), ignore_errors=True)
 
@@ -527,8 +568,8 @@ class TestRunner:
         self.summary_test(sim, "fstest: hostfs", "/host", "fstest", FSTEST_TIMEOUT)
 
         if disk:
-            self.summary_test(sim, "fstest: fatfs", "/mnt/sda1", "fstest", FSTEST_TIMEOUT)
-            self.summary_test(sim, "fstest: ext4fs", "/mnt/sda2", "fstest", FSTEST_TIMEOUT)
+            self.summary_test(sim, "fstest: fatfs", "/mnt/sda1", "fstest", FSTEST_TIMEOUT, device="/dev/sda1")
+            self.summary_test(sim, "fstest: ext4fs", "/mnt/sda2", "fstest", FSTEST_TIMEOUT, device="/dev/sda2")
         else:
             for name in ("fstest: fatfs", "fstest: ext4fs"):
                 if self.selected(name):
@@ -536,19 +577,20 @@ class TestRunner:
 
         self.summary_test(sim, "fstest: flatfs", "/mnt/flatfs", "fstest", FSTEST_TIMEOUT,
                           ("mkflatfs /dev/sdb1 %u" % FLATFS_MAX_FILE_KIB, "mkdir /mnt/flatfs",
-                           "mount /dev/sdb1 flatfs /mnt/flatfs"))
+                           "mount /dev/sdb1 flatfs /mnt/flatfs"), "/dev/sdb1")
         self.summary_test(sim, "fstest: eefs", "/mnt/eefs", "fstest", FSTEST_TIMEOUT,
-                          ("mkeefs /dev/sdb2", "mkdir /mnt/eefs", "mount /dev/sdb2 eefs /mnt/eefs"))
+                          ("mkeefs /dev/sdb2", "mkdir /mnt/eefs", "mount /dev/sdb2 eefs /mnt/eefs"),
+                          "/dev/sdb2")
         self.summary_test(sim, "fstest: ext2 (mkext)", "/mnt/ext2", "fstest", FSTEST_TIMEOUT,
                           ("mkext -e 2 -l dnxext2 -i /dev/sdb3", "mkdir /mnt/ext2",
-                           "mount /dev/sdb3 ext4fs /mnt/ext2"))
+                           "mount /dev/sdb3 ext4fs /mnt/ext2"), "/dev/sdb3")
         self.summary_test(sim, "fstest: ext3 (mkext)", "/mnt/ext3", "fstest", FSTEST_TIMEOUT,
                           ("mkext -e 3 -j -l dnxext3 -i /dev/sdb4", "mkdir /mnt/ext3",
-                           "mount /dev/sdb4 ext4fs /mnt/ext3"))
+                           "mount /dev/sdb4 ext4fs /mnt/ext3"), "/dev/sdb4")
 
         if romfs:
             self.summary_test(sim, "fstest: romfs", "/mnt/romfs", "fstest -r", FSTEST_TIMEOUT,
-                              ("mkdir /mnt/romfs", "mount /dev/sdc romfs /mnt/romfs"))
+                              ("mkdir /mnt/romfs", "mount /dev/sdc romfs /mnt/romfs"), "/dev/sdc")
         elif self.selected("fstest: romfs"):
             self.result("fstest: romfs", SKIP, "ROMFS image not created")
 
@@ -574,6 +616,8 @@ class TestRunner:
 
         if configured:
             self.summary_test(sim, "inettest", None, ("inettest " + opt).strip(), NETTEST_TIMEOUT)
+        elif "LINK DISCONNECTED" in out:
+            self.result("inettest", FAIL, "no link: host TAP interface '%s' is down or not available" % args.tap)
         else:
             self.result("inettest", FAIL, "network interface not configured")
 
@@ -591,6 +635,7 @@ def main():
     parser.add_argument("--board", default=os.path.join(root, "sim-env", "boards", "test.lua"),
                         help="board model script, 'none' disables board tests")
     parser.add_argument("--perf", action="store_true", help="also performance measurements of network tests")
+    parser.add_argument("--iostat", action="store_true", help="print block device statistics of file system tests")
     parser.add_argument("--log", default=os.path.join(root, "build", "simtest.log"), help="log file")
     parser.add_argument("--keep", action="store_true", help="keep temporary files (disk image, hostfs)")
     parser.add_argument("-v", "--verbose", action="store_true", help="show simulator output")

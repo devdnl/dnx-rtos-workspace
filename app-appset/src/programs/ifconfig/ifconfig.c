@@ -342,8 +342,8 @@ static void UDS_print_status(void)
 {
         static const char *STATE[] = {"NOT CONFIGURED", "CONFIGURED"};
 
-        const char *tx_unit = convert_unit(&global->status.cannet.tx_bytes);
-        const char *rx_unit = convert_unit(&global->status.cannet.rx_bytes);
+        const char *tx_unit = convert_unit(&global->status.uds.tx_bytes);
+        const char *rx_unit = convert_unit(&global->status.uds.rx_bytes);
 
         printf("UDS\n"
                "  Status: %s\n"

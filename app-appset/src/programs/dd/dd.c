@@ -39,6 +39,7 @@ Brief   Disc destroyer
 #include <stdbool.h>
 #include <dnx/misc.h>
 #include <dnx/os.h>
+#include <unistd.h>
 
 /*==============================================================================
   Local macros
@@ -52,6 +53,7 @@ Brief   Disc destroyer
   Local function prototypes
 ==============================================================================*/
 static void help(const char *name);
+static void *io_buffer_alloc(size_t size);
 
 /*==============================================================================
   Local objects
@@ -77,6 +79,24 @@ PROGRAM_PARAMS(dd, STACK_DEPTH_LOW);
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief  Function allocates I/O buffer aligned to data cache line, so block
+ *         devices can transfer data directly (DMA) without bounce buffers.
+ *
+ * @param  size         buffer size
+ *
+ * @return Pointer to buffer (released by free()) or NULL on error.
+ */
+//==============================================================================
+static void *io_buffer_alloc(size_t size)
+{
+        long line = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+        size_t align = (line > (long)sizeof(void *)) ? (size_t)line : sizeof(void *);
+
+        void *buf = NULL;
+        return (posix_memalign(&buf, align, size) == 0) ? buf : NULL;
+}
 
 //==============================================================================
 /**
@@ -126,7 +146,7 @@ int main(int argc, char *argv[])
                 }
         }
 
-        u8_t *blk = malloc(global->block_size);
+        u8_t *blk = io_buffer_alloc(global->block_size);
         if (blk) {
                 FILE *in = fopen(global->input_file, "r");
                 if (!in) {

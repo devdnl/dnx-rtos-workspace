@@ -155,6 +155,45 @@ void *_libc_malloc(size_t size)
  * a <i>n</i> or <i>size</i> of zero.
  */
 //==============================================================================
+int _libc_posix_memalign(void **memptr, size_t alignment, size_t size)
+{
+        if (!memptr || (alignment < sizeof(void *)) || (alignment & (alignment - 1))) {
+                return EINVAL;
+        }
+
+        *memptr = NULL;
+
+        if (size == 0) {
+                return 0;
+        }
+
+        _libc_heap_t *heap = get_heap();
+        if (!heap) {
+                heap = _libc_heap_new(ALLOC_BLOCK_SIZE);
+                get_heap() = heap;
+        }
+
+        *memptr = _libc_heap_malloc_aligned(heap, size, alignment);
+
+        return *memptr ? 0 : ENOMEM;
+}
+
+void *_libc_aligned_alloc(size_t alignment, size_t size)
+{
+        if ((alignment == 0) || (alignment & (alignment - 1))) {
+                errno = EINVAL;
+                return NULL;
+        }
+
+        void *ptr = NULL;
+        int err = _libc_posix_memalign(&ptr, max(alignment, sizeof(void *)), size);
+        if (err) {
+                errno = err;
+        }
+
+        return ptr;
+}
+
 void *_libc_calloc(size_t n, size_t size)
 {
         if ((size != 0) && (n > (SIZE_MAX / size))) {

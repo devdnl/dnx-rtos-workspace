@@ -700,6 +700,78 @@ static void *mem_heap_malloc(mem_heap_t *heap, size_t size_in)
 
 //==============================================================================
 /**
+ * @brief  Allocate a block of memory with a minimum of 'size' bytes aligned to
+ *         selected boundary. Bigger block is allocated and its leading part is
+ *         returned to the heap as free block, so the aligned pointer is a regular
+ *         block (can be released by mem_heap_free()).
+ *
+ * @param  heap         heap object
+ * @param  size_in      is the minimum size of the requested block in bytes.
+ * @param  align        alignment (power of 2)
+ *
+ * @return Pointer to allocated memory or NULL if no free memory was found.
+ */
+//==============================================================================
+static void *mem_heap_malloc_aligned(mem_heap_t *heap, size_t size_in, size_t align)
+{
+        if (align <= HEAP_ALIGN) {
+                return mem_heap_malloc(heap, size_in);
+        }
+
+        /* leading part must be big enough to become a free block */
+        const size_t lead_min = SIZEOF_STRUCT_MEM + BLOCK_MIN_SIZE_ALIGNED;
+
+        if (size_in > (SIZE_MAX - align - lead_min)) {
+                return NULL;
+        }
+
+        u8_t *p = mem_heap_malloc(heap, size_in + align + lead_min);
+        if (!p || ((((uintptr_t)p) & (align - 1)) == 0)) {
+                return p;
+        }
+
+        struct mem *mem = (struct mem *)(void *)(p - (SIZEOF_STRUCT_MEM + MEM_SANITY_OFFSET));
+        uintptr_t q = (((uintptr_t)p) + lead_min + align - 1) & ~((uintptr_t)align - 1);
+        struct mem *mem2 = (struct mem *)(void *)(q - (SIZEOF_STRUCT_MEM + MEM_SANITY_OFFSET));
+
+        size_t ptr = mem_to_ptr(heap, mem);
+        size_t ptr2 = mem_to_ptr(heap, mem2);
+
+        /* aligned block takes the rest of allocated block */
+        mem2->next = mem->next;
+        mem2->prev = ptr;
+        mem2->used = 1;
+
+        if (mem2->next != heap->size) {
+                ptr_to_mem(heap, mem2->next)->prev = ptr2;
+        }
+
+        /* leading part is free */
+        mem->next = ptr2;
+        mem->used = 0;
+        heap->used -= (ptr2 - ptr);
+
+#if HEAP_OVERFLOW_CHECK
+        memset((u8_t *)mem + SIZEOF_STRUCT_MEM, HEAP_EMPTY_REGION_VALUE, ptr2 - ptr - SIZEOF_STRUCT_MEM);
+#endif
+
+        overflow_init_element(mem2, size_in);
+
+        if (mem < heap->lfree) {
+                heap->lfree = mem;
+        }
+
+        plug_holes(heap, mem);
+
+#if HEAP_SANITY_CHECK
+        mem_heap_check_consistency(heap);
+#endif
+
+        return (void *)q;
+}
+
+//==============================================================================
+/**
  * @brief  Function check heap consistency.
  *
  * @param  heap         heap instance
@@ -1067,17 +1139,19 @@ void *_libc_heap_free(_libc_heap_t *heap, void *ptr)
 
 //==============================================================================
 /**
- * @brief  Allocate memory block.
+ * @brief  Allocate memory block aligned to selected boundary. Block can be
+ *         released by _libc_heap_free().
  *
  * @param  heap         heap instance
  * @param  size         block size to allocate
+ * @param  align        alignment (power of 2)
  *
  * @return On success pointer to block, otherwise NULL.
  */
 //==============================================================================
-void *_libc_heap_malloc(_libc_heap_t *heap, size_t size)
+void *_libc_heap_malloc_aligned(_libc_heap_t *heap, size_t size, size_t align)
 {
-        if (not heap or not size) {
+        if (not heap or not size or (align & (align - 1))) {
                 return NULL;
         }
 
@@ -1095,7 +1169,7 @@ void *_libc_heap_malloc(_libc_heap_t *heap, size_t size)
 
         while (mem) {
                 if (mem_heap_get_free(mem) >= size) {
-                        ptr = mem_heap_malloc(mem, size);
+                        ptr = mem_heap_malloc_aligned(mem, size, align);
                         if (ptr) {
                                 break;
                         }
@@ -1114,11 +1188,16 @@ void *_libc_heap_malloc(_libc_heap_t *heap, size_t size)
                                   MEM_SANITY_REGION_BEFORE_ALIGNED + MEM_SANITY_REGION_AFTER_ALIGNED +
                                   SIZEOF_STRUCT_MEM;
 
+                /* aligned block: alignment and leading free block */
+                if (align > HEAP_ALIGN) {
+                        required += align + SIZEOF_STRUCT_MEM + BLOCK_MIN_SIZE_ALIGNED;
+                }
+
                 size_t heap_size = ((required / heap->alloc_block_size) + 1) * heap->alloc_block_size;
 
                 mem = mem_heap_new(heap_size);
                 if (mem) {
-                        ptr = mem_heap_malloc(mem, size);
+                        ptr = mem_heap_malloc_aligned(mem, size, align);
 
                         if (ptr) {
                                 if (mem_last) {
@@ -1135,6 +1214,21 @@ void *_libc_heap_malloc(_libc_heap_t *heap, size_t size)
         unprotect(heap);
 
         return ptr;
+}
+
+//==============================================================================
+/**
+ * @brief  Allocate memory block.
+ *
+ * @param  heap         heap instance
+ * @param  size         block size to allocate
+ *
+ * @return On success pointer to block, otherwise NULL.
+ */
+//==============================================================================
+void *_libc_heap_malloc(_libc_heap_t *heap, size_t size)
+{
+        return _libc_heap_malloc_aligned(heap, size, HEAP_ALIGN);
 }
 
 //==============================================================================

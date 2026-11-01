@@ -61,6 +61,11 @@ extern "C" {
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
 
+/* sysconf() variables (values compatible with glibc) */
+#define _SC_NPROCESSORS_CONF       83  /*!< number of configured processors (CPU cores) */
+#define _SC_NPROCESSORS_ONLN       84  /*!< number of online processors (CPU cores) */
+#define _SC_LEVEL1_DCACHE_LINESIZE 190 /*!< data cache line size in bytes (0 if no data cache) */
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
@@ -393,6 +398,44 @@ static inline uid_t getuid(void)
         uid_t uid = 0;
         _libc_syscall(_LIBC_SYS_GETUID, &uid);
         return uid;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns value of system configuration variable.
+ *
+ * The sysconf() function returns value of selected system configuration
+ * variable. Supported variables: @ref _SC_NPROCESSORS_CONF,
+ * @ref _SC_NPROCESSORS_ONLN, @ref _SC_LEVEL1_DCACHE_LINESIZE.
+ *
+ * @param name          variable name (_SC_*)
+ *
+ * @return On success variable value is returned, otherwise -1 and @ref errno
+ *         is set (EINVAL: unknown variable).
+ *
+ * @b Example
+ * @code
+        #include <unistd.h>
+        #include <stdlib.h>
+
+        // ...
+        long line = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+        size_t align = (line > (long)sizeof(void *)) ? (size_t)line : sizeof(void *);
+
+        void *buf = NULL;
+        if (posix_memalign(&buf, align, 4096) == 0) {
+                // buffer for DMA transfers (e.g. file read and write) ...
+                free(buf);
+        }
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline long sysconf(int name)
+{
+        long value = -1;
+        int err = _libc_syscall(_LIBC_SYS_SYSCONF, &name, &value);
+        return err ? -1 : value;
 }
 
 //==============================================================================

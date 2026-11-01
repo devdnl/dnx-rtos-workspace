@@ -66,6 +66,7 @@
   Local function prototypes
 ==============================================================================*/
 static void print_help(const char *name);
+static void *io_buffer_alloc(size_t size);
 static bool copy_any(const char *src, const char *dst, int depth);
 
 /*==============================================================================
@@ -89,6 +90,24 @@ PROGRAM_PARAMS(cp, STACK_DEPTH_MEDIUM);
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief  Function allocates I/O buffer aligned to data cache line, so block
+ *         devices can transfer data directly (DMA) without bounce buffers.
+ *
+ * @param  size         buffer size
+ *
+ * @return Pointer to buffer (released by free()) or NULL on error.
+ */
+//==============================================================================
+static void *io_buffer_alloc(size_t size)
+{
+        long line = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+        size_t align = (line > (long)sizeof(void *)) ? (size_t)line : sizeof(void *);
+
+        void *buf = NULL;
+        return (posix_memalign(&buf, align, size) == 0) ? buf : NULL;
+}
 
 //==============================================================================
 /**
@@ -615,7 +634,7 @@ int main(int argc, char *argv[])
 
         // operation buffer
         global->buffer_size = BUFFER_MAX_SIZE;
-        while ((global->buffer = malloc(global->buffer_size)) == NULL) {
+        while ((global->buffer = io_buffer_alloc(global->buffer_size)) == NULL) {
                 global->buffer_size /= 2;
 
                 if (global->buffer_size < BUFFER_MIN_SIZE) {

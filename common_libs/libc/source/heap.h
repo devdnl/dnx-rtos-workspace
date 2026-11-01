@@ -93,6 +93,7 @@ extern _libc_heap_t *_libc_heap_new(size_t alloc_block_size);
 extern _libc_heap_t *_libc_heap_delete(_libc_heap_t *heap);
 extern void         *_libc_heap_free(_libc_heap_t *heap, void *ptr);
 extern void         *_libc_heap_malloc(_libc_heap_t *heap, size_t size);
+extern void         *_libc_heap_malloc_aligned(_libc_heap_t *heap, size_t size, size_t align);
 extern size_t        _libc_heap_get_free(_libc_heap_t *heap);
 extern size_t        _libc_heap_get_used(_libc_heap_t *heap);
 extern size_t        _libc_heap_get_size(_libc_heap_t *heap);

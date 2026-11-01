@@ -216,6 +216,7 @@ typedef enum {
         _LIBC_SYS_PINTHREADTOCORE,        // int errno (pid_t *pid , tid_t *tid, u32_t *core_mask)
         _LIBC_SYS_GETCURRENTCORE,         // int errno (u8_t *core)
         _LIBC_SYS_GETCPUCORECOUNT,        // int errno (u8_t *core_count)
+        _LIBC_SYS_SYSCONF,                // int errno (const int *name, long *value)
 } _libc_syscall_t;
 // clang-format on
 

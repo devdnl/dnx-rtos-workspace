@@ -245,6 +245,10 @@ both C preprocessor and make**. Rules:
 - Programs use the dnx libc from `common_libs/libc` (POSIX-like API,
   `<dnx/os.h>`, `<dnx/misc.h>`, `<dnx/thread.h>`). Mind the small stack and
   heap — avoid large local arrays; prefer `malloc` or `global->` buffers.
+  Big I/O buffers of block device or file transfers should be allocated by
+  `posix_memalign()` with alignment `sysconf(_SC_LEVEL1_DCACHE_LINESIZE)`
+  (at least `sizeof(void *)`), so DMA transfers on CPUs with data cache
+  (STM32F7/H7) do not need kernel bounce buffers (see `dd`, `cp`).
 - A shared library lives in `common_libs/<lib>/` with a `Makefile.in`
   (`CSRC_LIB`, `CXXSRC_LIB`, `HDRLOC_LIB`) and is linked into an appset by
   `src/libs/<lib>.mk`. Changes in `common_libs` affect both appsets.
