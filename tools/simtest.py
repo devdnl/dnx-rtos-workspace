@@ -281,7 +281,7 @@ def create_romfs_image(path, root, tmpdir):
     content = os.path.join(tmpdir, "romfs")
     os.mkdir(content)
     run = lambda args: subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True)
-    run([sys.executable, os.path.join(root, "app-appset", "src", "programs", "fstest", "fstest_ref.py"), content])
+    run([sys.executable, os.path.join(root, "common_apps", "fstest", "fstest_ref.py"), content])
     run([sys.executable, os.path.join(root, "kernel", "tools", "mkfpkg.py"), content, path])
 
 
