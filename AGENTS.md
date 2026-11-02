@@ -288,6 +288,12 @@ both C preprocessor and make**. Rules:
   `posix_memalign()` with alignment `sysconf(_SC_LEVEL1_DCACHE_LINESIZE)`
   (at least `sizeof(void *)`), so DMA transfers on CPUs with data cache
   (STM32F7/H7) do not need kernel bounce buffers (see `dd`, `cp`).
+- A thread created with `detached = false` (or `attr == NULL`) must be joined
+  by `thread_join()`/`thread_join2()`, also after `thread_cancel()`: its thread
+  ID and slot stay reserved until join. Use `detached = true` for threads that
+  are never joined. A killed process (`process_kill()`) that is not detached
+  must be waited for by `process_wait()`, like a process that finished itself;
+  its exit status is `PROCESS_STATUS_KILLED` (137).
 - A shared library lives in `common_libs/<lib>/` with a `Makefile.in`
   (`CSRC_LIB`, `CXXSRC_LIB`, `HDRLOC_LIB`) and is linked into an appset by
   `src/libs/<lib>.mk`. Changes in `common_libs` affect both appsets.

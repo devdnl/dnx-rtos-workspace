@@ -1787,9 +1787,8 @@ int main(int argc, char *argv[])
                                                         struct thread *t = &global->thread[i];
 
                                                         if (not t->busy) {
-
                                                                 thread_attr_t attr;
-                                                                attr.detached = false;
+                                                                attr.detached = true;
                                                                 attr.priority = 0;
                                                                 attr.stack_depth = STACK_DEPTH_MEDIUM;
 

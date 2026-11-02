@@ -233,6 +233,7 @@ if child then
     local r, e, code = proc.wait(child, 100)
     check("wait timeout", r == nil and type(e) == "string", e, code)
     check("kill", proc.kill(child) == true)
+    check("wait for killed process", proc.wait(child, 5000) == 137)
 else
     check("spawn lua", false)
 end

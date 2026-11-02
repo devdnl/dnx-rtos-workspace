@@ -399,6 +399,8 @@ static int proc_run(lua_State *L)
 //==============================================================================
 /**
  * @brief  dnx.proc.kill(pid)
+ *         Killed process that is not detached must be waited for by
+ *         dnx.proc.wait().
  *
  * @param  L            Lua state
  *

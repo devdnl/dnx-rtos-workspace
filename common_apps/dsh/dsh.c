@@ -1951,7 +1951,9 @@ static bool run_pipeline(char **cmds, size_t count, char *std_in, char *file,
                         int err = errno;
 
                         for (size_t j = 0; j < i; j++) {
-                                process_kill(stage[j].pid);
+                                if (process_kill(stage[j].pid) == 0) {
+                                        process_wait(stage[j].pid, NULL, MAX_DELAY_MS);
+                                }
                         }
 
                         errno = err;

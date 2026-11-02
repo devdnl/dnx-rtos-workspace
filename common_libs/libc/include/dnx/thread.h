@@ -115,6 +115,13 @@ extern "C" {
 #define STACK_DEPTH_CUSTOM(depth)
 #endif
 
+/**
+ * @brief Exit status of killed process (the same as in POSIX shell: 128 + SIGKILL)
+ *
+ * @see process_kill(), process_wait()
+ */
+#define PROCESS_STATUS_KILLED 137
+
 #define mutex_scope(_mtx, _timeout)                                           \
         for (mutex_t *__mtx = _mtx; __mtx; mutex_unlock(__mtx), __mtx = NULL) \
                 for (bool _ = mutex_lock(__mtx, _timeout); _; _ = false)
@@ -304,13 +311,17 @@ extern pid_t process_create(const char *cmd, const process_attr_t *attr);
 /**
  * @brief Function kill selected process.
  *
- * The function process_kill() delete running process. Process status is not
- * read because is not set.
+ * The function process_kill() delete running process. Killed process which
+ * is not detached must be waited for by process_wait() (the same as process
+ * that finished by itself), otherwise it stays in the zombie list until its
+ * parent finishes. Exit status of killed process is @ref PROCESS_STATUS_KILLED.
+ * Kill of process that finished already (but was not waited for yet) has no
+ * effect and exit status of the process is kept.
  *
  * @param pid                   process ID
  *
- * @exception | @ref EINVAL
- * @exception | @ref EAGAIN
+ * @exception | @ref ESRCH
+ * @exception | @ref ETIME
  *
  * @return Return 0 on success. On error, -1 is returned, and
  * <b>errno</b> is set appropriately.
@@ -318,25 +329,27 @@ extern pid_t process_create(const char *cmd, const process_attr_t *attr);
  * @b Example
  * @code
         #include <dnx/thread.h>
+        #include <unistd.h>
+        #include <string.h>
 
         // ...
 
-        errno = 0;
-
-        static const process_attr_t attr = {
-                .f_stdin   = stdin,
-                .f_stdout  = stdout,
-                .f_stderr  = stderr,
-                .p_stdin   = NULL,
-                .p_stdout  = NULL,
-                .p_stderr  = NULL,
-                .detached  = true
-        }
+        process_attr_t attr;
+        memset(&attr, 0, sizeof(attr));
+        attr.fd_stdin  = STDIN_FILENO;
+        attr.fd_stdout = STDOUT_FILENO;
+        attr.fd_stderr = STDERR_FILENO;
+        attr.detached  = false;
 
         pid_t pid = process_create("cat", &attr);
         if (pid) {
                 sleep(1); // child execute time
-                process_kill(pid);
+
+                if (process_kill(pid) == 0) {
+                        int status = -1;
+                        process_wait(pid, &status, MAX_DELAY_MS);
+                        // status == PROCESS_STATUS_KILLED
+                }
         } else {
                 perror("Program not started");
 
@@ -362,7 +375,8 @@ static inline int process_kill(pid_t pid)
  *
  * The function process_wait() wait for process close. Function destroy
  * child process when finish successfully at the selected timeout. In case of
- * timeout the process is not destroyed.
+ * timeout the process is not destroyed. Exit status of process killed by
+ * process_kill() is @ref PROCESS_STATUS_KILLED.
  *
  * @param pid                   process ID
  * @param status                child process exit status (it can be NULL)
@@ -629,12 +643,19 @@ static inline int process_get_priority(pid_t pid)
  * new task and have own stack, but global variables are shared with main
  * thread.
  *
+ * Thread which is not detached (<i>attr</i> is NULL or <i>detached</i> is
+ * false) must be joined by thread_join() or thread_join2(). Thread ID of
+ * finished thread is reserved until join, so the number of threads that are
+ * not joined is limited. Detached thread is released at exit and cannot be
+ * joined.
+ *
  * @param func          thread function
  * @param attr          thread attributes (can be NULL)
  * @param arg           thread argument (can be NULL)
  *
  * @exception | @ref EINVAL
  * @exception | @ref ENOMEM
+ * @exception | @ref EAGAIN
  *
  * @return On success return thread ID (TID), otherwise 0,
  * and <b>errno</b> is set appropriately.
@@ -668,6 +689,12 @@ static inline int process_get_priority(pid_t pid)
                 tid_t tid = thread_create(thread, &attr, NULL);
                 if (tid) {
                         printf("Thread %d created\n", (int)tid);
+
+                        // ...
+
+                        // thread is not detached, so it must be joined
+                        int status;
+                        thread_join(tid, &status);
                 } else {
                         perror("Thread not created");
                 }
@@ -693,11 +720,14 @@ static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr,
 /**
  * @brief Function cancel selected thread.
  *
- * The function thread_cancel() kills running thread <i>tid</i>.
+ * The function thread_cancel() kills running thread <i>tid</i>. Canceled
+ * thread which is not detached must be joined. Cancel of finished thread
+ * (not joined yet) has no effect.
  *
  * @param tid           thread ID
  *
  * @exception | @ref EINVAL
+ * @exception | @ref ESRCH
  *
  * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
  * is set appropriately.
@@ -732,6 +762,9 @@ static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr,
                         } else {
                                 perror("Thread cancel error");
                         }
+
+                        // canceled thread which is not detached must be joined
+                        thread_join(tid, NULL);
 
                 } else {
                         perror("Thread not created");
@@ -793,6 +826,9 @@ static inline int thread_cancel(tid_t tid)
                                 perror("Thread cancel error");
                         }
 
+                        // canceled thread which is not detached must be joined
+                        thread_join(tid, NULL);
+
                 } else {
                         perror("Thread not created");
                 }
@@ -849,6 +885,9 @@ static inline int thread_current(void)
                 tid_t tid = thread_create(thread, NULL, (void*)0);
                 if (tid) {
                         printf("Thread %d created\n", (int)tid);
+
+                        int status;
+                        thread_join(tid, &status); // status of thread_exit()
                 } else {
                         perror("Thread not created");
                 }
@@ -871,7 +910,9 @@ static inline void thread_exit(int status)
  * @brief Function join thread to main thread (wait for close by selected time).
  *
  * The function thread_join2() joins selected thread <i>tid</i> to parent
- * program. Function wait until thread was closed or timeout occurred.
+ * program. Function wait until thread was closed or timeout occurred. After
+ * join the thread ID can be assigned to new thread. Detached thread cannot be
+ * joined (EINVAL), thread that does not exist or is already joined: ESRCH.
  *
  * @param tid           thread ID
  * @param status        thread exit status
@@ -879,6 +920,7 @@ static inline void thread_exit(int status)
  *
  * @exception | @ref EINVAL
  * @exception | @ref ETIME
+ * @exception | @ref ESRCH
  *
  * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
  * is set appropriately.
@@ -945,6 +987,7 @@ static inline int thread_join2(tid_t tid, int *status, uint32_t timeout_ms)
  *
  * @exception | @ref EINVAL
  * @exception | @ref ETIME
+ * @exception | @ref ESRCH
  *
  * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
  * is set appropriately.

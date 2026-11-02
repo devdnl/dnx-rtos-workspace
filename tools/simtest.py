@@ -27,6 +27,8 @@
 #           - fstest -r (read tests and read-only checks) on romfs image with reference data
 #             created by fstest_ref.py and mkfpkg.py,
 #           - udstest (UNIX domain sockets),
+#           - perf stress tests (threads, heap, synchronization objects, processes), with --perf
+#             option also performance measurements of perf program,
 #           - inettest (TCP/IP, only with --tap option, TAP interface must be prepared),
 #           - no application crash and kernel panic.
 #
@@ -91,6 +93,7 @@ DEFAULT_TIMEOUT = 60        # seconds
 FSTEST_TIMEOUT = 300        # seconds
 SDSPI_FSTEST_TIMEOUT = 600  # seconds (SD card model over SPI, about 2.5 minutes)
 NETTEST_TIMEOUT = 600       # seconds
+PERF_TIMEOUT = 300          # seconds
 QUIET_TIME = 0.3            # seconds without output after prompt
 
 SECTOR_SIZE = 512
@@ -747,6 +750,9 @@ class TestRunner:
         opt = "" if args.perf else "-t"
         self.summary_test(sim, "udstest", None, ("udstest " + opt).strip(), NETTEST_TIMEOUT)
 
+        # system stress tests (threads, heap, synchronization objects, processes)
+        self.summary_test(sim, "perf: stress", None, "perf" if args.perf else "perf -s", PERF_TIMEOUT)
+
         if not self.selected("inettest"):
             return
 
@@ -783,7 +789,7 @@ def main():
     parser.add_argument("--tap", default=None, help="TAP interface (enables inettest)")
     parser.add_argument("--board", default=os.path.join(root, "sim-env", "boards", "test.lua"),
                         help="board model script, 'none' disables board tests")
-    parser.add_argument("--perf", action="store_true", help="also performance measurements of network tests")
+    parser.add_argument("--perf", action="store_true", help="also performance measurements of network tests and perf")
     parser.add_argument("--iostat", action="store_true", help="print block device statistics of file system tests")
     parser.add_argument("--log", default=os.path.join(root, "build", "simtest.log"), help="log file")
     parser.add_argument("--keep", action="store_true", help="keep temporary files (disk image, hostfs)")
