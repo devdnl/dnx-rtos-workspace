@@ -14,7 +14,7 @@ that can be built and flashed separately:
 |---------------|---------------------------------|----------------------|
 | app kernel    | `kernel/` (git submodule)       | `config/app-kernel/` |
 | app appset    | `app-appset/`                   | `config/app-appset/` |
-| app romfs     | `app-romfs/content/`            | `config/app-romfs/`  |
+| app romfs     | `app-romfs/`                    | `config/app-romfs/`  |
 | bootloader kernel | `kernel/` (same submodule)  | `config/btl-kernel/` |
 | bootloader appset | `btl-appset/`               | `config/btl-appset/` |
 
@@ -35,12 +35,18 @@ The default configuration targets **stm32h7** (`__CPU_ARCH__` in
   - `src/include/` internal kernel headers (`drivers/driver.h`, `fs/fs.h`, …)
   - `config/` default kernel config (the workspace overrides it via `config/app-kernel`)
   - `tools/` configtool-cli (Lua), `mkfpkg.py`, `syncdir.py`, helper scripts
-- `app-appset/`, `btl-appset/` — user-space application sets
-  - `src/programs/<prog>.mk` pulls in a program from `common_apps/`;
-    `src/programs/<prog>/` program specific to this appset (`initd`, `siminit`,
+- `app-appset/`, `btl-appset/` — user-space application sets (only programs
+  and libraries, built by `tools/appset`; the simulator appset is built from
+  `app-appset` with `config/sim-appset`)
+  - `programs/<prog>.mk` pulls in a program from `common_apps/`;
+    `programs/<prog>/` program specific to this appset (`initd`, `siminit`,
     `bootloader`)
-  - `src/libs/<lib>.mk` pulls in libraries from `common_libs/`; `src/libs/liblocal/` local lib
-  - `tools/` `addapps.sh` (generates program registration), `find_global_vars.sh`
+  - `libs/<lib>.mk` pulls in libraries from `common_libs/`; `libs/liblocal/` local lib
+- `tools/appset/` — appset build base: `Makefile` (`APPSET_DIR`, `CONFIG_DIR`,
+  `BUILD_DIR`), default appset configuration `config/`, `addapps.sh` (generates
+  program registration), `find_global_vars.sh`, `memory_layout.ld`.
+- `tools/romfs/` — ROMFS build base: `Makefile` (`ROMFS_DIR`, `CONFIG_DIR`,
+  `BUILD_DIR`) and default ROMFS configuration `config/`.
 - `common_apps/` — programs shared by appsets, one directory per program
   (`Makefile.in` + sources).
 - `common_libs/` — libraries shared by appsets: `libc` (the dnx user-space
@@ -53,7 +59,7 @@ The default configuration targets **stm32h7** (`__CPU_ARCH__` in
   ["app*|btl*"]` exports selected directories, each optimized for its own
   `__CPU_ARCH__`; `tools/config_sync.sh` re-syncs all configs and BSPs with the
   defaults (run it after adding a configuration flag).
-- `app-romfs/content/` — files packed into the ROMFS image.
+- `app-romfs/` — files packed into the ROMFS image.
 - `sim-env/` — POSIX simulator environment: board models (`boards/`), device
   models (`models/`), tests and demos executed in dnx (`tests/`, `demos/`),
   pages of the board panel (`panel/`); API in `sim-env/README.md`.
@@ -61,7 +67,8 @@ The default configuration targets **stm32h7** (`__CPU_ARCH__` in
 - `tools/` — Dockerfile, flashing (`flash.sh`, `runocd.sh`), linker-script
   generator, BSP import/export, simulator tests (`simtest.py`) and board panel
   (`simpanel.py`).
-- `build/` — output (git-ignored). Never edit or commit.
+- `build/` — output (git-ignored): images and build directories of appsets and
+  romfs (`build/<config name>/`). Never edit or commit.
 
 ## Build environment
 
@@ -102,13 +109,17 @@ Notes:
 - The kernel is shared by app and bootloader; `build-*-kernel` always cleans
   the kernel first and builds it with `CONFIG_DIR=../config/<name>`.
 - Kernel build exports generated ioctl headers to `build/ioctl/`.
-- Appset build runs `addapps.sh`, which generates `program_registration.c`
-  and the program Makefile in `app-appset/build/program/`. Do not hand-edit
-  generated files.
+- Appset build (`make -C tools/appset all APPSET_DIR=<appset>
+  CONFIG_DIR=config/<name> BUILD_DIR=build/<name>`, relative paths are relative
+  to the workspace) runs `addapps.sh`, which generates `program_registration.c`,
+  the program Makefile and the linker script in `build/<name>/program/`. Do not
+  hand-edit generated files. Do not add Makefiles, configuration or scripts to
+  appset directories: everything common belongs to `tools/appset`.
 - `install*` and `config-*` targets need hardware / an interactive terminal —
   do not run them unless the user asks.
-- Static analysis: `make check` inside `kernel/`, `make check` / `make checkprog`
-  inside `app-appset/` (cppcheck).
+- Static analysis: `make check` inside `kernel/`, `make -C tools/appset check`
+  / `checkprog` with `APPSET_DIR=app-appset CONFIG_DIR=config/app-appset`
+  (cppcheck).
 - `kernel/tools/tests.sh` builds the kernel for all test configurations in
   `kernel/tools/test_bsp/` and restores the kernel's default `config/`.
 
@@ -137,7 +148,7 @@ Notes:
   simulator terminal. `siminit` initializes `/dev/ttyS1..3` (raw, no shell).
 - `--tap <name>` connects `eth/posix` (`/dev/eth`, frames via
   `/dev/net/tun`, software MAC filter) to the host TAP interface; `siminit`
-  starts `netmgr --daemon /etc/netmgr.conf` (ROMFS content `app-romfs/content`
+  starts `netmgr --daemon /etc/netmgr.conf` (ROMFS content `app-romfs`
   is shared with the application, `config/sim-romfs` sets image parameters).
 - Drivers are configured by structures (`IOCTL_<DRV>__CONFIGURE`) or by
   configuration strings (`IOCTL_<DRV>__CONFIGURE_STR` = `IOCTL_DEVICE__CONFIGURE_STR`,
@@ -263,23 +274,25 @@ both C preprocessor and make**. Rules:
   CXXSRC_PROGRAMS +=
   HDRLOC_PROGRAMS +=
   ```
-  An appset contains it by `src/programs/<name>.mk` (add the file to each
+  An appset contains it by `programs/<name>.mk` (add the file to each
   appset that should have the program):
   ```make
-  PROG_ROOT_<NAME> = ../../../common_apps/
-  include ../common_apps/<name>/Makefile.in
+  PROG_ROOT_<NAME> = $(COMMON_APPS)/
+  include $(COMMON_APPS)/<name>/Makefile.in
   ```
-  A program specific to one appset is a directory `src/programs/<name>/` with
-  the same `Makefile.in` (`PROG_ROOT_<NAME>` is not defined there, so it is
-  empty). `addapps.sh` registers
-  all programs found in `src/programs/` except `__PROGRAMS_EXCLUDE_LIST__`.
+  A program specific to one appset is a directory `programs/<name>/` with
+  the same `Makefile.in` (`PROG_ROOT_<NAME>` is set to `<appset>/programs/` by
+  the generated Makefile). `addapps.sh` registers
+  all programs found in `programs/` except `__PROGRAMS_EXCLUDE_LIST__`.
+  Sources are compiled with absolute paths, `__FILE__` is relative to the
+  workspace (`-ffile-prefix-map`).
 - Declare the program with `PROGRAM_PARAMS(<name>, STACK_DEPTH_…);` and an
   ordinary `int main(int argc, char *argv[])`.
 - **No global or static variables in programs and libraries.** Each program
   may run in many instances, so all state goes into
   `GLOBAL_VARIABLES_SECTION { … };` (accessed through `global->…`) or into
   dynamically allocated memory. The build enforces this with
-  `tools/find_global_vars.sh` (any `.bss`/`.data` symbol fails the build).
+  `tools/appset/find_global_vars.sh` (any `.bss`/`.data` symbol fails the build).
   `const` data in flash is fine.
 - Programs use the dnx libc from `common_libs/libc` (POSIX-like API,
   `<dnx/os.h>`, `<dnx/misc.h>`, `<dnx/thread.h>`). Mind the small stack and
@@ -296,7 +309,9 @@ both C preprocessor and make**. Rules:
   its exit status is `PROCESS_STATUS_KILLED` (137).
 - A shared library lives in `common_libs/<lib>/` with a `Makefile.in`
   (`CSRC_LIB`, `CXXSRC_LIB`, `HDRLOC_LIB`) and is linked into an appset by
-  `src/libs/<lib>.mk`. Changes in `common_libs` affect both appsets.
+  `libs/<lib>.mk` (`LIB_ROOT_<NAME> = $(COMMON_LIBS)/`,
+  `include $(COMMON_LIBS)/<lib>/Makefile.in`). Changes in `common_libs` affect
+  both appsets.
 - Full-screen terminal programs (`nano`, `mc`, `dialog`, `tuidemo`) use
   `common_libs/libtui` (`tui.h`): tty raw mode (`IOCTL_TTY__RAW_MODE_ON/OFF`),
   screen buffers with differential refresh (slow serial links), key decoder

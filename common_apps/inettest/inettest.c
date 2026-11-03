@@ -105,10 +105,10 @@ Brief   TCP/IP (INET) socket test and benchmark program. All tests use the
 #endif
 
 #define IO_BUF_SIZE          4096
-#define BULK_CHUNK           1024
+#define BULK_CHUNK           1472
 #define SAFE_TIMEOUT         5000 /* timeout that protects test from hang [ms] */
 #define BENCH_TIMEOUT        1000 /* receive timeout of benchmark helpers [ms] */
-#define MAX_DATAGRAM         1024 /* maximum datagram size of INET stack */
+#define MAX_DATAGRAM         1472 /* maximum datagram size of INET stack */
 #define DGRAM_END_MARK       1    /* size of datagram that ends datagram stream */
 #define PORT_BASE            20000
 #define PORTS_PER_PID        128
@@ -346,8 +346,10 @@ static const bench_entry_t BENCH_TAB[] = {
         {.name = "TCP round trip, msg", .fn = bench_stream_rtt, .param = 1024},
         {.name = "UDP throughput, size", .fn = bench_dgram_throughput, .param = 128},
         {.name = "UDP throughput, size", .fn = bench_dgram_throughput, .param = 1024},
+        {.name = "UDP throughput, size", .fn = bench_dgram_throughput, .param = 1472},
         {.name = "UDP round trip, size", .fn = bench_dgram_rtt, .param = 16},
         {.name = "UDP round trip, size", .fn = bench_dgram_rtt, .param = 1024},
+        {.name = "UDP round trip, size", .fn = bench_dgram_rtt, .param = 1472},
         {.name = "TCP connect/accept/close rate", .fn = bench_connect_rate, .param = 0},
 };
 

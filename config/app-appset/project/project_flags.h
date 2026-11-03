@@ -135,7 +135,7 @@ CPUCONFIG_AFLAGS=-mcpu=cortex-m3 -mthumb -ffast-math -fno-math-errno -mthumb-int
 CPUCONFIG_CFLAGS=-mcpu=cortex-m3 -mthumb -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM3
 CPUCONFIG_CXXFLAGS=-mcpu=cortex-m3 -mthumb -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM3
 CPUCONFIG_LDFLAGS=-mcpu=cortex-m3 -mthumb -mthumb-interwork -nostartfiles
-CPUCONFIG_LDFLAGS += -T./build/program/layout.ld
+CPUCONFIG_LDFLAGS += -T$(GEN_PROG_DIR)/layout.ld
 endif
 #*/
 #elif (__CPU_ARCH__ == stm32f3)
@@ -146,7 +146,7 @@ CPUCONFIG_AFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -f
 CPUCONFIG_CFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM4
 CPUCONFIG_CXXFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM4
 CPUCONFIG_LDFLAGS=-mcpu=cortex-m4 -mthumb -mthumb-interwork -nostartfiles
-CPUCONFIG_LDFLAGS += -T./build/program/layout.ld
+CPUCONFIG_LDFLAGS += -T$(GEN_PROG_DIR)/layout.ld
 endif
 #*/
 #elif (__CPU_ARCH__ == stm32f4)
@@ -157,7 +157,7 @@ CPUCONFIG_AFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -f
 CPUCONFIG_CFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM4
 CPUCONFIG_CXXFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM4
 CPUCONFIG_LDFLAGS=-mcpu=cortex-m4 -mthumb -mthumb-interwork -nostartfiles
-CPUCONFIG_LDFLAGS += -T./build/program/layout.ld
+CPUCONFIG_LDFLAGS += -T$(GEN_PROG_DIR)/layout.ld
 endif
 #*/
 #elif (__CPU_ARCH__ == stm32f7)
@@ -168,7 +168,7 @@ CPUCONFIG_AFLAGS=-mcpu=cortex-m7 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -f
 CPUCONFIG_CFLAGS=-mcpu=cortex-m7 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM7
 CPUCONFIG_CXXFLAGS=-mcpu=cortex-m7 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM7
 CPUCONFIG_LDFLAGS=-mcpu=cortex-m7 -mthumb -mthumb-interwork -nostartfiles
-CPUCONFIG_LDFLAGS += -T./build/program/layout.ld
+CPUCONFIG_LDFLAGS += -T$(GEN_PROG_DIR)/layout.ld
 endif
 #*/
 #elif (__CPU_ARCH__ == stm32h7)
@@ -179,7 +179,7 @@ CPUCONFIG_AFLAGS=-mcpu=cortex-m7 -mthumb -mfloat-abi=softfp -mfpu=fpv5-d16 -ffas
 CPUCONFIG_CFLAGS=-mcpu=cortex-m7 -mthumb -mfloat-abi=softfp -mfpu=fpv5-d16 -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM7
 CPUCONFIG_CXXFLAGS=-mcpu=cortex-m7 -mthumb -mfloat-abi=softfp -mfpu=fpv5-d16 -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM7
 CPUCONFIG_LDFLAGS=-mcpu=cortex-m7 -mthumb -mthumb-interwork -nostartfiles
-CPUCONFIG_LDFLAGS += -T./build/program/layout.ld
+CPUCONFIG_LDFLAGS += -T$(GEN_PROG_DIR)/layout.ld
 endif
 #*/
 #elif (__CPU_ARCH__ == rpcm0)
@@ -190,7 +190,7 @@ CPUCONFIG_AFLAGS=-mcpu=cortex-m0plus -mthumb -ffast-math -fno-math-errno -mthumb
 CPUCONFIG_CFLAGS=-mcpu=cortex-m0plus -mthumb -ffast-math -fno-math-errno -mthumb-interwork
 CPUCONFIG_CXXFLAGS=-mcpu=cortex-m0plus -mthumb -ffast-math -fno-math-errno -mthumb-interwork
 CPUCONFIG_LDFLAGS=-mcpu=cortex-m0plus -mthumb -mthumb-interwork -nostartfiles
-CPUCONFIG_LDFLAGS += -T./build/program/layout.ld
+CPUCONFIG_LDFLAGS += -T$(GEN_PROG_DIR)/layout.ld
 endif
 #*/
 #elif (__CPU_ARCH__ == posix)

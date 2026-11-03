@@ -58,6 +58,8 @@ SIZE           = $(TOOLCHAIN)size
 CONFIGTOOL     = $(SHELL) ./kernel/tools/configtool.sh
 FLASH_CPU      = $(SHELL) ./tools/flash.sh
 MKFPKG         = $(PYTHON3) ./kernel/tools/mkfpkg.py
+APPSET_BASE    = tools/appset
+ROMFS_BASE     = tools/romfs
 MKLINKERSCRIPT = $(SHELL) ./tools/create_linker_script.sh
 SYNCDIR        = $(PYTHON3) ./kernel/tools/syncdir.py
 
@@ -86,16 +88,17 @@ define build_kernel
 	$(REMOVE) kernel/build/ioctl
 endef
 
-# define macro used to build appset according to name
+# define macro used to build appset: appset directory (programs, libs), configuration name
+# (config/<name>), build directory is $(TARGET_DIR_NAME)/<configuration name>
 define build_appset
 	$(eval $@_APP_NAME = $(1))
 	$(eval $@_CONFIG_NAME = $(2))
 	$(eval $@_BOARD_NAME = $(3))
 	$(eval $@_PROJECT_OPTS = $(4))
-	$(MAKE) -C ${$@_APP_NAME} -s -j 1 -fMakefile all BOARD_NAME=${$@_BOARD_NAME} CONFIG_DIR=../config/${$@_CONFIG_NAME} PROJECT_OPTS=${$@_PROJECT_OPTS}
-	$(COPY) ${$@_APP_NAME}/build/output/appset.hex $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.hex
-	$(COPY) ${$@_APP_NAME}/build/output/appset.elf $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.elf
-	$(COPY) ${$@_APP_NAME}/build/output/appset.bin $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.bin
+	$(MAKE) -C $(APPSET_BASE) -s -j 1 -fMakefile all APPSET_DIR=${$@_APP_NAME} CONFIG_DIR=config/${$@_CONFIG_NAME} BUILD_DIR=$(TARGET_DIR_NAME)/${$@_CONFIG_NAME} BOARD_NAME=${$@_BOARD_NAME} PROJECT_OPTS=${$@_PROJECT_OPTS}
+	$(COPY) $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}/output/appset.hex $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.hex
+	$(COPY) $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}/output/appset.elf $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.elf
+	$(COPY) $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}/output/appset.bin $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.bin
 endef
 
 # define macro used to build POSIX simulator kernel
@@ -114,24 +117,25 @@ endef
 define build_sim_appset
 	$(eval $@_APP_NAME = $(1))
 	$(eval $@_CONFIG_NAME = $(2))
-	$(MAKE) -C ${$@_APP_NAME} -s -j 1 -fMakefile all BOARD_NAME=posix CONFIG_DIR=../config/${$@_CONFIG_NAME} PROJECT_OPTS=sim
-	$(COPY) ${$@_APP_NAME}/build/output/appset.o $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.o
+	$(MAKE) -C $(APPSET_BASE) -s -j 1 -fMakefile all APPSET_DIR=${$@_APP_NAME} CONFIG_DIR=config/${$@_CONFIG_NAME} BUILD_DIR=$(TARGET_DIR_NAME)/${$@_CONFIG_NAME} BOARD_NAME=posix PROJECT_OPTS=sim
+	$(COPY) $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}/output/appset.o $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.o
 endef
 
-# define macro used to create ROMFS
+# define macro used to create ROMFS: directory with files of the image, configuration name
+# (config/<name>), build directory is $(TARGET_DIR_NAME)/<configuration name>
 define build_romfs
 	$(eval $@_ROMFS_NAME = $(1))
 	$(eval $@_CONFIG_NAME = $(2))
-	$(MAKE) -C ${$@_ROMFS_NAME} -s -j 1 -fMakefile all CONFIG_DIR=../config/${$@_CONFIG_NAME}
-	$(COPY) ${$@_ROMFS_NAME}/build/romfs.bin $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.bin
-	$(COPY) ${$@_ROMFS_NAME}/build/romfs.hex $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.hex
+	$(MAKE) -C $(ROMFS_BASE) -s -j 1 -fMakefile all ROMFS_DIR=${$@_ROMFS_NAME} CONFIG_DIR=config/${$@_CONFIG_NAME} BUILD_DIR=$(TARGET_DIR_NAME)/${$@_CONFIG_NAME}
+	$(COPY) $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}/romfs.bin $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.bin
+	$(COPY) $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}/romfs.hex $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.hex
 endef
 
-# define macro to clean appset
+# define macro to clean appset: configuration name (build directory)
 define clean_appset
-	$(eval $@_APP_NAME = $(1))
-	$(ECHO) -n "Cleaning ${$@_APP_NAME} files: "
-	$(MAKE) -C ${$@_APP_NAME} -s -j 1 -fMakefile clean
+	$(eval $@_CONFIG_NAME = $(1))
+	$(ECHO) -n "Cleaning ${$@_CONFIG_NAME} files: "
+	$(MAKE) -C $(APPSET_BASE) -s -j 1 -fMakefile clean BUILD_DIR=$(TARGET_DIR_NAME)/${$@_CONFIG_NAME}
 endef
 
 # define macro to clean kernel
@@ -140,11 +144,11 @@ define clean_kernel
 	$(MAKE) -C kernel -s -j 1 -fMakefile clean
 endef
 
-# define macro to clean romfs
+# define macro to clean romfs: configuration name (build directory)
 define clean_romfs
-	$(eval $@_ROMFS_NAME = $(1))
-	$(ECHO) "Cleaning ${$@_ROMFS_NAME}..."
-	$(MAKE) -C ${$@_ROMFS_NAME} -s -j 1 -fMakefile clean
+	$(eval $@_CONFIG_NAME = $(1))
+	$(ECHO) "Cleaning ${$@_CONFIG_NAME}..."
+	$(MAKE) -C $(ROMFS_BASE) -s -j 1 -fMakefile clean BUILD_DIR=$(TARGET_DIR_NAME)/${$@_CONFIG_NAME}
 endef
 
 # define macro install
@@ -220,7 +224,9 @@ clean :
 	@$(call clean_kernel)
 	@$(call clean_appset, app-appset)
 	@$(call clean_appset, btl-appset)
+	@$(call clean_appset, sim-appset)
 	@$(call clean_romfs, app-romfs)
+	@$(call clean_romfs, sim-romfs)
 	@$(REMOVE) -r $(TARGET_DIR_NAME)
 
 
@@ -249,7 +255,6 @@ build-sim-kernel : _build_prepare
 
 .PHONY : build-sim-appset
 build-sim-appset : _build_prepare
-	@$(call clean_appset, app-appset)
 	@$(call build_sim_appset, app-appset, sim-appset)
 
 .PHONY : build-sim-romfs
@@ -388,5 +393,5 @@ config-sim-romfs :
 
 .PHONY : appset-rungens
 appset-rungens :
-	@$(MAKE) -C appset -s -j 1 -fMakefile rungens
+	@$(MAKE) -C $(APPSET_BASE) -s -j 1 -fMakefile rungens APPSET_DIR=app-appset CONFIG_DIR=config/app-appset
 

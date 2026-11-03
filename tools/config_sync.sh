@@ -3,11 +3,11 @@
 #
 # @brief   Synchronize all workspace configuration directories (config/*) and
 #          BSP files (bsp/*) with the default configurations of the kernel,
-#          appset and romfs projects:
+#          appset and romfs build bases:
 #
 #            1. config/*-kernel  is synchronized with kernel/config
-#            2. config/*-appset  is synchronized with app-appset/config
-#            3. config/*-romfs   is synchronized with app-romfs/config
+#            2. config/*-appset  is synchronized with tools/appset/config
+#            3. config/*-romfs   is synchronized with tools/romfs/config
 #            4. every BSP file is imported (its configuration directories are
 #               reset to the default configuration before import) and exported
 #               again with the same configuration directories (each directory
@@ -68,12 +68,12 @@ for target in config/*-appset; do
     if [ ! -d "$target" ]; then
         continue
     fi
-    if [ ! -d app-appset/config ]; then
-        echo "[error] source directory not found: app-appset/config" >&2
+    if [ ! -d tools/appset/config ]; then
+        echo "[error] source directory not found: tools/appset/config" >&2
         exit 1
     fi
-    echo "==> Sync $target with default from app-appset/config"
-    bsp_copy_defaults app-appset/config "$target"
+    echo "==> Sync $target with default from tools/appset/config"
+    bsp_copy_defaults tools/appset/config "$target"
 done
 
 #--- Step 3: sync romfs configurations ----------------------------------------
@@ -81,12 +81,12 @@ for target in config/*-romfs; do
     if [ ! -d "$target" ]; then
         continue
     fi
-    if [ ! -d app-romfs/config ]; then
-        echo "[error] source directory not found: app-romfs/config" >&2
+    if [ ! -d tools/romfs/config ]; then
+        echo "[error] source directory not found: tools/romfs/config" >&2
         exit 1
     fi
-    echo "==> Sync $target with default from app-romfs/config"
-    bsp_copy_defaults app-romfs/config "$target"
+    echo "==> Sync $target with default from tools/romfs/config"
+    bsp_copy_defaults tools/romfs/config "$target"
 done
 
 #--- Step 4: re-import and re-export every BSP file ---------------------------

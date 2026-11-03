@@ -48,8 +48,8 @@ bsp_default_dir()
 {
     case "$1" in
         *-kernel) echo "$BSP_ROOT_DIR/kernel/config" ;;
-        *-appset) echo "$BSP_ROOT_DIR/app-appset/config" ;;
-        *-romfs)  echo "$BSP_ROOT_DIR/app-romfs/config" ;;
+        *-appset) echo "$BSP_ROOT_DIR/tools/appset/config" ;;
+        *-romfs)  echo "$BSP_ROOT_DIR/tools/romfs/config" ;;
         *)        echo "" ;;
     esac
 }

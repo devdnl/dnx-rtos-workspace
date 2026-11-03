@@ -39,7 +39,7 @@ partition:
   - `app-appset` – regular application set (shell, system tools, servers, etc.),
   - `btl-appset` – boot loader application set (`bootloader` program).
 - **romfs** – read-only file system image (`app-romfs`) created from the
-  `app-romfs/content` directory at build time. It is a simple way to deliver
+  `app-romfs` directory at build time. It is a simple way to deliver
   configuration files, scripts, web pages or graphics from the PC to the
   microcontroller.
 
@@ -93,12 +93,29 @@ responsible for initializing drivers, mounting file systems and starting the
 user programs (in the simulator the `siminit` program is used instead).
 
 Sources of programs shared by appsets are placed in `common_apps/<name>/`. An
-appset contains a program by the file `<appset>/src/programs/<name>.mk`
-(includes `common_apps/<name>/Makefile.in`); programs specific to a single
-appset are directories in `<appset>/src/programs/` (`initd`, `siminit`,
-`bootloader`). All programs of the appset are built except programs listed in
-`__PROGRAMS_EXCLUDE_LIST__` of the appset configuration
+appset contains a program by the file `<appset>/programs/<name>.mk`:
+```make
+PROG_ROOT_CAT = $(COMMON_APPS)/
+include $(COMMON_APPS)/cat/Makefile.in
+```
+Programs specific to a single appset are directories in `<appset>/programs/`
+with `Makefile.in` (`initd`, `siminit`, `bootloader`, `PROG_ROOT_<NAME>` is
+set by the build). All programs of the appset are built except programs listed
+in `__PROGRAMS_EXCLUDE_LIST__` of the appset configuration
 (`config/<appset>/programs/programs_flags.h`).
+
+The appset directory contains only programs and libraries. All appsets are
+built by the common build base `tools/appset` (Makefile, default
+configuration, scripts) with the appset directory, the configuration and the
+build directory given as arguments, e.g.:
+```
+make -C tools/appset all APPSET_DIR=app-appset CONFIG_DIR=config/app-appset BUILD_DIR=build/app-appset
+```
+The top-level targets (`build-app-appset`, `build-btl-appset`, ...) do this,
+see `tools/appset/README.md`. A new appset is a new directory with
+`programs/` and `libs/` and its configuration in `config/` (copy of the default
+configuration `tools/appset/config`). The ROMFS image is built the same way by
+`tools/romfs` from the directory with files of the image (`app-romfs`).
 
 ### Common libraries
 The `common_libs` directory contains libraries shared by all appsets (and by
@@ -107,7 +124,9 @@ possible other sub projects): `libc` (dnx RTOS C library), `lua`, `zlib`,
 `http-parser`, `http-multipart-parser`, `fpkg`, `bs` (binary serialization),
 `conf_parser`, `libtui` (text user interface), `llist`, `tinyexpr`, `utcl`,
 `crc`, `chsum`, `md5`, `sha1` and `sha256`. Libraries are attached to particular appset by
-makefiles placed in `<appset>/src/libs`.
+makefiles placed in `<appset>/libs` (`<name>.mk`: `LIB_ROOT_<NAME> = $(COMMON_LIBS)/` and
+`include $(COMMON_LIBS)/<name>/Makefile.in`), local libraries of the appset are
+directories with `Makefile.in` (e.g. `app-appset/libs/liblocal`).
 
 ### Board Support Packages
 Configuration of the whole workspace for a selected board is stored in a single
@@ -120,12 +139,13 @@ BSP file (`bsp/*.bsp`). Included BSPs:
 - `posix-sim.bsp` – POSIX simulator (`config/sim-*`).
 
 ### Workspace structure
-- `app-appset` – application set sources,
+- `app-appset` – application set: programs (`programs/`) and libraries (`libs/`),
 - `app-dist` – files added to the application FPKG update package,
-- `app-romfs` – romfs image builder and its content (`app-romfs/content`),
+- `app-romfs` – content of the romfs image,
 - `bsp` – board support packages,
-- `btl-appset` – boot loader application set sources,
-- `build` – output binaries (created after compilation),
+- `btl-appset` – boot loader application set (programs and libraries),
+- `build` – output binaries and build directories of appsets and romfs
+  (`build/<configuration name>/`, created after compilation),
 - `common_apps` – programs shared between appsets,
 - `common_libs` – libraries shared between appsets,
 - `config` – current configuration of all parts (`app-kernel`, `app-appset`,
@@ -135,9 +155,10 @@ BSP file (`bsp/*.bsp`). Included BSPs:
 - `sim-env` – simulation environment of the POSIX simulator (board model:
   Lua description of hardware connected to the microcontroller, pages of the
   board panel, see `sim-env/README.md`),
-- `tools` – helper scripts (BSP import/export, flashing, OpenOCD, terminal,
-  linker script generator, Docker image, simulator tests `simtest.py`, board
-  panel `simpanel.py`).
+- `tools` – build bases of appsets (`tools/appset`) and romfs (`tools/romfs`)
+  with their default configurations, helper scripts (BSP import/export,
+  flashing, OpenOCD, terminal, linker script generator, Docker image,
+  simulator tests `simtest.py`, board panel `simpanel.py`).
 
 ## Getting started
 
@@ -240,8 +261,8 @@ The system terminal can be opened by `./tools/terminal.sh [/dev/ttyUSBx]`.
 ### POSIX simulator (Linux)
 dnx RTOS can be started on PC as a Linux program (FreeRTOS POSIX port, 32-bit
 x86 executable). The simulator uses its own configuration: `config/sim-kernel`,
-`config/sim-appset`, `config/sim-romfs` (ROMFS content `app-romfs/content` is
-shared with the application). The init program of the simulator is `siminit`.
+`config/sim-appset`, `config/sim-romfs` (appset `app-appset` and ROMFS content
+`app-romfs` are shared with the application). The init program of the simulator is `siminit`.
 ```
 make build-sim      # creates build/dnx-sim and build/sim-romfs.bin
 make run-sim        # builds and starts simulator in the current terminal
@@ -281,7 +302,7 @@ make run-sim SIM_OPTS="--hostfs ."
   `--uart 0=pty` moves the system console to PTY,
 - `--tap` connects the `ETH` driver (`/dev/eth`) to the host TAP interface,
   `siminit` starts `netmgr` with `/etc/netmgr.conf` (static address
-  192.168.77.2/24, gateway 192.168.77.1, file `app-romfs/content/netmgr.conf`),
+  192.168.77.2/24, gateway 192.168.77.1, file `app-romfs/netmgr.conf`),
 - `--board` loads the board model – Lua script which describes hardware
   connected to the microcontroller (e.g. LEDs, buttons, connections between
   GPIO pins, I2C devices: EEPROM, I/O expander, temperature sensor, SPI
@@ -471,7 +492,7 @@ The addresses have to be consistent between parts:
 - `__LIBC_DNX_RTOS_ADDRESS__` in `config/app-appset/project/project_flags.h`
   must be equal to the kernel address (`0x08000000`),
 - the application mounts romfs from `__ROMFS_ADDRESS__` (`0x08080000`, see
-  `app-romfs/content/README`).
+  `app-romfs/README`).
 
 The whole flash is programmed by:
 ```
@@ -534,7 +555,7 @@ The addresses have to be consistent between parts:
 - the boot loader starts the application from the `app-kernel` address
   (`APP_BASE_ADDRESS` in the `bootloader` program),
 - the application mounts romfs from `__ROMFS_ADDRESS__` (see
-  `app-romfs/content/README`).
+  `app-romfs/README`).
 
 The RAM (AXI SRAM, SRAM1–4, ITCM, DTCM and backup SRAM) is not partitioned –
 the boot loader and the application use the same regions, because only one of

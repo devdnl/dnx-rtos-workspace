@@ -1,5 +1,0 @@
-# Makefile for GNU make
-
-CSRC_LIB   += $(LIB_ROOT_LIBLOCAL)liblocal/liblocal.c
-CXXSRC_LIB += $(LIB_ROOT_LIBLOCAL)
-HDRLOC_LIB += $(LIB_ROOT_LIBLOCAL)liblocal
