@@ -934,6 +934,17 @@ this:SetToolTip("LWIP_CHECKSUM_ON_COPY==1: Calculate checksum when\ncopying data
 #define __NETWORK_LWIP_CHECKSUM_ON_COPY__ 0
 
 /*--
+this:AddWidget("Combobox", "LWIP_ASSERT_DEBUG")
+this:AddItem("Disable (0)", "0")
+this:AddItem("Enable (1)", "1")
+this:SetToolTip("LWIP_ASSERT_DEBUG==1: Print message of failed lwIP assertion (condition,\n"..
+                "file and line) to the system log before the system is stopped. Messages\n"..
+                "of all lwIP assertions are stored in the flash memory (about 16 KiB).\n"..
+                "When disabled, the system is stopped without message.")
+--*/
+#define __NETWORK_LWIP_ASSERT_DEBUG__ 0
+
+/*--
 this:AddWidget("Combobox", "LWIP_DBG_MIN_LEVEL")
 this:AddItem("All", "LWIP_DBG_LEVEL_ALL")
 this:AddItem("Warnings", "LWIP_DBG_LEVEL_WARNING")
