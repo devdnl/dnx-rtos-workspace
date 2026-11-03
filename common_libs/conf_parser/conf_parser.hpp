@@ -69,7 +69,6 @@ public:
         }
 
         conf_parser(const conf_parser &) = delete;
-        conf_parser &operator=(const conf_parser &) = delete;
 
         int set_file_path(const char *path)
         {
