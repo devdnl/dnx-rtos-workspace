@@ -18,18 +18,20 @@
 #         Pages use the script /panel.js served by this program:
 #           - attributes: data-signal="<id>" (shows value: class "on", attribute data-value,
 #             data-on/data-off images, data-format text), data-input="<id>" (controls: buttons,
-#             checkboxes, sliders, fields), <canvas data-lcd> (LCD of the LTDC driver, touch),
+#             checkboxes, sliders, fields), <canvas data-lcd="<id>"> (LCD and its touch: LTDC driver
+#             "ltdc" or LCD of board model, panel.lcd() of board script),
 #           - API: panel.on(id, fn), panel.set(id, value), panel.get(id), panel.onInit(fn),
-#             panel.onStatus(fn), panel.onLcd(fn), panel.touch(x, y, pressed),
+#             panel.onStatus(fn), panel.onLcd(fn), panel.touch(lcd_id, x, y, pressed),
 #             panel.format(fmt, value), panel.bind(root).
 #
 #         Protocol of the simulator socket (one message per line):
 #           simulator -> panel: JSON objects {"t": "init", "page": ..., "board": ..., "signals": [...],
-#                               "state": {...}}, {"t": "state", "state": {...}}, {"t": "lcd", "w": ...,
-#                               "h": ..., "fmt": ..., "bg": [r, g, b], "y": ..., "n": ..., "data": ...}
-#                               (changed lines of LCD framebuffer, LTDC driver, base64)
+#                               "state": {...}}, {"t": "state", "state": {...}}, {"t": "lcd", "id": ...,
+#                               "w": ..., "h": ..., "fmt": ..., "bg": [r, g, b], "y": ..., "n": ...,
+#                               "data": ...} (changed lines of LCD framebuffer, base64, "w": 0: LCD is not
+#                               active; id "ltdc": LTDC driver, other: LCDs of board models)
 #           panel -> simulator: set <id> <type><value>, type: b (0/1), n (number), s (string),
-#                               touch <x> <y> <0|1> (LCD touched/released)
+#                               touch <x> <y> <0|1> <lcd id> (LCD touched/released)
 #
 #         Usage:
 #           tools/simpanel.py [--socket build/dnx-panel.sock] [--dir sim-env/panel] [--port 8080]
@@ -37,7 +39,7 @@
 #
 #         HTTP interface: / (panel page), /p/<page>/... (page files), /panel.js, /events (server
 #         sent events), /api/state (GET, JSON), /api/set (POST, JSON {"id": ..., "value": ...}),
-#         /api/touch (POST, JSON {"x": ..., "y": ..., "pressed": true|false}).
+#         /api/touch (POST, JSON {"x": ..., "y": ..., "pressed": true|false, "lcd": <id>}).
 #
 #         MIT License
 #
@@ -168,20 +170,23 @@ PANEL_JS = r"""
     };
 
     // LCD ---------------------------------------------------------------------------------------------
+    // LCDs are identified by id (LTDC driver: "ltdc", LCDs of board models: panel.lcd() of board
+    // script), all LCDs are handled the same way, <canvas data-lcd="<id>"> shows LCD <id>
     const lcdListeners = [];
-    const lcdCanvases = [];
-    let lcdImage = null;    // whole frame (ImageData)
-    panel.lcd = null;       // {w, h, fmt, bg} or null (no LCD)
+    const lcdCanvases = [];     // [{el, id}]
+    const lcdImages = {};       // id -> whole frame (ImageData)
+    panel.lcds = {};            // id -> {id, w, h, fmt, bg} (active LCDs)
 
-    // call fn(lcd) when LCD is changed, lcd: {w, h, fmt, bg} or null
+    // call fn(lcd, id) when LCD is changed, lcd: {id, w, h, fmt, bg} or null (not active), called
+    // immediately for all active LCDs
     panel.onLcd = function (fn) {
         lcdListeners.push(fn);
-        safe(fn, panel.lcd);
+        for (const id in panel.lcds) safe(fn, panel.lcds[id], id);
     };
 
-    // touch of LCD (x, y in pixels of LCD, pressed: false is release)
-    panel.touch = function (x, y, pressed) {
-        return post("/api/touch", { x: x, y: y, pressed: !!pressed });
+    // touch of LCD id (x, y in pixels of LCD, pressed: false is release)
+    panel.touch = function (id, x, y, pressed) {
+        return post("/api/touch", { lcd: String(id), x: x, y: y, pressed: !!pressed });
     };
 
     // convert pixels of LTDC format to RGBA (alpha is blended with background color)
@@ -219,53 +224,68 @@ PANEL_JS = r"""
         }
     }
 
-    function drawLcd(canvas, y, n) {
-        if (!lcdImage) {
+    function drawLcd(canvas, id, y, n) {
+        const img = lcdImages[id];
+        if (!img) {
             canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
             return;
         }
-        if (canvas.width !== lcdImage.width || canvas.height !== lcdImage.height) {
-            canvas.width = lcdImage.width;
-            canvas.height = lcdImage.height;
+        if (canvas.width !== img.width || canvas.height !== img.height) {
+            canvas.width = img.width;
+            canvas.height = img.height;
             y = 0;
-            n = lcdImage.height;
+            n = img.height;
         }
-        canvas.getContext("2d").putImageData(lcdImage, 0, 0, 0, y, lcdImage.width, n);
+        canvas.getContext("2d").putImageData(img, 0, 0, 0, y, img.width, n);
     }
 
     function lcdMessage(msg) {
-        const old = panel.lcd;
+        const id = String(msg.id);
+        const old = panel.lcds[id] || null;
+        let lcd = null;
         if (!msg.w || !msg.h) {
-            panel.lcd = null;
-            lcdImage = null;
+            delete panel.lcds[id];
+            delete lcdImages[id];
         } else {
-            panel.lcd = { w: msg.w, h: msg.h, fmt: msg.fmt, bg: msg.bg || [0, 0, 0] };
-            if (!lcdImage || lcdImage.width !== msg.w || lcdImage.height !== msg.h) {
-                lcdImage = new ImageData(msg.w, msg.h);
+            lcd = panel.lcds[id] = { id: id, w: msg.w, h: msg.h, fmt: msg.fmt, bg: msg.bg || [0, 0, 0] };
+            let img = lcdImages[id];
+            if (!img || img.width !== msg.w || img.height !== msg.h) {
+                img = lcdImages[id] = new ImageData(msg.w, msg.h);
             }
             if (msg.data) {
                 const bin = atob(msg.data);
                 const src = new Uint8Array(bin.length);
                 for (let i = 0; i < bin.length; i++) src[i] = bin.charCodeAt(i);
                 const off = msg.y * msg.w * 4;
-                decode(msg.fmt, src, panel.lcd.bg, lcdImage.data.subarray(off, off + msg.n * msg.w * 4));
+                decode(msg.fmt, src, lcd.bg, img.data.subarray(off, off + msg.n * msg.w * 4));
             }
         }
         for (let i = lcdCanvases.length - 1; i >= 0; i--) {
-            if (!lcdCanvases[i].isConnected) { lcdCanvases.splice(i, 1); continue; }
-            drawLcd(lcdCanvases[i], msg.y || 0, msg.n || 0);
+            const c = lcdCanvases[i];
+            if (!c.el.isConnected) { lcdCanvases.splice(i, 1); continue; }
+            if (c.id === id) drawLcd(c.el, id, msg.y || 0, msg.n || 0);
         }
-        if (JSON.stringify(old) !== JSON.stringify(panel.lcd)) {
-            for (const fn of lcdListeners) safe(fn, panel.lcd);
+        if (JSON.stringify(old) !== JSON.stringify(lcd)) {
+            for (const fn of lcdListeners) safe(fn, lcd, id);
         }
     }
 
-    // <canvas data-lcd>: LCD image, pointer is the touch of LCD
+    // LCDs of init message: LCDs that are not active are removed
+    function lcdInit(lcds) {
+        for (const id of Object.keys(panel.lcds)) {
+            if (!lcds || !lcds[id]) lcdMessage({ id: id, w: 0, h: 0 });
+        }
+    }
+
+    // <canvas data-lcd="<id>">: LCD image, pointer is the touch of LCD
     function bindLcd(el) {
-        lcdCanvases.push(el);
+        const id = el.dataset.lcd;
+        if (!id) { console.warn("panel: <canvas data-lcd> without LCD id", el); return; }
+        lcdCanvases.push({ el: el, id: id });
         el.style.touchAction = "none";
         if (!el.style.imageRendering) el.style.imageRendering = "pixelated";
-        drawLcd(el, 0, lcdImage ? lcdImage.height : 0);
+        const img = lcdImages[id];
+        drawLcd(el, id, 0, img ? img.height : 0);
 
         let pressed = false, pos = [0, 0], pending = false, timer = null;
         const point = function (e) {
@@ -280,23 +300,23 @@ PANEL_JS = r"""
                     Math.min(el.height - 1, Math.max(0, Math.floor((e.clientY - top) * el.height / h)))];
         };
         const release = function () {
-            if (pressed) { pressed = false; panel.touch(pos[0], pos[1], false); }
+            if (pressed) { pressed = false; panel.touch(id, pos[0], pos[1], false); }
         };
         el.addEventListener("pointerdown", function (e) {
-            if (e.button !== 0 || !panel.lcd) return;
+            if (e.button !== 0 || !panel.lcds[id]) return;
             pressed = true;
             pos = point(e);
             try { el.setPointerCapture(e.pointerId); } catch (_) { }
-            panel.touch(pos[0], pos[1], true);
+            panel.touch(id, pos[0], pos[1], true);
             e.preventDefault();
         });
         el.addEventListener("pointermove", function (e) {
             if (!pressed) return;
             pos = point(e);
             if (timer) { pending = true; return; }
-            panel.touch(pos[0], pos[1], true);
+            panel.touch(id, pos[0], pos[1], true);
             timer = setTimeout(function tick() {
-                if (pending && pressed) { pending = false; panel.touch(pos[0], pos[1], true); timer = setTimeout(tick, 30); }
+                if (pending && pressed) { pending = false; panel.touch(id, pos[0], pos[1], true); timer = setTimeout(tick, 30); }
                 else timer = null;
             }, 30);
         });
@@ -456,7 +476,7 @@ PANEL_JS = r"""
                 return;
             }
             setStatus(!!msg.connected);
-            if (!msg.lcd) lcdMessage({ w: 0, h: 0 });
+            lcdInit(msg.lcds);
             for (const fn of initListeners) safe(fn, panel.signals);
             for (const k in panel.state) emit(k, panel.state[k]);
             for (const k in old) if (!(k in panel.state)) emit(k, undefined);
@@ -508,7 +528,7 @@ class Panel:
         self.signals = []
         self.state = {}
         self.clients = []
-        self.lcd = None         # LCD: {"w", "h", "fmt", "bg", "frame"}
+        self.lcds = {}          # active LCDs: id -> {"w", "h", "fmt", "bg", "frame"}
 
     def log(self, msg):
         if self.verbose:
@@ -522,17 +542,16 @@ class Panel:
         return "/p/default/"
 
     def init_message(self):
-        lcd = {k: self.lcd[k] for k in ("w", "h", "fmt", "bg")} if self.lcd else None
+        lcds = {i: {k: lcd[k] for k in ("w", "h", "fmt", "bg")} for i, lcd in self.lcds.items()}
         return {"t": "init", "connected": self.connected, "page": self.page, "board": self.board,
-                "page_url": self.page_url(), "signals": self.signals, "state": self.state, "lcd": lcd}
+                "page_url": self.page_url(), "signals": self.signals, "state": self.state, "lcds": lcds}
 
-    def lcd_message(self):
+    def lcd_message(self, lcd_id):
         # whole LCD frame (called with lock)
-        if not self.lcd:
-            return {"t": "lcd", "w": 0, "h": 0}
-        msg = {k: self.lcd[k] for k in ("w", "h", "fmt", "bg")}
-        msg.update({"t": "lcd", "y": 0, "n": self.lcd["h"],
-                    "data": base64.b64encode(self.lcd["frame"]).decode("ascii")})
+        lcd = self.lcds[lcd_id]
+        msg = {k: lcd[k] for k in ("w", "h", "fmt", "bg")}
+        msg.update({"t": "lcd", "id": lcd_id, "y": 0, "n": lcd["h"],
+                    "data": base64.b64encode(lcd["frame"]).decode("ascii")})
         return msg
 
     def subscribe(self):
@@ -540,8 +559,8 @@ class Panel:
         with self.lock:
             self.clients.append(q)
             q.put(self.init_message())
-            if self.lcd:
-                q.put(self.lcd_message())
+            for lcd_id in self.lcds:
+                q.put(self.lcd_message(lcd_id))
         return q
 
     def unsubscribe(self, q):
@@ -582,16 +601,21 @@ class Panel:
 
     def handle_lcd(self, msg):
         # changed lines of LCD (called with lock): the whole frame is kept for new browsers
+        lcd_id = msg.get("id")
+        if not isinstance(lcd_id, str) or not ID_RE.match(lcd_id):
+            self.log("LCD message without valid id")
+            return
         w, h, fmt = msg.get("w", 0), msg.get("h", 0), msg.get("fmt")
         if not w or not h or fmt not in PIXEL_SIZE:
-            self.lcd = None
-            self.broadcast({"t": "lcd", "w": 0, "h": 0})
+            if self.lcds.pop(lcd_id, None):
+                self.log("LCD %s is not active" % lcd_id)
+            self.broadcast({"t": "lcd", "id": lcd_id, "w": 0, "h": 0})
             return
         line = w * PIXEL_SIZE[fmt]
-        lcd = self.lcd
+        lcd = self.lcds.get(lcd_id)
         if not lcd or (lcd["w"], lcd["h"], lcd["fmt"]) != (w, h, fmt):
-            lcd = self.lcd = {"w": w, "h": h, "fmt": fmt, "frame": bytearray(line * h)}
-            self.log("LCD %ux%u %s" % (w, h, fmt))
+            lcd = self.lcds[lcd_id] = {"w": w, "h": h, "fmt": fmt, "frame": bytearray(line * h)}
+            self.log("LCD %s %ux%u %s" % (lcd_id, w, h, fmt))
         lcd["bg"] = msg.get("bg", [0, 0, 0])
         y, data = msg.get("y", 0), base64.b64decode(msg.get("data", ""))
         if 0 <= y and y * line + len(data) <= len(lcd["frame"]):
@@ -621,6 +645,7 @@ class Panel:
             self.log("simulator connected")
             with self.lock:
                 self.sock = s
+                self.lcds = {}  # LCDs are sent again by the simulator
             self.set_connected(True)
 
             buf = bytearray()
@@ -664,15 +689,17 @@ class Panel:
                 return False, str(e)
         return True, ""
 
-    def touch(self, x, y, pressed):
-        lcd = self.lcd
+    def touch(self, lcd_id, x, y, pressed):
+        if not isinstance(lcd_id, str) or not ID_RE.match(lcd_id):
+            return False, "invalid LCD id"
+        lcd = self.lcds.get(lcd_id)
         if not lcd:
-            return False, "LCD is not active"
+            return False, "LCD %s is not active" % lcd_id
         if not all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in (x, y)):
             return False, "invalid coordinates"
         x = min(max(int(x), 0), lcd["w"] - 1)
         y = min(max(int(y), 0), lcd["h"] - 1)
-        return self.send_line("touch %d %d %d\n" % (x, y, 1 if pressed else 0))
+        return self.send_line("touch %d %d %d %s\n" % (x, y, 1 if pressed else 0, lcd_id))
 
     def send(self, sig_id, value):
         if not isinstance(sig_id, str) or not ID_RE.match(sig_id):
@@ -746,7 +773,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/set":
                 ok, err = self.panel.send(req.get("id"), req.get("value"))
             else:
-                ok, err = self.panel.touch(req.get("x"), req.get("y"), bool(req.get("pressed")))
+                ok, err = self.panel.touch(req.get("lcd"), req.get("x"), req.get("y"), bool(req.get("pressed")))
         except (ValueError, AttributeError):
             ok, err = False, "invalid request"
         if ok:

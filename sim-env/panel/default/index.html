@@ -67,6 +67,9 @@
     input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); }
     .empty { color: var(--muted); }
     #lcd-section[hidden] { display: none; }
+    #lcd-list { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+    #lcd-list figure { margin: 0; max-width: 100%; }
+    #lcd-list figcaption { font-size: 12px; color: var(--muted); margin-top: 4px; }
     canvas[data-lcd] {
         display: block; max-width: 100%; height: auto; background: #000; border-radius: 6px;
         border: 1px solid var(--line); cursor: crosshair;
@@ -82,8 +85,8 @@
 </header>
 <section id="lcd-section" hidden style="max-width:1100px;margin:0 auto 20px">
     <h2 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px">
-        Display <span id="lcd-info" style="text-transform:none;letter-spacing:0"></span></h2>
-    <canvas data-lcd></canvas>
+        Displays</h2>
+    <div id="lcd-list"></div>
 </section>
 <main id="main">
     <p class="empty">Waiting for the simulator&hellip; Start it with
@@ -169,10 +172,24 @@
 
     function panelValue(id) { return panel.get(id); }
 
-    // display of LTDC driver (touch: panel.on_touch() in board script)
-    panel.onLcd(function (lcd) {
-        document.getElementById("lcd-section").hidden = !lcd;
-        document.getElementById("lcd-info").textContent = lcd ? lcd.w + "×" + lcd.h + " " + lcd.fmt : "";
+    // displays: LTDC driver ("ltdc") and LCDs of board models (panel.lcd()), canvas is created for each
+    // active LCD (touch: panel.on_touch() in board script)
+    const lcdFigures = {};
+    panel.onLcd(function (lcd, id) {
+        const list = document.getElementById("lcd-list");
+        let fig = lcdFigures[id];
+        if (lcd && !fig) {
+            const canvas = el("canvas", {});
+            canvas.dataset.lcd = id;
+            fig = lcdFigures[id] = el("figure", {}, canvas, el("figcaption", {}));
+            list.append(fig);
+            panel.bind(fig);
+        } else if (!lcd && fig) {
+            fig.remove();
+            delete lcdFigures[id];
+        }
+        if (fig) fig.querySelector("figcaption").textContent = id + ": " + lcd.w + "×" + lcd.h + " " + lcd.fmt;
+        document.getElementById("lcd-section").hidden = Object.keys(lcdFigures).length === 0;
     });
 
     panel.onInit(function (signals) {
@@ -181,7 +198,7 @@
         main.replaceChildren();
 
         if (signals.length === 0) {
-            if (!panel.lcd) {
+            if (Object.keys(panel.lcds).length === 0) {
                 main.append(el("p", { class: "empty" }, "The board script does not define panel signals ",
                                "(panel.output(), panel.input(), panel.value(), panel.control())."));
             }

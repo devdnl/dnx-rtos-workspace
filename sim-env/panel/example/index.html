@@ -81,10 +81,20 @@
         <section class="block wide">
             <h2>LCD <small>LTDC driver, touch: FT5336 I2C1 0x38, INT PA9</small>
                 <span class="led small touch" data-signal="TOUCH"></span></h2>
-            <div class="lcd">
-                <canvas data-lcd></canvas>
+            <div class="lcd off" data-lcd-block="ltdc">
+                <canvas data-lcd="ltdc"></canvas>
                 <p class="lcd-off">LCD is not active: <code>modprobe -i LTDC 0 0 /dev/lcd -c pixel_format=rgb565</code>,
                     demo: <code>lua /host/demos/lcdpaint.lua</code> (option <code>--hostfs sim-env</code>)</p>
+            </div>
+        </section>
+
+        <section class="block wide">
+            <h2>TFT <small>ST7789 240×320, SPI3, CS PB1, D/C PB0</small>
+                <code class="hex" data-signal="TFT_TOUCH" data-format=""></code></h2>
+            <div class="lcd off" data-lcd-block="tft">
+                <canvas data-lcd="tft"></canvas>
+                <p class="lcd-off">Display is off (sleep or DISPOFF), demo: <code>lua /host/demos/tftdemo.lua</code>
+                    (option <code>--hostfs sim-env</code>)</p>
             </div>
         </section>
     </div>

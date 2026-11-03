@@ -7,7 +7,8 @@
 
   The board panel (PANEL=1, web browser: http://localhost:8080) shows page
   sim-env/panel/example/: LEDs, button, temperature, LEDs of the I/O expander
-  and shift register, LCD (LTDC driver) with touch panel.
+  and shift register, LCD (LTDC driver) with touch panel, TFT display (ST7789
+  model on SPI3).
 
   Pins (port A):
     PA0  LED (output of the system, active low)
@@ -29,6 +30,8 @@
     PA15  SD card (SDHC), image in the host file build/example-sd.img (64 MiB)
   SPI2:
     PA16  74HC595 with 8 LEDs (printed when changed)
+  SPI3:
+    PB1   ST7789 TFT display 240x320 (LCD "tft" of the panel), D/C -> PB0
 
   dnx RTOS (shell), I2C EEPROM:
     modprobe -i I2C 0 0 /dev/i2c-ee -c address=0x50,sub_addr_mode=2
@@ -51,6 +54,12 @@
     modprobe -i I2C 0 5 /dev/i2c-ts -c address=0x38,sub_addr_mode=1
     lua /host/demos/lcdpaint.lua
 
+  dnx RTOS (shell), TFT display (demo sim-env/demos/tftdemo.lua, simulator
+  option --hostfs sim-env, D/C pin is controlled by /dev/gpiob):
+    modprobe -i GPIO 1 0 /dev/gpiob
+    modprobe -i SPI 2 0 /dev/spi-tft -c cs_port=1,cs_pin=1
+    lua /host/demos/tftdemo.lua
+
   dnx RTOS (shell), SPI EEPROM and LEDs:
     modprobe -i SPIEE 0 0 /dev/ee1 -c spi_path=/dev/spi-ee,memory_size=32768,page_size=64,address_size=2
     modprobe -i SPI 1 0 /dev/leds2 -c cs_port=0,cs_pin=16
@@ -63,6 +72,7 @@ local spiee = require("models.25xx")
 local ft5336 = require("models.ft5336")
 local sdcard = require("models.sdcard")
 local hc595 = require("models.74hc595")
+local st7789 = require("models.st7789")
 
 -- LED: print state when system changes the output
 gpio.on_change("PA0", function(level)
@@ -120,7 +130,7 @@ panel.output("OS", "PA6", {active_low = true, label = "LM75 OS (PA6)", color = "
 -- I2C1: touch panel controller of the LCD (LTDC driver), touch of the LCD in
 -- the board panel
 local ts = ft5336.new({ int = "PA9" }):attach("I2C1", 0x38)
-panel.on_touch(function(x, y, pressed) ts:touch(x, y, pressed) end)
+panel.on_touch(function(x, y, pressed) ts:touch(x, y, pressed) end, "ltdc")
 panel.output("TOUCH", "PA9", {active_low = true, label = "Touch INT (PA9)", color = "#a855f7"})
 
 -- I2C1: EEPROM
@@ -145,5 +155,11 @@ leds2:on_change(function(state)
     print("LEDs2: " .. table.concat(t))
     panel.set("LEDS2", state)
 end)
+
+-- SPI3: TFT display (LCD "tft" of the panel), touch of the display in the
+-- board panel is only shown
+local tft = st7789.new({ id = "tft", width = 240, height = 320, dc = "PB0" }):attach("SPI3", "PB1")
+panel.value("TFT_TOUCH", "", {label = "TFT touch"})
+tft:on_touch(function(x, y, pressed) panel.set("TFT_TOUCH", pressed and string.format("%d, %d", x, y) or "") end)
 
 print("example board loaded")

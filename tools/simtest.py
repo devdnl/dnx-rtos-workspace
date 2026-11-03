@@ -378,7 +378,8 @@ class TestRunner:
 
     # board panel: the test connects to the panel socket like tools/simpanel.py, signals of board
     # boards/test.lua: P_OUT shows PA18, P_IN drives PA19, P_CTL sets P_VAL = 2 * P_CTL; LCD of LTDC
-    # driver (frame sent to the panel) and touch of LCD read from FT5336 model by I2C driver
+    # driver (frame sent to the panel) and touch of LCD read from FT5336 model by I2C driver; LCD "tft"
+    # of ST7789 model (SPI4) and its touch (P_TOUCH)
     def panel_test(self, sim):
         name = "board: panel"
         if not self.selected(name):
@@ -392,7 +393,7 @@ class TestRunner:
             self.result(name, FAIL, "cannot connect to panel socket: %s" % e)
             return
 
-        state, signals, lcd = {}, [], {}
+        state, signals, lcds = {}, [], {}
         lock = threading.Lock()
 
         # messages are read all the time (the simulator closes connection of panel that does not read)
@@ -432,11 +433,13 @@ class TestRunner:
 
         threading.Thread(target=reader, daemon=True).start()
 
-        # whole LCD frame assembled from changed lines
+        # whole LCD frames (id -> {geometry, frame}) assembled from changed lines
         def lcd_update(msg):
+            lcd_id = msg.get("id")
             if not msg.get("w"):
-                lcd.clear()
+                lcds.pop(lcd_id, None)
                 return
+            lcd = lcds.setdefault(lcd_id, {})
             line = msg["w"] * 2 if msg.get("fmt") == "rgb565" else 0
             if lcd.get("geometry") != (msg["w"], msg["h"], msg.get("fmt")):
                 lcd["geometry"] = (msg["w"], msg["h"], msg.get("fmt"))
@@ -444,10 +447,14 @@ class TestRunner:
             data = base64.b64decode(msg.get("data", ""))
             lcd["frame"][msg["y"] * line:msg["y"] * line + len(data)] = data
 
-        def lcd_pixel(x, y):
+        def lcd_pixel(x, y, lcd_id="ltdc"):
+            lcd = lcds.get(lcd_id, {})
             frame = lcd.get("frame")
             w = lcd["geometry"][0] if frame else 0
             return frame[(y * w + x) * 2] | (frame[(y * w + x) * 2 + 1] << 8) if frame else None
+
+        def lcd_geometry(lcd_id="ltdc"):
+            return lcds.get(lcd_id, {}).get("geometry")
 
         def touch_state():
             ok, out = sim.run("lua lcd.lua touch")
@@ -488,16 +495,16 @@ class TestRunner:
                 if "LCD=261120" not in out:
                     errors.append("LTDC device not created")
                 elif not wait(lambda: lcd_pixel(5, 10) == 0xF800 and lcd_pixel(5, 11) == 0, 5):
-                    errors.append("LCD frame not received (geometry %r)" % (lcd.get("geometry"),))
-                elif lcd["geometry"] != (480, 272, "rgb565"):
-                    errors.append("LCD geometry %r" % (lcd["geometry"],))
+                    errors.append("LCD frame not received (geometry %r)" % (lcd_geometry(),))
+                elif lcd_geometry() != (480, 272, "rgb565"):
+                    errors.append("LCD geometry %r" % (lcd_geometry(),))
                 else:
-                    s.sendall(b"touch 123 45 1\n")
+                    s.sendall(b"touch 123 45 1 ltdc\n")
                     time.sleep(0.1)
                     st = touch_state()
                     if not st or st[:3] != (1, 123, 45) or st[4] != 0:
                         errors.append("touch not reported by FT5336: %r" % (st,))
-                    s.sendall(b"touch 123 45 0\n")
+                    s.sendall(b"touch 123 45 0 ltdc\n")
                     time.sleep(0.1)
                     st = touch_state()
                     if not st or st[0] != 0 or st[3] != 1 or st[4] != 1:
@@ -507,8 +514,40 @@ class TestRunner:
                 ok, out = sim.run("lua lcd.lua release")
                 if "RELEASED" not in out:
                     errors.append("LTDC device not released")
-                elif not wait(lambda: not lcd, 3):
+                elif not wait(lambda: "ltdc" not in lcds, 3):
                     errors.append("LCD not detached from panel after release")
+
+                # LCD "tft" of ST7789 model (SPI4), shown after SLPOUT and DISPON
+                if "tft" in lcds:
+                    errors.append("LCD tft shown before initialization")
+                ok, out = sim.run("lua spilcd.lua init")
+                if "ID=858552 PM=0x9C" not in out:
+                    errors.append("ST7789 init: %r" % out.strip())
+                elif not wait(lambda: lcd_geometry("tft") == (240, 320, "rgb565"), 5):
+                    errors.append("LCD tft not shown (geometry %r)" % (lcd_geometry("tft"),))
+                else:
+                    ok, out = sim.run("lua spilcd.lua draw")
+                    px = lambda: (lcd_pixel(5, 10, "tft"), lcd_pixel(5, 11, "tft"), lcd_pixel(5, 20, "tft"),
+                                  lcd_pixel(6, 21, "tft"), lcd_pixel(7, 20, "tft"), lcd_pixel(7, 30, "tft"))
+                    if "DRAWN" not in out:
+                        errors.append("ST7789 draw: %r" % out.strip())
+                    elif not wait(lambda: px() == (0xF800, 0, 0x001F, 0x001F, 0, 0x07E0), 5):
+                        errors.append("LCD tft pixels %r" % (px(),))
+
+                    # touch of LCD tft is not passed to FT5336 (handler of LCD "ltdc")
+                    s.sendall(b"touch 12 300 1 tft\n")
+                    if not wait(lambda: state.get("P_TOUCH") == "12 300 1 tft"):
+                        errors.append("touch of LCD tft: %r" % state.get("P_TOUCH"))
+                    st = touch_state()
+                    if not st or st[0] != 0:
+                        errors.append("touch of LCD tft reported by FT5336: %r" % (st,))
+                    s.sendall(b"touch 12 300 0 tft\n")
+                    if not wait(lambda: state.get("P_TOUCH") == "12 300 0 tft"):
+                        errors.append("release of LCD tft: %r" % state.get("P_TOUCH"))
+
+                    ok, out = sim.run("lua spilcd.lua off")
+                    if "OFF" not in out or not wait(lambda: "tft" not in lcds, 3):
+                        errors.append("LCD tft shown after DISPOFF")
 
                 sim.run("cd /")
         except (OSError, ValueError) as e:

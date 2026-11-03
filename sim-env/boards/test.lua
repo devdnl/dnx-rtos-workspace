@@ -27,12 +27,16 @@
   SPI2:
     PA16  74HC595 (CS = RCLK), outputs QA..QH -> PA20..PA27
   SPI3:   no devices
+  SPI4:
+    PB1   ST7789 LCD 240x320 (LCD "tft" of the panel), D/C -> PB0,
+          tests/spilcd.lua
 
   Panel (tools/simtest.py, test of panel protocol, tests/panel.lua):
     P_OUT  shows PA18 (system output)
     P_IN   drives PA19 (system input)
     P_VAL  value, P_CTL control (P_VAL = 2 * P_CTL)
-    touch of LCD (LTDC driver) -> FT5336 (I2C1 0x38, INT -> PA28), tests/lcd.lua
+    touch of LCD "ltdc" (LTDC driver) -> FT5336 (I2C1 0x38, INT -> PA28), tests/lcd.lua
+    touch of LCD "tft" (ST7789) -> P_TOUCH value: "<x> <y> <0|1> <lcd id>"
 ------------------------------------------------------------------------------]]
 
 local eeprom = require("models.24cxx")
@@ -42,6 +46,7 @@ local spiee = require("models.25xx")
 local sdcard = require("models.sdcard")
 local hc595 = require("models.74hc595")
 local ft5336 = require("models.ft5336")
+local st7789 = require("models.st7789")
 
 gpio.connect("PA0", "PA8", true)
 gpio.connect("PA1", "PA9")
@@ -113,6 +118,13 @@ panel.value("P_VAL", 0)
 panel.control("P_CTL", function(v) panel.set("P_VAL", v * 2) end)
 
 local ts = ft5336.new{int = "PA28"}:attach("I2C1", 0x38)
-panel.on_touch(function(x, y, pressed) ts:touch(x, y, pressed) end)
+panel.on_touch(function(x, y, pressed) ts:touch(x, y, pressed) end, "ltdc")
+
+-- SPI4: LCD of board model
+panel.value("P_TOUCH", "")
+st7789.new{id = "tft", width = 240, height = 320, dc = "PB0"}:attach("SPI4", "PB1")
+panel.on_touch(function(x, y, pressed, id)
+    if id ~= "ltdc" then panel.set("P_TOUCH", string.format("%d %d %d %s", x, y, pressed and 1 or 0, id)) end
+end)
 
 print("test board loaded")

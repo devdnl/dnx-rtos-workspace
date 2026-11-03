@@ -134,6 +134,7 @@ figcaption { font-size: 13px; color: var(--muted); }
     box-shadow: inset 0 0 0 1px #ffffff1a, 0 4px 12px #0007;
 }
 .lcd .lcd-off { display: none; margin: 0; color: var(--muted); font-size: 13px; }
+.lcd canvas[data-lcd="tft"] { width: 240px; }
 .lcd.off canvas { display: none; }
 .lcd.off .lcd-off { display: block; }
 .led.touch { --c: #a855f7; margin-left: auto; }

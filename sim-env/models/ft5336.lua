@@ -6,7 +6,7 @@
   Usage:
     local ft5336 = require("models.ft5336")
     local ts = ft5336.new{int = "PA9"}:attach("I2C1", 0x38)
-    panel.on_touch(function(x, y, pressed) ts:touch(x, y, pressed) end)
+    panel.on_touch(function(x, y, pressed) ts:touch(x, y, pressed) end, "ltdc")
 
   Options:
     int         INT output pin (optional): low while panel is touched

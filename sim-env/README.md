@@ -16,10 +16,13 @@ Directories:
   `24cxx` (I2C EEPROM), `pcf8574` (I2C I/O expander), `lm75` (I2C temperature
   sensor), `25xx` (SPI EEPROM), `sdcard` (SD card in SPI mode, host image
   file), `74hc595` (SPI shift register), `ft5336` (I2C touch panel
-  controller), the description of options and methods is in the model file,
+  controller), `st7789` (SPI TFT LCD controller, ST7789/ILI9341 compatible,
+  shown by the board panel), the description of options and methods is in
+  the model file, see [Writing device models](#writing-device-models),
 - `tests/` – test programs executed in dnx RTOS (e.g. `lua /host/gpio.lua`),
 - `demos/` – demo programs executed in dnx RTOS, e.g. `lcdpaint.lua` (drawing
   on the LCD of the board panel, see [LCD and touch](#lcd-and-touch)),
+  `tftdemo.lua` (drawing on the SPI TFT display, ST7789 model),
 - `panel/` – pages of the board panel shown in a web browser (`default/` –
   generic page, `example/` – page of `boards/example.lua`), see
   [Board panel](#board-panel).
@@ -224,7 +227,8 @@ can use them; options used by the board are described below.
 | `panel.get(id)` | current value of signal |
 | `panel.page(name)` | page of the panel: directory `panel/<name>/` (default: name of board script, e.g. `example` for `boards/example.lua`) |
 | `panel.connected()` | `true` when the panel is connected |
-| `panel.on_touch(fn)` | call `fn(x, y, pressed)` when the LCD of the panel is touched (`pressed`: `false` – released), see [LCD and touch](#lcd-and-touch) |
+| `panel.on_touch(fn [, lcd_id])` | call `fn(x, y, pressed, lcd_id)` when an LCD of the panel is touched (`pressed`: `false` – released), `lcd_id`: only touch of this LCD (default: all LCDs), see [LCD and touch](#lcd-and-touch) |
+| `panel.lcd(id, width, height [, opts])` | LCD of board model (e.g. model of LCD controller) shown by the panel, returns LCD object, see [LCDs of board models](#lcds-of-board-models) |
 
 Changes are sent to the panel at most every 20 ms (the last value of signal
 is sent), so very short pulses are not visible.
@@ -252,6 +256,7 @@ are connected by `panel.bind(element)`):
 | Attribute | Description |
 |-----------|-------------|
 | `data-signal="<id>"` | shows value: class `on` (value is true, not zero, not empty), attribute `data-value`; `<img>` with `data-on`/`data-off` changes image; `data-format` sets text (printf-like format, e.g. `%.1f °C`, `0x%02X`, empty: value) |
+| `data-lcd="<lcd id>"` | `<canvas>` shows LCD (`ltdc`: LTDC driver, other: LCDs of board models), pointer (mouse, touch screen) is the touch of LCD |
 | `data-input="<id>"` | control: button or other element (`data-mode="push"`: `true` while pressed (default), `"toggle"`: changed by click), checkbox (boolean), slider and number field (number), text field and select (string, `data-type="number"`: number); shows current value too |
 
 Classes of `<html>`: `panel-connected`, `panel-disconnected`; elements with
@@ -268,8 +273,9 @@ JavaScript API (object `panel`):
 | `panel.onStatus(fn)` | call `fn(connected)` when connection with simulator is changed |
 | `panel.format(fmt, value)` | printf-like formatting |
 | `panel.bind(root)` | connect `data-signal`/`data-input`/`data-lcd` elements of `root` |
-| `panel.onLcd(fn)` | call `fn(lcd)` when LCD is changed, `lcd`: `{w, h, fmt, bg}` or `null` (LTDC driver not active) |
-| `panel.touch(x, y, pressed)` | touch of LCD (pixels of LCD), as touch of `<canvas data-lcd>` |
+| `panel.onLcd(fn)` | call `fn(lcd, id)` when LCD `id` is changed (and immediately for all active LCDs), `lcd`: `{id, w, h, fmt, bg}` or `null` (not active: LTDC driver not initialized, display of model is off) |
+| `panel.lcds` | active LCDs: `{[id] = {id, w, h, fmt, bg}}` |
+| `panel.touch(lcd_id, x, y, pressed)` | touch of LCD (pixels of LCD), as touch of `<canvas data-lcd="<lcd id>">` |
 
 Example (`panel/example/`):
 ```html
@@ -282,10 +288,11 @@ Example (`panel/example/`):
 </script>
 ```
 
-The HTTP interface of `simpanel.py`: `/api/state` (GET, JSON: signals and
-values), `/api/set` (POST, JSON `{"id": "...", "value": ...}`), `/api/touch`
-(POST, JSON `{"x": ..., "y": ..., "pressed": true}`), `/events` (server-sent
-events), e.g. `curl -d '{"id":"BUTTON","value":true}' localhost:8080/api/set`.
+The HTTP interface of `simpanel.py`: `/api/state` (GET, JSON: signals,
+values and active LCDs), `/api/set` (POST, JSON `{"id": "...", "value": ...}`),
+`/api/touch` (POST, JSON `{"lcd": "tft", "x": ..., "y": ..., "pressed": true}`),
+`/events` (server-sent events), e.g.
+`curl -d '{"id":"BUTTON","value":true}' localhost:8080/api/set`.
 
 ### LCD and touch
 The `LTDC` driver of the simulator (enabled in `config/sim-kernel`, size of
@@ -300,14 +307,20 @@ background color):
 ```
 modprobe -i LTDC 0 0 /dev/lcd -c pixel_format=rgb565
 ```
-The LCD is shown by `<canvas data-lcd>` (the generic page shows it
-automatically). Touch of the canvas (mouse or touch screen) is sent to the
-board script (`panel.on_touch()`), usually to the model of touch panel
-controller which is read by the system, e.g. FT5336 (as on STM32F746G-DISCO):
+The panel can show more LCDs, all of them are handled the same way and are
+identified by id: the LCD of the LTDC driver has id `ltdc`, other LCDs are
+defined by the board script (models of displays connected by SPI, I2C,
+parallel bus, etc.), see [LCDs of board models](#lcds-of-board-models). The
+LCD is shown by `<canvas data-lcd="<id>">` (e.g. `<canvas data-lcd="ltdc">`),
+more canvases can show the same LCD (the generic page shows all active LCDs
+automatically). Touch of the canvas (mouse or touch screen) is
+sent to the board script (`panel.on_touch()`), usually to the model of touch
+panel controller which is read by the system, e.g. FT5336 (as on
+STM32F746G-DISCO):
 ```lua
 local ft5336 = require("models.ft5336")
 local ts = ft5336.new{int = "PA9"}:attach("I2C1", 0x38)
-panel.on_touch(function(x, y, pressed) ts:touch(x, y, pressed) end)
+panel.on_touch(function(x, y, pressed) ts:touch(x, y, pressed) end, "ltdc")
 ```
 The controller is read in dnx RTOS by the `I2C` driver, registers 0x02..0x06:
 number of points, X and Y (12 bits), e.g. in the demo:
@@ -315,3 +328,171 @@ number of points, X and Y (12 bits), e.g. in the demo:
 make run-sim PANEL=1 SIM_OPTS="--board sim-env/boards/example.lua --hostfs sim-env"
 lua /host/demos/lcdpaint.lua
 ```
+
+### LCDs of board models
+`panel.lcd(id, width, height [, opts])` creates a framebuffer in the
+simulator and shows it in the panel as LCD `id` (letters, digits, `_`, `.`,
+`-`, `ltdc` is used by the LTDC driver, at most 7 LCDs). The framebuffer has
+the same layout as the framebuffer of the LTDC driver (lines from the top,
+pixels little endian), changed lines are sent to the panel every 50 ms by the
+simulator (not by Lua), so the model only writes pixels. The LCD exists until
+the board is stopped.
+
+| Option | Description |
+|--------|-------------|
+| `format` | pixel format: `rgb565` (default), `argb8888`, `rgb888`, `argb1555`, `argb4444`, `l8` (gray scale), `al44`, `al88` |
+| `bg` | `{r, g, b}` background color blended with alpha of pixels (default black) |
+| `enabled` | `false`: LCD is not shown (e.g. display is off after reset) |
+
+Methods and fields of LCD object (colors are pixel values in the LCD format,
+pixels out of LCD are not written):
+
+| Method / field | Description |
+|----------------|-------------|
+| `lcd:pixel(x, y [, value])` | write pixel (if `value` is given), returns pixel value (`nil`: out of LCD) |
+| `lcd:fill(value [, x, y, w, h])` | fill whole LCD or rectangle |
+| `lcd:color(r, g, b [, a])` | pixel value of color (components 0..255, alpha default 255) |
+| `lcd:write(offset, data)` | write raw bytes (string) at byte offset of framebuffer, returns number of written bytes |
+| `lcd:read(offset, len)` | read raw bytes of framebuffer |
+| `lcd:enable(on)` | show (`true`) or hide LCD in the panel (display off, sleep), content is kept |
+| `lcd:on_touch(fn)` | call `fn(x, y, pressed, id)` when the LCD is touched in the panel |
+| `lcd.id`, `lcd.width`, `lcd.height`, `lcd.format`, `lcd.pixel_size`, `lcd.enabled` | properties |
+
+Example (`boards/example.lua`, page `panel/example/`, demo
+`demos/tftdemo.lua`) – ST7789 TFT display on SPI3:
+```lua
+local st7789 = require("models.st7789")
+local tft = st7789.new{id = "tft", width = 240, height = 320, dc = "PB0"}:attach("SPI3", "PB1")
+tft:on_touch(function(x, y, pressed) panel.set("TFT_TOUCH", pressed and x .. ", " .. y or "") end)
+```
+```html
+<canvas data-lcd="tft"></canvas>
+<script>
+    panel.onLcd(function (lcd, id) { if (id === "tft") { /* lcd === null: display off */ } });
+</script>
+```
+In dnx RTOS the display is used by the SPI device and the D/C pin of GPIO port
+B (`/dev/gpiob`, the file is the 32-bit port state):
+```
+modprobe -i GPIO 1 0 /dev/gpiob
+modprobe -i SPI 2 0 /dev/spi-tft -c cs_port=1,cs_pin=1
+lua /host/demos/tftdemo.lua
+```
+
+## Writing device models
+A device model is a Lua module in `models/` loaded by the board script by
+`require("models.<name>")`. The board engine calls methods of the device
+(I2C: `select`, `write`, `read`, `stop`; SPI: `select`, `transfer`,
+`deselect`, see [i2c](#i2c) and [spi](#spi)), GPIO lines of the device (INT,
+D/C, RESET, chip enable, ...) are handled by the [gpio](#gpio) API, timing
+(write cycle, conversion time) by `host.time_ms()` and `host.timer()`, and
+the device can be shown or controlled by the [board panel](#board-panel).
+
+### Structure of model
+The convention of existing models:
+- the file starts with a comment: usage, options of `new()`, supported
+  commands/registers, methods and fields (this is the documentation of the
+  model),
+- the module returns table `M` with `M.new(opts)`: creates the device object
+  (table with metatable), options are checked (`error()`/`assert()` with the
+  model name in the message),
+- `dev:attach(bus, address_or_cs)` connects the device to the bus and returns
+  the device (`local d = model.new{...}:attach("SPI1", "PA7")`),
+- protocol methods are called by the engine, host side methods are used by
+  the board script and tests (e.g. `set_temperature()`, `touch()`,
+  `read_byte()`), callbacks of changes are registered by `dev:on_change(fn)`,
+- state kept in host files: loaded in `new()`, saved after changes (delayed
+  by `host.timer()`, not after every byte) and at exit (`host.on_exit()`),
+  paths relative to the board script are built from `host.dir`,
+- no global variables: the board can contain more instances of the model.
+
+Skeleton of SPI device with INT output (open drain, active low):
+```lua
+local M = {}
+local DEV = {}
+DEV.__index = DEV
+
+function M.new(opts)
+    opts = opts or {}
+    local d = setmetatable({}, DEV)
+    d.mode = {[0] = true, [3] = true}   -- supported SPI modes
+    d.int = opts.int                    -- INT pin (input of the system), optional
+    d.regs = {}
+    if d.int then gpio.set(d.int, true) end
+    return d
+end
+
+function DEV:select() self.state = "cmd" end      -- CS activated: new command
+
+function DEV:transfer(byte)
+    if self.state == "cmd" then
+        self.cmd, self.state = byte, "data"
+        return 0xFF                     -- byte sent to the system
+    end
+    -- data of command ...
+    return self.regs[self.cmd] or 0
+end
+
+function DEV:deselect() self.state = nil end      -- CS deactivated: execute command
+
+function DEV:interrupt(active)
+    if self.int then gpio.set(self.int, not active) end
+end
+
+function DEV:attach(bus, cs)
+    spi.attach(bus, cs, self)
+    return self
+end
+
+return M
+```
+
+Rules of the engine that the model can rely on:
+- all callbacks (bus methods, GPIO changes, timers, panel controls) are
+  called one by one in the board thread, so the model does not need locks,
+- GPIO changes of the system are handled before a bus transfer that the
+  system started later (e.g. D/C or CS pin set before the SPI transfer), so
+  the model can keep pin levels from `gpio.on_change()` (initial level:
+  `gpio.get()`),
+- a bus transfer of the system waits for the model, so a model method should
+  be fast (no loops waiting for time): timing is simulated by time stamps
+  (e.g. busy until `host.time_ms() + write_time`) or timers,
+- the system can release CS between a command and its data (e.g. `write()`
+  of the command and `read()` of the result are two transfers of the SPI
+  driver), so models of devices that keep the command state across CS (LCD
+  controllers) do not reset it in `select()`,
+- an error in a method is printed with traceback and the board works
+  further (I2C: transfer is not acknowledged).
+
+### Model of display
+A display model joins the bus protocol of the controller with an LCD of the
+panel (`models/st7789.lua`):
+- `new()` creates the LCD by `panel.lcd(opts.id, width, height, {enabled =
+  false})`, so the panel shows the display only after initialization by the
+  system (e.g. SLPOUT and DISPON), commands that switch the display off call
+  `lcd:enable(false)`,
+- the D/C pin is followed by `gpio.on_change()`: in `transfer()` low level
+  means command, high level data (parameters, pixels),
+- the address window (CASET/RASET or similar commands) and the write pointer
+  are kept by the model, pixels of RAMWR are converted to the LCD format
+  (`lcd:color()`, or directly when the formats are the same) and written by
+  `lcd:pixel()`; the orientation (MADCTL) is applied to coordinates, the LCD
+  in the panel has the physical orientation of the display,
+- reads of the controller (ID, status) return data from `transfer()`,
+- touch of the LCD in the panel is passed to the model of the touch
+  controller (`lcd:on_touch()` or `panel.on_touch(fn, id)`), the system reads
+  it by its bus (e.g. FT5336 by I2C, see [LCD and touch](#lcd-and-touch)).
+
+A display with own memory layout (monochrome OLED with pages, e.g. SSD1306)
+keeps its memory in Lua and writes changed pixels to the LCD
+(`lcd:pixel(x, y, on and white or black)`), a display with the framebuffer in
+the LCD format can write whole lines by `lcd:write(offset, data)`.
+
+### Testing models
+Behavior of the model can be checked in the board script (calls of the
+methods, `print()`), by the generic panel page (`/p/default/?all`) and by test
+programs executed in dnx RTOS. Automatic tests (`make test-sim`,
+`tools/simtest.py`) use the board `boards/test.lua`: a new model is attached
+there, a test program in `tests/` uses the device by the driver of dnx RTOS
+(e.g. `tests/spilcd.lua` for the ST7789 model) and `tools/simtest.py` checks
+its output (and data received by the panel socket, e.g. pixels of the LCD).
