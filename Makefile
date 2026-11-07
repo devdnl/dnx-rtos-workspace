@@ -35,6 +35,18 @@ TARGET_DIR_NAME = build
 SIM_PANEL_SOCKET = $(TARGET_DIR_NAME)/dnx-panel.sock
 SIM_PANEL_PORT ?= 8080
 
+# POSIX simulator: other appsets linked with the simulator kernel (programs are searched in the
+# main appset first, then in these appsets in the given order): list of <appset directory>
+# [:<configuration directory>] (relative to the workspace or absolute), default configuration is
+# config/sim-appset, e.g. SIM_APPSETS="btl-appset /home/user/project/appset:config/sim-appset";
+# appset is built in $(TARGET_DIR_NAME)/sim-<appset directory name>, so names must be unique
+SIM_APPSETS ?=
+
+# test-sim: the test appset (programs appsettest and echo) is always linked with the simulator
+ifneq ($(filter test-sim,$(MAKECMDGOALS)),)
+override SIM_APPSETS += sim-env/testappset
+endif
+
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
 #---------------------------------------------------------------------------------------------------
@@ -113,12 +125,33 @@ define build_sim_kernel
 	$(REMOVE) kernel/build/ioctl
 endef
 
-# define macro used to build POSIX simulator appset
+# define macro used to build POSIX simulator appset: appset directory, configuration directory,
+# build name ($(TARGET_DIR_NAME)/<name> and <name>.o), symbol of program table
 define build_sim_appset
 	$(eval $@_APP_NAME = $(1))
-	$(eval $@_CONFIG_NAME = $(2))
-	$(MAKE) -C $(APPSET_BASE) -s -j 1 -fMakefile all APPSET_DIR=${$@_APP_NAME} CONFIG_DIR=config/${$@_CONFIG_NAME} BUILD_DIR=$(TARGET_DIR_NAME)/${$@_CONFIG_NAME} BOARD_NAME=posix PROJECT_OPTS=sim
-	$(COPY) $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}/output/appset.o $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.o
+	$(eval $@_CONFIG_DIR = $(2))
+	$(eval $@_BUILD_NAME = $(3))
+	$(eval $@_TABLE_SYMBOL = $(4))
+	$(MAKE) -C $(APPSET_BASE) -s -j 1 -fMakefile all APPSET_DIR=${$@_APP_NAME} CONFIG_DIR=${$@_CONFIG_DIR} BUILD_DIR=$(TARGET_DIR_NAME)/${$@_BUILD_NAME} BOARD_NAME=posix PROJECT_OPTS=sim TABLE_SYMBOL=${$@_TABLE_SYMBOL}
+	$(COPY) $(TARGET_DIR_NAME)/${$@_BUILD_NAME}/output/appset.o $(TARGET_DIR_NAME)/${$@_BUILD_NAME}.o
+endef
+
+# other appsets of the POSIX simulator (SIM_APPSETS): fields of entry, build name, table symbol
+sim_appset_dir    = $(word 1,$(subst :, ,$(1)))
+sim_appset_config = $(or $(word 2,$(subst :, ,$(1))),config/sim-appset)
+sim_appset_name   = sim-$(notdir $(abspath $(call sim_appset_dir,$(1))))
+sim_appset_symbol = _program_table_desc_$(subst .,_,$(subst -,_,$(notdir $(abspath $(call sim_appset_dir,$(1))))))
+SIM_APPSET_OBJS   = $(foreach a,$(SIM_APPSETS),$(TARGET_DIR_NAME)/$(call sim_appset_name,$(a)).o)
+
+# rule building one of other appsets of the POSIX simulator: entry of SIM_APPSETS
+define sim_appset_rule
+.PHONY : build-$(call sim_appset_name,$(1))
+build-$(call sim_appset_name,$(1)) : _build_prepare
+	@if [ ! -d "$(call sim_appset_dir,$(1))" ]; then $$(ECHO) "SIM_APPSETS: appset directory not found: $(call sim_appset_dir,$(1))"; exit 1; fi
+	@if [ ! -f "$(call sim_appset_config,$(1))/config.h" ]; then $$(ECHO) "SIM_APPSETS: configuration not found: $(call sim_appset_config,$(1))"; exit 1; fi
+	@if [ "$(call sim_appset_name,$(1))" = "sim-appset" ]; then $$(ECHO) "SIM_APPSETS: appset directory name 'appset' is used by the main appset: $(call sim_appset_dir,$(1))"; exit 1; fi
+	@$$(ECHO) "Building simulator appset $(call sim_appset_dir,$(1)) ($(call sim_appset_config,$(1)))..."
+	@$$(call build_sim_appset, $(call sim_appset_dir,$(1)), $(call sim_appset_config,$(1)), $(call sim_appset_name,$(1)), $(call sim_appset_symbol,$(1)))
 endef
 
 # define macro used to create ROMFS: directory with files of the image, configuration name
@@ -193,6 +226,8 @@ help :
 	@$(ECHO) "   run-sim             build and start POSIX simulator (options: SIM_OPTS=..., PANEL=1"
 	@$(ECHO) "                       board panel in web browser, needs --board, PANEL_OPTS=...)"
 	@$(ECHO) "   test-sim            build and test system in POSIX simulator (options: SIMTEST_OPTS=...)"
+	@$(ECHO) "                       other appsets in simulator: SIM_APPSETS=\"<appset>[:<config>] ...\""
+	@$(ECHO) "                       (test-sim adds sim-env/testappset)"
 	@$(ECHO) "   build-btl-appset    build bootloader's appset"
 	@$(ECHO) "   build-app           build application (kernel + appset)"
 	@$(ECHO) "   build-app-kernel    build application's kernel"
@@ -244,7 +279,7 @@ build-app : _build_prepare build-app-romfs build-app-kernel build-app-appset
 .PHONY : build-sim
 build-sim : _build_prepare build-sim-romfs build-sim-kernel build-sim-appset
 	@$(MAKE) -C kernel -s -j 1 -fMakefile link-sim CONFIG_DIR=../config/sim-kernel \
-	         APPSET_OBJ=../$(TARGET_DIR_NAME)/sim-appset.o \
+	         APPSET_OBJ="../$(TARGET_DIR_NAME)/sim-appset.o $(addprefix ../,$(SIM_APPSET_OBJS))" \
 	         OUTPUT=../$(TARGET_DIR_NAME)/dnx-sim
 	@$(ECHO) "Target sim built successfully: $(TARGET_DIR_NAME)/dnx-sim --disk 0=$(TARGET_DIR_NAME)/sim-romfs.bin:ro"
 
@@ -254,8 +289,10 @@ build-sim-kernel : _build_prepare
 	@$(call build_sim_kernel, sim-kernel)
 
 .PHONY : build-sim-appset
-build-sim-appset : _build_prepare
-	@$(call build_sim_appset, app-appset, sim-appset)
+build-sim-appset : _build_prepare $(foreach a,$(SIM_APPSETS),build-$(call sim_appset_name,$(a)))
+	@$(call build_sim_appset, app-appset, config/sim-appset, sim-appset, _program_table_desc)
+
+$(foreach a,$(SIM_APPSETS),$(eval $(call sim_appset_rule,$(a))))
 
 .PHONY : build-sim-romfs
 build-sim-romfs : _build_prepare

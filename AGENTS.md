@@ -204,6 +204,16 @@ Notes:
   `_program_table_desc` stays global, so appset symbols do not conflict with
   kernel and host library symbols. libc calls kernel by `_dnx_syscall` when
   `__LIBC_DNX_RTOS_ADDRESS__` is 0.
+- More appsets in the simulator: `make build-sim SIM_APPSETS="<appset>[:<config>] ..."`
+  (default config `config/sim-appset`, build `build/sim-<appset name>`). Other
+  appsets get the table symbol `_program_table_desc_<appset name>`
+  (`TABLE_SYMBOL` of `tools/appset`); when `__PROJ_APPSET_TABLE_ADDRESS__` is 0
+  the generated `program_registration.c` puts a reference of the table in the
+  `dnx_appset_tables` section and the kernel (`_process_init()`, POSIX only)
+  registers all tables found there after the main one. Programs are searched
+  in the main appset first. `make test-sim` adds the test appset
+  `sim-env/testappset` (`appsettest`, test `appsets: testappset`; it is
+  skipped when the simulator was built without it).
 - A program fault (SIGSEGV, ...) is reported as APP CRASH like a CPU exception
   on the microcontroller; the simulator keeps running.
 

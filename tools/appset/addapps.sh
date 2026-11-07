@@ -268,6 +268,14 @@ function create_program_registration_file()
     echo "};"
     echo ''
 
+    echo '#if __PROJ_APPSET_TABLE_ADDRESS__ == 0'
+    echo '// appset linked with kernel (POSIX simulator): reference of the table found by the kernel'
+    echo '// in the section of all linked appsets (more appsets in one executable)'
+    echo 'static const void *const _program_table_ref __attribute__((section("dnx_appset_tables"), used)) ='
+    echo '        &_program_table_desc;'
+    echo '#endif'
+    echo ''
+
     echo "// function never called"
     echo "int main(void) {"
     echo "        _program_table_desc.program_entry->main(0, NULL);"

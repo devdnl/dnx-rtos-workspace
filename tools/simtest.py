@@ -21,6 +21,8 @@
 #           - fstest on flatfs, eefs, ext2 and ext3 (journal) partitions of the second disk
 #             (formatted by mkflatfs, mkeefs and mkext programs), ext2 and ext3 are checked by
 #             e2fsck after test (requires e2fsprogs, otherwise check is skipped),
+#           - other appset linked with simulator (sim-env/testappset, program appsettest: libc,
+#             threads, child process, search order of programs in appsets),
 #           - block layer (sim-env/tests/blkdev.lua): unaligned requests and bounce buffers on host disk
 #             with emulated constraints (block size, buffer alignment), fstest on ext2 on that disk,
 #             image is checked by e2fsck,
@@ -321,6 +323,17 @@ class TestRunner:
         return (not self.args.filter) or (self.args.filter.lower() in name.lower())
 
     # run program which prints SUMMARY line, setup commands are executed before (e.g. format, mount)
+    def appset_test(self, sim):
+        name = "appsets: testappset"
+        if not self.selected(name):
+            return
+
+        ok, out = sim.run("appsettest", DEFAULT_TIMEOUT)
+        if ok and ("is unknown command" in out):
+            self.result(name, SKIP, "simulator built without sim-env/testappset (make test-sim or SIM_APPSETS)")
+        else:
+            self.summary_test(sim, name, None, "appsettest", DEFAULT_TIMEOUT)
+
     def summary_test(self, sim, name, cwd, cmd, timeout, setup=(), device=None):
         if not self.selected(name):
             return
@@ -744,6 +757,9 @@ class TestRunner:
             for name in board_tests:
                 if self.selected(name):
                     self.result(name, SKIP, "board model not selected (--board none)")
+
+        # other appset linked with simulator (make test-sim links sim-env/testappset)
+        self.appset_test(sim)
 
         # block layer: HOSTDISK with emulated constraints (block size, buffer alignment), formatted by blkdev.lua
         self.summary_test(sim, "blkdev: constraints", "/host/sim-env", "lua blkdev.lua", FSTEST_TIMEOUT)

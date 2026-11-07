@@ -267,6 +267,24 @@ x86 executable). The simulator uses its own configuration: `config/sim-kernel`,
 make build-sim      # creates build/dnx-sim and build/sim-romfs.bin
 make run-sim        # builds and starts simulator in the current terminal
 ```
+Other appsets can be linked with the simulator too (e.g. the bootloader appset
+or an appset of another project): `SIM_APPSETS` is a list of `<appset
+directory>[:<configuration directory>]` (relative to the workspace or absolute,
+default configuration `config/sim-appset`), each appset is built in
+`build/sim-<appset directory name>`:
+```
+make build-sim SIM_APPSETS="btl-appset /home/user/project/appset"
+make run-sim SIM_APPSETS=btl-appset
+```
+Programs are searched in the main appset (`app-appset`) first, then in other
+appsets in the given order (a program of the same name in a later appset is
+not started). All symbols of an appset except its program table are local, so
+appsets can contain the same libraries (libc) and program names in the source
+code; the table of the appset is `_program_table_desc_<appset directory name>`
+(debugger). `make test-sim` always links the test appset `sim-env/testappset`
+(program `appsettest`: libc, threads and child process in other appset, search
+order of programs; its `echo` must not be started instead of `echo` of the
+main appset).
 The simulator is built by the `i686-unknown-linux-musl-` toolchain (installed
 in the Docker image on x86_64 hosts) as a static executable, so it can be
 started also outside the container. Program options:

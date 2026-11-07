@@ -48,6 +48,7 @@ make -C tools/appset all APPSET_DIR=<appset> [CONFIG_DIR=<config>] [BUILD_DIR=<b
 | `APPSET_DIR` | appset directory (`programs/`, `libs/`), required to build |
 | `CONFIG_DIR` | appset configuration, default: `tools/appset/config` |
 | `BUILD_DIR` | build directory (objects, generated files, `output/appset.{elf,hex,bin,o}`), default: `build/<appset name>` |
+| `TABLE_SYMBOL` | POSIX simulator: global symbol of the program table in `output/appset.o`, default: `_program_table_desc` (main appset), other appsets linked with the same kernel use unique names (`SIM_APPSETS` of the workspace) |
 
 Relative paths are relative to the workspace directory. The workspace build
 uses `config/<name>` and `build/<name>` (e.g. `config/sim-appset` and

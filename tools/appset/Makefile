@@ -35,6 +35,9 @@
 #               programs and libraries, directories of local ones)
 #   CONFIG_DIR  appset configuration (default: tools/appset/config)
 #   BUILD_DIR   build directory (default: build/<appset name>)
+#   TABLE_SYMBOL  POSIX simulator: name of the global symbol of the program table
+#               (default: _program_table_desc, the main appset), other appsets
+#               linked with the same kernel need unique names
 #
 # Relative paths are relative to the workspace directory.
 #
@@ -171,8 +174,12 @@ LFLAGS   = -g \
 
 # POSIX simulator: appset is a relocatable object linked with kernel. Only the
 # program table is exported, all other symbols are local (no conflicts with
-# kernel and host library symbols).
-POSIX_OBJCOPY_FLAGS = --keep-global-symbol=_program_table_desc \
+# kernel and host library symbols). The table of other appsets linked with the
+# same kernel is renamed (TABLE_SYMBOL), the kernel finds all tables by the
+# section dnx_appset_tables (program_registration.c).
+TABLE_SYMBOL ?= _program_table_desc
+POSIX_OBJCOPY_FLAGS = $(if $(filter-out _program_table_desc,$(TABLE_SYMBOL)),--redefine-sym _program_table_desc=$(TABLE_SYMBOL)) \
+                      --keep-global-symbol=$(TABLE_SYMBOL) \
                       --redefine-sym __data_init_start=_appset_data_init_start \
                       --redefine-sym __data_start=_appset_data_start \
                       --redefine-sym __data_size=_appset_data_size \
