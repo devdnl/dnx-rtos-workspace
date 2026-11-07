@@ -69,6 +69,38 @@
             </div>
         </section>
 
+        <section class="block">
+            <h2>DS2482-100 <small>I2C1 0x18, 1-Wire, 3× DS18B20</small></h2>
+            <div class="ow-sensor">
+                <label class="check"><input type="checkbox" data-input="OW1_PLUG" aria-label="Sensor 1 connected">
+                    <code data-signal="OW1_ROM" data-format=""></code></label>
+                <div class="slider">
+                    <input type="range" min="-55" max="125" step="0.25" data-input="OW1_SET" aria-label="Sensor 1 temperature">
+                    <span data-signal="OW1_SET" data-format="%.2f °C"></span>
+                </div>
+                <div class="ow-reg">register <span data-signal="OW1_REG" data-format="%.4f °C">–</span></div>
+            </div>
+            <div class="ow-sensor">
+                <label class="check"><input type="checkbox" data-input="OW2_PLUG" aria-label="Sensor 2 connected">
+                    <code data-signal="OW2_ROM" data-format=""></code></label>
+                <div class="slider">
+                    <input type="range" min="-55" max="125" step="0.25" data-input="OW2_SET" aria-label="Sensor 2 temperature">
+                    <span data-signal="OW2_SET" data-format="%.2f °C"></span>
+                </div>
+                <div class="ow-reg">register <span data-signal="OW2_REG" data-format="%.4f °C">–</span></div>
+            </div>
+            <div class="ow-sensor">
+                <label class="check"><input type="checkbox" data-input="OW3_PLUG" aria-label="Sensor 3 connected">
+                    <code data-signal="OW3_ROM" data-format=""></code> <small>parasite</small></label>
+                <div class="slider">
+                    <input type="range" min="-55" max="125" step="0.25" data-input="OW3_SET" aria-label="Sensor 3 temperature">
+                    <span data-signal="OW3_SET" data-format="%.2f °C"></span>
+                </div>
+                <div class="ow-reg">register <span data-signal="OW3_REG" data-format="%.4f °C">–</span></div>
+            </div>
+            <label class="check"><input type="checkbox" data-input="OW_SHORT"> 1-Wire line shorted</label>
+        </section>
+
         <section class="block wide">
             <h2>PCF8574 <small>I2C1 0x20, active low</small>
                 <code class="hex" data-signal="LEDS1" data-format="0x%02X"></code></h2>

@@ -120,6 +120,10 @@ figcaption { font-size: 13px; color: var(--muted); }
 .slider { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .slider input { flex: 1; min-width: 0; accent-color: #22c55e; }
 .slider span { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; min-width: 64px; text-align: right; }
+.ow-sensor { padding: 6px 0 8px; border-bottom: 1px solid rgba(127, 127, 127, 0.2); margin-bottom: 8px; }
+.ow-sensor .slider { margin-top: 4px; }
+.ow-reg { font-size: 13px; color: var(--muted); }
+.ow-reg span { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: inherit; }
 
 /* LED bars */
 .bar { display: flex; justify-content: space-between; gap: 6px; }

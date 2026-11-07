@@ -6,9 +6,9 @@
     make run-sim PANEL=1 SIM_OPTS="--board sim-env/boards/example.lua"
 
   The board panel (PANEL=1, web browser: http://localhost:8080) shows page
-  sim-env/panel/example/: LEDs, button, temperature, LEDs of the I/O expander
-  and shift register, LCD (LTDC driver) with touch panel, TFT display (ST7789
-  model on SPI3).
+  sim-env/panel/example/: LEDs, button, temperature, DS18B20 sensors on
+  1-Wire bus (DS2482), LEDs of the I/O expander and shift register, LCD
+  (LTDC driver) with touch panel, TFT display (ST7789 model on SPI3).
 
   Pins (port A):
     PA0  LED (output of the system, active low)
@@ -17,6 +17,9 @@
     PA4  heartbeat (input of the system, toggled every 500 ms)
 
   I2C1:
+    0x18  DS2482-100 1-Wire master with 3 DS18B20 sensors (temperatures set
+          by the panel, sensor 3 with parasite power), EEPROM of sensors is
+          kept in the host files build/example-ds18b20-<n>.bin
     0x20  PCF8574 with 8 LEDs (printed when changed), INT -> PA5
     0x38  FT5336 touch panel controller (touch of the LCD in the panel),
           INT -> PA9
@@ -38,6 +41,10 @@
     modprobe -i I2CEE 0 0 /dev/ee0 -c i2c_path=/dev/i2c-ee,memory_size=32768,page_size=64,page_prog_time_ms=5
     mkeefs /dev/ee0   (only once, EEPROM content is kept in the file)
     mkdir /mnt/ee; mount /dev/ee0 eefs /mnt/ee
+
+  dnx RTOS (shell), DS2482 (1-Wire protocol is implemented by the program
+  or driver that uses the device file):
+    modprobe -i I2C 0 1 /dev/i2c-ow -c address=0x18
 
   dnx RTOS (shell), SD card (all SPI1 CS pins should be configured first,
   not configured CS pin is low: device is selected):
@@ -68,6 +75,8 @@
 local eeprom = require("models.24cxx")
 local pcf8574 = require("models.pcf8574")
 local lm75 = require("models.lm75")
+local ds2482 = require("models.ds2482")
+local ds18b20 = require("models.ds18b20")
 local spiee = require("models.25xx")
 local ft5336 = require("models.ft5336")
 local sdcard = require("models.sdcard")
@@ -139,6 +148,32 @@ panel.output("TOUCH", "PA9", {active_low = true, label = "Touch INT (PA9)", colo
 local DATA = host.dir .. "/../../build/"
 
 eeprom.new({ type = "24c256", file = DATA .. "example-24c256.bin" }):attach("I2C1", 0x50)
+
+-- I2C1: DS2482-100 with three DS18B20 sensors on 1-Wire bus (sensor 3:
+-- parasite power), temperatures are set by the panel, sensors can be
+-- disconnected (hot-plug) and the 1-Wire line shorted
+local ow = ds2482.new():attach("I2C1", 0x18)
+local OW_SENSORS = {
+    {serial = 0x00000A1B2C01, temperature = 21.5},
+    {serial = 0x00000A1B2C02, temperature = 4.0},
+    {serial = 0x00000A1B2C03, temperature = -12.25, parasite = true},
+}
+for n, o in ipairs(OW_SENSORS) do
+    local s = ds18b20.new({ serial = o.serial, temperature = o.temperature, parasite = o.parasite,
+                            file = DATA .. "example-ds18b20-" .. n .. ".bin" }):attach(ow)
+    local id = "OW" .. n
+    panel.value(id .. "_ROM", s:rom_string(), {label = "DS18B20 " .. n .. " ROM"})
+    panel.value(id .. "_REG", function() return s:register() end,
+                {period = 250, label = "DS18B20 " .. n .. " last conversion", unit = "°C", format = "%.4f"})
+    panel.control(id .. "_SET", function(v) s:set_temperature(v) end,
+                  {value = o.temperature, min = -55, max = 125, step = 0.25,
+                   label = "DS18B20 " .. n .. " temperature", unit = "°C"})
+    panel.control(id .. "_PLUG", function(v)
+        if v then s:attach(ow) else s:detach() end
+        print(string.format("DS18B20 %s %s", s:rom_string(), v and "connected" or "disconnected"))
+    end, {value = true, label = "DS18B20 " .. n .. " connected"})
+end
+panel.control("OW_SHORT", function(v) ow.ow:set_short(v) end, {value = false, label = "1-Wire line shorted"})
 
 -- SPI1: EEPROM and SD card
 spiee.new({ type = "25lc256", file = DATA .. "example-25lc256.bin" }):attach("SPI1", "PA7")

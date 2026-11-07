@@ -17,7 +17,9 @@ Directories:
   sensor), `25xx` (SPI EEPROM), `sdcard` (SD card in SPI mode, host image
   file), `74hc595` (SPI shift register), `ft5336` (I2C touch panel
   controller), `st7789` (SPI TFT LCD controller, ST7789/ILI9341 compatible,
-  shown by the board panel), the description of options and methods is in
+  shown by the board panel), `ds2482` (I2C to 1-Wire bridge DS2482-100),
+  `ds18b20` (1-Wire thermometer), `onewire` (1-Wire bus used by them, see
+  [1-Wire](#1-wire)), the description of options and methods is in
   the model file, see [Writing device models](#writing-device-models),
 - `tests/` – test programs executed in dnx RTOS (e.g. `lua /host/gpio.lua`),
 - `demos/` – demo programs executed in dnx RTOS, e.g. `lcdpaint.lua` (drawing
@@ -181,6 +183,52 @@ modprobe -i SDSPI 0 0 /dev/sdcard -c spi_path=/dev/spi-sd
 storinit /dev/sdcard
 modprobe -i SPI 0 1 /dev/spi-ee -c cs_port=0,cs_pin=7,mode=0
 modprobe -i SPIEE 0 0 /dev/ee1 -c spi_path=/dev/spi-ee,memory_size=32768,page_size=64,address_size=2
+```
+
+### 1-Wire
+1-Wire devices are connected to the 1-Wire bus (`models/onewire.lua`) of the
+master model, the DS2482-100 I2C bridge (`models/ds2482.lua`, addresses
+0x18..0x1B). The bus is modeled by time slots, not by bytes: in each slot the
+master writes one bit (bit 1 is the read slot), every device can pull the line
+low and all of them sample the resulting level (wired-AND). The master does
+not know commands of devices, so SEARCH ROM and ALARM SEARCH work as on the
+real line for any number of devices and any ROM codes, also when the search
+is done by single bits (DS2482 `1WSB`) instead of triplets (`1WT`), and READ
+ROM with more devices returns the wired-AND of their codes.
+```lua
+local ds2482 = require("models.ds2482")
+local ds18b20 = require("models.ds18b20")
+
+local ow = ds2482.new{}:attach("I2C1", 0x18)
+local s1 = ds18b20.new{serial = 0x00000A1B2C01, temperature = 21.5}:attach(ow)
+local s2 = ds18b20.new{serial = 0x00000A1B2C02, parasite = true}:attach(ow)
+s1:set_temperature(-10.125)
+s2:detach()                       -- hot-plug: disconnected device
+ow.ow:set_short(true)             -- 1-Wire line shorted to ground
+s1:set_fault("crc", true)         -- wrong CRC of scratchpad
+```
+The DS2482 model sets the busy bit (`1WB`) for the time of the 1-Wire
+operation (reset about 1.15 ms, time slot 72.5 µs) and its results (PPD, SBR,
+TSB, DIR, read data) are visible after the operation is finished, so the
+driver has to poll the status register as on the hardware (option `timing =
+false`: operations are finished immediately). Commands sent while the line is
+busy are ignored (a warning is printed). The DS18B20 model supports all ROM
+and function commands of the device: conversion time depends on resolution
+(read slots return 0 during conversion), the temperature register is 85 °C
+after power on, EEPROM (TH, TL, configuration) can be kept in the host file.
+Devices with parasite power need the strong pull-up of the master (DS2482
+`SPU` bit set before CONVERT T or COPY SCRATCHPAD), otherwise the operation
+fails (temperature register is not changed, a warning is printed). Faults:
+`set_fault("crc" | "rom_crc" | "mute", on)` of the sensor, short of the line.
+Other 1-Wire devices or masters (e.g. DS2482-800, bit-banged GPIO master) can
+be written for the same bus interface (described in `models/onewire.lua`).
+
+In dnx RTOS the DS2482 is used by the I2C device without sub-address, the
+1-Wire protocol is implemented by the program or driver (`tests/ds2482.lua`
+contains a Lua implementation: reset, byte and bit transfers, triplets,
+search by Maxim AN187, MATCH ROM, conversion, scratchpad with CRC):
+```
+modprobe -i I2C 0 1 /dev/i2c-ow -c address=0x18
 ```
 
 ## Board panel
