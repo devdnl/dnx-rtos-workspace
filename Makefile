@@ -42,6 +42,14 @@ SIM_PANEL_PORT ?= 8080
 # appset is built in $(TARGET_DIR_NAME)/sim-<appset directory name>, so names must be unique
 SIM_APPSETS ?=
 
+# drvset partition (drivers built separately from the kernel, tools/drvset): directory with
+# Makefile.in of drivers, built with the application kernel configuration (config/app-kernel)
+DRVSET_DIR ?= tools/drvset/example
+
+# drvset partition of POSIX simulator (option --drvset of simulator, used by test-sim): example
+# driver and file system dsramfs
+SIM_DRVSET_DIR ?= tools/drvset/test/sim
+
 # test-sim: the test appset (programs appsettest and echo) is always linked with the simulator
 ifneq ($(filter test-sim,$(MAKECMDGOALS)),)
 override SIM_APPSETS += sim-env/testappset
@@ -223,6 +231,8 @@ help :
 	@$(ECHO) "   build-btl           build bootloader (kernel + appset)"
 	@$(ECHO) "   build-btl-kernel    build bootloader's kernel"
 	@$(ECHO) "   build-sim           build POSIX simulator (Linux): build/dnx-sim"
+	@$(ECHO) "   build-sim-drvset    build drvset partition of simulator: build/sim-drvset.bin (SIM_DRVSET_DIR=...,"
+	@$(ECHO) "                       run-sim SIM_OPTS=\"--drvset build/sim-drvset.bin\")"
 	@$(ECHO) "   run-sim             build and start POSIX simulator (options: SIM_OPTS=..., PANEL=1"
 	@$(ECHO) "                       board panel in web browser, needs --board, PANEL_OPTS=...)"
 	@$(ECHO) "   test-sim            build and test system in POSIX simulator (options: SIMTEST_OPTS=...)"
@@ -232,6 +242,8 @@ help :
 	@$(ECHO) "   build-app           build application (kernel + appset)"
 	@$(ECHO) "   build-app-kernel    build application's kernel"
 	@$(ECHO) "   build-app-appset    build application's appset"
+	@$(ECHO) "   build-app-drvset    build drvset partition of application kernel (DRVSET_DIR=...)"
+	@$(ECHO) "   test-drvset         build and check drvset partitions with test kernel (no hardware needed)"
 	@$(ECHO) "   install             install (flash) bootloader and application"
 	@$(ECHO) "   install-btl         install (flash) bootloader"
 	@$(ECHO) "   install-app         install (flash) application"
@@ -294,6 +306,12 @@ build-sim-appset : _build_prepare $(foreach a,$(SIM_APPSETS),build-$(call sim_ap
 
 $(foreach a,$(SIM_APPSETS),$(eval $(call sim_appset_rule,$(a))))
 
+.PHONY : build-sim-drvset
+build-sim-drvset : _build_prepare
+	@$(MAKE) -C tools/drvset -s -fMakefile all DRVSET_DIR=$(SIM_DRVSET_DIR) CONFIG_DIR=config/sim-kernel \
+	         BUILD_DIR=$(TARGET_DIR_NAME)/sim-drvset
+	@$(COPY) $(TARGET_DIR_NAME)/sim-drvset/output/drvset.bin $(TARGET_DIR_NAME)/sim-drvset.bin
+
 .PHONY : build-sim-romfs
 build-sim-romfs : _build_prepare
 	@$(call build_romfs, app-romfs, sim-romfs)
@@ -312,9 +330,11 @@ else
 endif
 
 .PHONY : test-sim
-test-sim : build-sim
+test-sim : build-sim build-sim-drvset
+	@$(MAKE) -C tools/drvset -s -fMakefile check DRVSET_DIR=$(SIM_DRVSET_DIR) CONFIG_DIR=config/sim-kernel \
+	         BUILD_DIR=$(TARGET_DIR_NAME)/sim-drvset KERNEL_ELF=$(TARGET_DIR_NAME)/dnx-sim
 	@$(PYTHON3) tools/simtest.py --sim $(TARGET_DIR_NAME)/dnx-sim --rom $(TARGET_DIR_NAME)/sim-romfs.bin\
-	 --log $(TARGET_DIR_NAME)/simtest.log $(SIMTEST_OPTS)
+	 --drvset $(TARGET_DIR_NAME)/sim-drvset.bin --log $(TARGET_DIR_NAME)/simtest.log $(SIMTEST_OPTS)
 
 .PHONY : build-btl
 build-btl : _build_prepare build-btl-kernel build-btl-appset
@@ -334,6 +354,20 @@ build-app-kernel : _build_prepare
 .PHONY : build-app-appset
 build-app-appset : _build_prepare
 	@$(call build_appset, app-appset, app-appset, boardname, proj_opts)
+
+.PHONY : build-app-drvset
+build-app-drvset : _build_prepare
+	@$(MAKE) -C tools/drvset -s -fMakefile all DRVSET_DIR=$(DRVSET_DIR) CONFIG_DIR=config/app-kernel BUILD_DIR=$(TARGET_DIR_NAME)/app-drvset
+	@$(COPY) $(TARGET_DIR_NAME)/app-drvset/output/drvset.hex $(TARGET_DIR_NAME)/app-drvset.hex
+	@$(COPY) $(TARGET_DIR_NAME)/app-drvset/output/drvset.elf $(TARGET_DIR_NAME)/app-drvset.elf
+	@$(COPY) $(TARGET_DIR_NAME)/app-drvset/output/drvset.bin $(TARGET_DIR_NAME)/app-drvset.bin
+	@if [ -f $(TARGET_DIR_NAME)/app-kernel.elf ]; then \
+	    $(MAKE) -C tools/drvset -s -fMakefile check DRVSET_DIR=$(DRVSET_DIR) CONFIG_DIR=config/app-kernel \
+	            BUILD_DIR=$(TARGET_DIR_NAME)/app-drvset KERNEL_ELF=$(TARGET_DIR_NAME)/app-kernel.elf; fi
+
+.PHONY : test-drvset
+test-drvset :
+	@$(SHELL) tools/drvset/test/test.sh
 
 .PHONY : build-app-romfs
 build-app-romfs : _build_prepare

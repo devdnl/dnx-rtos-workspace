@@ -208,6 +208,7 @@ static void INET_print_status(void)
                "  Address: %u.%u.%u.%u\n"
                "  Gateway: %u.%u.%u.%u\n"
                "  Netmask: %u.%u.%u.%u\n"
+               "  MTU    : %u B\n"
                "  RX packets: %llu (%llu %s)\n"
                "  TX packets: %llu (%llu %s)\n",
 
@@ -225,6 +226,8 @@ static void INET_print_status(void)
 
                 NET_INET_IPv4_a(global->status.inet.mask), NET_INET_IPv4_b(global->status.inet.mask),
                 NET_INET_IPv4_c(global->status.inet.mask), NET_INET_IPv4_d(global->status.inet.mask),
+
+                global->status.inet.MTU,
 
                 global->status.inet.rx_packets, global->status.inet.rx_bytes, rx_unit,
                 global->status.inet.tx_packets, global->status.inet.tx_bytes, tx_unit);
@@ -347,11 +350,13 @@ static void UDS_print_status(void)
 
         printf("UDS\n"
                "  Status: %s\n"
+               "  MTU: %u B\n"
                "  RX packets: %llu (%llu %s)\n"
                "  TX packets: %llu (%llu %s)\n",
 
-                STATE[global->status.uds.state], global->status.uds.rx_packets, global->status.uds.rx_bytes,
-                rx_unit, global->status.uds.tx_packets, global->status.uds.tx_bytes, tx_unit);
+                STATE[global->status.uds.state], global->status.uds.MTU, global->status.uds.rx_packets,
+                global->status.uds.rx_bytes, rx_unit, global->status.uds.tx_packets, global->status.uds.tx_bytes,
+                tx_unit);
 }
 
 //==============================================================================

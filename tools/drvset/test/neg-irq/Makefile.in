@@ -1,0 +1,6 @@
+# Makefile for GNU make
+# Negative test (tools/drvset/test/test.sh): shared handler of interrupt handled by the kernel
+# image (TEST_IRQ_USED selected by test.sh), check shall fail.
+
+DRVSET_MODULES += DSNEGIRQ
+CSRC_DRVSET    += $(DRVSET_ROOT)neg_irq.c

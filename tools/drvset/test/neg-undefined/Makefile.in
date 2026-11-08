@@ -1,0 +1,6 @@
+# Makefile for GNU make
+# Negative test (tools/drvset/test/test.sh): driver uses kernel function that is not exported
+# (not in kernel symbol table), link shall fail.
+
+DRVSET_MODULES += DSNEGUNDEF
+CSRC_DRVSET    += $(DRVSET_ROOT)neg_undefined.c

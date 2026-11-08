@@ -1,0 +1,8 @@
+{
+	["config/os/os_flags.h"]={
+		["__OS_ENABLE_DRVSET__"]="_YES_";
+	};
+	["config/arch/arch_flags.h"]={
+		["__ENABLE_IRQ__"]="_YES_";
+	};
+}

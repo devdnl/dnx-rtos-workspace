@@ -1,0 +1,12 @@
+# Makefile for GNU make
+# Drvset partition of the POSIX simulator tests (make test-sim, tools/simtest.py): example driver
+# (tools/drvset/example) and ramfs of the kernel built into the partition as file system dsramfs.
+
+DRVSET_MODULES     += EXAMPLE
+CSRC_DRVSET        += $(WORKSPACE)/tools/drvset/example/example.c
+HDRLOC_DRVSET      += $(WORKSPACE)/tools/drvset/example
+IOCTL_DRVSET       += $(WORKSPACE)/tools/drvset/example/example_ioctl.h
+
+DRVSET_FILESYSTEMS += dsramfs:ramfs
+CSRC_DRVSET        += $(KERNEL_SRC)/fs/ramfs/ramfs.c
+HDRLOC_DRVSET      += $(KERNEL_SRC)/fs/ramfs

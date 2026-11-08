@@ -1,0 +1,6 @@
+# Makefile for GNU make
+# Negative test (tools/drvset/test/test.sh): module with the name of module built into the
+# kernel (GPIO), check shall fail.
+
+DRVSET_MODULES += GPIO
+CSRC_DRVSET    += $(DRVSET_ROOT)neg_module.c

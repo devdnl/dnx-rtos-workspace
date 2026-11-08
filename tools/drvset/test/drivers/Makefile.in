@@ -1,0 +1,13 @@
+# Makefile for GNU make
+# Test drivers of drvset (tools/drvset/test/test.sh): two modules, file system, driver interfaces of kernel
+# drivers, exclusive and shared interrupt handlers. Interrupts are selected by test.sh
+# (CFLAGS_DRVSET: TEST_IRQ, TEST_IRQ2, TEST_IRQ_HANDLER).
+
+DRVSET_MODULES += DSTEST DSTESTBLK:blk
+CSRC_DRVSET    += $(DRVSET_ROOT)dstest.c
+HDRLOC_DRVSET  += $(DRVSET_ROOT)
+
+# file system of the kernel (ramfs) built into the partition under other mount name
+DRVSET_FILESYSTEMS += dsramfs:ramfs
+CSRC_DRVSET    += $(KERNEL_SRC)/fs/ramfs/ramfs.c
+HDRLOC_DRVSET  += $(KERNEL_SRC)/fs/ramfs

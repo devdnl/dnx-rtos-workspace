@@ -1,0 +1,7 @@
+# Makefile for GNU make
+# Negative test (tools/drvset/test/test.sh): file system with the name of file system built into
+# the kernel (ramfs), check shall fail.
+
+DRVSET_FILESYSTEMS += ramfs
+CSRC_DRVSET        += $(KERNEL_SRC)/fs/ramfs/ramfs.c
+HDRLOC_DRVSET      += $(KERNEL_SRC)/fs/ramfs

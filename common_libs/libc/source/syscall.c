@@ -42,10 +42,11 @@ Brief   Syscall handling.
   Local macros
 ==============================================================================*/
 /*
- * Syscall section address is 0x08000400 in normal mode.
- * The syscall section compiled is in the Thumb mode. To indicate this mode jump
- * address is incremented by 1.
+ * Syscall entry address is stored in the kernel vector table, entry 255
+ * (kernel/kvectors.h: _KVECTOR_SYSCALL). __LIBC_DNX_RTOS_ADDRESS__ is the kernel
+ * vector table address.
  */
+#define KVECTOR_SYSCALL 255
 #if __LIBC_DNX_RTOS_ADDRESS__ == 0
 /*
  * Kernel address 0 means that appset is linked with kernel (POSIX simulator).
@@ -54,7 +55,7 @@ Brief   Syscall handling.
 extern int _dnx_syscall(_libc_syscall_t, va_list);
 #define dnx_syscall _dnx_syscall
 #else
-#define dnx_syscall ((syscall_func)(__LIBC_DNX_RTOS_ADDRESS__ + 0x401))
+#define dnx_syscall (*(const syscall_func *)(__LIBC_DNX_RTOS_ADDRESS__ + 4 * KVECTOR_SYSCALL))
 #endif
 
 /*==============================================================================

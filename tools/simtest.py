@@ -23,6 +23,11 @@
 #             e2fsck after test (requires e2fsprogs, otherwise check is skipped),
 #           - other appset linked with simulator (sim-env/testappset, program appsettest: libc,
 #             threads, child process, search order of programs in appsets),
+#           - drvset partition (drivers built separately from the kernel, option --drvset of
+#             simulator, image of tools/drvset/test/sim built by make build-sim-drvset): module
+#             registration, driver initialization by modprobe, read, release, fstest on file
+#             system dsramfs of the partition, partition with incorrect header (started in
+#             separate simulator), skipped without image,
 #           - block layer (sim-env/tests/blkdev.lua): unaligned requests and bounce buffers on host disk
 #             with emulated constraints (block size, buffer alignment), fstest on ext2 on that disk,
 #             image is checked by e2fsck,
@@ -38,6 +43,7 @@
 #
 #         Usage:
 #           tools/simtest.py [--sim build/dnx-sim] [--rom build/sim-romfs.bin] [--tap tap0]
+#                            [--drvset build/sim-drvset.bin|none]
 #                            [--board sim-env/boards/test.lua|none] [--perf] [--iostat]
 #                            [--log build/simtest.log] [-v] [filter]
 #
@@ -334,6 +340,82 @@ class TestRunner:
         else:
             self.summary_test(sim, name, None, "appsettest", DEFAULT_TIMEOUT)
 
+    # drvset partition (example driver): registration at boot, initialization, read and release
+    def drvset_test(self, sim):
+        name = "drvset: example driver"
+        if not self.selected(name):
+            return
+
+        if not self.args.drvset:
+            self.result(name, SKIP, "drvset image not found (make build-sim-drvset, --drvset)")
+            return
+
+        if "drvset: 1 modules, 1 file systems registered" not in sim.out:
+            self.result(name, FAIL, "partition not registered at boot (see log: %s)" % self.args.log)
+            return
+
+        steps = (("modprobe -i EXAMPLE 0 0 /dev/example", "initialized"),
+                 ("cat /dev/example", "irq: 0"),
+                 ("modprobe -R /dev/example", "released"))
+        for cmd, expected in steps:
+            ok, out = sim.run(cmd)
+            if not ok or expected not in out:
+                self.result(name, FAIL, "'%s': '%s' expected" % (cmd, expected))
+                return
+
+        self.result(name, PASS, "registered, initialized, read, released")
+
+    # file system of drvset partition (ramfs of the kernel built into the partition as dsramfs)
+    def drvset_fs_test(self, sim):
+        name = "fstest: dsramfs (drvset)"
+        if not self.selected(name):
+            return
+
+        if not self.args.drvset:
+            self.result(name, SKIP, "drvset image not found (make build-sim-drvset, --drvset)")
+            return
+
+        self.summary_test(sim, name, "/mnt/dsfs", "fstest", FSTEST_TIMEOUT,
+                          ("mkdir /mnt/dsfs", "mount - dsramfs /mnt/dsfs"))
+
+    # partition with incorrect header is rejected and system starts (separate simulator)
+    def drvset_bad_image_test(self, log, tmpdir):
+        name = "drvset: incorrect image"
+        if not self.selected(name):
+            return
+
+        if not self.args.drvset:
+            self.result(name, SKIP, "drvset image not found (make build-sim-drvset, --drvset)")
+            return
+
+        with open(self.args.drvset, "rb") as f:
+            image = bytearray(f.read())
+        struct.pack_into("<H", image, 4, 0xBAD)  # header version
+        bad = os.path.join(tmpdir, "drvset-bad.bin")
+        with open(bad, "wb") as f:
+            f.write(image)
+
+        argv = [self.args.sim, "--disk", "0=%s:ro" % self.args.rom, "--drvset", bad]
+        log.write("\n$ %s\n" % " ".join(argv))
+        sim = Simulator(argv, log, self.args.verbose)
+        try:
+            booted = sim.read(BOOT_TIMEOUT, lambda: "\n$ " in sim.out)
+            sim.read(1)
+            ok, out = sim.run("modprobe -i EXAMPLE 0 0 /dev/example") if booted else (False, "")
+            if not booted:
+                self.result(name, FAIL, "system does not start (see log: %s)" % self.args.log)
+            elif "drvset: unsupported header version" not in sim.out:
+                self.result(name, FAIL, "partition error not reported")
+            elif not ok or "initialized" in out:
+                self.result(name, FAIL, "module of rejected partition initialized")
+            else:
+                self.result(name, PASS, "partition rejected, system started")
+
+            if CRASH.search(sim.out):
+                self.result(name + " (crash)", FAIL, "see log: %s" % self.args.log)
+        finally:
+            sim.stop()
+
     def summary_test(self, sim, name, cwd, cmd, timeout, setup=(), device=None):
         if not self.selected(name):
             return
@@ -619,6 +701,8 @@ class TestRunner:
             romfs = None
 
         argv = [args.sim, "--disk", "0=%s:ro" % args.rom, "--hostfs", hostfs_dir]
+        if args.drvset:
+            argv += ["--drvset", args.drvset]
         if disk:
             argv += ["--disk", "1=%s" % disk]
         argv += ["--disk", "2=%s" % raw_disk]
@@ -651,10 +735,13 @@ class TestRunner:
                         sim.run("umount /mnt/sda1", 10)
                         sim.run("umount /mnt/sda2", 10)
                     for mnt in ("/mnt/i2cee", "/mnt/spiee", "/mnt/sdcard", "/mnt/flatfs", "/mnt/eefs", "/mnt/ext2",
-                                "/mnt/ext3", "/mnt/romfs", "/mnt/blk"):
+                                "/mnt/ext3", "/mnt/romfs", "/mnt/blk", "/mnt/dsfs"):
                         sim.run("umount " + mnt, 10)
                     sim.run("sync", 10)
                 sim.stop()
+
+            # partition with incorrect header: system starts without partition
+            self.drvset_bad_image_test(log, tmpdir)
 
             if self.selected("crash") or not args.filter:
                 if CRASH.search(sim.out):
@@ -761,6 +848,10 @@ class TestRunner:
         # other appset linked with simulator (make test-sim links sim-env/testappset)
         self.appset_test(sim)
 
+        # drvset partition (option --drvset)
+        self.drvset_test(sim)
+        self.drvset_fs_test(sim)
+
         # block layer: HOSTDISK with emulated constraints (block size, buffer alignment), formatted by blkdev.lua
         self.summary_test(sim, "blkdev: constraints", "/host/sim-env", "lua blkdev.lua", FSTEST_TIMEOUT)
         if self.selected("blkdev: constraints"):
@@ -843,6 +934,8 @@ def main():
     parser.add_argument("--sim", default=os.path.join(root, "build", "dnx-sim"), help="simulator program")
     parser.add_argument("--rom", default=os.path.join(root, "build", "sim-romfs.bin"), help="ROMFS image")
     parser.add_argument("--tap", default=None, help="TAP interface (enables inettest)")
+    parser.add_argument("--drvset", default=os.path.join(root, "build", "sim-drvset.bin"),
+                        help="drvset partition image (tools/drvset/example), 'none' disables drvset tests")
     parser.add_argument("--board", default=os.path.join(root, "sim-env", "boards", "test.lua"),
                         help="board model script, 'none' disables board tests")
     parser.add_argument("--perf", action="store_true", help="also performance measurements of network tests and perf")
@@ -855,6 +948,8 @@ def main():
     args.root = root
     if args.board == "none":
         args.board = None
+    if args.drvset == "none" or not os.path.isfile(args.drvset):
+        args.drvset = None
 
     for path in [args.sim, args.rom] + ([args.board] if args.board else []):
         if not os.path.isfile(path):

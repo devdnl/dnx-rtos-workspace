@@ -47,6 +47,13 @@ The default configuration targets **stm32h7** (`__CPU_ARCH__` in
   program registration), `find_global_vars.sh`, `memory_layout.ld`.
 - `tools/romfs/` — ROMFS build base: `Makefile` (`ROMFS_DIR`, `CONFIG_DIR`,
   `BUILD_DIR`) and default ROMFS configuration `config/`.
+- `tools/drvset/` — drvset build base (drivers built separately from the
+  kernel, flash partition): `Makefile` (`DRVSET_DIR`, `CONFIG_DIR` = kernel
+  configuration, `BUILD_DIR`, `check` target; modules `DRVSET_MODULES`,
+  file systems `DRVSET_FILESYSTEMS`), `ldregion.awk`,
+  `drvset_check.py` (offline check against kernel image), example driver
+  `example/`, tests `test/`; ABI parts are in `kernel/src/drvset/`. Top-level
+  targets `build-app-drvset`, `test-drvset`.
 - `common_apps/` — programs shared by appsets, one directory per program
   (`Makefile.in` + sources).
 - `common_libs/` — libraries shared by appsets: `libc` (the dnx user-space
@@ -122,6 +129,10 @@ Notes:
   (cppcheck).
 - `kernel/tools/tests.sh` builds the kernel for all test configurations in
   `kernel/tools/test_bsp/` and restores the kernel's default `config/`.
+- `make test-drvset` (`tools/drvset/test/test.sh`) builds the test kernel
+  (`config/app-kernel` + drvset and IRQ), drvset partitions (example, test
+  drivers, negative tests) and checks them by `tools/drvset/drvset_check.py`
+  (no hardware); output in `build/drvset-test`.
 
 ## POSIX simulator
 
@@ -161,7 +172,9 @@ Notes:
   (`blkdev`: host disk with emulated constraints), `fstest` (ramfs, hostfs,
   FAT/ext4 image, flatfs/eefs/ext2/ext3 partitions formatted in dnx, ext2 on
   the SD card model and on the constrained disk, read-only romfs image),
-  `udstest` and `inettest` (`--tap`) in the simulator and checks their
+  `udstest`, drvset partition (`--drvset`: example driver, fstest on its file
+  system `dsramfs`, incorrect image) and
+  `inettest` (`--tap`) in the simulator and checks their
   `SUMMARY:` lines (ext2/ext3/ext4/FAT images are checked by e2fsck/fsck.fat);
   use it to verify kernel/appset changes on PC. A test name filter runs a
   subset, e.g. `make test-sim SIMTEST_OPTS=board`.
@@ -198,6 +211,12 @@ Notes:
   thread in `board.c` sends changed lines (base64) every 50 ms. Touch goes to
   the board script, usually to the FT5336 model (`sim-env/models/ft5336.lua`)
   read by the system through the `I2C` driver.
+- `--drvset <file>` maps a drvset partition image (`make build-sim-drvset`,
+  `tools/drvset` for `config/sim-kernel`, i386 stubs of `ksymstub.S`) at
+  `__OS_DRVSET_FLASH_ADDRESS__` (0x50000000) and its RAM after it
+  (`_host_drvset_map()`); the kernel stores the symbol table address in the
+  first word of that RAM. Interrupts are not emulated (partitions with
+  interrupt handlers are rejected). Modules are initialized by `modprobe -i`.
 - `siminit` connects `--disk 1..3` as `/dev/sda..sdc` with MBR partitions
   (`PART`) and mounts FAT/ext4 in `/mnt/sdXn` (or whole disk in `/mnt/sdX`).
 - Appset is linked as a relocatable object (`ld -r`), only

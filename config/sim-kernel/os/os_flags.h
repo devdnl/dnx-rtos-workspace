@@ -194,6 +194,49 @@ this:SetToolTip("This option enables assert system assert function. Use only for
 #define __OS_ENABLE_SYS_ASSERT__ _YES_
 
 /*--
+this:AddWidget("Combobox", "Enable external drivers (drvset)")
+this:AddItem("Yes", "_YES_")
+this:AddItem("No", "_NO_")
+this:SetToolTip("This option enables kernel symbol table used by drivers and file systems\n"..
+                "built separately from the kernel (drvset partition). The table is\n"..
+                "located in flash (about 4 bytes per function), RAM is not used.")
+--*/
+#define __OS_ENABLE_DRVSET__ _YES_
+
+/*--
+this:AddWidget("Editline", false, "drvset flash address")
+this:SetToolTip("Address of the drvset partition in flash memory (partition header).\n"..
+                "Used when external drivers (drvset) are enabled. POSIX simulator:\n"..
+                "address of the image given by option --drvset (free address range of\n"..
+                "the simulator process, partition RAM follows the partition).")
+--*/
+#define __OS_DRVSET_FLASH_ADDRESS__ 0x50000000
+
+/*--
+this:AddWidget("Spinbox", 1, 4096, "drvset flash size [KiB]")
+this:SetToolTip("Size of the drvset partition in flash memory.\n"..
+                "Used when external drivers (drvset) are enabled.")
+--*/
+#define __OS_DRVSET_FLASH_SIZE__ 128
+
+/*--
+this:AddWidget("Spinbox", 1, 64, "drvset RAM size [KiB]")
+this:SetToolTip("RAM reserved for data of drivers from the drvset partition\n"..
+                "(.data and .bss), placed at the start of the main RAM region.\n"..
+                "Dynamic memory of drivers is allocated from the heap.\n"..
+                "Used when external drivers (drvset) are enabled.")
+--*/
+#define __OS_DRVSET_RAM_SIZE__ 4
+
+/*--
+this:AddWidget("Spinbox", 1, 32, "drvset maximum number of modules")
+this:SetToolTip("Maximum number of modules in the drvset partition\n"..
+                "(4 bytes of RAM per module for memory statistics).\n"..
+                "Used when external drivers (drvset) are enabled.")
+--*/
+#define __OS_DRVSET_MAX_MODULES__ 8
+
+/*--
 this:AddWidget("Combobox", "Enable IPC Shared memory")
 this:AddItem("Yes", "_YES_")
 this:AddItem("No", "_NO_")

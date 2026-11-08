@@ -1,0 +1,16 @@
+# Makefile for GNU make
+# Drvset example: one character device driver (EXAMPLE).
+#
+# DRVSET_MODULES  modules of partition: NAME (character device) or NAME:blk
+#                 (block device), NAME is the name used by MODULE_NAME() and
+#                 API_MOD_*() of driver and by driver_init()
+# CSRC_DRVSET     C sources
+# HDRLOC_DRVSET   header search paths
+# IOCTL_DRVSET    ioctl headers of drivers (copied to output/ioctl, used by programs)
+#
+# DRVSET_ROOT is the drvset directory (with trailing slash).
+
+DRVSET_MODULES += EXAMPLE
+CSRC_DRVSET    += $(DRVSET_ROOT)example.c
+HDRLOC_DRVSET  += $(DRVSET_ROOT)
+IOCTL_DRVSET   += $(DRVSET_ROOT)example_ioctl.h
