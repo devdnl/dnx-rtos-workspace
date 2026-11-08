@@ -117,6 +117,19 @@ static void dac_irq(void)
 DRV_IRQ_SHARED(TIM6_DAC_IRQn, dac_irq);
 ```
 
+Shared handlers can be used also by drivers of the kernel: the driver Makefile
+adds the driver to `IRQ_SHARED` (`IRQ_SHARED += <driver>`), then the kernel is
+built with the shared interrupt dispatcher (`kernel/src/kernel/kirq.c`, the
+IRQ must not have a handler in the kernel vector table). Kernel and partition
+drivers can share one interrupt line: the default handler calls shared handlers
+of the kernel and then handlers of the partition. The kernel prints at start
+`IRQ n: shared handler is not used` when the vector of the IRQ is used by
+another handler. A driver must not disable the shared interrupt in NVIC on
+release (other drivers use it). Without drvset support and without
+`IRQ_SHARED` the dispatcher is not built (no flash or RAM used).
+`drvset_check.py -v` marks partition interrupts shared with kernel drivers,
+`--kernel-info` lists them (`shared_irqs=`).
+
 ## Driver interfaces of kernel drivers
 Drivers of the partition can use driver interfaces of drivers built into the
 kernel (the same headers as kernel drivers):

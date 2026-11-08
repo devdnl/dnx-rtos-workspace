@@ -17,7 +17,8 @@
 #           drvset_check.py --kernel-info <kernel.elf>
 #
 #         --kernel-info       prints interrupts available for drvset (free_irqs=), interrupts
-#                             handled by the kernel image (used_irqs=), built-in modules
+#                             handled by the kernel image (used_irqs=), interrupts with shared
+#                             handlers of kernel drivers (shared_irqs=), built-in modules
 #                             (modules=) and file systems (filesystems=), used by tests
 #
 #         --flash, --size     drvset partition (__OS_DRVSET_FLASH_ADDRESS__, __OS_DRVSET_FLASH_SIZE__),
@@ -383,7 +384,19 @@ class Checker:
             owner = self.kfunc.get(self.vectors[KVECTOR_IRQ0 + irq] & ~1, {'not existing in CPU'})
             self.error(f'IRQ {irq} is not available ({what} handler, kernel: {", ".join(sorted(owner))})')
         else:
-            self.info(f'IRQ {irq}: {what} handler 0x{handler:08X}')
+            shared = ' (shared with kernel driver)' if irq in self.kernel_shared_irqs() else ''
+            self.info(f'IRQ {irq}: {what} handler 0x{handler:08X}{shared}')
+
+    def kernel_shared_irqs(self):
+        """IRQ numbers of shared interrupt handlers of kernel drivers (DRV_IRQ_SHARED())."""
+        k = self.k
+        irqs = set()
+        if k.has('__irq_shared_start') and k.has('__irq_shared_end'):
+            for addr in range(k.sym('__irq_shared_start'), k.sym('__irq_shared_end'), IRQ_SHARED_SIZE):
+                irq = k.u32(addr)
+                if irq is not None:
+                    irqs.add(irq)
+        return irqs
 
     def check_interrupts(self, h):
         d = self.d
@@ -475,6 +488,7 @@ def kernel_info(path):
     print('free_irqs=' + ','.join(str(i) for i in irqs if c.vectors[KVECTOR_IRQ0 + i] & ~1 == c.default_handler))
     print('used_irqs=' + ','.join(str(i) for i in irqs if c.vectors[KVECTOR_IRQ0 + i] & ~1 != c.default_handler
                                   and i < KVECTOR_KSYMTAB - KVECTOR_IRQ0))
+    print('shared_irqs=' + ','.join(str(i) for i in sorted(c.kernel_shared_irqs())))
     print('modules=' + ','.join(sorted(c.builtin)))
     c.kernel_filesystems()
     print('filesystems=' + ','.join(sorted(c.builtin_fs)))
