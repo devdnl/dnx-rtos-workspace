@@ -152,8 +152,8 @@ Notes:
   is shared with the application, `config/sim-romfs` sets image parameters).
 - Drivers are configured by structures (`IOCTL_<DRV>__CONFIGURE`) or by
   configuration strings (`IOCTL_<DRV>__CONFIGURE_STR` = `IOCTL_DEVICE__CONFIGURE_STR`,
-  "key=value,key=value", parsed by `sys_stropt_*()`, enumerations by
-  `sys_stropt_get_enum()`); from shell: `modprobe -i <drv> <major> <minor> <path>
+  "key=value,key=value", parsed by `sys_opt_*()`, enumerations by
+  `sys_opt_get_enum()`); from shell: `modprobe -i <drv> <major> <minor> <path>
   -c <config>` (new device) or `modprobe -c <path> <config>` (existing device).
 - `make test-sim` (`tools/simtest.py`) runs driver configuration string tests
   (`devcfg`), board tests (`sim-env/tests/*.lua`: GPIO, I2C, I2CEE, SPI, SPIEE,
