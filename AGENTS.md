@@ -338,6 +338,13 @@ both C preprocessor and make**. Rules:
   `posix_memalign()` with alignment `sysconf(_SC_LEVEL1_DCACHE_LINESIZE)`
   (at least `sizeof(void *)`), so DMA transfers on CPUs with data cache
   (STM32F7/H7) do not need kernel bounce buffers (see `dd`, `cp`).
+- Atomic test and set of libc (futex, heap lock: `libc/source/atomic.h`):
+  C11 `atomic_flag` (ldrex/strex) on CPUs with `__ARM_FEATURE_LDREX`, kernel
+  `SYSCALL_ATOMICTAS` on Cortex-M0+ (compiler generates not atomic code). A
+  multicore port whose ldrex/strex do not work between cores sets
+  `-D__DNX_ATOMIC_KERNEL__` in `CPUCONFIG_CFLAGS` of both the kernel config
+  (`cpu_flags.h`) and the appset projects (`project_flags.h`); libc checks
+  the kernel at heap creation (mismatch: `malloc()` fails, `ENOTSUP`).
 - A thread created with `detached = false` (or `attr == NULL`) must be joined
   by `thread_join()`/`thread_join2()`, also after `thread_cancel()`: its thread
   ID and slot stay reserved until join. Use `detached = true` for threads that

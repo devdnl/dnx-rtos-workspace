@@ -40,6 +40,7 @@
 #include <sys/stat.h>
 #include <stdatomic.h>
 #include "libc/source/syscall.h"
+#include "libc/source/atomic.h"
 #include "libc/include/dnx/os.h"
 #include "libc/include/unistd.h"
 
@@ -1204,7 +1205,7 @@ bool futex_lock(futex_t *futex, u32_t timeout)
 {
         clock_t tref = get_uptime_ms();
 
-        while (atomic_flag_test_and_set_explicit(futex, memory_order_acquire)) {
+        while (_libc_atomic_flag_test_and_set(futex)) {
 
                 if ((timeout != WAIT_FOREVER_MS) and (get_uptime_ms() - tref >= timeout)) {
                         errno = ETIME;

@@ -217,6 +217,7 @@ typedef enum {
         _LIBC_SYS_GETCURRENTCORE,         // int errno (u8_t *core)
         _LIBC_SYS_GETCPUCORECOUNT,        // int errno (u8_t *core_count)
         _LIBC_SYS_SYSCONF,                // int errno (const int *name, long *value)
+        _LIBC_SYS_ATOMICTAS,              // int errno (u8_t *flag): 0 when flag set by caller, EBUSY when flag already set
 } _libc_syscall_t;
 // clang-format on
 

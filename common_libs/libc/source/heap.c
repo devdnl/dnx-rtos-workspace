@@ -68,6 +68,7 @@
   Include files
 ==============================================================================*/
 #include "heap.h"
+#include "atomic.h"
 #include <stdio.h>
 #include <dnx/misc.h>
 #include <stdatomic.h>
@@ -226,7 +227,7 @@ static void sys_free(void *ptr)
 //==============================================================================
 static void protect(_libc_heap_t *heap)
 {
-        while (atomic_flag_test_and_set_explicit(&heap->futex, memory_order_acquire)) {
+        while (_libc_atomic_flag_test_and_set(&heap->futex)) {
                 msleep(0);
         }
 }
@@ -1040,6 +1041,11 @@ static size_t mem_heap_get_block_size(mem_heap_t *heap, void *rmem)
 _libc_heap_t *_libc_heap_new(size_t alloc_block_size)
 {
         if (alloc_block_size == 0) {
+                return NULL;
+        }
+
+        if (not _libc_atomic_check()) {
+                errno = ENOTSUP;
                 return NULL;
         }
 
