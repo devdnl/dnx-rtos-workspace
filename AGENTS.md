@@ -167,8 +167,8 @@ Notes:
   `sys_opt_get_enum()`); from shell: `modprobe -i <drv> <major> <minor> <path>
   -c <config>` (new device) or `modprobe -c <path> <config>` (existing device).
 - `make test-sim` (`tools/simtest.py`) runs driver configuration string tests
-  (`devcfg`), board tests (`sim-env/tests/*.lua`: GPIO, I2C, I2CEE, SPI, SPIEE,
-  SDSPI, board panel protocol with LCD and touch), the block layer test
+  (`devcfg`), board tests (`sim-env/tests/*.lua`: GPIO, I2C, I2CEE, DS2482, SPI,
+  SPIEE, MCP23S17, SDSPI, board panel protocol with LCD and touch), the block layer test
   (`blkdev`: host disk with emulated constraints), `fstest` (ramfs, hostfs,
   FAT/ext4 image, flatfs/eefs/ext2/ext3 partitions formatted in dnx, ext2 on
   the SD card model and on the constrained disk, read-only romfs image),
@@ -364,9 +364,12 @@ both C preprocessor and make**. Rules:
 - `common_libs/luadnx` (MIT) contains Lua bindings to dnx services, preloaded
   by the `lua` program with `luadnx_openlibs()`: `lfs` (LuaFileSystem 1.8
   compatible), `dnx.sys` (system info, memory, CPU load, syslog, reboot,
-  sleep) and `dnx.proc` (spawn/run/wait/kill, process and thread statistics).
-  Functions return `nil, message, errno` on error. Do not duplicate Lua
-  standard library functionality there. Test script:
+  sleep), `dnx.proc` (spawn/run/wait/kill, process and thread statistics) and
+  `dnx.spi` (`transceive(path, frame, ...)`: full duplex SPI transfer by
+  `IOCTL_SPI__TRANSCEIVE`, all frames in one CS activation; `ENOTSUP` when
+  the kernel is built without the SPI driver). Functions return
+  `nil, message, errno` on error. Do not duplicate Lua standard library
+  functionality there. Test script:
   `common_libs/luadnx/test/luadnx_test.lua` (run on target).
 
 ## Working rules for agents

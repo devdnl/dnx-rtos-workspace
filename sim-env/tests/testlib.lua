@@ -94,6 +94,7 @@ T.SPI_DEVICES = {
     {"/dev/spi-sdv1",     0, 16, "cs_port=0,cs_pin=17"},
     {"/dev/spi-595",      1, 10, "cs_port=0,cs_pin=16"},
     {"/dev/spi-none",     2, 10, nil},
+    {"/dev/spi-mcp",      2, 11, "cs_port=1,cs_pin=2"},
 }
 
 function T.spi_devices()

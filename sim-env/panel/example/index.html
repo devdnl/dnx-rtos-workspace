@@ -108,6 +108,31 @@
             <h2>74HC595 <small>SPI2, CS PA16</small>
                 <code class="hex" data-signal="LEDS2" data-format="0x%02X"></code></h2>
             <div class="bar red" data-bits="LEDS2"></div>
+            <h2>MCP23S17 <small>SPI2, CS PA17, port A: LEDs, port B: buttons</small>
+                <code class="hex" data-signal="MCP_A" data-format="0x%02X"></code></h2>
+            <div class="bar" data-bits="MCP_A"></div>
+            <div class="mcp-buttons">
+                <figure><button class="tact small" data-input="MCP_B7" aria-label="Button GPB7"></button>
+                    <figcaption>7</figcaption></figure>
+                <figure><button class="tact small" data-input="MCP_B6" aria-label="Button GPB6"></button>
+                    <figcaption>6</figcaption></figure>
+                <figure><button class="tact small" data-input="MCP_B5" aria-label="Button GPB5"></button>
+                    <figcaption>5</figcaption></figure>
+                <figure><button class="tact small" data-input="MCP_B4" aria-label="Button GPB4"></button>
+                    <figcaption>4</figcaption></figure>
+                <figure><button class="tact small" data-input="MCP_B3" aria-label="Button GPB3"></button>
+                    <figcaption>3</figcaption></figure>
+                <figure><button class="tact small" data-input="MCP_B2" aria-label="Button GPB2"></button>
+                    <figcaption>2</figcaption></figure>
+                <figure><button class="tact small" data-input="MCP_B1" aria-label="Button GPB1"></button>
+                    <figcaption>1</figcaption></figure>
+                <figure><button class="tact small" data-input="MCP_B0" aria-label="Button GPB0"></button>
+                    <figcaption>0</figcaption></figure>
+            </div>
+            <div class="mcp-int">
+                <span class="led small amber" data-signal="MCP_INTA"></span><code>INTA PA10</code>
+                <span class="led small amber" data-signal="MCP_INTB"></span><code>INTB PA11</code>
+            </div>
         </section>
 
         <section class="block wide">

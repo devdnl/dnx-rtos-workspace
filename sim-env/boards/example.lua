@@ -7,8 +7,9 @@
 
   The board panel (PANEL=1, web browser: http://localhost:8080) shows page
   sim-env/panel/example/: LEDs, button, temperature, DS18B20 sensors on
-  1-Wire bus (DS2482), LEDs of the I/O expander and shift register, LCD
-  (LTDC driver) with touch panel, TFT display (ST7789 model on SPI3).
+  1-Wire bus (DS2482), LEDs of the I/O expander and shift register, MCP23S17
+  with LEDs and buttons, LCD (LTDC driver) with touch panel, TFT display
+  (ST7789 model on SPI3).
 
   Pins (port A):
     PA0  LED (output of the system, active low)
@@ -33,6 +34,9 @@
     PA15  SD card (SDHC), image in the host file build/example-sd.img (64 MiB)
   SPI2:
     PA16  74HC595 with 8 LEDs (printed when changed)
+    PA17  MCP23S17 (address 0): GPA0..GPA7 LEDs (active high), GPB0..GPB7
+          buttons of the panel (pressed: low, released: not driven, pull-up
+          GPPUB should be enabled), INTA -> PA10, INTB -> PA11
   SPI3:
     PB1   ST7789 TFT display 240x320 (LCD "tft" of the panel), D/C -> PB0
 
@@ -45,6 +49,10 @@
   dnx RTOS (shell), DS2482 (1-Wire protocol is implemented by the program
   or driver that uses the device file):
     modprobe -i I2C 0 1 /dev/i2c-ow -c address=0x18
+
+  dnx RTOS (shell), MCP23S17 (registers are accessed by full duplex
+  transfers, e.g. dnx.spi.transceive() in Lua):
+    modprobe -i SPI 1 1 /dev/spi-mcp -c cs_port=0,cs_pin=17
 
   dnx RTOS (shell), SD card (all SPI1 CS pins should be configured first,
   not configured CS pin is low: device is selected):
@@ -77,6 +85,7 @@ local pcf8574 = require("models.pcf8574")
 local lm75 = require("models.lm75")
 local ds2482 = require("models.ds2482")
 local ds18b20 = require("models.ds18b20")
+local mcp23s17 = require("models.mcp23s17")
 local spiee = require("models.25xx")
 local ft5336 = require("models.ft5336")
 local sdcard = require("models.sdcard")
@@ -190,6 +199,20 @@ leds2:on_change(function(state)
     print("LEDs2: " .. table.concat(t))
     panel.set("LEDS2", state)
 end)
+
+-- SPI2: MCP23S17, port A: LEDs, port B: buttons to ground (pull-up of the expander)
+local mcp = mcp23s17.new({ address = 0, int_a = "PA10", int_b = "PA11" }):attach("SPI2", "PA17")
+panel.value("MCP_A", mcp:port("A"), {label = "MCP23S17 port A LEDs", format = "0x%02X"})
+panel.output("MCP_INTA", "PA10", {active_low = true, label = "MCP23S17 INTA (PA10, active low)"})
+panel.output("MCP_INTB", "PA11", {active_low = true, label = "MCP23S17 INTB (PA11, active low)"})
+mcp:on_change(function(state, changed)
+    if changed & 0xFF ~= 0 then panel.set("MCP_A", state & 0xFF) end
+end)
+for n = 0, 7 do
+    panel.control("MCP_B" .. n, function(pressed)
+        if pressed then mcp:set_input(8 + n, false) else mcp:release(8 + n) end
+    end, {value = false, label = "MCP23S17 button GPB" .. n})
+end
 
 -- SPI3: TFT display (LCD "tft" of the panel), touch of the display in the
 -- board panel is only shown

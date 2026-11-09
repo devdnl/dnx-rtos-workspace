@@ -3,7 +3,7 @@ File    luadnx_test.lua
 
 Author  Daniel Zorychta
 
-Brief   Test of luadnx modules (lfs, dnx.sys, dnx.proc).
+Brief   Test of luadnx modules (lfs, dnx.sys, dnx.proc, dnx.spi).
 
         Usage (on target):  lua luadnx_test.lua [work_dir]
         work_dir must be writable (default: /tmp).
@@ -56,11 +56,13 @@ local lfs  = require("lfs")
 local dnx  = require("dnx")
 local sys  = require("dnx.sys")
 local proc = require("dnx.proc")
+local spi  = require("dnx.spi")
 
 check("require lfs", type(lfs) == "table")
 check("require dnx", type(dnx) == "table" and type(dnx._VERSION) == "string")
 check("dnx.sys is the same module", dnx.sys == sys)
 check("dnx.proc is the same module", dnx.proc == proc)
+check("dnx.spi is the same module", dnx.spi == spi)
 check("lfs version", type(lfs._VERSION) == "string", lfs._VERSION)
 
 -------------------------------------------------------------------------------
@@ -239,6 +241,14 @@ else
 end
 
 check("spawn bad options raises error", not pcall(proc.spawn, "echo", {stdout = 12}))
+
+-------------------------------------------------------------------------------
+section("dnx.spi")
+-- transfers are tested with SPI devices of the simulator board (sim-env/tests/mcp23s17.lua)
+local r, e, code = spi.transceive(work .. "/no_such_spi_device", "\x00")
+check("transceive(missing device) fails", r == nil and type(e) == "string" and math.type(code) == "integer", e)
+check("transceive without frame raises error", not pcall(spi.transceive, "/dev/null"))
+check("transceive of empty frame raises error", not pcall(spi.transceive, "/dev/null", ""))
 
 -------------------------------------------------------------------------------
 print(string.format("\nPassed: %d, failed: %d", passed, failed))

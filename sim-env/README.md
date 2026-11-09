@@ -19,7 +19,8 @@ Directories:
   controller), `st7789` (SPI TFT LCD controller, ST7789/ILI9341 compatible,
   shown by the board panel), `ds2482` (I2C to 1-Wire bridge DS2482-100),
   `ds18b20` (1-Wire thermometer), `onewire` (1-Wire bus used by them, see
-  [1-Wire](#1-wire)), the description of options and methods is in
+  [1-Wire](#1-wire)), `mcp23s17` (SPI 16-bit I/O expander, see
+  [MCP23S17](#mcp23s17)), the description of options and methods is in
   the model file, see [Writing device models](#writing-device-models),
 - `tests/` – test programs executed in dnx RTOS (e.g. `lua /host/gpio.lua`),
 - `testappset/` – test appset linked with the simulator by `make test-sim`
@@ -185,6 +186,47 @@ modprobe -i SDSPI 0 0 /dev/sdcard -c spi_path=/dev/spi-sd
 storinit /dev/sdcard
 modprobe -i SPI 0 1 /dev/spi-ee -c cs_port=0,cs_pin=7,mode=0
 modprobe -i SPIEE 0 0 /dev/ee1 -c spi_path=/dev/spi-ee,memory_size=32768,page_size=64,address_size=2
+```
+
+### MCP23S17
+`models/mcp23s17.lua` is the 16-bit I/O expander with SPI (mode 0 or 3): all
+registers in both address maps (IOCON.BANK), sequential and byte mode
+(SEQOP), hardware addresses (HAEN: up to 8 devices on one CS pin, attach all
+of them to the same pin), input polarity, pull-ups, interrupt-on-change
+(INTCON/DEFVAL, INTF, INTCAP cleared by read of GPIO or INTCAP) and INT pins
+(MIRROR, ODR, INTPOL; INT lines of more devices on one system pin are
+wired-AND, so open drain outputs can share an interrupt line), RESET pin.
+Pins are connected to the system GPIO or driven by the board:
+```lua
+local mcp23s17 = require("models.mcp23s17")
+
+local exp = mcp23s17.new{address = 0, int_a = "PB3", int_b = "PB4", reset = "PB5"}
+exp:attach("SPI3", "PB2")
+for i = 0, 7 do exp:connect_output("A" .. i, "PC" .. i) end   -- GPA0..7 -> PC0..7
+exp:connect_input("B0", "PC8")                                 -- system output -> GPB0
+exp:set_input("B7", false)                                     -- button pressed (low)
+exp:release("B7")                                              -- released (pull-up GPPU)
+exp:on_change(function(state, changed) print(string.format("pins 0x%04X", state)) end)
+```
+A register is read in one transfer while CS is active (opcode, address, data),
+so the SPI device file in dnx RTOS is used by full duplex transfers: in Lua by
+`dnx.spi.transceive(path, frame [, frame ...])` (`luadnx`, all frames in one
+CS activation, returns received frames), in C by `IOCTL_SPI__TRANSCEIVE`.
+`tests/mcp23s17.lua` contains register access functions and tests of two
+expanders on one CS (`boards/test.lua`):
+```lua
+local spi = require("dnx.spi")
+local DEV = "/dev/spi-mcp"   -- modprobe -i SPI 2 11 /dev/spi-mcp -c cs_port=1,cs_pin=2
+
+local function wr(hw, reg, ...) spi.transceive(DEV, string.char(0x40 | (hw << 1), reg, ...)) end
+local function rd(hw, reg)
+    local r = spi.transceive(DEV, string.char(0x41 | (hw << 1), reg, 0))
+    return r:byte(3)
+end
+
+wr(0, 0x00, 0x00)            -- IODIRA: port A outputs
+wr(0, 0x14, 0xA5)            -- OLATA
+print(rd(0, 0x13))           -- GPIOB
 ```
 
 ### 1-Wire

@@ -1,7 +1,7 @@
 --[[----------------------------------------------------------------------------
   Board used by automatic tests (tools/simtest.py, test programs tests/gpio.lua,
   tests/i2c.lua, tests/i2cee.lua, tests/spi.lua, tests/spiee.lua,
-  tests/sdcard.lua, tests/ds2482.lua).
+  tests/sdcard.lua, tests/ds2482.lua, tests/mcp23s17.lua).
 
   GPIO connections (system outputs -> system inputs):
     PA0  -> PA8   inverter
@@ -34,7 +34,13 @@
     PA17  SD card SD v1 2 MiB (SDSPI driver)
   SPI2:
     PA16  74HC595 (CS = RCLK), outputs QA..QH -> PA20..PA27
-  SPI3:   no devices
+  SPI3 (/dev/spi-none: no devices on its CS):
+    PB2   MCP23S17 #0 (address 0) and #1 (address 1) on one CS, RESET <- PC16,
+          tests/mcp23s17.lua:
+          #0: GPA0..GPA7 -> PC0..PC7, PC8..PC15 -> GPB0..GPB7, INTA -> PC17,
+              INTB -> PC18
+          #1: GPA0..GPA7 -> GPB0..GPB7 (wire), INTA -> PC18 (shared with INTB of
+              #0, wired-AND), INTB -> PC19
   SPI4:
     PB1   ST7789 LCD 240x320 (LCD "tft" of the panel), D/C -> PB0,
           tests/spilcd.lua
@@ -57,6 +63,7 @@ local ft5336 = require("models.ft5336")
 local st7789 = require("models.st7789")
 local ds2482 = require("models.ds2482")
 local ds18b20 = require("models.ds18b20")
+local mcp23s17 = require("models.mcp23s17")
 
 gpio.connect("PA0", "PA8", true)
 gpio.connect("PA1", "PA9")
@@ -202,6 +209,21 @@ spi.attach("SPI1", "PA6", spi_memory())
 spiee.new{type = "25lc256"}:attach("SPI1", "PA7")
 sdcard.new{type = "sdhc", size = 16 * 1024 * 1024}:attach("SPI1", "PA15")
 sdcard.new{type = "sdv1", size = 2 * 1024 * 1024}:attach("SPI1", "PA17")
+
+-- SPI3: two MCP23S17 on one CS (hardware addresses 0 and 1)
+local mcp0 = mcp23s17.new{address = 0, int_a = "PC17", int_b = "PC18", reset = "PC16"}:attach("SPI3", "PB2")
+local mcp1 = mcp23s17.new{address = 1, int_a = "PC18", int_b = "PC19", reset = "PC16"}:attach("SPI3", "PB2")
+for i = 0, 7 do
+    mcp0:connect_output(i, "PC" .. i)
+    mcp0:connect_input(8 + i, "PC" .. (8 + i))
+end
+local function mcp1_wire(_, changed)
+    for i = 0, 7 do
+        if changed == nil or (changed >> i) & 1 == 1 then mcp1:set_input(8 + i, mcp1:pin(i)) end
+    end
+end
+mcp1:on_change(mcp1_wire)
+mcp1_wire()
 
 -- SPI2
 hc595.new{outputs = {"PA20", "PA21", "PA22", "PA23", "PA24", "PA25", "PA26", "PA27"}}:attach("SPI2", "PA16")

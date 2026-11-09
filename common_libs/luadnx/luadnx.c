@@ -56,6 +56,7 @@ static const luaL_Reg preload_libs[] = {
         {"dnx", luaopen_dnx},
         {"dnx.sys", luaopen_dnx_sys},
         {"dnx.proc", luaopen_dnx_proc},
+        {"dnx.spi", luaopen_dnx_spi},
         {NULL, NULL},
 };
 
@@ -72,9 +73,9 @@ static const luaL_Reg preload_libs[] = {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief  Open 'dnx' module. Module contains sub-modules 'sys' and 'proc'
- *         that are also available directly by require("dnx.sys") and
- *         require("dnx.proc").
+ * @brief  Open 'dnx' module. Module contains sub-modules 'sys', 'proc' and
+ *         'spi' that are also available directly by require("dnx.sys"),
+ *         require("dnx.proc") and require("dnx.spi").
  *
  * @param  L            Lua state
  *
@@ -90,6 +91,9 @@ int luaopen_dnx(lua_State *L)
 
         luaL_requiref(L, "dnx.proc", luaopen_dnx_proc, 0);
         lua_setfield(L, -2, "proc");
+
+        luaL_requiref(L, "dnx.spi", luaopen_dnx_spi, 0);
+        lua_setfield(L, -2, "spi");
 
         lua_pushliteral(L, LUADNX_VERSION);
         lua_setfield(L, -2, "_VERSION");

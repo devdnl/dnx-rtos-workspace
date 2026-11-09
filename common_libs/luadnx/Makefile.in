@@ -4,5 +4,6 @@ CSRC_LIB   += $(LIB_ROOT_LUADNX)luadnx/luadnx.c
 CSRC_LIB   += $(LIB_ROOT_LUADNX)luadnx/lfs.c
 CSRC_LIB   += $(LIB_ROOT_LUADNX)luadnx/ldnx_sys.c
 CSRC_LIB   += $(LIB_ROOT_LUADNX)luadnx/ldnx_proc.c
+CSRC_LIB   += $(LIB_ROOT_LUADNX)luadnx/ldnx_spi.c
 CXXSRC_LIB +=
 HDRLOC_LIB += $(LIB_ROOT_LUADNX)luadnx
