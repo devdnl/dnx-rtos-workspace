@@ -101,6 +101,21 @@
             <label class="check"><input type="checkbox" data-input="OW_SHORT"> 1-Wire line shorted</label>
         </section>
 
+        <section class="block">
+            <h2>GPS <small>UART2 /dev/ttyS1, NMEA 9600 8N1</small></h2>
+            <div class="gps-pos" data-signal="GPS_POS" data-format="">–</div>
+            <label class="check"><input type="checkbox" data-input="GPS_FIX"> Position fix</label>
+            <div class="slider">
+                <input type="range" min="0" max="200" step="1" data-input="GPS_SPEED" aria-label="GPS speed">
+                <span data-signal="GPS_SPEED" data-format="%d kn"></span>
+            </div>
+            <div class="slider">
+                <input type="range" min="0" max="359" step="1" data-input="GPS_COURSE" aria-label="GPS course">
+                <span data-signal="GPS_COURSE" data-format="%d°"></span>
+            </div>
+            <code class="gps-nmea" data-signal="GPS_LAST" data-format=""></code>
+        </section>
+
         <section class="block wide">
             <h2>PCF8574 <small>I2C1 0x20, active low</small>
                 <code class="hex" data-signal="LEDS1" data-format="0x%02X"></code></h2>

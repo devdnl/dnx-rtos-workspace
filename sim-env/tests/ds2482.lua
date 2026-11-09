@@ -15,7 +15,7 @@ local test, expect = T.test, T.expect
 local ST_1WB, ST_PPD, ST_SD, ST_LL, ST_RST, ST_SBR, ST_TSB, ST_DIR = 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
 local CFG_APU, CFG_SPU, CFG_1WS = 0x01, 0x04, 0x08
 
-local BUSY_TIMEOUT = 100  -- ms
+local BUSY_TIMEOUT = 500  -- ms (host load: simulator thread can be suspended for a while)
 
 local function uptime()
     return dnx.sys.uptime()
@@ -129,7 +129,11 @@ function OW:wait()
     while true do
         local st = self:rd()
         if st & ST_1WB == 0 then return st end
-        if uptime() - t0 > BUSY_TIMEOUT then error("1-Wire busy timeout", 2) end
+        if uptime() - t0 > BUSY_TIMEOUT then
+            st = self:rd()   -- status after timeout (thread suspended for timeout time)
+            if st & ST_1WB == 0 then return st end
+            error("1-Wire busy timeout", 2)
+        end
     end
 end
 

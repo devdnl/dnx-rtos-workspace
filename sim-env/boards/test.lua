@@ -1,7 +1,7 @@
 --[[----------------------------------------------------------------------------
   Board used by automatic tests (tools/simtest.py, test programs tests/gpio.lua,
   tests/i2c.lua, tests/i2cee.lua, tests/spi.lua, tests/spiee.lua,
-  tests/sdcard.lua, tests/ds2482.lua, tests/mcp23s17.lua).
+  tests/sdcard.lua, tests/ds2482.lua, tests/mcp23s17.lua, tests/uart.lua).
 
   GPIO connections (system outputs -> system inputs):
     PA0  -> PA8   inverter
@@ -16,15 +16,23 @@
           tests/ds2482.lua
     0x19  DS2482-100, 1-Wire bus "b": DS18B20 sensor 9
     0x20  PCF8574, P0..P3 connected to P4..P7, INT -> PA13
-    0x30  1-Wire test control: write of text command, read of response
+    0x30  1-Wire and GPS test control: write of text command, read of response
           (text terminated by 0): "init", "powercycle", "list",
           "temp <n> <C>", "attach <n>", "detach <n>", "short <a|b> <0|1>",
-          "fault <n> <crc|rom_crc|mute> <0|1>"
+          "fault <n> <crc|rom_crc|mute> <0|1>", "gps fix <0|1>",
+          "gps pos <lat> <lon> <alt>", "gps motion <knots> <course>",
+          "gps power <0|1>", "gps time" (board time in ms)
     0x48  LM75 (21.5 C), OS -> PA14, PA3 = 1 heats sensor to 90 C
     0x50  24C256 (I2CEE driver and eefs)
     0x51  24C32 (raw access tests)
   I2C2:
     0x50  24C02
+
+  UART (UART2 /dev/ttyS1 is used by tools/simtest.py --uart 1=<pty>):
+    UART3 /dev/ttyS2  echo (transmission timing), "?cfg\n" is answered by
+                      configuration: "<baud> <parity> <stop bits>\n"
+    UART4 /dev/ttyS3  NMEA GPS (38400 8N1, fix every 200 ms, start time
+                      2026-01-01 12:00:00 UTC, 52.2297 N 21.0122 E 100 m)
 
   SPI1 (CS pins, active low):
     PA4   test memory A: returns data of the last write transaction (mode 0)
@@ -64,6 +72,7 @@ local st7789 = require("models.st7789")
 local ds2482 = require("models.ds2482")
 local ds18b20 = require("models.ds18b20")
 local mcp23s17 = require("models.mcp23s17")
+local nmea_gps = require("models.nmea_gps")
 
 gpio.connect("PA0", "PA8", true)
 gpio.connect("PA1", "PA9")
@@ -156,6 +165,49 @@ local OW_COMMANDS = {
     short = function(bus, on) assert(ow[bus], "no bus " .. tostring(bus)).ow:set_short(on == "1") end,
     fault = function(n, name, on) sensor(n):set_fault(name, on == "1") end,
 }
+
+-- UART3: echo, UART4: GPS (UARTs connected by simulator option --uart are not used)
+local echo = {pending = ""}
+function echo:receive(data)
+    local out = {}
+    for ch in data:gmatch(".") do
+        local p = self.pending .. ch
+        if p == "?cfg\n" then
+            local c = uart.config("UART3")
+            out[#out + 1] = string.format("%d %s %d\n", c.baud, c.parity, c.stop_bits)
+            p = ""
+        elseif ("?cfg\n"):sub(1, #p) ~= p then
+            out[#out + 1] = p   -- not a query: echo
+            p = ""
+        end
+        self.pending = p
+    end
+    if #out > 0 then uart.send("UART3", table.concat(out)) end
+end
+if uart.available("UART3") then uart.attach("UART3", echo) end
+
+local gps = nmea_gps.new{baud = 38400, rate = 200, start_time = 1767268800, lat = 52.2297, lon = 21.0122, alt = 100,
+                         ttff = {hot = 600, warm = 600, cold = 600}}
+-- GPS is powered on by the UART test only: data of unread port is lost (receiver
+-- overrun reported by board) and it is not needed by other tests
+gps:set_enabled(false)
+if uart.available("UART4") then gps:attach("UART4") end
+
+OW_COMMANDS.gps = function(what, a, b, c)
+    if what == "power" then
+        gps:set_enabled(a == "1")
+    elseif what == "fix" then
+        gps:set_fix(a == "1")
+    elseif what == "pos" then
+        gps:set_position(assert(tonumber(a)), assert(tonumber(b)), tonumber(c))
+    elseif what == "motion" then
+        gps:set_motion(assert(tonumber(a)), assert(tonumber(b)))
+    elseif what == "time" then
+        return string.format("%.0f", host.time_ms())   -- board time (GPS time = start_time + board time)
+    else
+        error("gps: unknown command " .. tostring(what))
+    end
+end
 
 local ow_ctl = {resp = "", pos = 1}
 function ow_ctl:select(read)

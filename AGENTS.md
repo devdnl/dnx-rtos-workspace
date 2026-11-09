@@ -153,10 +153,18 @@ Notes:
   `struct timeval`, ...). The only interface between both sides is
   `src/cpu/posix/host/host.h` (basic C types only). Host calls are short,
   non-blocking and executed in the critical section.
-- `--uart <n>=pty[:<link>]|<device>` connects UART0..3 to PTY or host serial
-  port (UART0 is the simulator terminal by default). `uart/posix` sends data in
-  chunks (writer or service thread), host writes are non-blocking except the
-  simulator terminal. `siminit` initializes `/dev/ttyS1..3` (raw, no shell).
+- `--uart <n>=pty[:<link>]|<device>|board` connects UART0..3 to PTY, host
+  serial port or board model (UART0 is the simulator terminal by default).
+  `uart/posix` sends data in chunks (writer or service thread), host writes
+  are non-blocking except the simulator terminal. `siminit` initializes
+  `/dev/ttyS1..3` (raw, no shell). UARTs not selected by `--uart` can be
+  attached by board scripts (`uart.attach("UART2", dev)`, UART<n+1> =
+  `/dev/ttyS<n>`): `board.c` keeps RX/TX FIFOs with reception times
+  (transmission time from baud rate and frame configured by the system, 10 ms
+  transmitter window for the 5 ms polling of `uart/posix`, receiver overrun
+  after 200 ms), the configuration is passed to the model
+  (`dev:configure(cfg)`), data to the model by `dev:receive(data)`, from the
+  model by `uart.send()`. Model of GPS: `sim-env/models/nmea_gps.lua`.
 - `--tap <name>` connects `eth/posix` (`/dev/eth`, frames via
   `/dev/net/tun`, software MAC filter) to the host TAP interface; `siminit`
   starts `netmgr --daemon /etc/netmgr.conf` (ROMFS content `app-romfs`
@@ -168,7 +176,7 @@ Notes:
   -c <config>` (new device) or `modprobe -c <path> <config>` (existing device).
 - `make test-sim` (`tools/simtest.py`) runs driver configuration string tests
   (`devcfg`), board tests (`sim-env/tests/*.lua`: GPIO, I2C, I2CEE, DS2482, SPI,
-  SPIEE, MCP23S17, SDSPI, board panel protocol with LCD and touch), the block layer test
+  SPIEE, MCP23S17, UART (echo, NMEA GPS), SDSPI, board panel protocol with LCD and touch), the block layer test
   (`blkdev`: host disk with emulated constraints), `fstest` (ramfs, hostfs,
   FAT/ext4 image, flatfs/eefs/ext2/ext3 partitions formatted in dnx, ext2 on
   the SD card model and on the constrained disk, read-only romfs image),

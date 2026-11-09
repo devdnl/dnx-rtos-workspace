@@ -8,8 +8,8 @@
   The board panel (PANEL=1, web browser: http://localhost:8080) shows page
   sim-env/panel/example/: LEDs, button, temperature, DS18B20 sensors on
   1-Wire bus (DS2482), LEDs of the I/O expander and shift register, MCP23S17
-  with LEDs and buttons, LCD (LTDC driver) with touch panel, TFT display
-  (ST7789 model on SPI3).
+  with LEDs and buttons, GPS receiver (UART2), LCD (LTDC driver) with touch
+  panel, TFT display (ST7789 model on SPI3).
 
   Pins (port A):
     PA0  LED (output of the system, active low)
@@ -39,6 +39,9 @@
           GPPUB should be enabled), INTA -> PA10, INTB -> PA11
   SPI3:
     PB1   ST7789 TFT display 240x320 (LCD "tft" of the panel), D/C -> PB0
+  UART2 (/dev/ttyS1, when not connected by simulator option --uart 1=...):
+          NMEA GPS receiver (9600 8N1, 1 fix per second), position, fix,
+          speed and course set by the panel
 
   dnx RTOS (shell), I2C EEPROM:
     modprobe -i I2C 0 0 /dev/i2c-ee -c address=0x50,sub_addr_mode=2
@@ -53,6 +56,12 @@
   dnx RTOS (shell), MCP23S17 (registers are accessed by full duplex
   transfers, e.g. dnx.spi.transceive() in Lua):
     modprobe -i SPI 1 1 /dev/spi-mcp -c cs_port=0,cs_pin=17
+
+  dnx RTOS (shell), GPS (/dev/ttyS1 is initialized by siminit with default
+  configuration 115200 baud, the receiver sends unreadable data until the
+  baud rate is set):
+    modprobe -c /dev/ttyS1 baud=9600
+    cat /dev/ttyS1
 
   dnx RTOS (shell), SD card (all SPI1 CS pins should be configured first,
   not configured CS pin is low: device is selected):
@@ -86,6 +95,7 @@ local lm75 = require("models.lm75")
 local ds2482 = require("models.ds2482")
 local ds18b20 = require("models.ds18b20")
 local mcp23s17 = require("models.mcp23s17")
+local nmea_gps = require("models.nmea_gps")
 local spiee = require("models.25xx")
 local ft5336 = require("models.ft5336")
 local sdcard = require("models.sdcard")
@@ -212,6 +222,28 @@ for n = 0, 7 do
     panel.control("MCP_B" .. n, function(pressed)
         if pressed then mcp:set_input(8 + n, false) else mcp:release(8 + n) end
     end, {value = false, label = "MCP23S17 button GPB" .. n})
+end
+
+-- UART2: GPS receiver (not used when UART2 is connected by simulator option --uart 1=...)
+if uart.available("UART2") then
+    local gps = nmea_gps.new({ lat = 52.2297, lon = 21.0122, alt = 110 })
+    gps:attach("UART2")
+    local function pos()
+        local lat, lon = gps:position()
+        return string.format("%.5f %s  %.5f %s", math.abs(lat), lat >= 0 and "N" or "S",
+                             math.abs(lon), lon >= 0 and "E" or "W")
+    end
+    panel.value("GPS_POS", pos, {period = 1000, label = "GPS position"})
+    panel.value("GPS_LAST", "", {label = "GPS last RMC sentence"})
+    gps:on_sentence(function(s)
+        if s:find("^%$GPRMC") then panel.set("GPS_LAST", s) end
+    end)
+    panel.control("GPS_FIX", function(v) gps:set_fix(v) end, {value = true, label = "GPS fix"})
+    local motion = {speed = 0, course = 0}
+    panel.control("GPS_SPEED", function(v) motion.speed = v; gps:set_motion(motion.speed, motion.course) end,
+                  {value = 0, min = 0, max = 200, step = 1, label = "GPS speed", unit = "kn"})
+    panel.control("GPS_COURSE", function(v) motion.course = v; gps:set_motion(motion.speed, motion.course) end,
+                  {value = 0, min = 0, max = 359, step = 1, label = "GPS course", unit = "°"})
 end
 
 -- SPI3: TFT display (LCD "tft" of the panel), touch of the display in the

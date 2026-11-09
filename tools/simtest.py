@@ -12,7 +12,7 @@
 #           - driver configuration strings (sim-env/tests/devcfg.lua, modprobe -c), UART1 is
 #             connected to the host pseudo terminal and its configuration is checked by termios,
 #           - board model (sim-env/boards/test.lua): GPIO, I2C, I2CEE/eefs, DS2482/DS18B20 (1-Wire),
-#             SPI, SPIEE/eefs, MCP23S17 (dnx.spi) and SDSPI/ext2 tests (sim-env/tests/*.lua) executed by dnx Lua interpreter, fstest on ext2
+#             SPI, SPIEE/eefs, MCP23S17 (dnx.spi), UART (echo, NMEA GPS) and SDSPI/ext2 tests (sim-env/tests/*.lua) executed by dnx Lua interpreter, fstest on ext2
 #             on SD card model (SDSPI driver), board panel protocol (socket of tools/simpanel.py),
 #           - fstest on ramfs (/tmp) and hostfs (/host, temporary host directory),
 #           - fstest on FAT and ext4 partitions of temporary disk image (/mnt/sda1, /mnt/sda2),
@@ -128,6 +128,7 @@ EXT3_SIZE = RAW_DISK_SIZE // SECTOR_SIZE - EXT3_START
 BLK_DISK = 4
 BLK_DISK_SIZE = 16 * 1024 * 1024
 
+BOARD_MESSAGE = re.compile(r"\[board\] [^\n]*\n+")
 ANSI_ESCAPE = re.compile(rb"\x1b\[[0-9;?]*[a-zA-Z]|\x1b[78]")
 ANSI_INCOMPLETE = re.compile(rb"\x1b(\[[0-9;?]*)?$")
 SUMMARY = re.compile(r"SUMMARY:\s*executed:\s*(\d+),\s*passed:\s*(\d+),\s*failed:\s*(\d+),\s*skipped:\s*(\d+)")
@@ -192,7 +193,8 @@ class Simulator:
             return False
 
     def _prompt_ready(self, start):
-        return self.out[start:].endswith("\n$ ")
+        # asynchronous messages of board engine (models) can follow the prompt
+        return BOARD_MESSAGE.sub("", self.out[start:]).endswith("\n$ ")
 
     # wait for shell prompt (prompt is the last output)
     def wait_prompt(self, timeout, start=0):
@@ -821,7 +823,7 @@ class TestRunner:
 
         # board model (before fstest on hostfs, test files are removed after test)
         board_tests = ("board: gpio", "board: i2c", "board: i2cee", "board: ds2482", "board: spi", "board: spiee",
-                       "board: mcp23s17",
+                       "board: mcp23s17", "board: uart",
                        "board: sdcard", "fstest: ext2 on sdspi", "board: panel")
         if args.board:
             self.summary_test(sim, "board: gpio", "/host/sim-env", "lua gpio.lua", DEFAULT_TIMEOUT)
@@ -830,6 +832,7 @@ class TestRunner:
             self.summary_test(sim, "board: i2cee", "/host/sim-env", "lua i2cee.lua", FSTEST_TIMEOUT)
             self.summary_test(sim, "board: ds2482", "/host/sim-env", "lua ds2482.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: mcp23s17", "/host/sim-env", "lua mcp23s17.lua", DEFAULT_TIMEOUT)
+            self.summary_test(sim, "board: uart", "/host/sim-env", "lua uart.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: spi", "/host/sim-env", "lua spi.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: spiee", "/host/sim-env", "lua spiee.lua", FSTEST_TIMEOUT)
             self.summary_test(sim, "board: sdcard", "/host/sim-env", "lua sdcard.lua", FSTEST_TIMEOUT)

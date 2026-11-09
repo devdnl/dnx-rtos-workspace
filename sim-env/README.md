@@ -20,7 +20,8 @@ Directories:
   shown by the board panel), `ds2482` (I2C to 1-Wire bridge DS2482-100),
   `ds18b20` (1-Wire thermometer), `onewire` (1-Wire bus used by them, see
   [1-Wire](#1-wire)), `mcp23s17` (SPI 16-bit I/O expander, see
-  [MCP23S17](#mcp23s17)), the description of options and methods is in
+  [MCP23S17](#mcp23s17)), `nmea_gps` (NMEA GPS receiver on UART, see
+  [uart](#uart)), the description of options and methods is in
   the model file, see [Writing device models](#writing-device-models),
 - `tests/` – test programs executed in dnx RTOS (e.g. `lua /host/gpio.lua`),
 - `testappset/` – test appset linked with the simulator by `make test-sim`
@@ -187,6 +188,57 @@ storinit /dev/sdcard
 modprobe -i SPI 0 1 /dev/spi-ee -c cs_port=0,cs_pin=7,mode=0
 modprobe -i SPIEE 0 0 /dev/ee1 -c spi_path=/dev/spi-ee,memory_size=32768,page_size=64,address_size=2
 ```
+
+### uart
+UARTs of the system not connected by the simulator option `--uart` (and not
+UART1, the simulator terminal) can be connected to board models. UART names
+are in STM32 style: `UART1` is `/dev/ttyS0` (option `--uart 0`), `UART2` is
+`/dev/ttyS1` and so on. `--uart <n>=board` connects UART explicitly (a warning
+is printed when the board script does not attach a model).
+```lua
+local dev = {}
+function dev:receive(data)                    -- data sent by the system (string)
+    uart.send("UART2", data:upper())          -- data sent to the system
+end
+function dev:configure(cfg)                   -- configuration set by the system
+    print(cfg.baud, cfg.parity, cfg.stop_bits) -- 9600 none 1 (parity: none, odd, even)
+end
+if uart.available("UART2") then               -- not connected by option --uart
+    uart.attach("UART2", dev)                 -- opts.timing = false: no transmission time
+end
+print(uart.config("UART2").baud, uart.pending("UART2"))
+```
+Data is transferred with transmission time of characters (start bit, 8 data
+bits, parity, stop bits at the baud rate configured by the system): the model
+gets bytes sent by the system when they are transmitted, bytes sent by the
+model are available to the system at the time of their reception, so the
+system sees the real throughput of the line (option `timing = false`: data is
+transferred immediately). Bytes received by the system and not read in 200 ms
+are lost (receiver overrun, reported once); data sent by model faster than the
+baud rate allows is lost when the buffer (4096 bytes) is full. The model
+should check the configuration (`dev:configure()`, `uart.config()`): a model of
+a device with fixed baud rate sends unreadable data when the system uses
+another baud rate or parity (as `nmea_gps`).
+
+`models/nmea_gps.lua` is a GPS receiver (MediaTek MT3339 style): sentences
+GGA, GSA, GSV, RMC, VTG (GLL, ZDA) of each fix, position, fix, speed and
+course set by the board, PMTK commands (fix interval, sentence output, baud
+rate, restart, firmware query):
+```lua
+local nmea_gps = require("models.nmea_gps")
+
+local gps = nmea_gps.new{lat = 52.2297, lon = 21.0122, alt = 110, baud = 9600}
+gps:attach("UART2")
+gps:set_motion(12.5, 90)                      -- knots, course
+gps:set_fix(false)
+```
+In dnx RTOS:
+```
+modprobe -c /dev/ttyS1 baud=9600
+cat /dev/ttyS1
+```
+`tests/uart.lua` tests UARTs of `boards/test.lua` (echo with configuration
+query on UART3, GPS on UART4).
 
 ### MCP23S17
 `models/mcp23s17.lua` is the 16-bit I/O expander with SPI (mode 0 or 3): all

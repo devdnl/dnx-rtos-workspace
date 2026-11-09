@@ -100,6 +100,10 @@ figcaption { font-size: 13px; color: var(--muted); }
 .tact.small { width: 32px; height: 32px; border-radius: 7px; }
 .tact.small::after { inset: 8px; }
 
+/* GPS: position and the last RMC sentence */
+.gps-pos { font: 600 18px ui-monospace, SFMono-Regular, Menlo, monospace; margin: 4px 0 10px; }
+.gps-nmea { display: block; margin-top: 10px; font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+
 /* MCP23S17: buttons of port B, INT pins */
 .mcp-buttons { display: flex; justify-content: space-between; gap: 6px; margin-top: 12px; }
 .mcp-buttons figcaption { font-size: 11px; }
