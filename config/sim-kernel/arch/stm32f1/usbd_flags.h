@@ -37,8 +37,7 @@
 #define _USBD_FLAGS_H_
 
 /*--
-this:SetLayout("TitledGridBack", 4, "Home > Microcontroller > USBD",
-               function() this:LoadFile("arch/arch_flags.h") end)
+this:SetTitle("Home > Microcontroller > USBD", "The USBD module configuration.")
 ++*/
 
 /*--

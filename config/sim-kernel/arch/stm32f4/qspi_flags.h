@@ -36,8 +36,7 @@ Brief   Quad SPI
 #define _QSPI_FLAGS_H_
 
 /*--
-this:SetLayout("TitledGridBack", 2, "Home > Microcontroller > QSPI",
-               function() this:LoadFile("arch/arch_flags.h") end)
+this:SetTitle("Home > Microcontroller > QSPI", "The QSPI module configuration.")
 ++*/
 
 /*--

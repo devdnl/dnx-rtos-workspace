@@ -602,8 +602,13 @@
 	["config/app-kernel/os/os_flags.h"]={
 		["__HEAP_BLOCK_SIZE__"]="4";
 		["__OS_COLOR_TERMINAL_ENABLE__"]="_YES_";
+		["__OS_DRVSET_FLASH_ADDRESS__"]="0x08080000";
+		["__OS_DRVSET_FLASH_SIZE__"]="128";
+		["__OS_DRVSET_MAX_MODULES__"]="8";
+		["__OS_DRVSET_RAM_SIZE__"]="4";
 		["__OS_ENABLE_CHMOD__"]="_NO_";
 		["__OS_ENABLE_CHOWN__"]="_NO_";
+		["__OS_ENABLE_DRVSET__"]="_NO_";
 		["__OS_ENABLE_FSTAT__"]="_YES_";
 		["__OS_ENABLE_GETCWD__"]="_YES_";
 		["__OS_ENABLE_MKDIR__"]="_YES_";

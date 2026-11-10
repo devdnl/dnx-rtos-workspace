@@ -36,8 +36,7 @@ Brief   PWM driver
 #define _PWM_FLAGS_H_
 
 /*--
-this:SetLayout("TitledGridBack", 2, "Home > Microcontroller > PWM",
-               function() this:LoadFile("arch/arch_flags.h") end)
+this:SetTitle("Home > Microcontroller > PWM", "The PWM module configuration.")
 ++*/
 
 #endif /* _PWM_FLAGS_H_ */
