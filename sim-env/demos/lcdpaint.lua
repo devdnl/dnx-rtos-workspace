@@ -6,7 +6,7 @@
 
   Draws on the LCD (LTDC driver, /dev/lcd, RGB565) where the LCD of the board
   panel (web browser) is touched. Touch is read from the FT5336 touch panel
-  controller (I2C1, address 0x38) by the I2C driver (/dev/i2c-ts). Top line:
+  controller (I2C:0, address 0x38) by the I2C driver (/dev/i2c-ts). Top line:
   colors, C clears the screen, X exits.
 ------------------------------------------------------------------------------]]
 

@@ -4,7 +4,7 @@
   Usage:
     local eeprom = require("models.24cxx")
     local ee = eeprom.new{type = "24c256"}         -- 32 KiB, 64 B page
-    ee:attach("I2C1", 0x50)                         -- 7-bit base address
+    ee:attach("I2C:0", 0x50)                        -- 7-bit base address
 
   Options of new():
     type        memory type (table TYPES), or explicit parameters:

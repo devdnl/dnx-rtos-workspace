@@ -4,7 +4,7 @@
   Usage:
     local sdcard = require("models.sdcard")
     local sd = sdcard.new{file = "sd.img"}      -- host image file
-    sd:attach("SPI1", "PA15")                    -- bus, CS pin (active low)
+    sd:attach("SPI:0", "PA15")                   -- bus, CS pin (active low)
 
   Options of new():
     type        "sdhc" (default, SD v2, block addressing), "sdsc" (SD v2,

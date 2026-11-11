@@ -54,7 +54,7 @@
         </section>
 
         <section class="block">
-            <h2>LM75 <small>I2C1 0x48</small></h2>
+            <h2>LM75 <small>I2C:0 0x48</small></h2>
             <div class="temp">
                 <div class="thermo"><div class="fill" id="thermo-fill"></div></div>
                 <div>
@@ -70,7 +70,7 @@
         </section>
 
         <section class="block">
-            <h2>DS2482-100 <small>I2C1 0x18, 1-Wire, 3× DS18B20</small></h2>
+            <h2>DS2482-100 <small>I2C:0 0x18, 1-Wire, 3× DS18B20</small></h2>
             <div class="ow-sensor">
                 <label class="check"><input type="checkbox" data-input="OW1_PLUG" aria-label="Sensor 1 connected">
                     <code data-signal="OW1_ROM" data-format=""></code></label>
@@ -102,7 +102,7 @@
         </section>
 
         <section class="block">
-            <h2>GPS <small>UART2 /dev/ttyS1, NMEA 9600 8N1</small></h2>
+            <h2>GPS <small>UART:1 /dev/ttyS1, NMEA 9600 8N1</small></h2>
             <div class="gps-pos" data-signal="GPS_POS" data-format="">–</div>
             <label class="check"><input type="checkbox" data-input="GPS_FIX"> Position fix</label>
             <div class="slider">
@@ -117,13 +117,13 @@
         </section>
 
         <section class="block wide">
-            <h2>PCF8574 <small>I2C1 0x20, active low</small>
+            <h2>PCF8574 <small>I2C:0 0x20, active low</small>
                 <code class="hex" data-signal="LEDS1" data-format="0x%02X"></code></h2>
             <div class="bar" data-bits="LEDS1" data-active-low></div>
-            <h2>74HC595 <small>SPI2, CS PA16</small>
+            <h2>74HC595 <small>SPI:1, CS PA16</small>
                 <code class="hex" data-signal="LEDS2" data-format="0x%02X"></code></h2>
             <div class="bar red" data-bits="LEDS2"></div>
-            <h2>MCP23S17 <small>SPI2, CS PA17, port A: LEDs, port B: buttons</small>
+            <h2>MCP23S17 <small>SPI:1, CS PA17, port A: LEDs, port B: buttons</small>
                 <code class="hex" data-signal="MCP_A" data-format="0x%02X"></code></h2>
             <div class="bar" data-bits="MCP_A"></div>
             <div class="mcp-buttons">
@@ -151,7 +151,7 @@
         </section>
 
         <section class="block wide">
-            <h2>LCD <small>LTDC driver, touch: FT5336 I2C1 0x38, INT PA9</small>
+            <h2>LCD <small>LTDC driver, touch: FT5336 I2C:0 0x38, INT PA9</small>
                 <span class="led small touch" data-signal="TOUCH"></span></h2>
             <div class="lcd off" data-lcd-block="ltdc">
                 <canvas data-lcd="ltdc"></canvas>
@@ -161,7 +161,7 @@
         </section>
 
         <section class="block wide">
-            <h2>TFT <small>ST7789 240×320, SPI3, CS PB1, D/C PB0</small>
+            <h2>TFT <small>ST7789 240×320, SPI:2, CS PB1, D/C PB0</small>
                 <code class="hex" data-signal="TFT_TOUCH" data-format=""></code></h2>
             <div class="lcd off" data-lcd-block="tft">
                 <canvas data-lcd="tft"></canvas>

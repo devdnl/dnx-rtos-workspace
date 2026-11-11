@@ -1,7 +1,7 @@
 --[[----------------------------------------------------------------------------
   SDSPI driver test executed in dnx RTOS (lua program) with board
   boards/test.lua: SDHC card 16 MiB (CS PA15) and SD v1 card 2 MiB (CS PA17)
-  on SPI1, ext2 file system on SDHC card (mkext). The card is left formatted
+  on SPI:0, ext2 file system on SDHC card (mkext). The card is left formatted
   (tools/simtest.py executes fstest on it).
 ------------------------------------------------------------------------------]]
 

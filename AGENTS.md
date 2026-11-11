@@ -158,7 +158,7 @@ Notes:
   `uart/posix` sends data in chunks (writer or service thread), host writes
   are non-blocking except the simulator terminal. `siminit` initializes
   `/dev/ttyS1..3` (raw, no shell). UARTs not selected by `--uart` can be
-  attached by board scripts (`uart.attach("UART2", dev)`, UART<n+1> =
+  attached by board scripts (`uart.attach("UART:1", dev)`, `"UART:<n>"` =
   `/dev/ttyS<n>`): `board.c` keeps RX/TX FIFOs with reception times
   (transmission time from baud rate and frame configured by the system, 10 ms
   transmitter window for the 5 ms polling of `uart/posix`, receiver overrun

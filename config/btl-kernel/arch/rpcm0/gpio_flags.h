@@ -107,8 +107,12 @@ elseif this.state.gpio_menu[1] and (this.state.gpio_menu[2] == nil) then
 
     this:SetTitle("Home > Microcontroller > "..gpio, "The "..gpio.." port configuration.")
 
+    -- pin names given by user (values saved in file, flags of pins are
+    -- defined after this script)
+    local names = this:GetFlagsList("arch/rpcm0/gpio_flags.h", "__GPIO_"..gpio.."_PIN_%d+_NAME__")
+
     for pin = 0, fntab[gpio].pinCount - 1 do
-        this:AddExtraWidget("Submenu", "HL_PIN"..pin, pin.." "..gpio.."."..pin, "arch/rpcm0/gpio_flags.h")
+        this:AddExtraWidget("Submenu", "HL_PIN"..pin, pin.." "..gpio.."."..pin, "arch/rpcm0/gpio_flags.h", names["__GPIO_"..gpio.."_PIN_"..pin.."_NAME__"])
         this:SetEvent("clicked", "HL_PIN"..pin, function() OpenPortMenu(gpio, pin) end)
     end
 

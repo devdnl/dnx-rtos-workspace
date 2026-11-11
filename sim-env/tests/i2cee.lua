@@ -1,6 +1,6 @@
 --[[----------------------------------------------------------------------------
   I2CEE driver and eefs test executed in dnx RTOS (lua program) with board
-  boards/test.lua (24C256 on I2C1, address 0x50). The full fstest is not
+  boards/test.lua (24C256 on I2C:0, address 0x50). The full fstest is not
   executed on this device: eefs reads blocks very often and every block is an
   I2C transaction, the test would take more than an hour.
 ------------------------------------------------------------------------------]]

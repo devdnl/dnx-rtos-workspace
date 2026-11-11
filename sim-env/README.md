@@ -83,8 +83,8 @@ host.timer(500, function() gpio.set("PA4", not gpio.get("PA4")) end, true)
 ```
 
 ### i2c
-Buses are named in STM32 style: `I2C1` (major 0 of the `I2C` driver) ..
-`I2C16`. The I2C driver of the simulator supports master mode only. Device
+Buses are named as in `driver_init()`: `"I2C:<major>"`, e.g. `I2C:0` (major
+0 of the `I2C` driver) .. `I2C:15`. The I2C driver of the simulator supports master mode only. Device
 addresses are 7-bit (as in datasheets), the same in the board model and in
 the driver configuration (e.g. `0x50`).
 
@@ -118,7 +118,7 @@ function dev:write(byte)
 end
 function dev:read() local v = self.regs[self.ptr]; self.ptr = self.ptr + 1; return v end
 
-i2c.attach("I2C1", 0x3C, dev)
+i2c.attach("I2C:0", 0x3C, dev)
 ```
 
 Example – models:
@@ -127,9 +127,9 @@ local eeprom = require("models.24cxx")
 local pcf8574 = require("models.pcf8574")
 local lm75 = require("models.lm75")
 
-eeprom.new{type = "24c256", file = "eeprom.bin"}:attach("I2C1", 0x50)
-local leds = pcf8574.new{int = "PA5"}:attach("I2C1", 0x20)
-local sensor = lm75.new{temperature = 21.5, os = "PA6"}:attach("I2C1", 0x48)
+eeprom.new{type = "24c256", file = "eeprom.bin"}:attach("I2C:0", 0x50)
+local leds = pcf8574.new{int = "PA5"}:attach("I2C:0", 0x20)
+local sensor = lm75.new{temperature = 21.5, os = "PA6"}:attach("I2C:0", 0x48)
 host.timer(1000, function() sensor:set_temperature(20 + math.random() * 5) end, true)
 ```
 
@@ -145,8 +145,8 @@ File position of I2C device file is the sub-address (register or memory
 address) when `sub_addr_mode` is set (1..4 bytes).
 
 ### spi
-Buses are named in STM32 style: `SPI1` (major 0 of the `SPI` driver) ..
-`SPI16`. Device is selected by its CS pin: the SPI driver of dnx RTOS
+Buses are named as in `driver_init()`: `"SPI:<major>"`, e.g. `SPI:0` (major
+0 of the `SPI` driver) .. `SPI:15`. Device is selected by its CS pin: the SPI driver of dnx RTOS
 controls CS by the GPIO driver (configuration `CS_port_idx`, `CS_pin_idx`),
 the board receives CS changes as GPIO events before the transfer, so CS
 timing is the same as on the hardware. Not configured CS pin is low (output
@@ -175,7 +175,7 @@ Example – shift register:
 local sr = {state = 0}
 function sr:transfer(byte) self.next = byte end
 function sr:deselect() if self.next then self.state = self.next; print("outputs", self.state) end end
-spi.attach("SPI2", "PA16", sr)
+spi.attach("SPI:1", "PA16", sr)
 ```
 
 Devices are created in dnx RTOS by the `SPI` driver, e.g. by `modprobe` with
@@ -191,22 +191,22 @@ modprobe -i SPIEE 0 0 /dev/ee1 -c spi_path=/dev/spi-ee,memory_size=32768,page_si
 
 ### uart
 UARTs of the system not connected by the simulator option `--uart` (and not
-UART1, the simulator terminal) can be connected to board models. UART names
-are in STM32 style: `UART1` is `/dev/ttyS0` (option `--uart 0`), `UART2` is
-`/dev/ttyS1` and so on. `--uart <n>=board` connects UART explicitly (a warning
+`UART:0`, the simulator terminal) can be connected to board models. UARTs are
+named as in `driver_init()`: `"UART:<major>"`, `UART:0` is `/dev/ttyS0`
+(option `--uart 0`), `UART:1` is `/dev/ttyS1` and so on. `--uart <n>=board` connects UART explicitly (a warning
 is printed when the board script does not attach a model).
 ```lua
 local dev = {}
 function dev:receive(data)                    -- data sent by the system (string)
-    uart.send("UART2", data:upper())          -- data sent to the system
+    uart.send("UART:1", data:upper())         -- data sent to the system
 end
 function dev:configure(cfg)                   -- configuration set by the system
     print(cfg.baud, cfg.parity, cfg.stop_bits) -- 9600 none 1 (parity: none, odd, even)
 end
-if uart.available("UART2") then               -- not connected by option --uart
-    uart.attach("UART2", dev)                 -- opts.timing = false: no transmission time
+if uart.available("UART:1") then              -- not connected by option --uart
+    uart.attach("UART:1", dev)                -- opts.timing = false: no transmission time
 end
-print(uart.config("UART2").baud, uart.pending("UART2"))
+print(uart.config("UART:1").baud, uart.pending("UART:1"))
 ```
 Data is transferred with transmission time of characters (start bit, 8 data
 bits, parity, stop bits at the baud rate configured by the system): the model
@@ -228,7 +228,7 @@ rate, restart, firmware query):
 local nmea_gps = require("models.nmea_gps")
 
 local gps = nmea_gps.new{lat = 52.2297, lon = 21.0122, alt = 110, baud = 9600}
-gps:attach("UART2")
+gps:attach("UART:1")
 gps:set_motion(12.5, 90)                      -- knots, course
 gps:set_fix(false)
 ```
@@ -238,7 +238,7 @@ modprobe -c /dev/ttyS1 baud=9600
 cat /dev/ttyS1
 ```
 `tests/uart.lua` tests UARTs of `boards/test.lua` (echo with configuration
-query on UART3, GPS on UART4).
+query on `UART:2`, GPS on `UART:3`).
 
 ### MCP23S17
 `models/mcp23s17.lua` is the 16-bit I/O expander with SPI (mode 0 or 3): all
@@ -253,7 +253,7 @@ Pins are connected to the system GPIO or driven by the board:
 local mcp23s17 = require("models.mcp23s17")
 
 local exp = mcp23s17.new{address = 0, int_a = "PB3", int_b = "PB4", reset = "PB5"}
-exp:attach("SPI3", "PB2")
+exp:attach("SPI:2", "PB2")
 for i = 0, 7 do exp:connect_output("A" .. i, "PC" .. i) end   -- GPA0..7 -> PC0..7
 exp:connect_input("B0", "PC8")                                 -- system output -> GPB0
 exp:set_input("B7", false)                                     -- button pressed (low)
@@ -295,7 +295,7 @@ ROM with more devices returns the wired-AND of their codes.
 local ds2482 = require("models.ds2482")
 local ds18b20 = require("models.ds18b20")
 
-local ow = ds2482.new{}:attach("I2C1", 0x18)
+local ow = ds2482.new{}:attach("I2C:0", 0x18)
 local s1 = ds18b20.new{serial = 0x00000A1B2C01, temperature = 21.5}:attach(ow)
 local s2 = ds18b20.new{serial = 0x00000A1B2C02, parasite = true}:attach(ow)
 s1:set_temperature(-10.125)
@@ -463,7 +463,7 @@ panel controller which is read by the system, e.g. FT5336 (as on
 STM32F746G-DISCO):
 ```lua
 local ft5336 = require("models.ft5336")
-local ts = ft5336.new{int = "PA9"}:attach("I2C1", 0x38)
+local ts = ft5336.new{int = "PA9"}:attach("I2C:0", 0x38)
 panel.on_touch(function(x, y, pressed) ts:touch(x, y, pressed) end, "ltdc")
 ```
 The controller is read in dnx RTOS by the `I2C` driver, registers 0x02..0x06:
@@ -503,10 +503,10 @@ pixels out of LCD are not written):
 | `lcd.id`, `lcd.width`, `lcd.height`, `lcd.format`, `lcd.pixel_size`, `lcd.enabled` | properties |
 
 Example (`boards/example.lua`, page `panel/example/`, demo
-`demos/tftdemo.lua`) – ST7789 TFT display on SPI3:
+`demos/tftdemo.lua`) – ST7789 TFT display on SPI:2:
 ```lua
 local st7789 = require("models.st7789")
-local tft = st7789.new{id = "tft", width = 240, height = 320, dc = "PB0"}:attach("SPI3", "PB1")
+local tft = st7789.new{id = "tft", width = 240, height = 320, dc = "PB0"}:attach("SPI:2", "PB1")
 tft:on_touch(function(x, y, pressed) panel.set("TFT_TOUCH", pressed and x .. ", " .. y or "") end)
 ```
 ```html
@@ -541,7 +541,7 @@ The convention of existing models:
   (table with metatable), options are checked (`error()`/`assert()` with the
   model name in the message),
 - `dev:attach(bus, address_or_cs)` connects the device to the bus and returns
-  the device (`local d = model.new{...}:attach("SPI1", "PA7")`),
+  the device (`local d = model.new{...}:attach("SPI:0", "PA7")`),
 - protocol methods are called by the engine, host side methods are used by
   the board script and tests (e.g. `set_temperature()`, `touch()`,
   `read_byte()`), callbacks of changes are registered by `dev:on_change(fn)`,

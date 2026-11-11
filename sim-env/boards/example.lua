@@ -8,8 +8,8 @@
   The board panel (PANEL=1, web browser: http://localhost:8080) shows page
   sim-env/panel/example/: LEDs, button, temperature, DS18B20 sensors on
   1-Wire bus (DS2482), LEDs of the I/O expander and shift register, MCP23S17
-  with LEDs and buttons, GPS receiver (UART2), LCD (LTDC driver) with touch
-  panel, TFT display (ST7789 model on SPI3).
+  with LEDs and buttons, GPS receiver (UART:1), LCD (LTDC driver) with touch
+  panel, TFT display (ST7789 model on SPI:2).
 
   Pins (port A):
     PA0  LED (output of the system, active low)
@@ -17,7 +17,7 @@
     PA2  -> PA3  inverter
     PA4  heartbeat (input of the system, toggled every 500 ms)
 
-  I2C1:
+  I2C:0:
     0x18  DS2482-100 1-Wire master with 3 DS18B20 sensors (temperatures set
           by the panel, sensor 3 with parasite power), EEPROM of sensors is
           kept in the host files build/example-ds18b20-<n>.bin
@@ -29,17 +29,17 @@
     0x50  24C256 EEPROM, content is kept in the host file
           build/example-24c256.bin (build directory of the workspace)
 
-  SPI1 (CS active low):
+  SPI:0 (CS active low):
     PA7   25LC256 EEPROM, content is kept in the host file build/example-25lc256.bin
     PA15  SD card (SDHC), image in the host file build/example-sd.img (64 MiB)
-  SPI2:
+  SPI:1:
     PA16  74HC595 with 8 LEDs (printed when changed)
     PA17  MCP23S17 (address 0): GPA0..GPA7 LEDs (active high), GPB0..GPB7
           buttons of the panel (pressed: low, released: not driven, pull-up
           GPPUB should be enabled), INTA -> PA10, INTB -> PA11
-  SPI3:
+  SPI:2:
     PB1   ST7789 TFT display 240x320 (LCD "tft" of the panel), D/C -> PB0
-  UART2 (/dev/ttyS1, when not connected by simulator option --uart 1=...):
+  UART:1 (/dev/ttyS1, when not connected by simulator option --uart 1=...):
           NMEA GPS receiver (9600 8N1, 1 fix per second), position, fix,
           speed and course set by the panel
 
@@ -63,7 +63,7 @@
     modprobe -c /dev/ttyS1 baud=9600
     cat /dev/ttyS1
 
-  dnx RTOS (shell), SD card (all SPI1 CS pins should be configured first,
+  dnx RTOS (shell), SD card (all SPI:0 CS pins should be configured first,
   not configured CS pin is low: device is selected):
     modprobe -i SPI 0 0 /dev/spi-ee -c cs_port=0,cs_pin=7
     modprobe -i SPI 0 1 /dev/spi-sd -c cs_port=0,cs_pin=15
@@ -124,8 +124,8 @@ host.timer(500, function()
 end, true)
 panel.output("HEARTBEAT", "PA4", {label = "Heartbeat (PA4)", color = "#3b82f6"})
 
--- I2C1: LEDs on I/O expander (active low)
-local leds = pcf8574.new({ int = "PA5" }):attach("I2C1", 0x20)
+-- I2C:0: LEDs on I/O expander (active low)
+local leds = pcf8574.new({ int = "PA5" }):attach("I2C:0", 0x20)
 panel.value("LEDS1", leds.latch, {label = "PCF8574 LEDs (active low)", format = "0x%02X"})
 leds:on_change(function(latch)
     local t = {}
@@ -136,9 +136,9 @@ leds:on_change(function(latch)
     panel.set("LEDS1", latch)
 end)
 
--- I2C1: temperature sensor, temperature changes between 20 and 30 C
+-- I2C:0: temperature sensor, temperature changes between 20 and 30 C
 -- (automatic mode) or is set by the panel
-local sensor = lm75.new({ temperature = 20, os = "PA6" }):attach("I2C1", 0x48)
+local sensor = lm75.new({ temperature = 20, os = "PA6" }):attach("I2C:0", 0x48)
 local auto = true
 host.timer(1000, function()
     if auto then
@@ -155,23 +155,23 @@ panel.control("TEMP_SET", function(v)
 end, {value = 25, min = -20, max = 100, step = 0.5, label = "Set temperature", unit = "°C"})
 panel.output("OS", "PA6", {active_low = true, label = "LM75 OS (PA6)", color = "#f59e0b"})
 
--- I2C1: touch panel controller of the LCD (LTDC driver), touch of the LCD in
+-- I2C:0: touch panel controller of the LCD (LTDC driver), touch of the LCD in
 -- the board panel
-local ts = ft5336.new({ int = "PA9" }):attach("I2C1", 0x38)
+local ts = ft5336.new({ int = "PA9" }):attach("I2C:0", 0x38)
 panel.on_touch(function(x, y, pressed) ts:touch(x, y, pressed) end, "ltdc")
 panel.output("TOUCH", "PA9", {active_low = true, label = "Touch INT (PA9)", color = "#a855f7"})
 
--- I2C1: EEPROM
+-- I2C:0: EEPROM
 -- files with content of memories are kept in the build directory of the
 -- workspace (sim-env/boards/../../build), removed by make clean
 local DATA = host.dir .. "/../../build/"
 
-eeprom.new({ type = "24c256", file = DATA .. "example-24c256.bin" }):attach("I2C1", 0x50)
+eeprom.new({ type = "24c256", file = DATA .. "example-24c256.bin" }):attach("I2C:0", 0x50)
 
--- I2C1: DS2482-100 with three DS18B20 sensors on 1-Wire bus (sensor 3:
+-- I2C:0: DS2482-100 with three DS18B20 sensors on 1-Wire bus (sensor 3:
 -- parasite power), temperatures are set by the panel, sensors can be
 -- disconnected (hot-plug) and the 1-Wire line shorted
-local ow = ds2482.new():attach("I2C1", 0x18)
+local ow = ds2482.new():attach("I2C:0", 0x18)
 local OW_SENSORS = {
     {serial = 0x00000A1B2C01, temperature = 21.5},
     {serial = 0x00000A1B2C02, temperature = 4.0},
@@ -194,12 +194,12 @@ for n, o in ipairs(OW_SENSORS) do
 end
 panel.control("OW_SHORT", function(v) ow.ow:set_short(v) end, {value = false, label = "1-Wire line shorted"})
 
--- SPI1: EEPROM and SD card
-spiee.new({ type = "25lc256", file = DATA .. "example-25lc256.bin" }):attach("SPI1", "PA7")
-sdcard.new({ file = DATA .. "example-sd.img", size = 64 * 1024 * 1024 }):attach("SPI1", "PA15")
+-- SPI:0: EEPROM and SD card
+spiee.new({ type = "25lc256", file = DATA .. "example-25lc256.bin" }):attach("SPI:0", "PA7")
+sdcard.new({ file = DATA .. "example-sd.img", size = 64 * 1024 * 1024 }):attach("SPI:0", "PA15")
 
--- SPI2: LEDs on shift register (active high)
-local leds2 = hc595.new():attach("SPI2", "PA16")
+-- SPI:1: LEDs on shift register (active high)
+local leds2 = hc595.new():attach("SPI:1", "PA16")
 panel.value("LEDS2", leds2:state(), {label = "74HC595 LEDs", format = "0x%02X"})
 leds2:on_change(function(state)
     local t = {}
@@ -210,8 +210,8 @@ leds2:on_change(function(state)
     panel.set("LEDS2", state)
 end)
 
--- SPI2: MCP23S17, port A: LEDs, port B: buttons to ground (pull-up of the expander)
-local mcp = mcp23s17.new({ address = 0, int_a = "PA10", int_b = "PA11" }):attach("SPI2", "PA17")
+-- SPI:1: MCP23S17, port A: LEDs, port B: buttons to ground (pull-up of the expander)
+local mcp = mcp23s17.new({ address = 0, int_a = "PA10", int_b = "PA11" }):attach("SPI:1", "PA17")
 panel.value("MCP_A", mcp:port("A"), {label = "MCP23S17 port A LEDs", format = "0x%02X"})
 panel.output("MCP_INTA", "PA10", {active_low = true, label = "MCP23S17 INTA (PA10, active low)"})
 panel.output("MCP_INTB", "PA11", {active_low = true, label = "MCP23S17 INTB (PA11, active low)"})
@@ -224,10 +224,10 @@ for n = 0, 7 do
     end, {value = false, label = "MCP23S17 button GPB" .. n})
 end
 
--- UART2: GPS receiver (not used when UART2 is connected by simulator option --uart 1=...)
-if uart.available("UART2") then
+-- UART:1: GPS receiver (not used when UART:1 is connected by simulator option --uart 1=...)
+if uart.available("UART:1") then
     local gps = nmea_gps.new({ lat = 52.2297, lon = 21.0122, alt = 110 })
-    gps:attach("UART2")
+    gps:attach("UART:1")
     local function pos()
         local lat, lon = gps:position()
         return string.format("%.5f %s  %.5f %s", math.abs(lat), lat >= 0 and "N" or "S",
@@ -246,9 +246,9 @@ if uart.available("UART2") then
                   {value = 0, min = 0, max = 359, step = 1, label = "GPS course", unit = "°"})
 end
 
--- SPI3: TFT display (LCD "tft" of the panel), touch of the display in the
+-- SPI:2: TFT display (LCD "tft" of the panel), touch of the display in the
 -- board panel is only shown
-local tft = st7789.new({ id = "tft", width = 240, height = 320, dc = "PB0" }):attach("SPI3", "PB1")
+local tft = st7789.new({ id = "tft", width = 240, height = 320, dc = "PB0" }):attach("SPI:2", "PB1")
 panel.value("TFT_TOUCH", "", {label = "TFT touch"})
 tft:on_touch(function(x, y, pressed) panel.set("TFT_TOUCH", pressed and string.format("%d, %d", x, y) or "") end)
 

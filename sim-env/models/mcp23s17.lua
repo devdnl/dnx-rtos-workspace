@@ -4,7 +4,7 @@
   Usage:
     local mcp23s17 = require("models.mcp23s17")
     local exp = mcp23s17.new{address = 0, int_a = "PB3", int_b = "PB4"}
-    exp:attach("SPI3", "PB2")                    -- bus, CS pin (active low)
+    exp:attach("SPI:2", "PB2")                   -- bus, CS pin (active low)
     exp:connect_output("A0", "PB8")              -- GPA0 drives system input PB8
     exp:connect_input("B0", "PB16")              -- system output PB16 drives GPB0
     exp:set_input("B7", false)                   -- external level of pin (button)

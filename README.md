@@ -377,7 +377,7 @@ test programs are executed in the shell and their `SUMMARY:` lines are checked:
 |------------------|-------------|
 | boot             | system starts, shell responds |
 | `devcfg: config strings` | driver configuration strings (`sim-env/tests/devcfg.lua`, `modprobe -c`): PART, FBRIDGE, UART, MEMBLOCK, invalid values |
-| `devcfg: uart termios` | UART1 configured in dnx (baud rate, stop bits) is checked on the host pseudo terminal |
+| `devcfg: uart termios` | UART:1 configured in dnx (baud rate, stop bits) is checked on the host pseudo terminal |
 | `board: gpio`    | GPIO test (`sim-env/tests/gpio.lua`) with board model `sim-env/boards/test.lua` |
 | `board: i2c`     | I2C test (`sim-env/tests/i2c.lua`): EEPROM, PCF8574, LM75 models, not connected device |
 | `board: i2cee`   | I2CEE driver and eefs on 24C256 model (`sim-env/tests/i2cee.lua`) |

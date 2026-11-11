@@ -5,7 +5,7 @@
   Usage:
     local nmea_gps = require("models.nmea_gps")
     local gps = nmea_gps.new{lat = 52.2297, lon = 21.0122, alt = 110}
-    gps:attach("UART2")                       -- /dev/ttyS1 of dnx RTOS
+    gps:attach("UART:1")                      -- /dev/ttyS1 of dnx RTOS
     gps:set_motion(12.5, 90)                  -- 12.5 knots to east
     gps:set_fix(false)                        -- no fix (e.g. signal lost)
 

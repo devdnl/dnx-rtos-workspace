@@ -7,7 +7,7 @@
   Usage:
     local st7789 = require("models.st7789")
     local lcd = st7789.new{id = "tft", width = 240, height = 320, dc = "PB0"}
-    lcd:attach("SPI3", "PB1")                   -- bus, CS pin (active low)
+    lcd:attach("SPI:2", "PB1")                  -- bus, CS pin (active low)
     lcd:on_touch(function(x, y, pressed) ... end)  -- touch of the panel LCD
 
   Options of new():

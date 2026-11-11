@@ -3,7 +3,7 @@
   boards/test.lua. The DS2482 is used by the I2C driver (device files without
   sub-address), the 1-Wire protocol (search, ROM and function commands) is
   implemented here, as it is done by a driver of the DS2482. The test board
-  is controlled by the test control device (I2C1 0x30): sensors are
+  is controlled by the test control device (I2C:0 0x30): sensors are
   attached and detached, temperatures, faults and short of the line are set.
 ------------------------------------------------------------------------------]]
 

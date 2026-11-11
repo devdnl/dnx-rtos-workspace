@@ -6,7 +6,7 @@
   Usage:
     local hc595 = require("models.74hc595")
     local leds = hc595.new{outputs = {"PA20", "PA21"}}   -- optional GPIO outputs
-    leds:attach("SPI2", "PA16")                          -- bus, CS/RCLK pin
+    leds:attach("SPI:1", "PA16")                         -- bus, CS/RCLK pin
     leds:on_change(function(state, changed) ... end)
 
   Options of new():

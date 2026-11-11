@@ -1,6 +1,6 @@
 --[[----------------------------------------------------------------------------
   Helper of the SPI LCD test (ST7789 model, LCD "tft" of the panel) executed
-  by tools/simtest.py with board boards/test.lua: SPI4, CS PB1, D/C PB0.
+  by tools/simtest.py with board boards/test.lua: SPI:3, CS PB1, D/C PB0.
     lua spilcd.lua init     creates /dev/gpiob and /dev/spi-lcd, initializes
                             the controller, prints ID=<RDDID bytes> and
                             PM=<RDDPM> (display on: 0x9C)

@@ -1,6 +1,6 @@
 --[[----------------------------------------------------------------------------
   MCP23S17 test executed in dnx RTOS (lua program) with board boards/test.lua:
-  two expanders on SPI3 with one CS (PB2, hardware addresses 0 and 1), signals
+  two expanders on SPI:2 with one CS (PB2, hardware addresses 0 and 1), signals
   of expanders are connected to GPIO port C (see board description). Registers
   are accessed by full duplex transfers (dnx.spi.transceive): opcode, register
   address and data in one transfer (CS active).

@@ -4,7 +4,7 @@
   Usage:
     local lm75 = require("models.lm75")
     local sensor = lm75.new{temperature = 21.5, os = "PA6"}  -- optional OS output
-    sensor:attach("I2C1", 0x48)
+    sensor:attach("I2C:0", 0x48)
     sensor:set_temperature(30)
 
   Registers (selected by pointer byte):

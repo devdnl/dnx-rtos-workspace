@@ -9,7 +9,7 @@
 #         The simulator is started in the pseudo terminal, test programs are executed in the dsh
 #         shell and their SUMMARY lines are checked. Tests:
 #           - boot (shell available, simulator platform),
-#           - driver configuration strings (sim-env/tests/devcfg.lua, modprobe -c), UART1 is
+#           - driver configuration strings (sim-env/tests/devcfg.lua, modprobe -c), UART:1 is
 #             connected to the host pseudo terminal and its configuration is checked by termios,
 #           - board model (sim-env/boards/test.lua): GPIO, I2C, I2CEE/eefs, DS2482/DS18B20 (1-Wire),
 #             SPI, SPIEE/eefs, MCP23S17 (dnx.spi), UART (echo, NMEA GPS) and SDSPI/ext2 tests (sim-env/tests/*.lua) executed by dnx Lua interpreter, fstest on ext2
@@ -476,7 +476,7 @@ class TestRunner:
     # board panel: the test connects to the panel socket like tools/simpanel.py, signals of board
     # boards/test.lua: P_OUT shows PA18, P_IN drives PA19, P_CTL sets P_VAL = 2 * P_CTL; LCD of LTDC
     # driver (frame sent to the panel) and touch of LCD read from FT5336 model by I2C driver; LCD "tft"
-    # of ST7789 model (SPI4) and its touch (P_TOUCH)
+    # of ST7789 model (SPI:3) and its touch (P_TOUCH)
     def panel_test(self, sim):
         name = "board: panel"
         if not self.selected(name):
@@ -614,7 +614,7 @@ class TestRunner:
                 elif not wait(lambda: "ltdc" not in lcds, 3):
                     errors.append("LCD not detached from panel after release")
 
-                # LCD "tft" of ST7789 model (SPI4), shown after SLPOUT and DISPON
+                # LCD "tft" of ST7789 model (SPI:3), shown after SLPOUT and DISPON
                 if "tft" in lcds:
                     errors.append("LCD tft shown before initialization")
                 ok, out = sim.run("lua spilcd.lua init")
@@ -654,7 +654,7 @@ class TestRunner:
 
         self.result(name, FAIL if errors else PASS, ", ".join(errors))
 
-    # UART1 configured by devcfg.lua: baud=9600,parity=even,stop_bits=2 (parity is not checked:
+    # UART:1 configured by devcfg.lua: baud=9600,parity=even,stop_bits=2 (parity is not checked:
     # Linux pseudo terminal does not keep the PARENB flag)
     def check_uart_config(self):
         attr = termios.tcgetattr(self.uart_slave)
@@ -719,7 +719,7 @@ class TestRunner:
             args.panel_socket = os.path.join(tmpdir, "panel.sock")
             argv += ["--board", args.board, "--panel", args.panel_socket]
 
-        # UART1 is connected to the host pseudo terminal as serial device (configuration test)
+        # UART:1 is connected to the host pseudo terminal as serial device (configuration test)
         self.uart_master, self.uart_slave = os.openpty()
         argv += ["--uart", "1=%s" % os.ttyname(self.uart_slave)]
 

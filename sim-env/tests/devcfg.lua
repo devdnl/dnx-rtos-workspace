@@ -4,7 +4,7 @@
     modprobe -i <module> <major> <minor> <path> -c <config>
     modprobe -c <path> <config>
   UART configuration (/dev/ttyS1) is checked by tools/simtest.py on the host
-  side (UART1 is connected to the host pseudo terminal). TTY is not tested: all
+  side (UART:1 is connected to the host pseudo terminal). TTY is not tested: all
   terminals share one input/output, reconfiguration moves the system console.
 ------------------------------------------------------------------------------]]
 

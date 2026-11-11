@@ -16,7 +16,7 @@ local DEVICES = {
     {"/dev/i2c-temp", 0, 11, "address=0x48,sub_addr_mode=1"},   -- LM75
     {"/dev/i2c-ee",   0, 12, "address=0x51,sub_addr_mode=2"},   -- 24C32
     {"/dev/i2c-none", 0, 13, "address=0x57,sub_addr_mode=2"},   -- not connected
-    {"/dev/i2c2-ee",  1, 10, "address=0x50,sub_addr_mode=1"},   -- 24C02 on I2C2
+    {"/dev/i2c2-ee",  1, 10, "address=0x50,sub_addr_mode=1"},   -- 24C02 on I2C:1
 }
 
 local function exists(path)
@@ -98,7 +98,7 @@ test("EEPROM sequential read across pages", function()
     expect(dev_read("/dev/i2c-ee", 0x800, #data) == data, "data mismatch")
 end)
 
-test("EEPROM on second bus (I2C2, 1-byte sub-address)", function()
+test("EEPROM on second bus (I2C:1, 1-byte sub-address)", function()
     expect(dev_write("/dev/i2c2-ee", 0x10, "I2C2"), "write error")
     T.msleep(WRITE_TIME)
     expect(dev_read("/dev/i2c2-ee", 0x10, 4) == "I2C2", "data mismatch")

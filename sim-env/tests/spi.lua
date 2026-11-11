@@ -83,7 +83,7 @@ test("Bus without devices (MISO high)", function()
     expect(rd == "\xFF\xFF\xFF", "read: " .. hex(rd))
 end)
 
-test("74HC595 outputs (SPI2, outputs -> PA20..PA27)", function()
+test("74HC595 outputs (SPI:1, outputs -> PA20..PA27)", function()
     for _, v in ipairs({0xA5, 0x3C, 0x00, 0xFF}) do
         expect(dev_write("/dev/spi-595", string.char(v)), "write error")
         T.msleep(DELAY)

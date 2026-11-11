@@ -4,7 +4,7 @@
   Usage:
     local pcf8574 = require("models.pcf8574")
     local io8 = pcf8574.new{int = "PA5"}   -- optional INT output (active low)
-    io8:attach("I2C1", 0x20)
+    io8:attach("I2C:0", 0x20)
 
   Pin level = output latch AND external level: pin with latch 1 is weak high
   (input), it can be pulled low by external device (drive()). Write to device

@@ -4,7 +4,7 @@
   Usage:
     local eeprom = require("models.25xx")
     local ee = eeprom.new{type = "25lc256"}     -- 32 KiB, 64 B page
-    ee:attach("SPI1", "PA7")                    -- bus, CS pin (active low)
+    ee:attach("SPI:0", "PA7")                   -- bus, CS pin (active low)
 
   Options of new():
     type        memory type (table TYPES), or explicit parameters:

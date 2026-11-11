@@ -5,7 +5,7 @@
   Usage:
     local ds2482 = require("models.ds2482")
     local ds18b20 = require("models.ds18b20")
-    local ow = ds2482.new{}:attach("I2C1", 0x18)
+    local ow = ds2482.new{}:attach("I2C:0", 0x18)
     local s1 = ds18b20.new{serial = 0x00000A1B2C3D, temperature = 21.5}:attach(ow)
     local s2 = ds18b20.new{serial = 0x00000A1B2C3E, parasite = true}:attach(ow)
     s1:set_temperature(-10.125)

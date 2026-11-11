@@ -4,7 +4,7 @@
     make run-sim PANEL=1 SIM_OPTS="--board sim-env/boards/example.lua --hostfs sim-env"
     lua /host/demos/tftdemo.lua [seconds]
 
-  Draws on the ST7789 display model (240x320, RGB565) connected to SPI3
+  Draws on the ST7789 display model (240x320, RGB565) connected to SPI:2
   (/dev/spi-tft, CS PB1), the D/C pin (PB0) is controlled by /dev/gpiob:
   color bars and a moving square for the given time (default 10 s), then the
   display is switched off.

@@ -1,8 +1,8 @@
 --[[----------------------------------------------------------------------------
   UART test executed in dnx RTOS (lua program) with board boards/test.lua:
-  UARTs connected to board models (uart.attach()), echo on /dev/ttyS2 (UART3)
-  and NMEA GPS on /dev/ttyS3 (UART4). The GPS is controlled by the test
-  control device (I2C1 0x30). Reads of UART are blocking, so the test reads
+  UARTs connected to board models (uart.attach()), echo on /dev/ttyS2 (UART:2)
+  and NMEA GPS on /dev/ttyS3 (UART:3). The GPS is controlled by the test
+  control device (I2C:0 0x30). Reads of UART are blocking, so the test reads
   only data that has to come.
 ------------------------------------------------------------------------------]]
 

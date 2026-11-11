@@ -4,7 +4,7 @@
   Usage:
     local ds2482 = require("models.ds2482")
     local ds18b20 = require("models.ds18b20")
-    local ow = ds2482.new{}:attach("I2C1", 0x18)     -- AD1 = AD0 = 0
+    local ow = ds2482.new{}:attach("I2C:0", 0x18)    -- AD1 = AD0 = 0
     ds18b20.new{serial = 0x0102030405}:attach(ow)     -- devices on ow.ow
     ow.ow:set_short(true)                             -- 1-Wire line shorted
 

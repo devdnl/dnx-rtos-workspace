@@ -1,6 +1,6 @@
 --[[----------------------------------------------------------------------------
   SPIEE driver and eefs test executed in dnx RTOS (lua program) with board
-  boards/test.lua (25LC256 on SPI1, CS PA7).
+  boards/test.lua (25LC256 on SPI:0, CS PA7).
 ------------------------------------------------------------------------------]]
 
 local T = require("testlib")
