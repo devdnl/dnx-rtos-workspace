@@ -107,6 +107,20 @@ SECTIONS
       PROVIDE(__text_end = __text_end);
    } > rom AT > rom
 
+   /* before .data: initial values of .data are the end of the image (image size of appsetfs) */
+   . = ALIGN(4);
+   __exidx_start = .;
+   PROVIDE(__exidx_start = __exidx_start);
+
+   .ARM.exidx :
+   {
+      *(.ARM.exidx* .gnu.linkonce.armexidx.*);
+   } > rom AT > rom                        /* index entries for section unwinding */
+
+   . = ALIGN(4);
+   __exidx_end = .;
+   PROVIDE(__exidx_end = __exidx_end);
+
    .data :
    {
       . = ALIGN(4);
@@ -138,19 +152,6 @@ SECTIONS
       __bss_end = .;
       PROVIDE(__bss_end = __bss_end);
    } > ram
-
-   . = ALIGN(4);
-   __exidx_start = .;
-   PROVIDE(__exidx_start = __exidx_start);
-
-   .ARM.exidx :
-   {
-      *(.ARM.exidx* .gnu.linkonce.armexidx.*);
-   } > rom AT > rom                        /* index entries for section unwinding */
-
-   . = ALIGN(4);
-   __exidx_end = .;
-   PROVIDE(__exidx_end = __exidx_end);
 
    .stab             0 (NOLOAD) : { *(.stab) }
    .stabstr          0 (NOLOAD) : { *(.stabstr) }

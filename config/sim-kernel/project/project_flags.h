@@ -105,6 +105,15 @@ __CPU_ARCH__=posix
 #--*/
 #define __PROJ_APPSET_TABLE_ADDRESS__ 0
 
+#/*--
+# this:AddWidget("Spinbox", 0, 2147483647, "Appset size [B]")
+# this:SetToolTip("Size of the flash partition of the main appset in bytes (the same\n"..
+#                 "value as executable size of the appset configuration). It is shown\n"..
+#                 "as size of appsetfs with the main appset (df). 0: unknown (also for\n"..
+#                 "appset localized just after OS section), the image size is shown.")
+#--*/
+#define __PROJ_APPSET_TABLE_SIZE__ 0
+
 #endif /* _PROJECT_FLAGS_H_ */
 #/*=============================================================================
 #  End of file

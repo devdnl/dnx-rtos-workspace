@@ -35,6 +35,10 @@ All programs of the appset are built except programs listed in
 `__PROGRAMS_EXCLUDE_LIST__` of the configuration
 (`<config>/programs/programs_flags.h`).
 
+`__PROJ_APPSET_TABLE_SIZE__` is the partition size in bytes (`rom` region of
+the linker script). `.ARM.exidx` is placed before `.data`, so the initial values
+of `.data` end the image (`appsetfs` computes the used space from the table).
+
 Program name (command) is the name of the `.mk` file (without `.mk`) or of the
 program directory, it can contain `.` and `-` (`mkfs.eefs.mk`). The program
 declares `PROGRAM_PARAMS(<identifier>, ...)`: the name with characters other

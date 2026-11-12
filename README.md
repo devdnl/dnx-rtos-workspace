@@ -142,7 +142,9 @@ appset and the kernel finds it in a directory of the program search path
 `/bin` is the main appset mounted by `initd`). Program files are
 empty, read-only and executable. The appset can be unmounted when none of its
 programs is running (`EBUSY` otherwise) and the same appset cannot be mounted
-twice.
+twice. `df` shows the partition size (memory region of the `MEMBLOCK` device,
+`__PROJ_APPSET_TABLE_SIZE__` of the kernel configuration for the main appset)
+and the space used by the appset image.
 
 ### Common libraries
 The `common_libs` directory contains libraries shared by all appsets (and by
@@ -537,6 +539,8 @@ The addresses have to be consistent between parts:
 
 - `__PROJ_APPSET_TABLE_ADDRESS__` in `config/app-kernel/project/project_flags.h`
   and `config/app-appset/project/project_flags.h` must be equal (`0x08100000`),
+  also `__PROJ_APPSET_TABLE_SIZE__` in bytes (`1048576`; the kernel shows it as
+  size of `appsetfs` with the main appset),
 - `__LIBC_DNX_RTOS_ADDRESS__` in `config/app-appset/project/project_flags.h`
   must be equal to the kernel address (`0x08000000`),
 - the application mounts romfs from `__ROMFS_ADDRESS__` (`0x08080000`, see
@@ -596,7 +600,7 @@ The addresses have to be consistent between parts:
 - the kernel must know where its appset is placed – `__PROJ_APPSET_TABLE_ADDRESS__`
   in `config/<x>-kernel/project/project_flags.h` must be equal to the address
   of the appset (`0x08040000` for the boot loader, `0x08100000` for the
-  application),
+  application), `__PROJ_APPSET_TABLE_SIZE__` to its size in bytes,
 - the appset must know where its kernel is placed – `__LIBC_DNX_RTOS_ADDRESS__`
   in `config/<x>-appset/project/project_flags.h` (`0x08000000` for the boot
   loader, `0x08080000` for the application),

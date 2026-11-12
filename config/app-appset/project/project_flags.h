@@ -104,10 +104,12 @@ __CPU_ARCH__=stm32h7
 #define __PROJ_APPSET_TABLE_ADDRESS__ 0x08100000
 
 #/*--
-# this:AddWidget("Editline", false, "Appset executable size")
-# this:SetToolTip("Size of application executable section.")
+# this:AddWidget("Spinbox", 1024, 2147483647, "Appset executable size [B]")
+# this:SetToolTip("Size of application executable section (flash partition of the\n"..
+#                 "appset) in bytes. The same value shall be set in the kernel\n"..
+#                 "configuration (size of appsetfs with the main appset).")
 #--*/
-#define __PROJ_APPSET_TABLE_SIZE__ 1024k
+#define __PROJ_APPSET_TABLE_SIZE__ 1048576
 
 #/*--
 # this:AddWidget("Editline", false, "Appset RAM address")

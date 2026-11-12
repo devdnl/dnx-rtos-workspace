@@ -22,7 +22,7 @@
 		["__PROJ_APPSET_RAM_ADDRESS__"]="0";
 		["__PROJ_APPSET_RAM_SIZE__"]="1024";
 		["__PROJ_APPSET_TABLE_ADDRESS__"]="0";
-		["__PROJ_APPSET_TABLE_SIZE__"]="1024k";
+		["__PROJ_APPSET_TABLE_SIZE__"]="1048576";
 	};
 	["config/sim-kernel/arch/arch_flags.h"]={
 		["__ENABLE_ADC__"]="_NO_";
@@ -659,6 +659,7 @@
 		["__PROJECT_NAME__"]="dnx";
 		["__PROJECT_TOOLCHAIN__"]="i686-unknown-linux-musl-";
 		["__PROJ_APPSET_TABLE_ADDRESS__"]="0";
+		["__PROJ_APPSET_TABLE_SIZE__"]="0";
 	};
 	["config/sim-romfs/config.h"]={
 		["__ROMFS_ADDRESS__"]="0x08080000";

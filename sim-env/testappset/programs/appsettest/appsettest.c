@@ -42,6 +42,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/mount.h>
+#include <sys/statfs.h>
 #include <dnx/os.h>
 #include <dnx/thread.h>
 
@@ -82,6 +83,7 @@ static const char *test_files(void);
 static const char *test_umount_busy(void);
 static const char *test_confstr_path(void);
 static const char *test_dot_name(void);
+static const char *test_statfs(void);
 
 /*==============================================================================
   Local object definitions
@@ -106,6 +108,7 @@ static const test_t TESTS[] = {
         {.name = "Unmount of used appset refused", .fn = test_umount_busy},
         {.name = "Program search path by confstr(_CS_PATH)", .fn = test_confstr_path},
         {.name = "Program name with '.' and '-' (dot.test-prog)", .fn = test_dot_name},
+        {.name = "Size of appsetfs (statfs)", .fn = test_statfs},
 };
 
 /*==============================================================================
@@ -536,6 +539,33 @@ static const char *test_dot_name(void)
         }
 
         return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Size of appsetfs: memblock region of the program table (siminit),
+ *         image size of appset linked with the simulator is unknown, so the
+ *         whole region is used.
+ *
+ * @return NULL on success, otherwise error message.
+ */
+//==============================================================================
+static const char *test_statfs(void)
+{
+        struct statfs st;
+        if (statfs(MOUNT_POINT, &st) != 0) {
+                return "statfs failed";
+        }
+
+        if ((st.f_blocks == 0) || (st.f_bfree != 0) || (st.f_bsize != 1)) {
+                return "wrong size of appsetfs";
+        }
+
+        if (strcmp(st.f_fsname, "appsetfs") != 0) {
+                return "wrong file system name";
+        }
+
+        return NULL;
 }
 
 //==============================================================================

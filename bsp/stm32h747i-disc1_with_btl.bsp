@@ -22,7 +22,7 @@
 		["__PROJ_APPSET_RAM_ADDRESS__"]="0";
 		["__PROJ_APPSET_RAM_SIZE__"]="1024";
 		["__PROJ_APPSET_TABLE_ADDRESS__"]="0x08100000";
-		["__PROJ_APPSET_TABLE_SIZE__"]="768k";
+		["__PROJ_APPSET_TABLE_SIZE__"]="786432";
 	};
 	["config/app-kernel/arch/arch_flags.h"]={
 		["__ENABLE_ADC__"]="_NO_";
@@ -1621,6 +1621,7 @@
 		["__PROJECT_NAME__"]="dnx";
 		["__PROJECT_TOOLCHAIN__"]="arm-none-eabi-";
 		["__PROJ_APPSET_TABLE_ADDRESS__"]="0x08100000";
+		["__PROJ_APPSET_TABLE_SIZE__"]="786432";
 	};
 	["config/app-romfs/config.h"]={
 		["__ROMFS_ADDRESS__"]="0x081C0000";
@@ -1649,7 +1650,7 @@
 		["__PROJ_APPSET_RAM_ADDRESS__"]="0";
 		["__PROJ_APPSET_RAM_SIZE__"]="1024";
 		["__PROJ_APPSET_TABLE_ADDRESS__"]="0x08040000";
-		["__PROJ_APPSET_TABLE_SIZE__"]="256k";
+		["__PROJ_APPSET_TABLE_SIZE__"]="262144";
 	};
 	["config/btl-kernel/arch/arch_flags.h"]={
 		["__ENABLE_ADC__"]="_NO_";
@@ -3248,5 +3249,6 @@
 		["__PROJECT_NAME__"]="dnx";
 		["__PROJECT_TOOLCHAIN__"]="arm-none-eabi-";
 		["__PROJ_APPSET_TABLE_ADDRESS__"]="0x08040000";
+		["__PROJ_APPSET_TABLE_SIZE__"]="262144";
 	};
 }
