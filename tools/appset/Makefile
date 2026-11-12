@@ -175,9 +175,13 @@ LFLAGS   = -g \
 # POSIX simulator: appset is a relocatable object linked with kernel. Only the
 # program table is exported, all other symbols are local (no conflicts with
 # kernel and host library symbols). The table of other appsets linked with the
-# same kernel is renamed (TABLE_SYMBOL), the kernel finds all tables by the
-# section dnx_appset_tables (program_registration.c).
+# same kernel is renamed (TABLE_SYMBOL), siminit finds them in the section
+# dnx_appset_tables (program_registration.c) and mounts them (appsetfs).
 TABLE_SYMBOL ?= _program_table_desc
+
+# name of other appset of the POSIX simulator (renamed table): reference of the table is put in
+# the section dnx_appset_tables, siminit mounts the appset in /opt/<name> (appsetfs)
+APPSET_TABLE_NAME = $(if $(filter-out _program_table_desc,$(TABLE_SYMBOL)),$(notdir $(abspath $(APPSET_DIR))))
 POSIX_OBJCOPY_FLAGS = $(if $(filter-out _program_table_desc,$(TABLE_SYMBOL)),--redefine-sym _program_table_desc=$(TABLE_SYMBOL)) \
                       --keep-global-symbol=$(TABLE_SYMBOL) \
                       --redefine-sym __data_init_start=_appset_data_init_start \
@@ -408,7 +412,7 @@ generate :
 	@$(MKDIR) $(GEN_PROG_DIR)
 	@$(MKDIR) $(GEN_PROG_DIR)-tmp
 	@$(ECHO) "Adding user's programs and libraries to the project..."
-	@$(ADDAPPS) $(APP_LOC) $(GEN_PROG_DIR)-tmp "*" $(__PROGRAMS_EXCLUDE_LIST__) $(CONFIG_DIR)
+	@APPSET_TABLE_NAME="$(APPSET_TABLE_NAME)" $(ADDAPPS) $(APP_LOC) $(GEN_PROG_DIR)-tmp "*" $(__PROGRAMS_EXCLUDE_LIST__) $(CONFIG_DIR)
 	@$(SYNCDIR) $(GEN_PROG_DIR)-tmp/ $(GEN_PROG_DIR)/
 
 	@$(ECHO) "Obtaining git hash..."

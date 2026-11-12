@@ -111,8 +111,14 @@ static void create_base_file_system_structure(void)
         mkdir("/mnt", 0666);  // this folder store mounted external discs
         mkdir("/proc", 0666); // this folder store operating system runtime files
         mkdir("/etc", 0666);  // this folder store misc files
+        mkdir("/bin", 0666);  // this folder store programs of the main appset
 
         mount("procfs", "", "/proc", "");
+
+        // programs as files (appsetfs disabled in kernel: folder not used)
+        if (mount("appsetfs", "", "/bin", "") != 0) {
+                remove("/bin");
+        }
 }
 
 //==============================================================================

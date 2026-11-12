@@ -73,14 +73,53 @@ filter_list() {
     for item in $input; do
         skip=0
         for remove in $exclude; do
-            i="${item##*/}"
-            i="${i%%.*}"
-            [[ "$i" == "$remove" ]] && skip=1 && break
+            [[ "$(prog_name "$item")" == "$remove" ]] && skip=1 && break
         done
         [[ $skip -eq 0 ]] && result="$result $item"
     done
 
     echo "$result"
+}
+
+#-------------------------------------------------------------------------------
+# @brief  Program name (command): name of program directory or .mk file without
+#         the .mk extension, can contain '.' and '-' (e.g. mkfs.eefs)
+# @param  path of program directory or .mk file
+# @return program name
+#-------------------------------------------------------------------------------
+function prog_name()
+{
+    local name="${1##*/}"
+    echo "${name%.mk}"
+}
+
+#-------------------------------------------------------------------------------
+# @brief  C identifier of program used by PROGRAM_PARAMS() in the program
+#         source: program name with characters other than letters, digits and
+#         '_' replaced by '_' (mkfs.eefs -> mkfs_eefs)
+# @param  path of program directory or .mk file
+# @return program identifier
+#-------------------------------------------------------------------------------
+function prog_ident()
+{
+    local name="$(prog_name "$1")"
+    echo "${name//[^A-Za-z0-9_]/_}"
+}
+
+#-------------------------------------------------------------------------------
+# @brief  Check that program identifiers are unique (e.g. mkfs.eefs and
+#         mkfs_eefs have the same identifier).
+# @param  None
+# @return None, exit on error
+#-------------------------------------------------------------------------------
+function check_program_identifiers()
+{
+    local dup=$(for prog in $program_list; do prog_ident "$prog"; done | sort | uniq -d)
+
+    if [ -n "$dup" ]; then
+        echo "addapps.sh: programs with the same identifier (PROGRAM_PARAMS): $dup" >&2
+        exit 1
+    fi
 }
 
 #-------------------------------------------------------------------------------
@@ -206,9 +245,9 @@ function create_program_registration_file()
     echo '        _PROGMAN_EXTERN_C int __builtin_app_##_name_##_main(int, char**);'
     echo ''
 
-    echo '#define _PROGRAM_ENTRY(_name_)\'
+    echo '#define _PROGRAM_ENTRY(_name_, _str_)\'
     echo '{\'
-    echo '        .name = #_name_,\'
+    echo '        .name = _str_,\'
     echo '        .main = __builtin_app_##_name_##_main,\'
     echo '        .globals_size = &__builtin_app_##_name_##_gs__,\'
     echo '        .stack_depth = &__builtin_app_##_name_##_ss__,\'
@@ -237,9 +276,7 @@ function create_program_registration_file()
     echo ''
 
     for prog in $program_list; do
-        prog="${prog##*/}"
-        prog="${prog%%.*}"
-        echo "_IMPORT_PROGRAM($prog);"
+        echo "_IMPORT_PROGRAM($(prog_ident "$prog"));"
     done
     echo ''
 
@@ -260,21 +297,28 @@ function create_program_registration_file()
     echo "        .bss_size = ((size_t)&__bss_size),"
     echo "        .program_entry = {"
     for prog in $program_list; do
-        prog="${prog##*/}"
-        prog="${prog%%.*}"
-        echo "                _PROGRAM_ENTRY($prog),"
+        echo "                _PROGRAM_ENTRY($(prog_ident "$prog"), \"$(prog_name "$prog")\"),"
     done
     echo "        }"
     echo "};"
     echo ''
 
-    echo '#if __PROJ_APPSET_TABLE_ADDRESS__ == 0'
-    echo '// appset linked with kernel (POSIX simulator): reference of the table found by the kernel'
-    echo '// in the section of all linked appsets (more appsets in one executable)'
-    echo 'static const void *const _program_table_ref __attribute__((section("dnx_appset_tables"), used)) ='
-    echo '        &_program_table_desc;'
-    echo '#endif'
-    echo ''
+    if [ -n "${APPSET_TABLE_NAME:-}" ]; then
+        echo '#if __PROJ_APPSET_TABLE_ADDRESS__ == 0'
+        echo '// other appset linked with kernel (POSIX simulator, SIM_APPSETS): siminit finds the table'
+        echo '// in the section of linked appsets and mounts it (appsetfs on memblock device of the table)'
+        echo 'static const struct {'
+        echo '        const void *table;'
+        echo '        uint32_t size;'
+        echo '        const char *name;'
+        echo '} _program_table_ref __attribute__((section("dnx_appset_tables"), used)) = {'
+        echo '        .table = &_program_table_desc,'
+        echo "        .size = sizeof(_program_table_desc_t) + $(echo $program_list | wc -w) * sizeof(_program_entry_t),"
+        echo "        .name = \"${APPSET_TABLE_NAME}\","
+        echo '};'
+        echo '#endif'
+        echo ''
+    fi
 
     echo "// function never called"
     echo "int main(void) {"
@@ -316,6 +360,8 @@ function main()
     else
         program_list=$(filter_list "$3" "$4")
     fi
+
+    check_program_identifiers
 
     create_makefile_programs "$3" > "$2/$Makefile_name"
     create_program_registration_file "$3" > "$2/$program_registration_file_name"

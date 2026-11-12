@@ -211,13 +211,13 @@ typedef enum {
         _LIBC_SYS_CACHEFLUSH,             // int errno (void)
         _LIBC_SYS_REBOOTTOADDR,           // int errno (const void *addr)
         _LIBC_SYS_LOWPOWERMODE,           // int errno (const int *mode)
-        _LIBC_SYS_REGISTERAPPSET,         // int errno (const void **appset_array, const size_t *array_size)
         _LIBC_SYS_MEMREGIONINFO,          // int errno (size_t idx, _mm_region_info_t *region_info)
         _LIBC_SYS_PINTHREADTOCORE,        // int errno (pid_t *pid , tid_t *tid, u32_t *core_mask)
         _LIBC_SYS_GETCURRENTCORE,         // int errno (u8_t *core)
         _LIBC_SYS_GETCPUCORECOUNT,        // int errno (u8_t *core_count)
         _LIBC_SYS_SYSCONF,                // int errno (const int *name, long *value)
         _LIBC_SYS_ATOMICTAS,              // int errno (u8_t *flag): 0 when flag set by caller, EBUSY when flag already set
+        _LIBC_SYS_CONFSTR,                // int errno (const int *name, const char **ref)
 } _libc_syscall_t;
 // clang-format on
 

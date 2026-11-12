@@ -363,7 +363,12 @@ static bool command_hint(void)
 
                 *tabstart = '\0';
 
-                char search[128];
+                /*
+                 * Directories to search: list of strings terminated by empty
+                 * string (path of typed file or program search path).
+                 */
+                char search[129];
+                const size_t search_size = sizeof(search) - 1;
                 char *line = "";
 
                 /*
@@ -384,11 +389,11 @@ static bool command_hint(void)
                                 char *slash = strrchr(line, '/');
 
                                 if (slash == line) {
-                                        strlcpy(search, "/", sizeof(search));
+                                        strlcpy(search, "/", search_size);
                                         line++;
                                 } else {
                                         size_t len = (slash - line) + 1;
-                                        strlcpy(search, line, min(sizeof(search), len));
+                                        strlcpy(search, line, min(search_size, len));
                                         line = slash + 1;
                                 }
                         } else {
@@ -397,22 +402,39 @@ static bool command_hint(void)
                                 }
 
                                 if (*begin == '/') {
-                                        strlcpy(search, "/", sizeof(search));
+                                        strlcpy(search, "/", search_size);
                                 } else {
-                                        strlcpy(search, global->cwd, sizeof(search));
-                                        strlcat(search, "/", sizeof(search));
+                                        strlcpy(search, global->cwd, search_size);
+                                        strlcat(search, "/", search_size);
                                 }
 
                                 char *slash = strrchr(line, '/');
                                 if (slash) {
                                         size_t len = (slash - line) + strlen(search) + 1;
-                                        strlcat(search, line, min(sizeof(search), len));
+                                        strlcat(search, line, min(search_size, len));
                                         line = slash + 1;
                                 }
                         }
 
+                        search[strlen(search) + 1] = '\0';
+
                 } else {
-                        strlcpy(search, "/proc/bin", sizeof(search));
+                        /*
+                         * Program: directories of the program search path (programs
+                         * of the main appset are in /bin, appsetfs mounted by init).
+                         */
+                        if (confstr(_CS_PATH, search, search_size) <= 1) {
+                                strlcpy(search, "/bin", search_size); // no search path: main appset
+                        }
+
+                        search[strlen(search) + 1] = '\0';
+
+                        for (char *c = search; *c; c++) {
+                                if (*c == ':') {
+                                        *c = '\0';
+                                }
+                        }
+
                         line = global->line;
                 }
 
@@ -423,25 +445,36 @@ static bool command_hint(void)
                         dirent_t *dirent;
                         int matching_entries = 0;
 
-                        DIR *dir = opendir(search);
-                        if (dir) {
-                                while ((matching_entries < 2) and (dirent = readdir(dir))) {
-                                        if (strncmp(dirent->d_name, line, strlen(line)) == 0) {
-                                                matching_entries++;
+                        for (const char *d = search; *d and (matching_entries < 2); d += strlen(d) + 1) {
+                                DIR *dir = opendir(d);
+                                if (dir) {
+                                        while ((matching_entries < 2) and (dirent = readdir(dir))) {
+                                                if (strncmp(dirent->d_name, line, strlen(line)) == 0) {
+                                                        matching_entries++;
+                                                }
                                         }
+
+                                        closedir(dir);
                                 }
+                        }
 
-                                if (matching_entries > 1) {
-                                        puts("");
+                        if (matching_entries > 1) {
+                                puts("");
+                        }
+
+                        char common[128];
+                        memset(common, EOT, sizeof(common));
+                        memcpy(common, line, min(strlen(line), sizeof(common) - 1));
+                        size_t min_len = UINT16_MAX;
+                        bool completed = false;
+
+                        for (const char *d = search; *d and (matching_entries > 0) and not completed;
+                                d += strlen(d) + 1) {
+
+                                DIR *dir = opendir(d);
+                                if (not dir) {
+                                        continue;
                                 }
-
-                                closedir(dir);
-                                dir = opendir(search);
-
-                                char common[128];
-                                memset(common, EOT, sizeof(common));
-                                memcpy(common, line, min(strlen(line), sizeof(common) - 1));
-                                size_t min_len = UINT16_MAX;
 
                                 while ((dirent = readdir(dir))) {
 
@@ -473,21 +506,22 @@ static bool command_hint(void)
 
                                                         ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE,
                                                                 global->line);
+                                                        completed = true;
                                                         break;
                                                 }
                                         }
                                 }
 
-                                if (matching_entries > 1) {
-                                        puts(" ");
-                                        print_prompt();
-                                        ioctl(fileno(global->input), IOCTL_TTY__REFRESH_LAST_LINE);
-
-                                        strlcpy(line, common, PROMPT_LINE_LEN - (global->line - line));
-                                        ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, global->line);
-                                }
-
                                 closedir(dir);
+                        }
+
+                        if (matching_entries > 1) {
+                                puts(" ");
+                                print_prompt();
+                                ioctl(fileno(global->input), IOCTL_TTY__REFRESH_LAST_LINE);
+
+                                strlcpy(line, common, PROMPT_LINE_LEN - (global->line - line));
+                                ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, global->line);
                         }
                 }
 

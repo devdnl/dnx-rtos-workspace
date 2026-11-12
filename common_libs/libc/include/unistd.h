@@ -66,6 +66,9 @@ extern "C" {
 #define _SC_NPROCESSORS_ONLN       84  /*!< number of online processors (CPU cores) */
 #define _SC_LEVEL1_DCACHE_LINESIZE 190 /*!< data cache line size in bytes (0 if no data cache) */
 
+/* confstr() variables (values compatible with glibc) */
+#define _CS_PATH 0 /*!< program search path of the kernel (directories separated by ':', may be empty) */
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
@@ -436,6 +439,61 @@ static inline long sysconf(int name)
         long value = -1;
         int err = _libc_syscall(_LIBC_SYS_SYSCONF, &name, &value);
         return err ? -1 : value;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns string of system configuration variable.
+ *
+ * The confstr() function copies string of selected system configuration
+ * variable to the buffer (truncated to <i>len</i> - 1 characters, always
+ * terminated). Supported variables: @ref _CS_PATH: program search path of the
+ * kernel, directories (programs of appsetfs) separated by ':' searched for a
+ * program that is not found by name in the main appset (empty when not
+ * configured).
+ *
+ * @param name          variable name (_CS_*)
+ * @param buf           buffer (can be NULL when len is 0)
+ * @param len           buffer size
+ *
+ * @return Size of buffer needed for the whole string (with terminating
+ *         character). On error 0 is returned and @ref errno is set (EINVAL:
+ *         unknown variable).
+ *
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        char path[64];
+        if (confstr(_CS_PATH, path, sizeof(path)) > 0) {
+                printf("Program search path: %s\n", path);
+        }
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline size_t confstr(int name, char *buf, size_t len)
+{
+        const char *str = NULL;
+        int err = _libc_syscall(_LIBC_SYS_CONFSTR, &name, &str);
+        if (err || !str) {
+                return 0;
+        }
+
+        size_t n = 0;
+        while (str[n] != '\0') {
+                if (buf && (n + 1 < len)) {
+                        buf[n] = str[n];
+                }
+                n++;
+        }
+
+        if (buf && (len > 0)) {
+                buf[(n < len) ? n : (len - 1)] = '\0';
+        }
+
+        return n + 1;
 }
 
 //==============================================================================

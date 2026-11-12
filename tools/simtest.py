@@ -21,8 +21,10 @@
 #           - fstest on flatfs, eefs, ext2 and ext3 (journal) partitions of the second disk
 #             (formatted by mkflatfs, mkeefs and mkext programs), ext2 and ext3 are checked by
 #             e2fsck after test (requires e2fsprogs, otherwise check is skipped),
-#           - other appset linked with simulator (sim-env/testappset, program appsettest: libc,
-#             threads, child process, search order of programs in appsets),
+#           - other appset linked with simulator (sim-env/testappset mounted by siminit in
+#             /opt/testappset by appsetfs, program appsettest: libc, threads, child process,
+#             search order of programs, start by path and program search path, files of
+#             appsetfs, umount of used appset), mount/umount of the appset from shell,
 #           - drvset partition (drivers built separately from the kernel, option --drvset of
 #             simulator, image of tools/drvset/test/sim built by make build-sim-drvset): module
 #             registration, driver initialization by modprobe, read, release, fstest on file
@@ -339,8 +341,35 @@ class TestRunner:
         ok, out = sim.run("appsettest", DEFAULT_TIMEOUT)
         if ok and ("is unknown command" in out):
             self.result(name, SKIP, "simulator built without sim-env/testappset (make test-sim or SIM_APPSETS)")
-        else:
-            self.summary_test(sim, name, None, "appsettest", DEFAULT_TIMEOUT)
+            return
+
+        self.summary_test(sim, name, None, "appsettest", DEFAULT_TIMEOUT)
+        self.appsetfs_mount_test(sim)
+
+    # appsetfs: unmount of appset that is not used, start of its program fails, mount again,
+    # second mount of the same appset is refused (EBUSY)
+    def appsetfs_mount_test(self, sim):
+        name = "appsetfs: mount/umount"
+        if not self.selected(name):
+            return
+
+        steps = (
+            ("umount /opt/testappset", lambda out: ("rror" not in out) and ("No such" not in out)),
+            ("/opt/testappset/echo", lambda out: "is unknown command" in out),
+            ("mount /dev/appset0 appsetfs /opt/testappset", lambda out: "rror" not in out),
+            ("mkdir /tmp/appset2", lambda out: True),
+            ("mount /dev/appset0 appsetfs /tmp/appset2", lambda out: "busy" in out),
+            ("/opt/testappset/echo", lambda out: "testappset" in out.replace("/opt/testappset/echo", "")),
+        )
+
+        for cmd, check in steps:
+            ok, out = sim.run(cmd, DEFAULT_TIMEOUT)
+            if not ok or not check(out):
+                lines = [l for l in out.strip().splitlines() if l.strip()]
+                self.result(name, FAIL, "'%s': %s" % (cmd, lines[-2] if len(lines) > 1 else "no output"))
+                return
+
+        self.result(name, PASS, "")
 
     # drvset partition (example driver): registration at boot, initialization, read and release
     def drvset_test(self, sim):

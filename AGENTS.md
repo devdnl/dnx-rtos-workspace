@@ -30,7 +30,7 @@ The default configuration targets **stm32h7** (`__CPU_ARCH__` in
   - `src/drivers/<name>/` drivers: `<name>_ioctl.h`, `Makefile`, and per-arch
     subdirs (`noarch/`, `stm32f4/`, …)
   - `src/fs/<name>/` file systems (ramfs, romfs, fatfs, ext4fs, eefs, flatfs,
-    procfs), `vfs.c`, `pipe.c`
+    procfs, appsetfs), `vfs.c`, `pipe.c`
   - `src/net/` (inet, cannet, sipc, uds), `src/mm/`, `src/cpu/<arch>/`
   - `src/include/` internal kernel headers (`drivers/driver.h`, `fs/fs.h`, …)
   - `config/` default kernel config (the workspace overrides it via `config/app-kernel`)
@@ -235,12 +235,16 @@ Notes:
   (default config `config/sim-appset`, build `build/sim-<appset name>`). Other
   appsets get the table symbol `_program_table_desc_<appset name>`
   (`TABLE_SYMBOL` of `tools/appset`); when `__PROJ_APPSET_TABLE_ADDRESS__` is 0
-  the generated `program_registration.c` puts a reference of the table in the
-  `dnx_appset_tables` section and the kernel (`_process_init()`, POSIX only)
-  registers all tables found there after the main one. Programs are searched
-  in the main appset first. `make test-sim` adds the test appset
-  `sim-env/testappset` (`appsettest`, test `appsets: testappset`; it is
-  skipped when the simulator was built without it).
+  the generated `program_registration.c` puts a reference of the table (table,
+  size, appset name) in the `dnx_appset_tables` section, `siminit` creates a
+  `MEMBLOCK` device of each table (`/dev/appset<n>`) and mounts it by
+  `appsetfs` in `/opt/<appset name>` (the main appset in `/bin`), as appset
+  partitions are mounted on the microcontroller. Programs started by name are
+  searched in the main appset, then in `__OS_PROGRAM_PATH__` of
+  `config/sim-kernel` (`/bin:/opt/testappset`). `make test-sim` adds the test
+  appset `sim-env/testappset` (`appsettest`, tests `appsets: testappset` and
+  `appsetfs: mount/umount`; they are skipped when the simulator was built
+  without it).
 - A program fault (SIGSEGV, ...) is reported as APP CRASH like a CPU exception
   on the microcontroller; the simulator keeps running.
 
@@ -324,7 +328,10 @@ both C preprocessor and make**. Rules:
   Sources are compiled with absolute paths, `__FILE__` is relative to the
   workspace (`-ffile-prefix-map`).
 - Declare the program with `PROGRAM_PARAMS(<name>, STACK_DEPTH_…);` and an
-  ordinary `int main(int argc, char *argv[])`.
+  ordinary `int main(int argc, char *argv[])`. The program name (command) is
+  the `.mk`/directory name and may contain `.` and `-` (`mkfs.eefs`); the
+  `PROGRAM_PARAMS` identifier is the name with other characters than letters,
+  digits and `_` replaced by `_` (`mkfs_eefs`, `addapps.sh`).
 - **No global or static variables in programs and libraries.** Each program
   may run in many instances, so all state goes into
   `GLOBAL_VARIABLES_SECTION { … };` (accessed through `global->…`) or into

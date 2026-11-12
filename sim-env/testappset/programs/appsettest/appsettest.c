@@ -38,6 +38,10 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <sys/mount.h>
 #include <dnx/os.h>
 #include <dnx/thread.h>
 
@@ -50,6 +54,7 @@
 #define HEAP_SIZE     4096
 #define THREAD_STATUS 7
 #define CHILD_STATUS  33
+#define MOUNT_POINT   "/opt/testappset" /* mounted by siminit (appsetfs) */
 
 /*==============================================================================
   Local types, enums definitions
@@ -70,6 +75,13 @@ static const char *test_libc(void);
 static const char *test_thread(void);
 static const char *test_child(void);
 static const char *test_search_order(void);
+static const char *test_start_by_path(void);
+static const char *test_program_path(void);
+static const char *test_main_appset_files(void);
+static const char *test_files(void);
+static const char *test_umount_busy(void);
+static const char *test_confstr_path(void);
+static const char *test_dot_name(void);
 
 /*==============================================================================
   Local object definitions
@@ -87,6 +99,13 @@ static const test_t TESTS[] = {
         {.name = "Thread create and join", .fn = test_thread},
         {.name = "Child process of the same appset", .fn = test_child},
         {.name = "Program search order (main appset first)", .fn = test_search_order},
+        {.name = "Program started by path (appsetfs)", .fn = test_start_by_path},
+        {.name = "Program found in program search path", .fn = test_program_path},
+        {.name = "Main appset mounted in /bin", .fn = test_main_appset_files},
+        {.name = "Files of appsetfs (stat, read, dir)", .fn = test_files},
+        {.name = "Unmount of used appset refused", .fn = test_umount_busy},
+        {.name = "Program search path by confstr(_CS_PATH)", .fn = test_confstr_path},
+        {.name = "Program name with '.' and '-' (dot.test-prog)", .fn = test_dot_name},
 };
 
 /*==============================================================================
@@ -266,14 +285,15 @@ static const char *test_child(void)
 
 //==============================================================================
 /**
- * @brief  Program search order: echo exists in the main appset and in this
- *         appset (prints "testappset"), the program of the main appset must
- *         be started.
+ * @brief  Start program and read the first line of its output.
  *
- * @return NULL on success, otherwise error message.
+ * @param  cmd          command line
+ * @param  status       exit status
+ *
+ * @return NULL on success (output in global->msg), otherwise error message.
  */
 //==============================================================================
-static const char *test_search_order(void)
+static const char *run_output(const char *cmd, int *status)
 {
         FILE *f = fopen(OUT_FILE, "w");
         if (!f) {
@@ -281,30 +301,241 @@ static const char *test_search_order(void)
         }
         fclose(f);
 
-        int status = -1;
-        bool ok = run("echo main appset", OUT_FILE, &status);
+        bool ok = run(cmd, OUT_FILE, status);
 
-        char buf[32] = {0};
+        global->msg[0] = '\0';
         f = fopen(OUT_FILE, "r");
         if (f) {
-                if (!fgets(buf, sizeof(buf), f)) {
-                        buf[0] = '\0';
+                if (!fgets(global->msg, sizeof(global->msg), f)) {
+                        global->msg[0] = '\0';
                 }
                 fclose(f);
         }
         remove(OUT_FILE);
 
-        if (!ok) {
-                return "echo not started";
+        global->msg[strcspn(global->msg, "\r\n")] = '\0';
+
+        return ok ? NULL : "program not started";
+}
+
+//==============================================================================
+/**
+ * @brief  Start program and check the first line of its output.
+ *
+ * @param  cmd          command line
+ * @param  expected     expected output
+ *
+ * @return NULL on success, otherwise error message.
+ */
+//==============================================================================
+static const char *expect_output(const char *cmd, const char *expected)
+{
+        int status = -1;
+        const char *err = run_output(cmd, &status);
+        if (err) {
+                return err;
         }
 
-        buf[strcspn(buf, "\r\n")] = '\0';
-        if (strcmp(buf, "main appset") != 0) {
-                snprintf(global->msg, sizeof(global->msg), "echo printed '%s'", buf);
+        if (strcmp(global->msg, expected) != 0) {
+                char out[32];
+                snprintf(out, sizeof(out), "%s", global->msg);
+                snprintf(global->msg, sizeof(global->msg), "'%s' printed '%s'", cmd, out);
                 return global->msg;
         }
 
         return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief  Program search order: echo exists in the main appset and in this
+ *         appset (prints "testappset"), program started by name is found in
+ *         the main appset first (then in the program search path).
+ *
+ * @return NULL on success, otherwise error message.
+ */
+//==============================================================================
+static const char *test_search_order(void)
+{
+        return expect_output("echo main appset", "main appset");
+}
+
+//==============================================================================
+/**
+ * @brief  Program of this appset started by path of the appsetfs.
+ *
+ * @return NULL on success, otherwise error message.
+ */
+//==============================================================================
+static const char *test_start_by_path(void)
+{
+        return expect_output(MOUNT_POINT "/echo", "testappset");
+}
+
+//==============================================================================
+/**
+ * @brief  Program of this appset started by name: not found in the main appset,
+ *         found in the program search path (simulator configuration).
+ *
+ * @return NULL on success, otherwise error message.
+ */
+//==============================================================================
+static const char *test_program_path(void)
+{
+        int status = -1;
+        if (!run("appsettest --exit 21", NULL, &status)) {
+                return "program not found in the program search path";
+        }
+
+        return (status == 21) ? NULL : "wrong exit status";
+}
+
+//==============================================================================
+/**
+ * @brief  Main appset mounted by siminit in /bin ("-" source).
+ *
+ * @return NULL on success, otherwise error message.
+ */
+//==============================================================================
+static const char *test_main_appset_files(void)
+{
+        return expect_output("/bin/echo main", "main");
+}
+
+//==============================================================================
+/**
+ * @brief  Files of appsetfs: executable empty regular files, read-only file
+ *         system, directory contains programs of this appset.
+ *
+ * @return NULL on success, otherwise error message.
+ */
+//==============================================================================
+static const char *test_files(void)
+{
+        struct stat st;
+        if (stat(MOUNT_POINT "/echo", &st) != 0) {
+                return "stat of program file failed";
+        }
+
+        if (!S_ISREG(st.st_mode) || !(st.st_mode & S_IXUSR) || (st.st_size != 0)) {
+                return "wrong status of program file";
+        }
+
+        FILE *f = fopen(MOUNT_POINT "/echo", "r");
+        if (!f) {
+                return "program file not opened";
+        }
+
+        char c;
+        size_t rd = fread(&c, 1, 1, f);
+        fclose(f);
+
+        if (rd != 0) {
+                return "program file is not empty";
+        }
+
+        errno = 0;
+        f = fopen(MOUNT_POINT "/echo", "w");
+        if (f) {
+                fclose(f);
+                return "program file opened for write";
+        }
+
+        if (errno != EROFS) {
+                return "write open: errno is not EROFS";
+        }
+
+        DIR *dir = opendir(MOUNT_POINT);
+        if (!dir) {
+                return "directory not opened";
+        }
+
+        int found = 0;
+        struct dirent *ent;
+        while ((ent = readdir(dir))) {
+                found += (strcmp(ent->d_name, "echo") == 0) || (strcmp(ent->d_name, "appsettest") == 0) ||
+                         (strcmp(ent->d_name, "dot.test-prog") == 0);
+        }
+        closedir(dir);
+
+        return (found == 3) ? NULL : "programs not found in directory";
+}
+
+//==============================================================================
+/**
+ * @brief  Unmount of the appset is refused while its program (this one) runs.
+ *
+ * @return NULL on success, otherwise error message.
+ */
+//==============================================================================
+static const char *test_umount_busy(void)
+{
+        errno = 0;
+        if (umount(MOUNT_POINT) == 0) {
+                return "appset unmounted while its program runs";
+        }
+
+        return (errno == EBUSY) ? NULL : "errno is not EBUSY";
+}
+
+//==============================================================================
+/**
+ * @brief  Program search path of the kernel (simulator configuration contains
+ *         the mount point of this appset), size and truncation of confstr().
+ *
+ * @return NULL on success, otherwise error message.
+ */
+//==============================================================================
+static const char *test_confstr_path(void)
+{
+        size_t size = confstr(_CS_PATH, NULL, 0);
+        if (size <= 1) {
+                return "program search path is empty";
+        }
+
+        if (confstr(_CS_PATH, global->msg, sizeof(global->msg)) != size) {
+                return "wrong size of program search path";
+        }
+
+        if (strlen(global->msg) + 1 != size) {
+                return "wrong length of program search path";
+        }
+
+        if (!strstr(global->msg, MOUNT_POINT)) {
+                return "mount point not in program search path";
+        }
+
+        char small[4] = {'x', 'x', 'x', 'x'};
+        if ((confstr(_CS_PATH, small, sizeof(small)) != size) || (small[3] != '\0') ||
+            (strncmp(small, global->msg, 3) != 0)) {
+                return "wrong truncation";
+        }
+
+        errno = 0;
+        if ((confstr(12345, global->msg, sizeof(global->msg)) != 0) || (errno != EINVAL)) {
+                return "unknown variable not rejected";
+        }
+
+        return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief  Program name with '.' and '-': PROGRAM_PARAMS() identifier is
+ *         dot_test_prog, the command is dot.test-prog (by path and by name in
+ *         the program search path).
+ *
+ * @return NULL on success, otherwise error message.
+ */
+//==============================================================================
+static const char *test_dot_name(void)
+{
+        const char *err = expect_output(MOUNT_POINT "/dot.test-prog", "dot.test-prog");
+        if (!err) {
+                err = expect_output("dot.test-prog", "dot.test-prog");
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -326,7 +557,7 @@ int main(int argc, char *argv[])
                 return atoi(argv[2]);
         }
 
-        printf("Test of appset linked with the simulator (SIM_APPSETS)\n");
+        printf("Test of appset linked with the simulator (SIM_APPSETS, appsetfs)\n");
 
         unsigned executed = 0, passed = 0, failed = 0;
 

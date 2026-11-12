@@ -4,8 +4,8 @@
 @author  Daniel Zorychta
 
 @brief   Program of the test appset with the same name as program of the main
-         appset: it must never be started (appsettest checks search order of
-         programs, the program of the main appset is found first)
+         appset: started only by path (/opt/testappset/echo), by name the
+         program of the main appset is found first (appsettest)
 
         MIT License
 

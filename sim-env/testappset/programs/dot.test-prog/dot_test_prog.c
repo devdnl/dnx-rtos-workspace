@@ -1,13 +1,15 @@
 /*==============================================================================
-@file   addappset.c
+@file    dot_test_prog.c
 
-@author Daniel Zorychta
+@author  Daniel Zorychta
 
-@brief  Add appset to system register.
+@brief   Program of the test appset with '.' and '-' in its name
+         (dot.test-prog): identifier of PROGRAM_PARAMS() is dot_test_prog,
+         prints its name (appsettest)
 
         MIT License
 
-        Copyright (C) 2025 Daniel Zorychta <daniel.zorychta@gmail.com>
+        Copyright (C) 2026 Daniel Zorychta <daniel.zorychta@gmail.com>
 
         Permission is hereby granted, free of charge, to any person obtaining
         a copy of this software and associated documentation files (the
@@ -34,37 +36,17 @@
   Include files
 ==============================================================================*/
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <dnx/misc.h>
-#include <dnx/os.h>
-
-/*==============================================================================
-  Local macros
-==============================================================================*/
 
 /*==============================================================================
   Local object types
-==============================================================================*/
-
-/*==============================================================================
-  Local function prototypes
-==============================================================================*/
-
-/*==============================================================================
-  Local objects
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
 };
 
 /*==============================================================================
-  Exported objects
+  Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(addappset, STACK_DEPTH_LOW);
-
-/*==============================================================================
-  External objects
-==============================================================================*/
+PROGRAM_PARAMS(dot_test_prog, STACK_DEPTH_LOW);
 
 /*==============================================================================
   Function definitions
@@ -72,33 +54,16 @@ PROGRAM_PARAMS(addappset, STACK_DEPTH_LOW);
 
 //==============================================================================
 /**
- * Main program function.
- *
- * Note: Please adjust stack size according to programs needs.
- *
- * @param argc      argument count
- * @param argv      arguments
+ * @brief  Main function.
  */
 //==============================================================================
 int main(int argc, char *argv[])
 {
-        if (argc < 2) {
-                printf("Usage: %s <appset-address-1> [appset-address-2] [...]\n", argv[0]);
-                return EXIT_FAILURE;
+        (void)argc;
+        (void)argv;
 
-        } else {
-                for (int i = 1; i < argc; i++) {
-                        const void *appset[] = {cast(void *, strtoul(argv[i], NULL, 0))};
-
-                        if (register_appset(appset, ARRAY_SIZE(appset)) == 0) {
-                                printf("Appset @ %p successfully added.\n", appset[0]);
-                        } else {
-                                printf("Unable to add appset @ %p.\n", appset[0]);
-                        }
-                }
-
-                return EXIT_SUCCESS;
-        }
+        puts("dot.test-prog");
+        return 0;
 }
 
 /*==============================================================================

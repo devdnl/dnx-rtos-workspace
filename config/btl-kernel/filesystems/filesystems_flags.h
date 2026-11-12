@@ -121,6 +121,22 @@ __ENABLE_EXT4FS__=_YES_
 #*/
 
 #/*--
+# this:AddWidget("Combobox", "appsetfs: enable")
+# this:AddItem("Yes", "_YES_")
+# this:AddItem("No", "_NO_")
+# this:SetToolTip("The appsetfs presents programs of an application set (appset)\n"..
+#                 "as executable files: mount(\"appsetfs\", \"/dev/appset\", \"/opt/progs\", \"\")\n"..
+#                 "(memblock device with appset image executed in place) or\n"..
+#                 "mount(\"appsetfs\", \"\", \"/bin\", \"\") (main appset, shell: mount -\n"..
+#                 "appsetfs /bin). Programs are started by path or found in the\n"..
+#                 "program search path.")
+#--*/
+#define __ENABLE_APPSETFS__ _NO_
+#/*
+__ENABLE_APPSETFS__=_NO_
+#*/
+
+#/*--
 # this:AddWidget("Combobox", "romfs: enable")
 # this:AddItem("Yes", "_YES_")
 # this:AddItem("No", "_NO_")

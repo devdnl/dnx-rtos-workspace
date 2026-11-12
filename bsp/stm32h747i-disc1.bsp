@@ -1363,6 +1363,7 @@
 		["__FATFS_LFN_CODEPAGE__"]="852";
 	};
 	["config/app-kernel/filesystems/filesystems_flags.h"]={
+		["__ENABLE_APPSETFS__"]="_YES_";
 		["__ENABLE_EEFS__"]="_YES_";
 		["__ENABLE_EXT4FS__"]="_YES_";
 		["__ENABLE_FATFS__"]="_YES_";
@@ -1600,6 +1601,7 @@
 		["__OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__"]="0";
 		["__OS_PIPE_LENGTH__"]="256";
 		["__OS_PROCESS_MAX_THREADS__"]="24";
+		["__OS_PROGRAM_PATH__"]="\"/bin\"";
 		["__OS_RTC_FILE_PATH__"]="\"/dev/rtc\"";
 		["__OS_SLEEP_ON_IDLE__"]="_YES_";
 		["__OS_STREAM_BUFFER_LENGTH__"]="256";

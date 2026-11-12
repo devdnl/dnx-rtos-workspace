@@ -35,8 +35,8 @@ TARGET_DIR_NAME = build
 SIM_PANEL_SOCKET = $(TARGET_DIR_NAME)/dnx-panel.sock
 SIM_PANEL_PORT ?= 8080
 
-# POSIX simulator: other appsets linked with the simulator kernel (programs are searched in the
-# main appset first, then in these appsets in the given order): list of <appset directory>
+# POSIX simulator: other appsets linked with the simulator kernel (siminit mounts them by appsetfs
+# in /opt/<appset directory name>, programs are started by path): list of <appset directory>
 # [:<configuration directory>] (relative to the workspace or absolute), default configuration is
 # config/sim-appset, e.g. SIM_APPSETS="btl-appset /home/user/project/appset:config/sim-appset";
 # appset is built in $(TARGET_DIR_NAME)/sim-<appset directory name>, so names must be unique

@@ -64,13 +64,26 @@
 /* number of primary partitions in MBR */
 #define NUMBER_OF_PARTITIONS 4
 
+/* directory of other appsets linked with the simulator (SIM_APPSETS): /opt/<appset name> */
+#define APPSETS_DIR "/opt"
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+/*
+ * Reference of other appset linked with the simulator (SIM_APPSETS), generated
+ * by tools/appset/addapps.sh in the section dnx_appset_tables.
+ */
+typedef struct {
+        const void *table;
+        uint32_t size;
+        const char *name;
+} appset_ref_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static void mount_appsets(void);
 
 /*==============================================================================
   Local object definitions
@@ -110,6 +123,12 @@ static void create_base_file_system_structure(void)
         mkdir("/etc", 0666);
 
         mount("procfs", "", "/proc", "");
+
+        /* programs of the main appset as files */
+        mkdir("/bin", 0666);
+        if (mount("appsetfs", "", "/bin", "") != 0) {
+                remove("/bin");
+        }
 }
 
 //==============================================================================
@@ -269,6 +288,48 @@ static void mount_file_systems(void)
         /* disks selected by the --disk option */
         for (u8_t disk = FIRST_DATA_HOST_DISK; disk <= LAST_DATA_HOST_DISK; disk++) {
                 mount_data_disk(disk);
+        }
+
+        mount_appsets();
+}
+
+//==============================================================================
+/**
+ * @brief Function mounts other appsets linked with the simulator (SIM_APPSETS)
+ *        in /opt/<appset name>: memblock device of the program table
+ *        (/dev/appset<n>) and appsetfs, as an appset partition of the
+ *        microcontroller. Programs are started by path or found in the program
+ *        search path of the kernel configuration.
+ */
+//==============================================================================
+static void mount_appsets(void)
+{
+        extern const appset_ref_t __start_dnx_appset_tables[] __attribute__((weak));
+        extern const appset_ref_t __stop_dnx_appset_tables[] __attribute__((weak));
+
+        u8_t n = 0;
+
+        for (const appset_ref_t *ref = __start_dnx_appset_tables; ref && (ref < __stop_dnx_appset_tables);
+                ref++, n++) {
+
+                const MEMBLOCK_config_t config = {
+                        .memory_address = (uint32_t)ref->table,
+                        .block_size = ref->size,
+                        .access = O_RDONLY,
+                };
+
+                snprintf(global->disk_path, sizeof(global->disk_path), "/dev/appset%u", n);
+                snprintf(global->str, sizeof(global->str), APPSETS_DIR "/%s", ref->name);
+
+                mkdir(APPSETS_DIR, 0777);
+                mkdir(global->str, 0777);
+
+                if ((driver_init2("MEMBLOCK", n, 0, global->disk_path, &config) != 0) ||
+                        (mount("appsetfs", global->disk_path, global->str, "") != 0)) {
+
+                        printf("Appset %s not mounted: %s\n", ref->name, strerror(errno));
+                        remove(global->str);
+                }
         }
 }
 

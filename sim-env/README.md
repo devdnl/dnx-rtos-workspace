@@ -25,7 +25,8 @@ Directories:
   the model file, see [Writing device models](#writing-device-models),
 - `tests/` – test programs executed in dnx RTOS (e.g. `lua /host/gpio.lua`),
 - `testappset/` – test appset linked with the simulator by `make test-sim`
-  (`SIM_APPSETS`, program `appsettest`),
+  (`SIM_APPSETS`, mounted by `siminit` in `/opt/testappset`, program
+  `appsettest`),
 - `demos/` – demo programs executed in dnx RTOS, e.g. `lcdpaint.lua` (drawing
   on the LCD of the board panel, see [LCD and touch](#lcd-and-touch)),
   `tftdemo.lua` (drawing on the SPI TFT display, ST7789 model),

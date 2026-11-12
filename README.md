@@ -79,7 +79,7 @@ The `app-appset` contains a reference set of programs, e.g.:
 - storage: `mkext`, `mkeefs`, `mkflatfs` (file system formatters), `storinit`
   (storage initialization),
 - system tools: `initd`, `siminit`, `top`, `free`, `memmon`, `dmesg`, `lsmod`,
-  `modprobe`, `addappset`, `uptime`, `uname`, `date`, `dstd` (daylight saving
+  `modprobe`, `uptime`, `uname`, `date`, `dstd` (daylight saving
   time), `time`, `perf`, `reboot`, `shutdown`,
 - network: `ifconfig`, `netmgr`, `ping`, `ethstat`, `canstat`, `httpsrv` (HTTP
   server with Lua scripting), `ftpd`, `telnetd`, `sntpd`, `mqtt_broker`,
@@ -104,6 +104,12 @@ set by the build). All programs of the appset are built except programs listed
 in `__PROGRAMS_EXCLUDE_LIST__` of the appset configuration
 (`config/<appset>/programs/programs_flags.h`).
 
+The program name (command) is the name of the `.mk` file or of the program
+directory and can contain `.` and `-` (e.g. `mkfs.eefs`). The program source
+declares it by `PROGRAM_PARAMS(<identifier>, ...)`, where the identifier is
+the name with other characters than letters, digits and `_` replaced by `_`
+(`PROGRAM_PARAMS(mkfs_eefs, STACK_DEPTH_LOW);`).
+
 The appset directory contains only programs and libraries. All appsets are
 built by the common build base `tools/appset` (Makefile, default
 configuration, scripts) with the appset directory, the configuration and the
@@ -116,6 +122,27 @@ see `tools/appset/README.md`. A new appset is a new directory with
 `programs/` and `libs/` and its configuration in `config/` (copy of the default
 configuration `tools/appset/config`). The ROMFS image is built the same way by
 `tools/romfs` from the directory with files of the image (`app-romfs`).
+
+Programs of the main appset (`__PROJ_APPSET_TABLE_ADDRESS__`) are started by
+name. More appsets can be programmed in other flash partitions (linked for
+their address, executed in place) and mounted by the `appsetfs` file system
+from a memory region device (`MEMBLOCK`); its programs are executable files of
+the mount point:
+```
+modprobe -i MEMBLOCK 1 0 /dev/appset1 -c memory_address=0x08100000,block_size=524288,access=rdonly
+mount /dev/appset1 appsetfs /opt/progs
+ls /opt/progs
+/opt/progs/heating
+mount - appsetfs /bin        # programs of the main appset as files (done by initd)
+```
+A program is started by path, or by name when it is not found in the main
+appset and the kernel finds it in a directory of the program search path
+(`__OS_PROGRAM_PATH__`, e.g. `"/bin:/opt/progs"`; programs read it by
+`confstr(_CS_PATH)`, `dsh` completes program names from these directories,
+`/bin` is the main appset mounted by `initd`). Program files are
+empty, read-only and executable. The appset can be unmounted when none of its
+programs is running (`EBUSY` otherwise) and the same appset cannot be mounted
+twice.
 
 ### Common libraries
 The `common_libs` directory contains libraries shared by all appsets (and by
@@ -276,15 +303,18 @@ default configuration `config/sim-appset`), each appset is built in
 make build-sim SIM_APPSETS="btl-appset /home/user/project/appset"
 make run-sim SIM_APPSETS=btl-appset
 ```
-Programs are searched in the main appset (`app-appset`) first, then in other
-appsets in the given order (a program of the same name in a later appset is
-not started). All symbols of an appset except its program table are local, so
-appsets can contain the same libraries (libc) and program names in the source
-code; the table of the appset is `_program_table_desc_<appset directory name>`
-(debugger). `make test-sim` always links the test appset `sim-env/testappset`
-(program `appsettest`: libc, threads and child process in other appset, search
-order of programs; its `echo` must not be started instead of `echo` of the
-main appset).
+`siminit` mounts each of them by `appsetfs` in `/opt/<appset directory name>`
+(memory region device `/dev/appset<n>` of its program table, as an appset
+partition of the microcontroller) and the main appset in `/bin`; programs are
+started by path or found in the program search path (`__OS_PROGRAM_PATH__` of
+`config/sim-kernel`, `"/bin:/opt/testappset"`). All symbols of an appset except its
+program table are local, so appsets can contain the same libraries (libc) and
+program names in the source code; the table of the appset is
+`_program_table_desc_<appset directory name>` (debugger). `make test-sim`
+always links the test appset `sim-env/testappset` (program `appsettest`: libc,
+threads and child process in other appset, search order of programs, start by
+path and program search path, files of `appsetfs`; mount and unmount from the
+shell).
 The simulator is built by the `i686-unknown-linux-musl-` toolchain (installed
 in the Docker image on x86_64 hosts) as a static executable, so it can be
 started also outside the container. Program options:

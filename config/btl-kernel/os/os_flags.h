@@ -355,6 +355,17 @@ this:SetToolTip("This is a program that execute command passed to system() funct
 --*/
 #define __OS_SYSTEM_PROG__ "dsh -e"
 
+/*--
+this:AddWidget("Editline", true, "Program search path")
+this:SetToolTip("Directories (separated by ':') searched for a program that is not\n"..
+                "found by name in the main appset, e.g. \"/bin:/opt/progs\".\n"..
+                "Programs are files of the appsetfs (main appset is mounted in\n"..
+                "/bin by init). The path is read by programs with\n"..
+                "confstr(_CS_PATH), e.g. dsh completes program names from it.\n"..
+                "Empty: no search.")
+--*/
+#define __OS_PROGRAM_PATH__ ""
+
 /* HEAP alignment depends on selected CPU */
 #define  _HEAP_ALIGN_ _CPU_HEAP_ALIGN_
 

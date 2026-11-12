@@ -789,18 +789,6 @@ static inline void cache_flush(void)
 
 //==============================================================================
 /**
- * @brief  Register new appset(s).
- *
- * @param  appset_address_array appset address array
- * @param  appset_count         number of addresses
- *
- * @return One of errno value.
- */
-//==============================================================================
-extern int register_appset(const void **appset_address_array, size_t appset_count);
-
-//==============================================================================
-/**
  * @brief  Set heap allocation size. It is minimal memory block size that will
  *         be requested from system to be used as heap memory.
  *
