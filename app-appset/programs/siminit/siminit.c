@@ -385,7 +385,8 @@ static void initialize_network(void)
 
         /*
          * Ethernet interface is available when simulator is started with
-         * --tap <name> option. Interface is configured by the netmgr program.
+         * --tap <name> option or the board script attached Ethernet models
+         * (eth.attach()). Interface is configured by the netmgr program.
          */
         if (driver_init("ETH", 0, 0, "/dev/eth") == 0) {
                 static const process_attr_t attr = {

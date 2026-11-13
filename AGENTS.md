@@ -168,7 +168,15 @@ Notes:
 - `--tap <name>` connects `eth/posix` (`/dev/eth`, frames via
   `/dev/net/tun`, software MAC filter) to the host TAP interface; `siminit`
   starts `netmgr --daemon /etc/netmgr.conf` (ROMFS content `app-romfs`
-  is shared with the application, `config/sim-romfs` sets image parameters).
+  is shared with the application, `config/sim-romfs` sets image parameters;
+  network 192.168.77.0/24, system 192.168.77.2). Board scripts attach
+  Ethernet models (`eth.attach(dev)`, `dev:receive(frame)`, `eth.send()`):
+  `host.c` connects the system, TAP and models as a hub (`_host_board_eth_*()`,
+  frame queues in `board.c`), so `/dev/eth` exists also without `--tap` and
+  models are visible from the host with it. `sim-env/models/netdev.lua` is an
+  IPv4 stack in Lua for device models (ARP, ICMP echo, UDP, TCP),
+  `udp_sensor.lua` an example (UDP broadcast sensor). Program `nc`
+  (`common_apps/nc`) is a simple netcat (TCP/UDP client and server).
 - Drivers are configured by structures (`IOCTL_<DRV>__CONFIGURE`) or by
   configuration strings (`IOCTL_<DRV>__CONFIGURE_STR` = `IOCTL_DEVICE__CONFIGURE_STR`,
   "key=value,key=value", parsed by `sys_opt_*()`, enumerations by
@@ -176,7 +184,7 @@ Notes:
   -c <config>` (new device) or `modprobe -c <path> <config>` (existing device).
 - `make test-sim` (`tools/simtest.py`) runs driver configuration string tests
   (`devcfg`), board tests (`sim-env/tests/*.lua`: GPIO, I2C, I2CEE, DS2482, SPI,
-  SPIEE, MCP23S17, UART (echo, NMEA GPS), SDSPI, board panel protocol with LCD and touch), the block layer test
+  SPIEE, MCP23S17, UART (echo, NMEA GPS), Ethernet (netdev: ping, UDP, TCP), SDSPI, board panel protocol with LCD and touch), the block layer test
   (`blkdev`: host disk with emulated constraints), `fstest` (ramfs, hostfs,
   FAT/ext4 image, flatfs/eefs/ext2/ext3 partitions formatted in dnx, ext2 on
   the SD card model and on the constrained disk, read-only romfs image),

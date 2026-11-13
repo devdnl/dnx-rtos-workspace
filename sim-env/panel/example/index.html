@@ -116,6 +116,21 @@
             <code class="gps-nmea" data-signal="GPS_LAST" data-format=""></code>
         </section>
 
+        <section class="block">
+            <h2>Ethernet sensor <small>192.168.77.51, UDP broadcast :5000</small></h2>
+            <div class="slider">
+                <input type="range" min="-40" max="85" step="0.1" data-input="ETH_TEMP" aria-label="Ethernet sensor temperature">
+                <span data-signal="ETH_TEMP" data-format="%.1f °C"></span>
+            </div>
+            <div class="eth-row">
+                <label class="check"><input type="checkbox" data-input="ETH_TEMP_EN"> Transmits</label>
+                <figure><button class="tact small" data-input="ETH_TEMP_SEND" data-mode="push"
+                        aria-label="Send datagram now"></button><figcaption>send</figcaption></figure>
+            </div>
+            <code class="gps-nmea">datagrams: <span data-signal="ETH_TEMP_TX" data-format="%d">0</span>,
+                last: "<span data-signal="ETH_TEMP_TEXT" data-format=""></span>"</code>
+        </section>
+
         <section class="block wide">
             <h2>PCF8574 <small>I2C:0 0x20, active low</small>
                 <code class="hex" data-signal="LEDS1" data-format="0x%02X"></code></h2>

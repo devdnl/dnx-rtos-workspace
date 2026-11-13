@@ -104,6 +104,11 @@ figcaption { font-size: 13px; color: var(--muted); }
 .gps-pos { font: 600 18px ui-monospace, SFMono-Regular, Menlo, monospace; margin: 4px 0 10px; }
 .gps-nmea { display: block; margin-top: 10px; font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
 
+/* Ethernet sensor */
+.eth-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+.eth-row figure { margin: 0; text-align: center; }
+.eth-row figcaption { font-size: 11px; }
+
 /* MCP23S17: buttons of port B, INT pins */
 .mcp-buttons { display: flex; justify-content: space-between; gap: 6px; margin-top: 12px; }
 .mcp-buttons figcaption { font-size: 11px; }

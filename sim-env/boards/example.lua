@@ -8,8 +8,9 @@
   The board panel (PANEL=1, web browser: http://localhost:8080) shows page
   sim-env/panel/example/: LEDs, button, temperature, DS18B20 sensors on
   1-Wire bus (DS2482), LEDs of the I/O expander and shift register, MCP23S17
-  with LEDs and buttons, GPS receiver (UART:1), LCD (LTDC driver) with touch
-  panel, TFT display (ST7789 model on SPI:2).
+  with LEDs and buttons, GPS receiver (UART:1), Ethernet temperature sensor
+  (UDP broadcast), LCD (LTDC driver) with touch panel, TFT display (ST7789
+  model on SPI:2).
 
   Pins (port A):
     PA0  LED (output of the system, active low)
@@ -42,6 +43,11 @@
   UART:1 (/dev/ttyS1, when not connected by simulator option --uart 1=...):
           NMEA GPS receiver (9600 8N1, 1 fix per second), position, fix,
           speed and course set by the panel
+  Ethernet (network of the simulator 192.168.77.0/24, the system is
+  192.168.77.2, with --tap also the host):
+    192.168.77.51  temperature sensor: UDP broadcast "<temperature>" to port
+                   5000 every 5 s and after change (temperature set by the
+                   panel), answers ping
 
   dnx RTOS (shell), I2C EEPROM:
     modprobe -i I2C 0 0 /dev/i2c-ee -c address=0x50,sub_addr_mode=2
@@ -62,6 +68,10 @@
   baud rate is set):
     modprobe -c /dev/ttyS1 baud=9600
     cat /dev/ttyS1
+
+  dnx RTOS (shell), Ethernet sensor (the network is configured by netmgr):
+    ping 192.168.77.51
+    nc -v -u -l -w 30 5000
 
   dnx RTOS (shell), SD card (all SPI:0 CS pins should be configured first,
   not configured CS pin is low: device is selected):
@@ -96,6 +106,7 @@ local ds2482 = require("models.ds2482")
 local ds18b20 = require("models.ds18b20")
 local mcp23s17 = require("models.mcp23s17")
 local nmea_gps = require("models.nmea_gps")
+local udp_sensor = require("models.udp_sensor")
 local spiee = require("models.25xx")
 local ft5336 = require("models.ft5336")
 local sdcard = require("models.sdcard")
@@ -245,6 +256,11 @@ if uart.available("UART:1") then
     panel.control("GPS_COURSE", function(v) motion.course = v; gps:set_motion(motion.speed, motion.course) end,
                   {value = 0, min = 0, max = 359, step = 1, label = "GPS course", unit = "°"})
 end
+
+-- Ethernet: temperature sensor sending UDP broadcast (models/udp_sensor.lua)
+local eth_sensor = udp_sensor.new{ip = "192.168.77.51", port = 5000, value = 20.5, format = "%.1f",
+                                  interval = 5000}:attach()
+udp_sensor.panel(eth_sensor, "ETH_TEMP", {label = "Ethernet sensor", min = -40, max = 85, step = 0.1, unit = "°C"})
 
 -- SPI:2: TFT display (LCD "tft" of the panel), touch of the display in the
 -- board panel is only shown

@@ -1,7 +1,8 @@
 --[[----------------------------------------------------------------------------
   Board used by automatic tests (tools/simtest.py, test programs tests/gpio.lua,
   tests/i2c.lua, tests/i2cee.lua, tests/spi.lua, tests/spiee.lua,
-  tests/sdcard.lua, tests/ds2482.lua, tests/mcp23s17.lua, tests/uart.lua).
+  tests/sdcard.lua, tests/ds2482.lua, tests/mcp23s17.lua, tests/uart.lua,
+  tests/net.lua).
 
   GPIO connections (system outputs -> system inputs):
     PA0  -> PA8   inverter
@@ -21,7 +22,8 @@
           "temp <n> <C>", "attach <n>", "detach <n>", "short <a|b> <0|1>",
           "fault <n> <crc|rom_crc|mute> <0|1>", "gps fix <0|1>",
           "gps pos <lat> <lon> <alt>", "gps motion <knots> <course>",
-          "gps power <0|1>", "gps time" (board time in ms)
+          "gps power <0|1>", "gps time" (board time in ms), "net ..."
+          (Ethernet, see below)
     0x48  LM75 (21.5 C), OS -> PA14, PA3 = 1 heats sensor to 90 C
     0x50  24C256 (I2CEE driver and eefs)
     0x51  24C32 (raw access tests)
@@ -33,6 +35,22 @@
                       configuration: "<baud> <parity> <stop bits>\n"
     UART:3 /dev/ttyS3  NMEA GPS (38400 8N1, fix every 200 ms, start time
                       2026-01-01 12:00:00 UTC, 52.2297 N 21.0122 E 100 m)
+
+  Ethernet (network of the simulator 192.168.77.0/24, system 192.168.77.2),
+  tests/net.lua:
+    192.168.77.50  netdev: ping, UDP echo port 7 (answer in upper case), TCP
+                   echo port 7, TCP source port 19 (sends "net src <n>" bytes
+                   of pattern: byte i = i % 251, then closes), TCP sink port 9
+                   (counts received bytes)
+    192.168.77.51  UDP sensor: broadcast "T=<value>" to port 5000 (500 ms,
+                   enabled by test)
+    control commands (I2C:0 0x30): "net sensor <value>", "net sensor_en <0|1>",
+    "net sensor_tx" (number of datagrams), "net src <n>", "net sink" (last
+    connection: "<bytes> <sum32> <closed 0|1>"), "net connect <ip> <port> <text>"
+    (TCP client sends text and closes), "net client" (state of client:
+    "connecting", "sent", "refused", ...), "net udp <ip> <port> <text>",
+    "net ping <ip>", "net pingres" ("ok <ms>", "fail", "pending"), "net conns"
+    (open TCP connections of 192.168.77.50)
 
   SPI:0 (CS pins, active low):
     PA4   test memory A: returns data of the last write transaction (mode 0)
@@ -73,6 +91,8 @@ local ds2482 = require("models.ds2482")
 local ds18b20 = require("models.ds18b20")
 local mcp23s17 = require("models.mcp23s17")
 local nmea_gps = require("models.nmea_gps")
+local netdev = require("models.netdev")
+local udp_sensor = require("models.udp_sensor")
 
 gpio.connect("PA0", "PA8", true)
 gpio.connect("PA1", "PA9")
@@ -206,6 +226,79 @@ OW_COMMANDS.gps = function(what, a, b, c)
         return string.format("%.0f", host.time_ms())   -- board time (GPS time = start_time + board time)
     else
         error("gps: unknown command " .. tostring(what))
+    end
+end
+
+-- Ethernet devices
+local net = netdev.new{ip = "192.168.77.50"}:attach()
+local net_state = {src = 0, sink = "0 0 0", client = "none", ping = "none"}
+
+local udp_echo = net:udp(7)
+udp_echo:on_receive(function(data, ip, port) udp_echo:send(ip, port, data:upper()) end)
+
+net:tcp_listen(7, function(conn)
+    conn:on_data(function(data) conn:send(data) end)
+end)
+
+net:tcp_listen(19, function(conn)
+    local n = net_state.src
+    local t = {}
+    for i = 0, n - 1 do t[#t + 1] = string.char(i % 251) end
+    conn:send(table.concat(t))
+    conn:close()
+end)
+
+net:tcp_listen(9, function(conn)
+    local bytes, sum = 0, 0
+    net_state.sink = "0 0 0"
+    conn:on_data(function(data)
+        bytes = bytes + #data
+        for i = 1, #data do sum = (sum + data:byte(i)) & 0xFFFFFFFF end
+        net_state.sink = string.format("%d %d 0", bytes, sum)
+    end)
+    conn:on_close(function() net_state.sink = string.format("%d %d 1", bytes, sum) end)
+end)
+
+local sensor_eth = udp_sensor.new{ip = "192.168.77.51", port = 5000, value = 21.5, format = "T=%.1f",
+                                  interval = 500, delay = 500, enabled = false}:attach()
+
+OW_COMMANDS.net = function(what, a, b, ...)
+    if what == "sensor" then
+        sensor_eth:set_value(assert(tonumber(a)))
+    elseif what == "sensor_en" then
+        sensor_eth:set_enabled(a == "1")
+    elseif what == "sensor_tx" then
+        return tostring(sensor_eth:transmissions())
+    elseif what == "src" then
+        net_state.src = assert(tonumber(a))
+    elseif what == "sink" then
+        return net_state.sink
+    elseif what == "connect" then
+        local text = table.concat({...}, " ")
+        net_state.client = "connecting"
+        net:tcp_connect(a, assert(tonumber(b)), function(conn, err)
+            if not conn then net_state.client = err return end
+            net_state.client = "connected"
+            conn:on_close(function(reason) net_state.client = net_state.client .. " " .. reason end)
+            conn:send(text)
+            conn:close()
+            net_state.client = "sent"
+        end)
+    elseif what == "client" then
+        return net_state.client
+    elseif what == "udp" then
+        udp_echo:send(a, assert(tonumber(b)), table.concat({...}, " "))
+    elseif what == "ping" then
+        net_state.ping = "pending"
+        net:ping(a, function(ok, ms) net_state.ping = ok and string.format("ok %.0f", ms) or "fail" end)
+    elseif what == "pingres" then
+        return net_state.ping
+    elseif what == "conns" then
+        local n = 0
+        for _ in pairs(net.conns) do n = n + 1 end
+        return tostring(n)
+    else
+        error("net: unknown command " .. tostring(what))
     end
 end
 

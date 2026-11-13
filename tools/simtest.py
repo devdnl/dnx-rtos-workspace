@@ -12,7 +12,9 @@
 #           - driver configuration strings (sim-env/tests/devcfg.lua, modprobe -c), UART:1 is
 #             connected to the host pseudo terminal and its configuration is checked by termios,
 #           - board model (sim-env/boards/test.lua): GPIO, I2C, I2CEE/eefs, DS2482/DS18B20 (1-Wire),
-#             SPI, SPIEE/eefs, MCP23S17 (dnx.spi), UART (echo, NMEA GPS) and SDSPI/ext2 tests (sim-env/tests/*.lua) executed by dnx Lua interpreter, fstest on ext2
+#             SPI, SPIEE/eefs, MCP23S17 (dnx.spi), UART (echo, NMEA GPS), Ethernet (netdev models: ping,
+#             UDP, TCP by nc program) and SDSPI/ext2 tests (sim-env/tests/*.lua) executed by dnx Lua
+#             interpreter, fstest on ext2
 #             on SD card model (SDSPI driver), board panel protocol (socket of tools/simpanel.py),
 #           - fstest on ramfs (/tmp) and hostfs (/host, temporary host directory),
 #           - fstest on FAT and ext4 partitions of temporary disk image (/mnt/sda1, /mnt/sda2),
@@ -130,7 +132,8 @@ EXT3_SIZE = RAW_DISK_SIZE // SECTOR_SIZE - EXT3_START
 BLK_DISK = 4
 BLK_DISK_SIZE = 16 * 1024 * 1024
 
-BOARD_MESSAGE = re.compile(r"\[board\] [^\n]*\n+")
+# asynchronous messages: board engine (models) and netmgr daemon (network configuration)
+ASYNC_MESSAGE = re.compile(r"(\[board\] |NM: )[^\n]*\n+")
 ANSI_ESCAPE = re.compile(rb"\x1b\[[0-9;?]*[a-zA-Z]|\x1b[78]")
 ANSI_INCOMPLETE = re.compile(rb"\x1b(\[[0-9;?]*)?$")
 SUMMARY = re.compile(r"SUMMARY:\s*executed:\s*(\d+),\s*passed:\s*(\d+),\s*failed:\s*(\d+),\s*skipped:\s*(\d+)")
@@ -195,8 +198,10 @@ class Simulator:
             return False
 
     def _prompt_ready(self, start):
-        # asynchronous messages of board engine (models) can follow the prompt
-        return BOARD_MESSAGE.sub("", self.out[start:]).endswith("\n$ ")
+        # asynchronous messages of board engine (models) and netmgr can follow the prompt
+        # (the terminal shows the prompt again before message of other process)
+        out = re.sub(r"(\$ )+$", "$ ", ASYNC_MESSAGE.sub("", self.out[start:]))
+        return out.endswith("\n$ ")
 
     # wait for shell prompt (prompt is the last output)
     def wait_prompt(self, timeout, start=0):
@@ -852,9 +857,20 @@ class TestRunner:
 
         # board model (before fstest on hostfs, test files are removed after test)
         board_tests = ("board: gpio", "board: i2c", "board: i2cee", "board: ds2482", "board: spi", "board: spiee",
-                       "board: mcp23s17", "board: uart",
+                       "board: mcp23s17", "board: uart", "board: net",
                        "board: sdcard", "fstest: ext2 on sdspi", "board: panel")
         if args.board:
+            # Ethernet models of the board: netmgr configures the network in background, its
+            # messages are printed to the terminal (wait, so they do not interrupt tests)
+            if any(self.selected(n) for n in board_tests):
+                end = time.time() + NETWORK_TIMEOUT
+                while time.time() < end:
+                    ok, out = sim.run("ifconfig")
+                    if (not ok) or ("name: inet" not in out) or ("STATIC IP" in out) or ("DHCP CONFIGURED" in out):
+                        break
+                    sim.read(1)
+                sim.read(0.5)
+
             self.summary_test(sim, "board: gpio", "/host/sim-env", "lua gpio.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: i2c", "/host/sim-env", "lua i2c.lua", DEFAULT_TIMEOUT)
 
@@ -862,6 +878,7 @@ class TestRunner:
             self.summary_test(sim, "board: ds2482", "/host/sim-env", "lua ds2482.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: mcp23s17", "/host/sim-env", "lua mcp23s17.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: uart", "/host/sim-env", "lua uart.lua", DEFAULT_TIMEOUT)
+            self.summary_test(sim, "board: net", "/host/sim-env", "lua net.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: spi", "/host/sim-env", "lua spi.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: spiee", "/host/sim-env", "lua spiee.lua", FSTEST_TIMEOUT)
             self.summary_test(sim, "board: sdcard", "/host/sim-env", "lua sdcard.lua", FSTEST_TIMEOUT)

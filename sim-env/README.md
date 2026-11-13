@@ -21,7 +21,9 @@ Directories:
   `ds18b20` (1-Wire thermometer), `onewire` (1-Wire bus used by them, see
   [1-Wire](#1-wire)), `mcp23s17` (SPI 16-bit I/O expander, see
   [MCP23S17](#mcp23s17)), `nmea_gps` (NMEA GPS receiver on UART, see
-  [uart](#uart)), the description of options and methods is in
+  [uart](#uart)), `netdev` (IPv4 stack of Ethernet devices: ARP, ICMP, UDP,
+  TCP) and `udp_sensor` (sensor sending UDP datagrams), see [eth](#eth),
+  the description of options and methods is in
   the model file, see [Writing device models](#writing-device-models),
 - `tests/` – test programs executed in dnx RTOS (e.g. `lua /host/gpio.lua`),
 - `testappset/` – test appset linked with the simulator by `make test-sim`
@@ -241,6 +243,69 @@ cat /dev/ttyS1
 ```
 `tests/uart.lua` tests UARTs of `boards/test.lua` (echo with configuration
 query on `UART:2`, GPS on `UART:3`).
+
+### eth
+Ethernet models of the board script are connected to the Ethernet interface
+of the system (`ETH` driver, `/dev/eth`, configured by `netmgr`, see
+`app-romfs/netmgr.conf`: network 192.168.77.0/24, the system is
+192.168.77.2). The network is a hub: frames of the system go to models and
+to the host TAP interface (option `--tap`), frames of models to the system,
+TAP and other models, frames received by TAP to the system and models. So
+devices of the board are visible from the host when `--tap` is used (ping,
+Wireshark, UDP/TCP clients and servers on the host); without `--tap` the
+network contains only the system and the models (no host configuration
+needed). The system sees the interface when the script attached a model
+(attach it when the script is loaded). Frames are passed when the system
+receives (the interface is started by `netmgr`).
+```lua
+local dev = {}
+function dev:receive(frame)                   -- Ethernet frame (without FCS)
+    -- frames of all devices: filter by destination MAC address
+end
+eth.attach(dev)
+eth.send(frame, dev)                          -- frame of model (14..1514 bytes),
+                                              -- not delivered back to dev
+eth.detach(dev)
+```
+Device models usually use `models/netdev.lua`, a minimal IPv4 stack in Lua:
+ARP, ICMP echo (ping), UDP (unicast and broadcast) and TCP (client and
+server, retransmissions, window of receiver, no fragmentation and congestion
+control):
+```lua
+local netdev = require("models.netdev")
+local dev = netdev.new{ip = "192.168.77.50"}:attach()   -- MAC 02:00 + IP
+
+local sock = dev:udp(7)                                 -- UDP echo
+sock:on_receive(function(data, ip, port) sock:send(ip, port, data) end)
+sock:send("255.255.255.255", 5000, "broadcast")
+
+dev:tcp_listen(80, function(conn)                       -- TCP server
+    conn:on_data(function(data) conn:send(data) end)
+    conn:on_end(function() conn:close() end)            -- remote side closed
+end)
+dev:tcp_connect("192.168.77.2", 1883, function(conn, err)   -- TCP client
+    if conn then conn:send("hello") conn:close() end
+end)
+dev:ping("192.168.77.2", function(ok, ms) print(ok, ms) end)
+```
+API is described in the header of the module (also `trace = true`: packets
+are printed). `models/udp_sensor.lua` is an example of device model: sensor
+sending its value as text in UDP datagrams (broadcast by default, value,
+transmissions and the last datagram in the panel by `udp_sensor.panel()`):
+```lua
+local udp_sensor = require("models.udp_sensor")
+local s = udp_sensor.new{ip = "192.168.77.51", port = 5000, value = 21.5, format = "T=%.1f"}:attach()
+s:set_value(22.0)
+```
+In dnx RTOS (program `nc`):
+```
+ping 192.168.77.51
+nc -v -u -l -w 30 5000                        # datagrams of the sensor
+nc -w 5 -h -s hello 192.168.77.50 7           # TCP echo of test board
+```
+Host with `--tap tap0` (TAP interface 192.168.77.1/24, see `app-romfs/netmgr.conf`):
+`ping 192.168.77.51`, `nc -u -l 5000`. `tests/net.lua` tests the network with
+`boards/test.lua` (ping, UDP, TCP in both directions).
 
 ### MCP23S17
 `models/mcp23s17.lua` is the 16-bit I/O expander with SPI (mode 0 or 3): all
