@@ -54,6 +54,9 @@
 /* host disk with ROMFS image (simulator option: --disk 0=<file>:ro) */
 #define ROMFS_HOST_DISK 0
 
+/* number of simulated UARTs (/dev/ttyS0..15, kernel _HOST_UART_COUNT) */
+#define SIM_UART_COUNT 16
+
 /* host disks connected by the simulator --disk option (1 -> sda, 2 -> sdb, ...) */
 #define FIRST_DATA_HOST_DISK 1
 #define LAST_DATA_HOST_DISK  3
@@ -170,10 +173,13 @@ static void open_output_stream(void)
 //==============================================================================
 static void initialize_additional_drivers(void)
 {
-        /* UARTs connected by the simulator --uart option (not connected UART drops data) */
-        driver_init("UART", 1, 0, "/dev/ttyS1");
-        driver_init("UART", 2, 0, "/dev/ttyS2");
-        driver_init("UART", 3, 0, "/dev/ttyS3");
+        /* UARTs connected by the simulator --uart option or by board models (not
+         * connected UART drops data) */
+        for (int major = 1; major < SIM_UART_COUNT; major++) {
+                char path[16];
+                snprintf(path, sizeof(path), "/dev/ttyS%d", major);
+                driver_init("UART", major, 0, path);
+        }
 
         driver_init("TTY", 0, 1, "/dev/tty1");
         driver_init("TTY", 0, 2, "/dev/tty2");

@@ -194,7 +194,8 @@ modprobe -i SPIEE 0 0 /dev/ee1 -c spi_path=/dev/spi-ee,memory_size=32768,page_si
 UARTs of the system not connected by the simulator option `--uart` (and not
 `UART:0`, the simulator terminal) can be connected to board models. UARTs are
 named as in `driver_init()`: `"UART:<major>"`, `UART:0` is `/dev/ttyS0`
-(option `--uart 0`), `UART:1` is `/dev/ttyS1` and so on. `--uart <n>=board` connects UART explicitly (a warning
+(option `--uart 0`), `UART:1` is `/dev/ttyS1` and so on up to `UART:15`
+(`siminit` initializes `/dev/ttyS1..15`). `--uart <n>=board` connects UART explicitly (a warning
 is printed when the board script does not attach a model).
 ```lua
 local dev = {}

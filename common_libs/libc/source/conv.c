@@ -365,11 +365,11 @@ char *_libc_strtoi(const char *string, int base, i32_t *value)
                 }
 
                 /* check character range */
-                if (character >= 'a') {
+                if ((character >= 'a') && (character <= 'z')) {
                         character -= 'a' - 10;
-                } else if (character >= 'A') {
+                } else if ((character >= 'A') && (character <= 'Z')) {
                         character -= 'A' - 10;
-                } else if (character >= '0') {
+                } else if ((character >= '0') && (character <= '9')) {
                         character -= '0';
                 } else {
                         break;
@@ -456,11 +456,11 @@ char *_libc_strtoll(const char *string, int base, i64_t *value)
                 }
 
                 /* check character range */
-                if (character >= 'a') {
+                if ((character >= 'a') && (character <= 'z')) {
                         character -= 'a' - 10;
-                } else if (character >= 'A') {
+                } else if ((character >= 'A') && (character <= 'Z')) {
                         character -= 'A' - 10;
-                } else if (character >= '0') {
+                } else if ((character >= '0') && (character <= '9')) {
                         character -= '0';
                 } else {
                         break;

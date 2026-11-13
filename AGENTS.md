@@ -153,11 +153,11 @@ Notes:
   `struct timeval`, ...). The only interface between both sides is
   `src/cpu/posix/host/host.h` (basic C types only). Host calls are short,
   non-blocking and executed in the critical section.
-- `--uart <n>=pty[:<link>]|<device>|board` connects UART0..3 to PTY, host
+- `--uart <n>=pty[:<link>]|<device>|board` connects UART0..15 to PTY, host
   serial port or board model (UART0 is the simulator terminal by default).
   `uart/posix` sends data in chunks (writer or service thread), host writes
   are non-blocking except the simulator terminal. `siminit` initializes
-  `/dev/ttyS1..3` (raw, no shell). UARTs not selected by `--uart` can be
+  `/dev/ttyS1..15` (raw, no shell). UARTs not selected by `--uart` can be
   attached by board scripts (`uart.attach("UART:1", dev)`, `"UART:<n>"` =
   `/dev/ttyS<n>`): `board.c` keeps RX/TX FIFOs with reception times
   (transmission time from baud rate and frame configured by the system, 10 ms

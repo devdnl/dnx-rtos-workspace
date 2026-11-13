@@ -40,7 +40,7 @@
 this:SetTitle("Home > Microcontroller > UART", "The UART module configuration.")
 
 this.PortExist = function(this, devNo)
-    return devNo <= 4
+    return devNo <= 16
 end
 ++*/
 
@@ -155,6 +155,186 @@ if this:PortExist(4) then
 end
 --*/
 #define __UART_MAJOR3_TX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(5) then
+    this:AddExtraWidget("Label", "UART4_GAP", "")
+    this:AddWidget("Spinbox", 16, 65536, "UART4 Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR4_RX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(5) then
+    this:AddWidget("Spinbox", 16, 65536, "UART4 Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR4_TX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(6) then
+    this:AddExtraWidget("Label", "UART5_GAP", "")
+    this:AddWidget("Spinbox", 16, 65536, "UART5 Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR5_RX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(6) then
+    this:AddWidget("Spinbox", 16, 65536, "UART5 Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR5_TX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(7) then
+    this:AddExtraWidget("Label", "UART6_GAP", "")
+    this:AddWidget("Spinbox", 16, 65536, "UART6 Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR6_RX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(7) then
+    this:AddWidget("Spinbox", 16, 65536, "UART6 Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR6_TX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(8) then
+    this:AddExtraWidget("Label", "UART7_GAP", "")
+    this:AddWidget("Spinbox", 16, 65536, "UART7 Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR7_RX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(8) then
+    this:AddWidget("Spinbox", 16, 65536, "UART7 Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR7_TX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(9) then
+    this:AddExtraWidget("Label", "UART8_GAP", "")
+    this:AddWidget("Spinbox", 16, 65536, "UART8 Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR8_RX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(9) then
+    this:AddWidget("Spinbox", 16, 65536, "UART8 Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR8_TX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(10) then
+    this:AddExtraWidget("Label", "UART9_GAP", "")
+    this:AddWidget("Spinbox", 16, 65536, "UART9 Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR9_RX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(10) then
+    this:AddWidget("Spinbox", 16, 65536, "UART9 Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR9_TX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(11) then
+    this:AddExtraWidget("Label", "UART10_GAP", "")
+    this:AddWidget("Spinbox", 16, 65536, "UART10 Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR10_RX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(11) then
+    this:AddWidget("Spinbox", 16, 65536, "UART10 Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR10_TX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(12) then
+    this:AddExtraWidget("Label", "UART11_GAP", "")
+    this:AddWidget("Spinbox", 16, 65536, "UART11 Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR11_RX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(12) then
+    this:AddWidget("Spinbox", 16, 65536, "UART11 Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR11_TX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(13) then
+    this:AddExtraWidget("Label", "UART12_GAP", "")
+    this:AddWidget("Spinbox", 16, 65536, "UART12 Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR12_RX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(13) then
+    this:AddWidget("Spinbox", 16, 65536, "UART12 Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR12_TX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(14) then
+    this:AddExtraWidget("Label", "UART13_GAP", "")
+    this:AddWidget("Spinbox", 16, 65536, "UART13 Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR13_RX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(14) then
+    this:AddWidget("Spinbox", 16, 65536, "UART13 Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR13_TX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(15) then
+    this:AddExtraWidget("Label", "UART14_GAP", "")
+    this:AddWidget("Spinbox", 16, 65536, "UART14 Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR14_RX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(15) then
+    this:AddWidget("Spinbox", 16, 65536, "UART14 Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR14_TX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(16) then
+    this:AddExtraWidget("Label", "UART15_GAP", "")
+    this:AddWidget("Spinbox", 16, 65536, "UART15 Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR15_RX_BUFFER_LEN__ 1024
+
+/*--
+if this:PortExist(16) then
+    this:AddWidget("Spinbox", 16, 65536, "UART15 Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR15_TX_BUFFER_LEN__ 1024
 
 #endif /* _UART_FLAGS_H_ */
 /*==============================================================================
