@@ -536,7 +536,7 @@ panel.on_touch(function(x, y, pressed) ts:touch(x, y, pressed) end, "ltdc")
 The controller is read in dnx RTOS by the `I2C` driver, registers 0x02..0x06:
 number of points, X and Y (12 bits), e.g. in the demo:
 ```
-make run-sim PANEL=1 SIM_OPTS="--board sim-env/boards/example.lua --hostfs sim-env"
+make run-sim PANEL=1 SIM_OPTS="--board sim-env/boards/example.lua --hostfs host=sim-env"
 lua /host/demos/lcdpaint.lua
 ```
 

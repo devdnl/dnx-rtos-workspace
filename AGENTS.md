@@ -146,9 +146,9 @@ Notes:
   `src/kernel/dnx-ports/GCC/Posix`, drivers `uart/posix`, `gpio/posix`,
   `i2c/posix`, `spi/posix`, `ltdc/posix`, `eth/posix`, `hostdisk/posix`
   (optional emulated block size and buffer alignment constraints for tests of
-  the block layer), `rtc/posix` (host clock + offset), file system `fs/hostfs` (host directory selected by
-  `--hostfs`, mounted by `siminit` in `/host`; paths cannot leave this
-  directory). Files using host headers are listed as `CSRC_HOST` and
+  the block layer), `rtc/posix` (host clock + offset), file system `fs/hostfs` (host directories selected by
+  `--hostfs <name>=<dir>`, mount source `host://<name>[/subdir]`, `siminit` mounts
+  `host` in `/host`; paths cannot leave the directory). Files using host headers are listed as `CSRC_HOST` and
   compiled without dnx `lib/` headers (dnx redefines `pid_t`, `time_t`,
   `struct timeval`, ...). The only interface between both sides is
   `src/cpu/posix/host/host.h` (basic C types only). Host calls are short,

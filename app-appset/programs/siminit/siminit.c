@@ -273,7 +273,7 @@ static void mount_data_disk(u8_t disk)
 /**
  * @brief Mount file systems. ROMFS image is connected by the simulator
  *        --disk 0=<file>:ro option and it is mounted in the /etc folder. Host directory selected
- *        by the --hostfs option is mounted in the /host folder. Disks selected
+ *        "host" (--hostfs host=<dir>) is mounted in the /host folder. Disks selected
  *        by the --disk 1..3 options are mounted in the /mnt folder.
  */
 //==============================================================================
@@ -285,9 +285,9 @@ static void mount_file_systems(void)
                 }
         }
 
-        /* host directory selected by the --hostfs option */
+        /* host directory selected by the --hostfs host=<dir> option */
         mkdir("/host", 0777);
-        if (mount("hostfs", "", "/host", "") != 0) {
+        if (mount("hostfs", "host://host", "/host", "") != 0) {
                 remove("/host");
         }
 

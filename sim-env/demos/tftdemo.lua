@@ -1,7 +1,7 @@
 --[[----------------------------------------------------------------------------
   TFT display demo executed in dnx RTOS (lua program) in the POSIX simulator
   with the example board and the board panel:
-    make run-sim PANEL=1 SIM_OPTS="--board sim-env/boards/example.lua --hostfs sim-env"
+    make run-sim PANEL=1 SIM_OPTS="--board sim-env/boards/example.lua --hostfs host=sim-env"
     lua /host/demos/tftdemo.lua [seconds]
 
   Draws on the ST7789 display model (240x320, RGB565) connected to SPI:2

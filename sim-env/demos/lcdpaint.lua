@@ -1,7 +1,7 @@
 --[[----------------------------------------------------------------------------
   LCD paint demo executed in dnx RTOS (lua program) in the POSIX simulator
   with the example board and the board panel:
-    make run-sim PANEL=1 SIM_OPTS="--board sim-env/boards/example.lua --hostfs sim-env"
+    make run-sim PANEL=1 SIM_OPTS="--board sim-env/boards/example.lua --hostfs host=sim-env"
     lua /host/demos/lcdpaint.lua
 
   Draws on the LCD (LTDC driver, /dev/lcd, RGB565) where the LCD of the board

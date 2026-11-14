@@ -171,7 +171,7 @@
             <div class="lcd off" data-lcd-block="ltdc">
                 <canvas data-lcd="ltdc"></canvas>
                 <p class="lcd-off">LCD is not active: <code>modprobe -i LTDC 0 0 /dev/lcd -c pixel_format=rgb565</code>,
-                    demo: <code>lua /host/demos/lcdpaint.lua</code> (option <code>--hostfs sim-env</code>)</p>
+                    demo: <code>lua /host/demos/lcdpaint.lua</code> (option <code>--hostfs host=sim-env</code>)</p>
             </div>
         </section>
 
@@ -181,7 +181,7 @@
             <div class="lcd off" data-lcd-block="tft">
                 <canvas data-lcd="tft"></canvas>
                 <p class="lcd-off">Display is off (sleep or DISPOFF), demo: <code>lua /host/demos/tftdemo.lua</code>
-                    (option <code>--hostfs sim-env</code>)</p>
+                    (option <code>--hostfs host=sim-env</code>)</p>
             </div>
         </section>
     </div>

@@ -83,13 +83,13 @@
     mkdir /mnt/sd; mount /dev/sdcard ext4fs /mnt/sd
 
   dnx RTOS (shell), LCD and touch panel (demo sim-env/demos/lcdpaint.lua,
-  simulator option --hostfs sim-env):
+  simulator option --hostfs host=sim-env):
     modprobe -i LTDC 0 0 /dev/lcd -c pixel_format=rgb565
     modprobe -i I2C 0 5 /dev/i2c-ts -c address=0x38,sub_addr_mode=1
     lua /host/demos/lcdpaint.lua
 
   dnx RTOS (shell), TFT display (demo sim-env/demos/tftdemo.lua, simulator
-  option --hostfs sim-env, D/C pin is controlled by /dev/gpiob):
+  option --hostfs host=sim-env, D/C pin is controlled by /dev/gpiob):
     modprobe -i GPIO 1 0 /dev/gpiob
     modprobe -i SPI 2 0 /dev/spi-tft -c cs_port=1,cs_pin=1
     lua /host/demos/tftdemo.lua

@@ -18,6 +18,7 @@
 #             on SD card model (SDSPI driver), board panel protocol (socket of tools/simpanel.py,
 #             also controls of udp_sensor.panel()),
 #           - fstest on ramfs (/tmp) and hostfs (/host, temporary host directory),
+#           - two host directories (--hostfs host=... aux=..., sim-env/tests/hostfs.lua),
 #           - fstest on FAT and ext4 partitions of temporary disk image (/mnt/sda1, /mnt/sda2),
 #             image is checked by fsck.fat and e2fsck after test (requires dosfstools and
 #             e2fsprogs, otherwise tests are skipped),
@@ -761,7 +762,15 @@ class TestRunner:
             print("ROMFS image error: %s" % e)
             romfs = None
 
-        argv = [args.sim, "--disk", "0=%s:ro" % args.rom, "--hostfs", hostfs_dir]
+        # second host directory (hostfs: directories)
+        aux_dir = os.path.join(tmpdir, "aux")
+        os.makedirs(os.path.join(aux_dir, "sub"))
+        with open(os.path.join(aux_dir, "aux.txt"), "w") as f:
+            f.write("aux")
+        with open(os.path.join(aux_dir, "sub", "sub.txt"), "w") as f:
+            f.write("sub")
+
+        argv = [args.sim, "--disk", "0=%s:ro" % args.rom, "--hostfs", "host=" + hostfs_dir, "--hostfs", "aux=" + aux_dir]
         if args.drvset:
             argv += ["--drvset", args.drvset]
         if disk:
@@ -935,6 +944,9 @@ class TestRunner:
                               ("mount /dev/blk ext4fs /mnt/blk",), "/dev/blk")
         elif self.selected("fstest: ext2 on blkdev"):
             self.result("fstest: ext2 on blkdev", SKIP, "requires 'blkdev: constraints' test")
+
+        # host directories selected by name (--hostfs host=... aux=...)
+        self.summary_test(sim, "hostfs: directories", "/host/sim-env", "lua hostfs.lua", DEFAULT_TIMEOUT)
 
         shutil.rmtree(os.path.join(args.hostfs_dir, "sim-env"), ignore_errors=True)
 

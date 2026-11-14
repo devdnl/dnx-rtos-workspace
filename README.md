@@ -321,10 +321,10 @@ The simulator is built by the `i686-unknown-linux-musl-` toolchain (installed
 in the Docker image on x86_64 hosts) as a static executable, so it can be
 started also outside the container. Program options:
 ```
-build/dnx-sim [--ram <KiB>] [--disk <n>=<file>[:ro]] [--hostfs <dir>]
+build/dnx-sim [--ram <KiB>] [--disk <n>=<file>[:ro]] [--hostfs <name>=<dir>]
               [--uart <n>=pty[:<link>]|<device>] [--tap <name>]
               [--board <script> [--panel <socket>]]
-make run-sim SIM_OPTS="--hostfs ."
+make run-sim SIM_OPTS="--hostfs host=."
 ```
 - `--ram` sets size of RAM (in KiB),
 - `--disk` connects host file to the `HOSTDISK` driver (major number `<n>`);
@@ -339,9 +339,11 @@ make run-sim SIM_OPTS="--hostfs ."
   block devices, e.g. `modprobe -i HOSTDISK 4 0 /dev/blk -c
   block_size=512,buffer_align=32` (the kernel block layer splits unaligned
   requests and uses bounce buffers),
-- `--hostfs` shares host directory, `siminit` mounts it in `/host` (the `hostfs`
-  file system, its subdirectory can be mounted too:
-  `mount /sub/dir hostfs /mnt ro`),
+- `--hostfs` shares host directory as `<name>` (option can be used many times),
+  the `hostfs` file system mounts directory selected by source
+  `host://<name>[/subdir]`, e.g. `mount host://www hostfs /mnt/www`,
+  `mount host://www/sub/dir hostfs /mnt ro`; `siminit` mounts directory `host`
+  in `/host`,
 - `--uart` connects `UART<n>` (`/dev/ttyS<n>`, n = 0..3) to the new pseudo
   terminal (its path is printed at start, optional `<link>` is a symbolic link
   to it, e.g. `--uart 1=pty:/tmp/ttyDNX1`, then `picocom /tmp/ttyDNX1`) or to
@@ -419,6 +421,7 @@ test programs are executed in the shell and their `SUMMARY:` lines are checked:
 | `fstest: ext2 on sdspi` | `fstest` on ext2 file system of the SD card model (SDSPI driver) |
 | `board: panel`   | board panel protocol: socket of `tools/simpanel.py`, output, input and control signals (`sim-env/tests/panel.lua`), LCD frame of `LTDC` driver and touch read from FT5336 model (`sim-env/tests/lcd.lua`) |
 | `fstest: ramfs`  | `fstest` in `/tmp` |
+| `hostfs: directories` | two host directories (`--hostfs host=... --hostfs aux=...`): mount by name, subdirectory read only, unknown name and `..` rejected (`sim-env/tests/hostfs.lua`) |
 | `fstest: hostfs` | `fstest` in temporary host directory (`/host`) |
 | `fstest: fatfs`  | `fstest` on FAT partition of temporary disk image, checked by `fsck.fat` after test |
 | `fstest: ext4fs` | `fstest` on ext4 partition of temporary disk image, checked by `e2fsck` after test |

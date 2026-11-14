@@ -41,6 +41,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define IPC_ANSWER_TIMEOUT_MS   10000
 
 /*==============================================================================
   Local types, enums definitions
@@ -228,6 +229,8 @@ int httpsrv_interpreter_init(httpsrv_thread_t *self)
                 lua_close(L);
                 return EADDRINUSE;
         }
+
+        socket_set_recv_timeout(self->interpreter.ipc_socket, IPC_ANSWER_TIMEOUT_MS);
 
         self->interpreter.object = L;
 
@@ -531,6 +534,17 @@ static int luafn_ipc_request(lua_State *L)
         luaL_checktype(L, 2, LUA_TTABLE);
 
         httpsrv_thread_t *self = get_http_thread_self(L);
+
+        /*
+         * Remove late answers of previous requests (server answered after
+         * timeout), otherwise the answer would be read as answer of this request.
+         */
+        socket_set_recv_timeout(self->interpreter.ipc_socket, 0);
+        NET_UDS_sockaddr_t late_addr;
+        while (socket_recvfrom(self->interpreter.ipc_socket, self->interpreter.tmp_buf,
+                       self->interpreter.tmp_buf_size, 0, &late_addr, sizeof(late_addr)) > 0) {
+        }
+        socket_set_recv_timeout(self->interpreter.ipc_socket, IPC_ANSWER_TIMEOUT_MS);
 
         /*
          * Compose request. Lua table -> bs
