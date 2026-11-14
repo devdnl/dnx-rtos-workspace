@@ -44,8 +44,13 @@
                    (counts received bytes)
     192.168.77.51  UDP sensor: broadcast "T=<value>" to port 5000 (500 ms,
                    enabled by test)
+    192.168.77.52  UDP sensor: unicast to the system port 5001, text by format
+                   function "S52 <value> #<datagram number>", no periodic
+                   transmissions (only after change and on request), value
+                   also by the panel (P_ETH)
     control commands (I2C:0 0x30): "net sensor <value>", "net sensor_en <0|1>",
-    "net sensor_tx" (number of datagrams), "net src <n>", "net sink" (last
+    "net sensor_tx" (number of datagrams), "net sensor_send", "net sensor2
+    <value>", "net sensor2_send", "net sensor2_tx", "net src <n>", "net sink" (last
     connection: "<bytes> <sum32> <closed 0|1>"), "net connect <ip> <port> <text>"
     (TCP client sends text and closes), "net client" (state of client:
     "connecting", "sent", "refused", ...), "net udp <ip> <port> <text>",
@@ -75,6 +80,7 @@
     P_OUT  shows PA18 (system output)
     P_IN   drives PA19 (system input)
     P_VAL  value, P_CTL control (P_VAL = 2 * P_CTL)
+    P_ETH* controls of UDP sensor 192.168.77.52 (udp_sensor.panel())
     touch of LCD "ltdc" (LTDC driver) -> FT5336 (I2C:0 0x38, INT -> PA28), tests/lcd.lua
     touch of LCD "tft" (ST7789) -> P_TOUCH value: "<x> <y> <0|1> <lcd id>"
 ------------------------------------------------------------------------------]]
@@ -262,6 +268,12 @@ end)
 local sensor_eth = udp_sensor.new{ip = "192.168.77.51", port = 5000, value = 21.5, format = "T=%.1f",
                                   interval = 500, delay = 500, enabled = false}:attach()
 
+local sensor_eth2 = udp_sensor.new{ip = "192.168.77.52", port = 5001, dst = "192.168.77.2", value = 10,
+                                   interval = 3600000, delay = 3600000,
+                                   format = function(v, s)
+                                       return string.format("S52 %.2f #%d", v, s:transmissions() + 1)
+                                   end}:attach()
+
 OW_COMMANDS.net = function(what, a, b, ...)
     if what == "sensor" then
         sensor_eth:set_value(assert(tonumber(a)))
@@ -269,6 +281,14 @@ OW_COMMANDS.net = function(what, a, b, ...)
         sensor_eth:set_enabled(a == "1")
     elseif what == "sensor_tx" then
         return tostring(sensor_eth:transmissions())
+    elseif what == "sensor_send" then
+        return tostring(sensor_eth:send())
+    elseif what == "sensor2" then
+        sensor_eth2:set_value(assert(tonumber(a)))
+    elseif what == "sensor2_send" then
+        return tostring(sensor_eth2:send())
+    elseif what == "sensor2_tx" then
+        return tostring(sensor_eth2:transmissions())
     elseif what == "src" then
         net_state.src = assert(tonumber(a))
     elseif what == "sink" then
@@ -388,5 +408,8 @@ st7789.new{id = "tft", width = 240, height = 320, dc = "PB0"}:attach("SPI:3", "P
 panel.on_touch(function(x, y, pressed, id)
     if id ~= "ltdc" then panel.set("P_TOUCH", string.format("%d %d %d %s", x, y, pressed and 1 or 0, id)) end
 end)
+
+-- controls of UDP sensor 192.168.77.52: P_ETH, P_ETH_EN, P_ETH_SEND, P_ETH_TX, P_ETH_TEXT
+udp_sensor.panel(sensor_eth2, "P_ETH", {label = "UDP sensor", min = -40, max = 85})
 
 print("test board loaded")

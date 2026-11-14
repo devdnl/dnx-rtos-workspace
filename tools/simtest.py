@@ -15,7 +15,8 @@
 #             SPI, SPIEE/eefs, MCP23S17 (dnx.spi), UART (echo, NMEA GPS), Ethernet (netdev models: ping,
 #             UDP, TCP by nc program) and SDSPI/ext2 tests (sim-env/tests/*.lua) executed by dnx Lua
 #             interpreter, fstest on ext2
-#             on SD card model (SDSPI driver), board panel protocol (socket of tools/simpanel.py),
+#             on SD card model (SDSPI driver), board panel protocol (socket of tools/simpanel.py,
+#             also controls of udp_sensor.panel()),
 #           - fstest on ramfs (/tmp) and hostfs (/host, temporary host directory),
 #           - fstest on FAT and ext4 partitions of temporary disk image (/mnt/sda1, /mnt/sda2),
 #             image is checked by fsck.fat and e2fsck after test (requires dosfstools and
@@ -620,6 +621,30 @@ class TestRunner:
                 s.sendall(b"set P_IN b0\n")
                 if not wait(lambda: state.get("P_IN") is False) or dnx("") != "0":
                     errors.append("P_IN does not release PA19")
+
+                # controls of UDP sensor (udp_sensor.panel()): value from the panel is sent
+                # after change, "send now" button, number of datagrams and the last datagram
+                if not {"P_ETH", "P_ETH_EN", "P_ETH_SEND", "P_ETH_TX", "P_ETH_TEXT"} <= set(signals):
+                    errors.append("signals of udp_sensor.panel() missing")
+                else:
+                    with lock:
+                        tx0 = state.get("P_ETH_TX") or 0
+                    s.sendall(b"set P_ETH n30.5\n")
+                    if not wait(lambda: state.get("P_ETH_TX") == tx0 + 1
+                                and state.get("P_ETH_TEXT") == "S52 30.50 #%d" % (tx0 + 1)):
+                        errors.append("P_ETH: datagram not sent (TX %r, text %r)"
+                                      % (state.get("P_ETH_TX"), state.get("P_ETH_TEXT")))
+                    s.sendall(b"set P_ETH_SEND b1\n")
+                    s.sendall(b"set P_ETH_SEND b0\n")
+                    if not wait(lambda: state.get("P_ETH_TX") == tx0 + 2):
+                        errors.append("P_ETH_SEND: datagram not sent (TX %r)" % state.get("P_ETH_TX"))
+                    s.sendall(b"set P_ETH_EN b0\n")
+                    s.sendall(b"set P_ETH_SEND b1\n")
+                    s.sendall(b"set P_ETH_SEND b0\n")
+                    time.sleep(0.5)
+                    if state.get("P_ETH_TX") != tx0 + 2:
+                        errors.append("P_ETH_EN: disabled sensor sends datagrams")
+                    s.sendall(b"set P_ETH_EN b1\n")
 
                 # LCD (LTDC driver): line 10 is red, touch is read from FT5336 by I2C driver
                 ok, out = sim.run("lua lcd.lua init")

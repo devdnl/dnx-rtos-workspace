@@ -2,10 +2,12 @@
   Ethernet test executed in dnx RTOS (lua program) with board boards/test.lua:
   network of the simulator connected to models of the board (eth.attach(),
   models/netdev.lua): ping in both directions, UDP (echo, unicast from the
-  model, broadcast of UDP sensor models/udp_sensor.lua), TCP (echo, transfer
-  in both directions, connection refused, connection from the model to the
-  system). The system uses programs ping and nc, models are controlled by the
-  test control device (I2C:0 0x30).
+  model, UDP sensors of models/udp_sensor.lua: broadcast, unicast, format
+  function, transmission after change and on request, disabled sensor), TCP
+  (echo, transfer in both directions, connection refused, connection from the
+  model to the system). The system uses programs ping and nc, models are
+  controlled by the test control device (I2C:0 0x30); udp_sensor.panel() is
+  tested by the panel protocol test of tools/simtest.py.
 ------------------------------------------------------------------------------]]
 
 local T = require("testlib")
@@ -153,6 +155,7 @@ test("UDP: model -> system (unicast)", function()
 end)
 
 test("UDP broadcast of sensor", function()
+    local tx0 = tonumber(control("net sensor_tx"))
     control("net sensor 23.4")
     control("net sensor_en 1")
     local ok, out = T.run("nc -v -u -l -w 5 -c 2 5000")
@@ -160,6 +163,59 @@ test("UDP broadcast of sensor", function()
     expect(ok, "nc failed: " .. out)
     local _, n = out:gsub("192%.168%.77%.51:5000 T=23%.4", "")
     expect(n == 2, "datagrams: " .. out)
+    local tx = tonumber(control("net sensor_tx"))
+    expect(tx >= tx0 + 2, "transmissions: " .. tx0 .. " -> " .. tx)
+end)
+
+test("UDP sensor disabled: no transmissions", function()
+    local tx0 = control("net sensor_tx")
+    expect(control("net sensor_send") == "false", "send() of disabled sensor returned true")
+    dnx.sys.msleep(1200)                    -- more than 2 periods (500 ms)
+    expect(control("net sensor_tx") == tx0, "transmissions: " .. tx0 .. " -> " .. control("net sensor_tx"))
+end)
+
+-- receive datagrams of sensor 192.168.77.52 (unicast to port 5001) while fn() is
+-- executed, returns lines of nc output (may be empty) and exit status of nc
+local function sensor2_receive(count, timeout, fn)
+    os.remove("/tmp/net_s2")
+    local pid = spawn("nc -v -u -l -w " .. timeout .. " -c " .. count .. " 5001", "/tmp/net_s2")
+    dnx.sys.msleep(300)
+    fn()
+    local status = wait(pid, (timeout + 5) * 1000)
+    local lines = {}
+    for l in (read_file("/tmp/net_s2") or ""):gmatch("[^\n]+") do
+        if l:find("^192%.168%.77%.52:5001 ") then lines[#lines + 1] = l:sub(20) end
+    end
+    return lines, status
+end
+
+test("UDP sensor: unicast, format function, send after change", function()
+    local tx0 = tonumber(control("net sensor2_tx"))
+    local lines, status = sensor2_receive(1, 5, function() control("net sensor2 12.5") end)
+    expect(status == 0 and #lines == 1, "datagrams: " .. table.concat(lines, " | "))
+    expect(lines[1] == string.format("S52 12.50 #%d", tx0 + 1), "datagram: " .. tostring(lines[1]))
+    expect(tonumber(control("net sensor2_tx")) == tx0 + 1, "transmissions")
+end)
+
+test("UDP sensor: quick changes are sent once", function()
+    local tx0 = tonumber(control("net sensor2_tx"))
+    local lines = sensor2_receive(2, 2, function()
+        control("net sensor2 1")
+        control("net sensor2 2")
+        control("net sensor2 3.25")
+    end)
+    expect(#lines == 1, "datagrams: " .. table.concat(lines, " | "))
+    expect(lines[1] == string.format("S52 3.25 #%d", tx0 + 1), "datagram: " .. tostring(lines[1]))
+    expect(tonumber(control("net sensor2_tx")) == tx0 + 1, "transmissions: " .. control("net sensor2_tx"))
+end)
+
+test("UDP sensor: send on request", function()
+    local tx0 = tonumber(control("net sensor2_tx"))
+    local lines, status = sensor2_receive(1, 5, function()
+        expect(control("net sensor2_send") == "true", "send() returned false")
+    end)
+    expect(status == 0 and lines[1] == string.format("S52 3.25 #%d", tx0 + 1),
+           "datagrams: " .. table.concat(lines, " | "))
 end)
 
 test("TCP echo", function()
@@ -236,7 +292,7 @@ end)
 
 test("Close", function()
     ctl:close()
-    for _, f in ipairs({"net_ping", "net_udp", "net_in", "net_out", "net_src", "net_srv", "net_srv_log"}) do
+    for _, f in ipairs({"net_ping", "net_udp", "net_in", "net_out", "net_src", "net_srv", "net_srv_log", "net_s2"}) do
         os.remove("/tmp/" .. f)
     end
 end)
