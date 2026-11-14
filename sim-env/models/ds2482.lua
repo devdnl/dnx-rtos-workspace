@@ -60,11 +60,11 @@ DEV.__index = DEV
 local ST_1WB, ST_PPD, ST_SD, ST_LL, ST_RST, ST_SBR, ST_TSB, ST_DIR = 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
 local CFG_SPU, CFG_1WS = 0x04, 0x08
 
-local T_RESET = {[false] = 1.148, [true] = 0.146}   -- ms (tRSTL + tRSTH)
-local T_SLOT  = {[false] = 0.0725, [true] = 0.0106} -- ms
+local T_RESET = { [false] = 1.148, [true] = 0.146 } -- ms (tRSTL + tRSTH)
+local T_SLOT = { [false] = 0.0725, [true] = 0.0106 } -- ms
 
-local PARAM = {[0xE1] = true, [0xD2] = true, [0x87] = true, [0xA5] = true, [0x78] = true}
-local NO_PARAM = {[0xF0] = true, [0xB4] = true, [0x96] = true}
+local PARAM = { [0xE1] = true, [0xD2] = true, [0x87] = true, [0xA5] = true, [0x78] = true }
+local NO_PARAM = { [0xF0] = true, [0xB4] = true, [0x96] = true }
 
 function M.new(opts)
     opts = opts or {}
@@ -72,7 +72,7 @@ function M.new(opts)
     d.ow = opts.bus or onewire.new()
     d.timing = opts.timing ~= false
     d.cfg = 0
-    d.st = ST_RST        -- status bits except 1WB and LL
+    d.st = ST_RST -- status bits except 1WB and LL
     d.data = 0xFF
     d.ptr = 0xF0
     d.busy_until = 0
@@ -91,7 +91,9 @@ function DEV:sync()
         local p = self.pending
         self.pending = nil
         self.st = (self.st & ~p.mask) | (p.bits & p.mask)
-        if p.data then self.data = p.data end
+        if p.data then
+            self.data = p.data
+        end
         if p.spu then
             self.ow:power(true)
             self.spu_active = true
@@ -107,8 +109,12 @@ end
 function DEV:status()
     self:sync()
     local s = self.st & ~(ST_1WB | ST_LL)
-    if self.pending then s = s | ST_1WB end
-    if self.ow:level() ~= 0 then s = s | ST_LL end
+    if self.pending then
+        s = s | ST_1WB
+    end
+    if self.ow:level() ~= 0 then
+        s = s | ST_LL
+    end
     return s
 end
 
@@ -132,8 +138,10 @@ function DEV:operation(name, slots, reset, use_spu, fn)
     self:end_spu()
     local od = self.cfg & CFG_1WS ~= 0
     local mask, bits, data = fn(od)
-    local p = {mask = mask or 0, bits = bits or 0, data = data}
-    if use_spu and self.cfg & CFG_SPU ~= 0 then p.spu = true end
+    local p = { mask = mask or 0, bits = bits or 0, data = data }
+    if use_spu and self.cfg & CFG_SPU ~= 0 then
+        p.spu = true
+    end
     self.ptr = 0xF0
     if self.timing then
         self.busy_until = self:now() + (reset and T_RESET[od] or 0) + slots * T_SLOT[od]
@@ -147,22 +155,20 @@ end
 function DEV:execute(cmd, param)
     local ow = self.ow
 
-    if cmd == 0xF0 then                          -- DRST
+    if cmd == 0xF0 then -- DRST
         self.pending = nil
         self:end_spu()
         self.cfg = 0
         self.st = ST_RST
         self.ptr = 0xF0
         return true
-
-    elseif cmd == 0xE1 then                      -- SRP
+    elseif cmd == 0xE1 then -- SRP
         if param ~= 0xF0 and param ~= 0xE1 and param ~= 0xC3 then
             return false
         end
         self.ptr = param
         return true
-
-    elseif cmd == 0xD2 then                      -- WCFG
+    elseif cmd == 0xD2 then -- WCFG
         if self:busy() then
             print("ds2482: WCFG ignored, 1-Wire busy (1WB = 1)")
             return true
@@ -170,45 +176,46 @@ function DEV:execute(cmd, param)
         if (param >> 4) == (~param & 0x0F) then
             self.cfg = param & 0x0F
             self.st = self.st & ~ST_RST
-            if self.cfg & CFG_SPU == 0 then self:end_spu() end
+            if self.cfg & CFG_SPU == 0 then
+                self:end_spu()
+            end
         else
             print(string.format("ds2482: WCFG 0x%02X ignored (upper nibble is not complement of lower)", param))
         end
         self.ptr = 0xC3
         return true
-
-    elseif cmd == 0xB4 then                      -- 1WRS
+    elseif cmd == 0xB4 then -- 1WRS
         self:operation("1WRS", 0, true, false, function(od)
             local presence, short = ow:reset(od)
             return ST_PPD | ST_SD, (presence and ST_PPD or 0) | (short and ST_SD or 0)
         end)
         return true
-
-    elseif cmd == 0x87 then                      -- 1WSB
+    elseif cmd == 0x87 then -- 1WSB
         self:operation("1WSB", 1, false, true, function()
             local v = ow:slot((param >> 7) & 1)
             return ST_SBR, v ~= 0 and ST_SBR or 0
         end)
         return true
-
-    elseif cmd == 0xA5 then                      -- 1WWB
+    elseif cmd == 0xA5 then -- 1WWB
         self:operation("1WWB", 8, false, true, function()
-            for i = 0, 7 do ow:slot((param >> i) & 1) end
+            for i = 0, 7 do
+                ow:slot((param >> i) & 1)
+            end
             return 0, 0
         end)
         return true
-
-    elseif cmd == 0x96 then                      -- 1WRB
+    elseif cmd == 0x96 then -- 1WRB
         self:operation("1WRB", 8, false, false, function()
             local v = 0
             for i = 0, 7 do
-                if ow:slot(1) ~= 0 then v = v | (1 << i) end
+                if ow:slot(1) ~= 0 then
+                    v = v | (1 << i)
+                end
             end
             return 0, 0, v
         end)
         return true
-
-    elseif cmd == 0x78 then                      -- 1WT
+    elseif cmd == 0x78 then -- 1WT
         self:operation("1WT", 3, false, true, function()
             local id = ow:slot(1)
             local cmp = ow:slot(1)
@@ -222,7 +229,7 @@ function DEV:execute(cmd, param)
             end
             ow:slot(dir)
             return ST_SBR | ST_TSB | ST_DIR,
-                   (id ~= 0 and ST_SBR or 0) | (cmp ~= 0 and ST_TSB or 0) | (dir ~= 0 and ST_DIR or 0)
+                (id ~= 0 and ST_SBR or 0) | (cmp ~= 0 and ST_TSB or 0) | (dir ~= 0 and ST_DIR or 0)
         end)
         return true
     end
@@ -247,7 +254,7 @@ function DEV:write(byte)
     elseif NO_PARAM[byte] then
         return self:execute(byte)
     end
-    return false  -- unknown command: NACK
+    return false -- unknown command: NACK
 end
 
 function DEV:read()
@@ -261,7 +268,7 @@ function DEV:read()
 end
 
 function DEV:stop()
-    self.cmd = nil  -- command without parameter is not executed
+    self.cmd = nil -- command without parameter is not executed
 end
 
 function DEV:attach(bus, address)

@@ -294,7 +294,9 @@ both C preprocessor and make**. Rules:
   and newer files use MIT. Keep the license of the file you edit; ask before
   choosing a license for a new file if unclear.
 - Code, comments and commit messages are in English. Commit messages are short
-  sentences ending with a period, e.g. `Fix in the VFS.`, `Improvements in df.`
+  sentences ending with a period, e.g. `Fix in the VFS.`, `Improvements in df.`\
+- Formatting for Lua scripts should be done by using command line:
+  `stylua --indent-type Spaces --column-width 120 <file>`.
 
 ## Kernel-side conventions (`kernel/src`)
 

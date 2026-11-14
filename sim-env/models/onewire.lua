@@ -60,10 +60,11 @@ function M.new(opts)
 end
 
 function BUS:add(dev)
-    assert(type(dev) == "table" and dev.ow_reset and dev.ow_drive and dev.ow_sample,
-           "onewire: device object expected")
+    assert(type(dev) == "table" and dev.ow_reset and dev.ow_drive and dev.ow_sample, "onewire: device object expected")
     for _, d in ipairs(self.list) do
-        if d == dev then return dev end
+        if d == dev then
+            return dev
+        end
     end
     table.insert(self.list, dev)
     return dev
@@ -80,7 +81,7 @@ function BUS:remove(dev)
 end
 
 function BUS:devices()
-    return {table.unpack(self.list)}
+    return { table.unpack(self.list) }
 end
 
 function BUS:set_short(on)
@@ -92,10 +93,14 @@ function BUS:level()
 end
 
 function BUS:reset(overdrive)
-    if self.powered then self:power(false) end
+    if self.powered then
+        self:power(false)
+    end
     local presence = false
     for _, d in ipairs(self.list) do
-        if d:ow_reset(overdrive and true or false) then presence = true end
+        if d:ow_reset(overdrive and true or false) then
+            presence = true
+        end
     end
     if self.short then
         return false, true
@@ -104,11 +109,17 @@ function BUS:reset(overdrive)
 end
 
 function BUS:slot(bit)
-    if self.powered then self:power(false) end
+    if self.powered then
+        self:power(false)
+    end
     local level = (bit ~= 0 and bit ~= false) and 1 or 0
-    if self.short then level = 0 end
+    if self.short then
+        level = 0
+    end
     for _, d in ipairs(self.list) do
-        if d:ow_drive() == 0 then level = 0 end
+        if d:ow_drive() == 0 then
+            level = 0
+        end
     end
     for _, d in ipairs(self.list) do
         d:ow_sample(level)
@@ -121,7 +132,9 @@ function BUS:power(on)
     if self.powered ~= on then
         self.powered = on
         for _, d in ipairs(self.list) do
-            if d.ow_power then d:ow_power(on) end
+            if d.ow_power then
+                d:ow_power(on)
+            end
         end
     end
 end

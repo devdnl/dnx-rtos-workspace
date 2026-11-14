@@ -34,7 +34,9 @@ function M.new(opts)
     dev.int = opts.int
     dev.handlers = {}
     dev.last = dev:pins()
-    if dev.int then gpio.set(dev.int, true) end
+    if dev.int then
+        gpio.set(dev.int, true)
+    end
     return dev
 end
 
@@ -86,7 +88,9 @@ function PCF:write(byte)
     self.last = self:pins()
     self:update_int()
     if changed ~= 0 then
-        for _, fn in ipairs(self.handlers) do fn(byte, changed) end
+        for _, fn in ipairs(self.handlers) do
+            fn(byte, changed)
+        end
     end
     return true
 end

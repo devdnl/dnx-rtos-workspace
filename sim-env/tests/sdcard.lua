@@ -9,14 +9,16 @@ local T = require("testlib")
 local lfs = require("lfs")
 local test, expect = T.test, T.expect
 
-local SD     = "/dev/sdcard"
-local SD_V1  = "/dev/sdcard-v1"
-local MNT    = "/mnt/sdcard"
+local SD = "/dev/sdcard"
+local SD_V1 = "/dev/sdcard-v1"
+local MNT = "/mnt/sdcard"
 local SECTOR = 512
 
 local function run(cmd)
     local ok, out = T.run(cmd)
-    if not ok then error(cmd .. ": " .. out, 2) end
+    if not ok then
+        error(cmd .. ": " .. out, 2)
+    end
     return out
 end
 
@@ -41,7 +43,9 @@ local function dev_rw(path, sector, data)
     f:seek("set", sector * SECTOR)
     local rd, rerr = f:read(#data)
     f:close()
-    if not rd then error("read error: " .. tostring(rerr), 2) end
+    if not rd then
+        error("read error: " .. tostring(rerr), 2)
+    end
     return rd
 end
 
@@ -53,16 +57,18 @@ end
 
 local function read_file(path)
     local f = io.open(path, "rb")
-    if not f then return nil end
+    if not f then
+        return nil
+    end
     local data = f:read("a")
     f:close()
     return data
 end
 
 local FILES = {
-    {MNT .. "/small.txt", "Hello from SD card!\n"},
-    {MNT .. "/big.bin", pattern(20000, 7)},
-    {MNT .. "/dir/nested.bin", pattern(1500, 8)},
+    { MNT .. "/small.txt", "Hello from SD card!\n" },
+    { MNT .. "/big.bin", pattern(20000, 7) },
+    { MNT .. "/dir/nested.bin", pattern(1500, 8) },
 }
 
 test("Create SPI and SDSPI devices (modprobe -c)", function()
@@ -92,7 +98,9 @@ end)
 local function iostat(path, dir)
     local out = run("iostat " .. path)
     local req, bytes, drv, unal = out:match(dir .. "%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)")
-    if not req then error("iostat output: " .. out, 2) end
+    if not req then
+        error("iostat output: " .. out, 2)
+    end
     return tonumber(req), tonumber(bytes), tonumber(drv), tonumber(unal)
 end
 
@@ -146,14 +154,20 @@ end)
 
 test("Write and read files", function()
     run("mkdir " .. MNT .. "/dir")
-    for _, f in ipairs(FILES) do write_file(f[1], f[2]) end
-    for _, f in ipairs(FILES) do expect(read_file(f[1]) == f[2], f[1] .. ": data mismatch") end
+    for _, f in ipairs(FILES) do
+        write_file(f[1], f[2])
+    end
+    for _, f in ipairs(FILES) do
+        expect(read_file(f[1]) == f[2], f[1] .. ": data mismatch")
+    end
 end)
 
 test("Remount and read files", function()
     run("umount " .. MNT)
     run("mount " .. SD .. " ext4fs " .. MNT)
-    for _, f in ipairs(FILES) do expect(read_file(f[1]) == f[2], f[1] .. ": data mismatch") end
+    for _, f in ipairs(FILES) do
+        expect(read_file(f[1]) == f[2], f[1] .. ": data mismatch")
+    end
 end)
 
 test("Unmount", function()

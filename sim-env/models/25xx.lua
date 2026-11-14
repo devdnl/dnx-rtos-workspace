@@ -32,16 +32,16 @@
 local M = {}
 
 M.TYPES = {
-    ["25aa010"]  = {size = 128,    page = 16,  addr_bytes = 1},
-    ["25aa020"]  = {size = 256,    page = 16,  addr_bytes = 1},
-    ["25lc080"]  = {size = 1024,   page = 16,  addr_bytes = 2},
-    ["25lc160"]  = {size = 2048,   page = 16,  addr_bytes = 2},
-    ["25lc320"]  = {size = 4096,   page = 32,  addr_bytes = 2},
-    ["25lc640"]  = {size = 8192,   page = 32,  addr_bytes = 2},
-    ["25lc128"]  = {size = 16384,  page = 64,  addr_bytes = 2},
-    ["25lc256"]  = {size = 32768,  page = 64,  addr_bytes = 2},
-    ["25lc512"]  = {size = 65536,  page = 128, addr_bytes = 2},
-    ["25lc1024"] = {size = 131072, page = 256, addr_bytes = 3},
+    ["25aa010"] = { size = 128, page = 16, addr_bytes = 1 },
+    ["25aa020"] = { size = 256, page = 16, addr_bytes = 1 },
+    ["25lc080"] = { size = 1024, page = 16, addr_bytes = 2 },
+    ["25lc160"] = { size = 2048, page = 16, addr_bytes = 2 },
+    ["25lc320"] = { size = 4096, page = 32, addr_bytes = 2 },
+    ["25lc640"] = { size = 8192, page = 32, addr_bytes = 2 },
+    ["25lc128"] = { size = 16384, page = 64, addr_bytes = 2 },
+    ["25lc256"] = { size = 32768, page = 64, addr_bytes = 2 },
+    ["25lc512"] = { size = 65536, page = 128, addr_bytes = 2 },
+    ["25lc1024"] = { size = 131072, page = 256, addr_bytes = 3 },
 }
 
 local CMD_WRSR, CMD_WRITE, CMD_READ, CMD_WRDI, CMD_RDSR, CMD_WREN = 0x01, 0x02, 0x03, 0x04, 0x05, 0x06
@@ -52,15 +52,17 @@ EEPROM.__index = EEPROM
 function M.new(opts)
     opts = opts or {}
     local t = opts.type and M.TYPES[string.lower(opts.type)]
-    if opts.type and not t then error("25xx: unknown type: " .. tostring(opts.type), 2) end
+    if opts.type and not t then
+        error("25xx: unknown type: " .. tostring(opts.type), 2)
+    end
     t = t or {}
 
     local ee = setmetatable({}, EEPROM)
-    ee.size       = opts.size or t.size
-    ee.page       = opts.page or t.page
+    ee.size = opts.size or t.size
+    ee.page = opts.page or t.page
     ee.addr_bytes = opts.addr_bytes or t.addr_bytes
     ee.write_time = opts.write_time or 5
-    ee.mode       = {[0] = true, [3] = true}
+    ee.mode = { [0] = true, [3] = true }
 
     assert(math.type(ee.size) == "integer" and ee.size > 0, "25xx: invalid size")
     assert(math.type(ee.page) == "integer" and ee.page > 0, "25xx: invalid page size")
@@ -70,20 +72,24 @@ function M.new(opts)
     ee:fill(opts.fill or 0xFF)
     ee.busy_until = 0
     ee.wel = false
-    ee.sr_bits = 0  -- BP1, BP0, WPEN
+    ee.sr_bits = 0 -- BP1, BP0, WPEN
     ee.state = "idle"
 
     if opts.file then
         ee.file = opts.file
         ee:load(ee.file)
-        host.on_exit(function() ee:flush() end)
+        host.on_exit(function()
+            ee:flush()
+        end)
     end
 
     return ee
 end
 
 function EEPROM:fill(value)
-    for i = 0, self.size - 1 do self.mem[i] = value & 0xFF end
+    for i = 0, self.size - 1 do
+        self.mem[i] = value & 0xFF
+    end
     self:mark_dirty()
 end
 
@@ -98,10 +104,14 @@ end
 
 function EEPROM:load(file)
     local f = io.open(file, "rb")
-    if not f then return false end
+    if not f then
+        return false
+    end
     local data = f:read("a")
     f:close()
-    for i = 1, math.min(#data, self.size) do self.mem[i - 1] = data:byte(i) end
+    for i = 1, math.min(#data, self.size) do
+        self.mem[i - 1] = data:byte(i)
+    end
     return true
 end
 
@@ -120,9 +130,13 @@ function EEPROM:save(file)
 end
 
 function EEPROM:mark_dirty()
-    if not self.file or self.dirty then return end
+    if not self.file or self.dirty then
+        return
+    end
     self.dirty = true
-    host.timer(500, function() self:flush() end)
+    host.timer(500, function()
+        self:flush()
+    end)
 end
 
 function EEPROM:flush()
@@ -164,10 +178,8 @@ function EEPROM:transfer(byte)
             self.state = "ignore" -- WREN, WRDI (executed at CS rise), unknown
         end
         return 0xFF
-
     elseif state == "rdsr" then
         return self:status()
-
     elseif state == "addr" then
         self.addr = (self.addr << 8) | byte
         self.addr_cnt = self.addr_cnt + 1
@@ -184,18 +196,15 @@ function EEPROM:transfer(byte)
             end
         end
         return 0xFF
-
     elseif state == "read" then
         local v = self.mem[self.ptr]
         self.ptr = (self.ptr + 1) % self.size
         return v
-
     elseif state == "write" then
         self.data[self.offset] = byte
         self.offset = (self.offset + 1) % self.page
         self.count = self.count + 1
         return 0xFF
-
     elseif state == "wrsr" then
         self.new_sr = byte & 0x8C
         self.state = "ignore"
@@ -219,7 +228,9 @@ function EEPROM:deselect()
     elseif cmd == CMD_WRDI then
         self.wel = false
     elseif cmd == CMD_WRITE and self.state == "write" and self.count > 0 and self.wel then
-        for off, v in pairs(self.data) do self.mem[self.page_base + off] = v end
+        for off, v in pairs(self.data) do
+            self.mem[self.page_base + off] = v
+        end
         self.busy_until = host.time_ms() + self.write_time
         self.wel = false
         self:mark_dirty()

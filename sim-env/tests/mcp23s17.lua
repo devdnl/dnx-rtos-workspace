@@ -23,10 +23,12 @@ local INTFA, INTFB, INTCAPA, INTCAPB, GPIOA, GPIOB, OLATA, OLATB = 0x0E, 0x0F, 0
 local BANK, MIRROR, SEQOP, HAEN, ODR, INTPOL = 0x80, 0x40, 0x20, 0x08, 0x04, 0x02
 
 -- port C pins
-local RESET, INT0A, INT0B, INT1B = 16, 17, 18, 19  -- INT0B: INTB of #0 and INTA of #1
+local RESET, INT0A, INT0B, INT1B = 16, 17, 18, 19 -- INT0B: INTB of #0 and INTA of #1
 
 local function hex(s)
-    return (tostring(s):gsub(".", function(c) return string.format("%02X ", c:byte()) end))
+    return (tostring(s):gsub(".", function(c)
+        return string.format("%02X ", c:byte())
+    end))
 end
 
 -- port C ----------------------------------------------------------------------
@@ -69,7 +71,9 @@ end
 -- SPI -------------------------------------------------------------------------
 local function transfer(data)
     local r, err = spi.transceive(DEV, data)
-    if not r then error("transceive: " .. tostring(err), 3) end
+    if not r then
+        error("transceive: " .. tostring(err), 3)
+    end
     return r
 end
 
@@ -122,7 +126,7 @@ test("dnx.spi.transceive: frames in one transfer (CS active)", function()
 end)
 
 test("Power-on state (IODIR = 0xFF, other registers 0)", function()
-    local regs = {rd(0, IODIRA, 22)}
+    local regs = { rd(0, IODIRA, 22) }
     for addr = 0, 21 do
         local exp = (addr <= 1) and 0xFF or 0x00
         expect(regs[addr + 1] == exp, string.format("register 0x%02X = 0x%02X", addr, regs[addr + 1]))
@@ -130,7 +134,7 @@ test("Power-on state (IODIR = 0xFF, other registers 0)", function()
 end)
 
 test("HAEN cleared: devices respond to address 0 only", function()
-    wr(0, OLATB, 0x5A)                   -- both devices
+    wr(0, OLATB, 0x5A) -- both devices
     expect(rd(1, OLATB) == 0xFF, "address 1 responds without HAEN")
     enable_haen()
     expect_reg(0, OLATB, 0x5A, "write at address 0 without HAEN")
@@ -186,14 +190,15 @@ test("Pull-up of not driven inputs (GPPU)", function()
 end)
 
 test("Sequential write and read (SEQOP = 0, address roll-over)", function()
-    wr(1, DEFVALA, 0x01, 0x02, 0x03, 0x04)  -- DEFVALA, DEFVALB, INTCONA, INTCONB
+    wr(1, DEFVALA, 0x01, 0x02, 0x03, 0x04) -- DEFVALA, DEFVALB, INTCONA, INTCONB
     local a, b, c, d = rd(1, DEFVALA, 4)
-    expect(a == 0x01 and b == 0x02 and c == 0x03 and d == 0x04,
-           string.format("read %02X %02X %02X %02X", a, b, c, d))
-    wr(1, OLATB, 0x77, 0xF0, 0xFF)      -- OLATB, roll-over: IODIRA, IODIRB
+    expect(a == 0x01 and b == 0x02 and c == 0x03 and d == 0x04, string.format("read %02X %02X %02X %02X", a, b, c, d))
+    wr(1, OLATB, 0x77, 0xF0, 0xFF) -- OLATB, roll-over: IODIRA, IODIRB
     local olatb, iodira, iodirb = rd(1, OLATB, 3)
-    expect(olatb == 0x77 and iodira == 0xF0 and iodirb == 0xFF,
-           string.format("roll-over: %02X %02X %02X", olatb, iodira, iodirb))
+    expect(
+        olatb == 0x77 and iodira == 0xF0 and iodirb == 0xFF,
+        string.format("roll-over: %02X %02X %02X", olatb, iodira, iodirb)
+    )
     wr(1, IODIRA, 0xFF)
     wr(1, DEFVALA, 0x00, 0x00, 0x00, 0x00)
 end)
@@ -202,9 +207,11 @@ test("Byte mode (SEQOP = 1, BANK = 0: A/B pair)", function()
     wr(0, OLATA, 0x81)
     wr(0, OLATB, 0x42)
     wr(0, IOCON, HAEN | SEQOP)
-    local v = {rd(0, OLATA, 4)}
-    expect(v[1] == 0x81 and v[2] == 0x42 and v[3] == 0x81 and v[4] == 0x42,
-           string.format("read %02X %02X %02X %02X", v[1], v[2], v[3], v[4]))
+    local v = { rd(0, OLATA, 4) }
+    expect(
+        v[1] == 0x81 and v[2] == 0x42 and v[3] == 0x81 and v[4] == 0x42,
+        string.format("read %02X %02X %02X %02X", v[1], v[2], v[3], v[4])
+    )
     wr(0, IOCON, HAEN)
 end)
 
@@ -218,15 +225,15 @@ test("BANK = 1 register addresses", function()
     expect_reg(0, 0x0B, 0x00, "not implemented address 0x0B")
     local olata, iodirb = rd(0, 0x0A, 2)
     expect(olata == 0x81 and iodirb == 0xFF, "sequential 0x0A -> 0x10")
-    wr(0, 0x05, HAEN | BANK | SEQOP)     -- IOCON in BANK = 1
+    wr(0, 0x05, HAEN | BANK | SEQOP) -- IOCON in BANK = 1
     local x, y = rd(0, 0x0A, 2)
     expect(x == 0x81 and y == 0x81, "byte mode BANK = 1 (same address)")
-    wr(0, 0x05, HAEN)                    -- IOCON in BANK = 1: back to BANK = 0
+    wr(0, 0x05, HAEN) -- IOCON in BANK = 1: back to BANK = 0
     expect_reg(0, IOCON, HAEN, "IOCON BANK = 0")
 end)
 
 test("Interrupt on change (INTCON = 0), INTF and INTCAP", function()
-    wr(1, IOCON, HAEN | ODR)             -- INTA of #1 does not drive shared line (INTB of #0)
+    wr(1, IOCON, HAEN | ODR) -- INTA of #1 does not drive shared line (INTB of #0)
     inputs(0x00)
     rd(0, GPIOB)
     wr(0, GPINTENB, 0xFF)
@@ -236,9 +243,9 @@ test("Interrupt on change (INTCON = 0), INTF and INTCAP", function()
     T.msleep(DELAY)
     expect(not pc_pin(INT0B), "INTB high (not active) after change")
     expect_reg(0, INTFB, 0x01, "INTFB")
-    inputs(0x03)                         -- next change: INTF, INTCAP not changed
+    inputs(0x03) -- next change: INTF, INTCAP not changed
     expect_reg(0, INTFB, 0x01, "INTFB after second change")
-    expect_reg(0, INTCAPB, 0x01, "INTCAPB")  -- read clears interrupt
+    expect_reg(0, INTCAPB, 0x01, "INTCAPB") -- read clears interrupt
     T.msleep(DELAY)
     expect(pc_pin(INT0B), "INTB low (active) after read of INTCAP")
     expect_reg(0, INTFB, 0x00, "INTFB after read of INTCAP")
@@ -254,7 +261,7 @@ test("Interrupt compared with DEFVAL (INTCON = 1)", function()
     expect_reg(0, INTFB, 0x00, "INTFB without condition")
     inputs(0x01)
     expect_reg(0, INTFB, 0x01, "INTFB")
-    expect_reg(0, GPIOB, 0x01, "GPIOB")      -- clears, condition still active
+    expect_reg(0, GPIOB, 0x01, "GPIOB") -- clears, condition still active
     expect_reg(0, INTFB, 0x01, "INTFB when pin still differs from DEFVAL")
     inputs(0x00)
     rd(0, GPIOB)
@@ -292,7 +299,7 @@ end)
 
 test("Open drain INT shared by two devices (ODR)", function()
     -- #1: GPA outputs drive GPB inputs, interrupt of port B on INTA (MIRROR)
-    wr(1, IOCON, HAEN | MIRROR | ODR | INTPOL)  -- open drain: active low, INTPOL ignored
+    wr(1, IOCON, HAEN | MIRROR | ODR | INTPOL) -- open drain: active low, INTPOL ignored
     wr(1, IODIRA, 0x00)
     wr(1, OLATA, 0x00)
     rd(1, GPIOB)
@@ -304,12 +311,12 @@ test("Open drain INT shared by two devices (ODR)", function()
     T.msleep(DELAY)
     expect(pc_pin(INT0B), "shared line low (active) before interrupts")
 
-    wr(1, OLATA, 0x10)                   -- interrupt of #1
+    wr(1, OLATA, 0x10) -- interrupt of #1
     T.msleep(DELAY)
     expect(not pc_pin(INT0B) and not pc_pin(INT1B), "interrupt of #1 not signaled")
     expect_reg(1, INTFB, 0x10, "INTFB of #1")
-    inputs(0x04)                         -- interrupt of #0
-    rd(1, INTCAPB)                       -- clear #1, line still low (#0)
+    inputs(0x04) -- interrupt of #0
+    rd(1, INTCAPB) -- clear #1, line still low (#0)
     T.msleep(DELAY)
     expect(not pc_pin(INT0B), "shared line released by #1 during interrupt of #0")
     expect(pc_pin(INT1B), "INTB of #1 low (active) after clear")

@@ -12,7 +12,7 @@ local test, expect = T.test, T.expect
 
 local ECHO = "/dev/ttyS2"
 local GPS = "/dev/ttyS3"
-local GPS_START = 12 * 3600 * 1000          -- 12:00:00.000 UTC (start_time of test board)
+local GPS_START = 12 * 3600 * 1000 -- 12:00:00.000 UTC (start_time of test board)
 
 local function uptime()
     return dnx.sys.uptime()
@@ -21,7 +21,9 @@ end
 local function configure(path, cfg)
     local cmd = string.format("modprobe -c %s %s", path, cfg)
     local ok, out = T.run(cmd)
-    if not ok then error(cmd .. ": " .. tostring(out), 2) end
+    if not ok then
+        error(cmd .. ": " .. tostring(out), 2)
+    end
 end
 
 local function open(path)
@@ -32,7 +34,9 @@ end
 
 local function read(f, n)
     local s = f:read(n)
-    if not s then error("read failed", 2) end
+    if not s then
+        error("read failed", 2)
+    end
     return s
 end
 
@@ -44,14 +48,18 @@ local function control(cmd)
     assert(ctl:write(cmd))
     ctl:seek("set", 0)
     local r = assert(ctl:read(128)):match("^[^%z]*")
-    if r:find("^error") then error("control '" .. cmd .. "': " .. r, 2) end
+    if r:find("^error") then
+        error("control '" .. cmd .. "': " .. r, 2)
+    end
     return r
 end
 
 -- NMEA -----------------------------------------------------------------------------
 local function checksum(body)
     local cs = 0
-    for i = 1, #body do cs = cs ~ body:byte(i) end
+    for i = 1, #body do
+        cs = cs ~ body:byte(i)
+    end
     return string.format("%02X", cs)
 end
 
@@ -62,16 +70,22 @@ end
 -- valid sentence: fields (fields[1]: type, e.g. "GPRMC") or nil
 local function parse(line)
     local body, cs = line:match("^%$([^*$]+)%*(%x%x)\r?$")
-    if not body or checksum(body) ~= cs then return nil end
+    if not body or checksum(body) ~= cs then
+        return nil
+    end
     local f = {}
-    for v in (body .. ","):gmatch("([^,]*),") do f[#f + 1] = v end
+    for v in (body .. ","):gmatch("([^,]*),") do
+        f[#f + 1] = v
+    end
     return f
 end
 
 -- time of sentence (ms from GPS start) or nil
 local function stime(f)
     local h, m, s, ms = (f[2] or ""):match("^(%d%d)(%d%d)(%d%d)%.(%d%d%d)$")
-    if not h then return nil end
+    if not h then
+        return nil
+    end
     return ((tonumber(h) * 60 + tonumber(m)) * 60 + tonumber(s)) * 1000 + tonumber(ms) - GPS_START
 end
 
@@ -91,7 +105,9 @@ local function next_sentence(kind, t, max)
         local f = parse(assert(gps:read("l")))
         if f and f[1] == kind then
             local st = stime(f)
-            if st and st > limit then return f end
+            if st and st > limit then
+                return f
+            end
         end
     end
     error("sentence " .. kind .. " not received", 2)
@@ -106,8 +122,12 @@ local function read_lines(n, t)
         local f = parse(line)
         if f then
             local st = stime(f)
-            if st then fresh = st > t end
-            if fresh then list[#list + 1] = f end
+            if st then
+                fresh = st > t
+            end
+            if fresh then
+                list[#list + 1] = f
+            end
         end
     end
     return list
@@ -117,7 +137,9 @@ end
 local function wait_ack(cmd, max)
     for _ = 1, max or 100 do
         local f = parse(assert(gps:read("l")))
-        if f and f[1] == "PMTK001" and tonumber(f[2]) == cmd then return tonumber(f[3]) end
+        if f and f[1] == "PMTK001" and tonumber(f[2]) == cmd then
+            return tonumber(f[3])
+        end
     end
     return nil
 end
@@ -150,7 +172,7 @@ test("Echo model and configuration (9600 8N1)", function()
 end)
 
 test("Transmission time (9600 vs 115200 baud)", function()
-    local data = string.rep("0123456789", 20)   -- 200 bytes
+    local data = string.rep("0123456789", 20) -- 200 bytes
     local t0 = uptime()
     echo:write(data)
     local r = read(echo, #data)
@@ -179,8 +201,10 @@ test("GPS sentences (38400 8N1)", function()
     configure(GPS, "baud=38400,parity=off,stop_bits=1")
     local list = read_lines(12)
     local seen = {}
-    for _, f in ipairs(list) do seen[f[1]] = true end
-    for _, k in ipairs({"GPGGA", "GPGSA", "GPGSV", "GPRMC", "GPVTG"}) do
+    for _, f in ipairs(list) do
+        seen[f[1]] = true
+    end
+    for _, k in ipairs({ "GPGGA", "GPGSA", "GPGSV", "GPRMC", "GPVTG" }) do
         expect(seen[k], k .. " not received")
     end
     local rmc = next_sentence("GPRMC")
@@ -189,7 +213,10 @@ test("GPS sentences (38400 8N1)", function()
     expect(rmc[6] == nmea_coord(21.0122, 3) and rmc[7] == "E", "RMC longitude " .. rmc[6] .. rmc[7])
     expect(rmc[10] == "010126", "RMC date " .. tostring(rmc[10]))
     local gga = next_sentence("GPGGA")
-    expect(gga[7] == "1" and gga[10] == "100.0", "GGA quality/altitude " .. tostring(gga[7]) .. " " .. tostring(gga[10]))
+    expect(
+        gga[7] == "1" and gga[10] == "100.0",
+        "GGA quality/altitude " .. tostring(gga[7]) .. " " .. tostring(gga[10])
+    )
 end)
 
 test("GPS time follows board time", function()
@@ -209,7 +236,9 @@ test("UART baud rate mismatch (unreadable data)", function()
     for line in data:gmatch("[^\n]+") do
         local f = parse(line)
         local st = f and stime(f)
-        if st and st > t0 + 50 then valid = valid + 1 end
+        if st and st > t0 + 50 then
+            valid = valid + 1
+        end
     end
     expect(valid == 0, valid .. " valid sentences received at wrong baud rate")
     configure(GPS, "baud=38400,parity=even")
@@ -219,7 +248,9 @@ test("UART baud rate mismatch (unreadable data)", function()
     for line in data:gmatch("[^\n]+") do
         local f = parse(line)
         local st = f and stime(f)
-        if st and st > t0 + 50 then valid = valid + 1 end
+        if st and st > t0 + 50 then
+            valid = valid + 1
+        end
     end
     expect(valid == 0, valid .. " valid sentences received with wrong parity")
     configure(GPS, "baud=38400,parity=off")
@@ -232,7 +263,9 @@ test("PMTK220 fix interval and PMTK314 sentence output", function()
     gps:write(pmtk("PMTK220,500"))
     expect(wait_ack(220) == 3, "PMTK220 not acknowledged")
     local list = read_lines(4)
-    for _, f in ipairs(list) do expect(f[1] == "GPRMC", "sentence " .. f[1] .. " (only RMC selected)") end
+    for _, f in ipairs(list) do
+        expect(f[1] == "GPRMC", "sentence " .. f[1] .. " (only RMC selected)")
+    end
     local d = stime(list[4]) - stime(list[3])
     expect(d >= 450 and d <= 550, "fix interval " .. d .. " ms (expected 500 ms)")
     gps:write(pmtk("PMTK220,10"))
@@ -280,12 +313,15 @@ end)
 
 test("Motion (speed and course)", function()
     control("gps pos 0 0 0")
-    control("gps motion 194.384 90")             -- 100 m/s to east
+    control("gps motion 194.384 90") -- 100 m/s to east
     local a = next_sentence("GPRMC")
     local b = next_sentence("GPRMC")
     control("gps motion 0 0")
     expect(a[8] == "194.38" and a[9] == "90.00", "RMC speed/course " .. a[8] .. " " .. a[9])
-    local function lon(f) local d = tonumber(f[6]:sub(1, 3)) + tonumber(f[6]:sub(4)) / 60 return d end
+    local function lon(f)
+        local d = tonumber(f[6]:sub(1, 3)) + tonumber(f[6]:sub(4)) / 60
+        return d
+    end
     local m = (lon(b) - lon(a)) * 111320
     expect(m > 15 and m < 25, string.format("moved %.1f m in 200 ms (expected 20 m)", m))
     expect(a[4] == "0000.0000", "latitude changed: " .. a[4])
@@ -298,7 +334,9 @@ test("PMTK101 restart (no fix until TTFF)", function()
     local rmc = next_sentence("GPRMC")
     expect(rmc[3] == "V", "fix after restart")
     local t0 = uptime()
-    repeat rmc = next_sentence("GPRMC") until rmc[3] == "A" or uptime() - t0 > 3000
+    repeat
+        rmc = next_sentence("GPRMC")
+    until rmc[3] == "A" or uptime() - t0 > 3000
     expect(rmc[3] == "A", "no fix after TTFF")
 end)
 

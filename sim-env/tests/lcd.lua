@@ -21,11 +21,9 @@ if arg[1] == "init" then
     assert(f:write(string.pack("<I2", 0xF800):rep(W)))
     f:close()
     print("LCD=" .. require("lfs").attributes("/dev/lcd", "size"))
-
 elseif arg[1] == "release" then
     local ok, out = T.run("modprobe -R /dev/lcd")
     print(ok and "RELEASED" or out)
-
 elseif arg[1] == "touch" then
     local f = assert(io.open("/dev/i2c-ts", "r+b"))
     f:setvbuf("no")
@@ -36,6 +34,15 @@ elseif arg[1] == "touch" then
     f:close()
     local x = ((d:byte(2) & 0x0F) << 8) | d:byte(3)
     local y = ((d:byte(4) & 0x0F) << 8) | d:byte(5)
-    print(string.format("TOUCH n=%d x=%d y=%d ev=%d int=%d id=0x%02X", d:byte(1) & 0x0F, x, y, d:byte(2) >> 6,
-                        T.pin_get(28) and 1 or 0, id))
+    print(
+        string.format(
+            "TOUCH n=%d x=%d y=%d ev=%d int=%d id=0x%02X",
+            d:byte(1) & 0x0F,
+            x,
+            y,
+            d:byte(2) >> 6,
+            T.pin_get(28) and 1 or 0,
+            id
+        )
+    )
 end

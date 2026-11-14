@@ -53,8 +53,14 @@ S.__index = S
 function M.new(opts)
     opts = opts or {}
     local s = setmetatable({}, S)
-    s.dev = netdev.new{ip = opts.ip, netmask = opts.netmask, gateway = opts.gateway, mac = opts.mac,
-                       name = opts.name, trace = opts.trace}
+    s.dev = netdev.new({
+        ip = opts.ip,
+        netmask = opts.netmask,
+        gateway = opts.gateway,
+        mac = opts.mac,
+        name = opts.name,
+        trace = opts.trace,
+    })
     s.port = opts.port or 5000
     s.dst = opts.dst or "255.255.255.255"
     s.val = opts.value or 0
@@ -74,31 +80,45 @@ function S:attach()
     self.sock = self.dev:udp(self.port)
     host.timer(self.delay, function()
         self:send()
-        self.timer = host.timer(self.interval, function() self:send() end, true)
+        self.timer = host.timer(self.interval, function()
+            self:send()
+        end, true)
     end)
     return self
 end
 
 function S:text()
     local f = self.format
-    if type(f) == "function" then return tostring(f(self.val, self)) end
-    if f == nil then f = type(self.val) == "number" and "%.2f" or "%s" end
+    if type(f) == "function" then
+        return tostring(f(self.val, self))
+    end
+    if f == nil then
+        f = type(self.val) == "number" and "%.2f" or "%s"
+    end
     return string.format(f, self.val)
 end
 
 function S:send()
-    if not self.on or not self.sock then return false end
+    if not self.on or not self.sock then
+        return false
+    end
     local text = self:text()
     self.sock:send(self.dst, self.port, text)
     self.count = self.count + 1
     self.last = text
-    for _, fn in ipairs(self.handlers) do fn(self, text) end
+    for _, fn in ipairs(self.handlers) do
+        fn(self, text)
+    end
     return true
 end
 
 function S:changed()
-    if not self.send_on_change or not self.sock then return end
-    if self.change_timer then self.change_timer:stop() end
+    if not self.send_on_change or not self.sock then
+        return
+    end
+    if self.change_timer then
+        self.change_timer:stop()
+    end
     self.change_timer = host.timer(300, function()
         self.change_timer = nil
         self:send()
@@ -134,19 +154,35 @@ function M.panel(s, id, opts)
     opts = opts or {}
     local label = opts.label or id
     if type(s:value()) == "number" then
-        panel.control(id, function(v) s:set_value(tonumber(v) or s:value()) end,
-                      {value = s:value(), min = opts.min or 0, max = opts.max or 100, step = opts.step or 0.1,
-                       unit = opts.unit, label = label})
+        panel.control(
+            id,
+            function(v)
+                s:set_value(tonumber(v) or s:value())
+            end,
+            {
+                value = s:value(),
+                min = opts.min or 0,
+                max = opts.max or 100,
+                step = opts.step or 0.1,
+                unit = opts.unit,
+                label = label,
+            }
+        )
     else
-        panel.control(id, function(v) s:set_value(tostring(v)) end,
-                      {value = s:value(), type = "string", label = label})
+        panel.control(id, function(v)
+            s:set_value(tostring(v))
+        end, { value = s:value(), type = "string", label = label })
     end
-    panel.control(id .. "_EN", function(v) s:set_enabled(v == true) end,
-                  {value = s:enabled(), type = "bool", label = label .. ": transmits"})
-    panel.control(id .. "_SEND", function(v) if v == true then s:send() end end,
-                  {value = false, type = "bool", label = label .. ": send now"})
-    panel.value(id .. "_TX", 0, {label = label .. ": transmissions"})
-    panel.value(id .. "_TEXT", "", {label = label .. ": datagram"})
+    panel.control(id .. "_EN", function(v)
+        s:set_enabled(v == true)
+    end, { value = s:enabled(), type = "bool", label = label .. ": transmits" })
+    panel.control(id .. "_SEND", function(v)
+        if v == true then
+            s:send()
+        end
+    end, { value = false, type = "bool", label = label .. ": send now" })
+    panel.value(id .. "_TX", 0, { label = label .. ": transmissions" })
+    panel.value(id .. "_TEXT", "", { label = label .. ": datagram" })
     s:on_send(function(_, text)
         panel.set(id .. "_TX", s:transmissions())
         panel.set(id .. "_TEXT", text)

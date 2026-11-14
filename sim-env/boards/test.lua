@@ -121,44 +121,54 @@ gpio.on_change("PA2", function(level)
 end)
 
 -- I2C:0
-local io8 = pcf8574.new{int = "PA13"}:attach("I2C:0", 0x20)
+local io8 = pcf8574.new({ int = "PA13" }):attach("I2C:0", 0x20)
 io8:on_change(function(latch)
-    for n = 0, 3 do io8:drive(n + 4, (latch >> n) & 1 == 1) end
+    for n = 0, 3 do
+        io8:drive(n + 4, (latch >> n) & 1 == 1)
+    end
 end)
 
-local sensor = lm75.new{temperature = 21.5, os = "PA14"}:attach("I2C:0", 0x48)
+local sensor = lm75.new({ temperature = 21.5, os = "PA14" }):attach("I2C:0", 0x48)
 gpio.on_change("PA3", function(level)
     sensor:set_temperature(level and 90 or 21.5)
 end)
 
-eeprom.new{type = "24c256"}:attach("I2C:0", 0x50)
-eeprom.new{type = "24c32"}:attach("I2C:0", 0x51)
+eeprom.new({ type = "24c256" }):attach("I2C:0", 0x50)
+eeprom.new({ type = "24c32" }):attach("I2C:0", 0x51)
 
 -- I2C:0: DS2482-100 bridges with DS18B20 sensors, ROM codes are selected for
 -- SEARCH ROM: discrepancies in the family code, in the first and last bits of
 -- serial number, sensors that differ only in CRC
-local ow = {a = ds2482.new{}:attach("I2C:0", 0x18), b = ds2482.new{}:attach("I2C:0", 0x19)}
+local ow = { a = ds2482.new({}):attach("I2C:0", 0x18), b = ds2482.new({}):attach("I2C:0", 0x19) }
 
 local OW_SENSORS = {
-    {bus = "a", serial = 0x000000000001, temperature = 25.0625},
-    {bus = "a", serial = 0x000000000003, temperature = -10.5},
-    {bus = "a", serial = 0x800000000001, temperature = 0},
-    {bus = "a", serial = 0x800000000000, temperature = 125},
-    {bus = "a", serial = 0x7FFFFFFFFFFF, temperature = -55},
-    {bus = "a", serial = 0x0000A1B2C3D4, temperature = 21.5, parasite = true},
-    {bus = "a", serial = 0x000000000001, temperature = 30, family = 0x10},
-    {bus = "a", serial = 0x123456789ABC, temperature = 40, unplugged = true},
-    {bus = "b", serial = 0x00000000BEEF, temperature = 22.25},
+    { bus = "a", serial = 0x000000000001, temperature = 25.0625 },
+    { bus = "a", serial = 0x000000000003, temperature = -10.5 },
+    { bus = "a", serial = 0x800000000001, temperature = 0 },
+    { bus = "a", serial = 0x800000000000, temperature = 125 },
+    { bus = "a", serial = 0x7FFFFFFFFFFF, temperature = -55 },
+    { bus = "a", serial = 0x0000A1B2C3D4, temperature = 21.5, parasite = true },
+    { bus = "a", serial = 0x000000000001, temperature = 30, family = 0x10 },
+    { bus = "a", serial = 0x123456789ABC, temperature = 40, unplugged = true },
+    { bus = "b", serial = 0x00000000BEEF, temperature = 22.25 },
 }
 
 local sensors = {}
 
 local function ow_init()
-    for _, s in ipairs(sensors) do s:detach() end
+    for _, s in ipairs(sensors) do
+        s:detach()
+    end
     for n, o in ipairs(OW_SENSORS) do
-        sensors[n] = ds18b20.new{serial = o.serial, family = o.family, temperature = o.temperature,
-                                 parasite = o.parasite}
-        if not o.unplugged then sensors[n]:attach(ow[o.bus]) end
+        sensors[n] = ds18b20.new({
+            serial = o.serial,
+            family = o.family,
+            temperature = o.temperature,
+            parasite = o.parasite,
+        })
+        if not o.unplugged then
+            sensors[n]:attach(ow[o.bus])
+        end
     end
     ow.a.ow:set_short(false)
     ow.b.ow:set_short(false)
@@ -171,29 +181,53 @@ local function sensor(n)
 end
 
 local OW_COMMANDS = {
-    init = function() ow_init() end,
+    init = function()
+        ow_init()
+    end,
     powercycle = function()
-        for _, s in ipairs(sensors) do s:power_cycle() end
+        for _, s in ipairs(sensors) do
+            s:power_cycle()
+        end
     end,
     list = function()
         local t = {}
         for n, s in ipairs(sensors) do
             local rom = {}
-            for i, b in ipairs(s:rom()) do rom[i] = string.format("%02X", b) end
-            t[#t + 1] = string.format("%d %s %d %s %.4f %d", n, OW_SENSORS[n].bus, s.bus and 1 or 0,
-                                      table.concat(rom), s:temperature(), s.parasite and 1 or 0)
+            for i, b in ipairs(s:rom()) do
+                rom[i] = string.format("%02X", b)
+            end
+            t[#t + 1] = string.format(
+                "%d %s %d %s %.4f %d",
+                n,
+                OW_SENSORS[n].bus,
+                s.bus and 1 or 0,
+                table.concat(rom),
+                s:temperature(),
+                s.parasite and 1 or 0
+            )
         end
         return table.concat(t, "\n")
     end,
-    temp = function(n, c) sensor(n):set_temperature(assert(tonumber(c), "temperature")) end,
-    attach = function(n) local s, o = sensor(n); s:attach(ow[o.bus]) end,
-    detach = function(n) sensor(n):detach() end,
-    short = function(bus, on) assert(ow[bus], "no bus " .. tostring(bus)).ow:set_short(on == "1") end,
-    fault = function(n, name, on) sensor(n):set_fault(name, on == "1") end,
+    temp = function(n, c)
+        sensor(n):set_temperature(assert(tonumber(c), "temperature"))
+    end,
+    attach = function(n)
+        local s, o = sensor(n)
+        s:attach(ow[o.bus])
+    end,
+    detach = function(n)
+        sensor(n):detach()
+    end,
+    short = function(bus, on)
+        assert(ow[bus], "no bus " .. tostring(bus)).ow:set_short(on == "1")
+    end,
+    fault = function(n, name, on)
+        sensor(n):set_fault(name, on == "1")
+    end,
 }
 
 -- UART:2: echo, UART:3: GPS (UARTs connected by simulator option --uart are not used)
-local echo = {pending = ""}
+local echo = { pending = "" }
 function echo:receive(data)
     local out = {}
     for ch in data:gmatch(".") do
@@ -203,21 +237,34 @@ function echo:receive(data)
             out[#out + 1] = string.format("%d %s %d\n", c.baud, c.parity, c.stop_bits)
             p = ""
         elseif ("?cfg\n"):sub(1, #p) ~= p then
-            out[#out + 1] = p   -- not a query: echo
+            out[#out + 1] = p -- not a query: echo
             p = ""
         end
         self.pending = p
     end
-    if #out > 0 then uart.send("UART:2", table.concat(out)) end
+    if #out > 0 then
+        uart.send("UART:2", table.concat(out))
+    end
 end
-if uart.available("UART:2") then uart.attach("UART:2", echo) end
+if uart.available("UART:2") then
+    uart.attach("UART:2", echo)
+end
 
-local gps = nmea_gps.new{baud = 38400, rate = 200, start_time = 1767268800, lat = 52.2297, lon = 21.0122, alt = 100,
-                         ttff = {hot = 600, warm = 600, cold = 600}}
+local gps = nmea_gps.new({
+    baud = 38400,
+    rate = 200,
+    start_time = 1767268800,
+    lat = 52.2297,
+    lon = 21.0122,
+    alt = 100,
+    ttff = { hot = 600, warm = 600, cold = 600 },
+})
 -- GPS is powered on by the UART test only: data of unread port is lost (receiver
 -- overrun reported by board) and it is not needed by other tests
 gps:set_enabled(false)
-if uart.available("UART:3") then gps:attach("UART:3") end
+if uart.available("UART:3") then
+    gps:attach("UART:3")
+end
 
 OW_COMMANDS.gps = function(what, a, b, c)
     if what == "power" then
@@ -229,27 +276,33 @@ OW_COMMANDS.gps = function(what, a, b, c)
     elseif what == "motion" then
         gps:set_motion(assert(tonumber(a)), assert(tonumber(b)))
     elseif what == "time" then
-        return string.format("%.0f", host.time_ms())   -- board time (GPS time = start_time + board time)
+        return string.format("%.0f", host.time_ms()) -- board time (GPS time = start_time + board time)
     else
         error("gps: unknown command " .. tostring(what))
     end
 end
 
 -- Ethernet devices
-local net = netdev.new{ip = "192.168.77.50"}:attach()
-local net_state = {src = 0, sink = "0 0 0", client = "none", ping = "none"}
+local net = netdev.new({ ip = "192.168.77.50" }):attach()
+local net_state = { src = 0, sink = "0 0 0", client = "none", ping = "none" }
 
 local udp_echo = net:udp(7)
-udp_echo:on_receive(function(data, ip, port) udp_echo:send(ip, port, data:upper()) end)
+udp_echo:on_receive(function(data, ip, port)
+    udp_echo:send(ip, port, data:upper())
+end)
 
 net:tcp_listen(7, function(conn)
-    conn:on_data(function(data) conn:send(data) end)
+    conn:on_data(function(data)
+        conn:send(data)
+    end)
 end)
 
 net:tcp_listen(19, function(conn)
     local n = net_state.src
     local t = {}
-    for i = 0, n - 1 do t[#t + 1] = string.char(i % 251) end
+    for i = 0, n - 1 do
+        t[#t + 1] = string.char(i % 251)
+    end
     conn:send(table.concat(t))
     conn:close()
 end)
@@ -259,20 +312,41 @@ net:tcp_listen(9, function(conn)
     net_state.sink = "0 0 0"
     conn:on_data(function(data)
         bytes = bytes + #data
-        for i = 1, #data do sum = (sum + data:byte(i)) & 0xFFFFFFFF end
+        for i = 1, #data do
+            sum = (sum + data:byte(i)) & 0xFFFFFFFF
+        end
         net_state.sink = string.format("%d %d 0", bytes, sum)
     end)
-    conn:on_close(function() net_state.sink = string.format("%d %d 1", bytes, sum) end)
+    conn:on_close(function()
+        net_state.sink = string.format("%d %d 1", bytes, sum)
+    end)
 end)
 
-local sensor_eth = udp_sensor.new{ip = "192.168.77.51", port = 5000, value = 21.5, format = "T=%.1f",
-                                  interval = 500, delay = 500, enabled = false}:attach()
+local sensor_eth = udp_sensor
+    .new({
+        ip = "192.168.77.51",
+        port = 5000,
+        value = 21.5,
+        format = "T=%.1f",
+        interval = 500,
+        delay = 500,
+        enabled = false,
+    })
+    :attach()
 
-local sensor_eth2 = udp_sensor.new{ip = "192.168.77.52", port = 5001, dst = "192.168.77.2", value = 10,
-                                   interval = 3600000, delay = 3600000,
-                                   format = function(v, s)
-                                       return string.format("S52 %.2f #%d", v, s:transmissions() + 1)
-                                   end}:attach()
+local sensor_eth2 = udp_sensor
+    .new({
+        ip = "192.168.77.52",
+        port = 5001,
+        dst = "192.168.77.2",
+        value = 10,
+        interval = 3600000,
+        delay = 3600000,
+        format = function(v, s)
+            return string.format("S52 %.2f #%d", v, s:transmissions() + 1)
+        end,
+    })
+    :attach()
 
 OW_COMMANDS.net = function(what, a, b, ...)
     if what == "sensor" then
@@ -294,12 +368,17 @@ OW_COMMANDS.net = function(what, a, b, ...)
     elseif what == "sink" then
         return net_state.sink
     elseif what == "connect" then
-        local text = table.concat({...}, " ")
+        local text = table.concat({ ... }, " ")
         net_state.client = "connecting"
         net:tcp_connect(a, assert(tonumber(b)), function(conn, err)
-            if not conn then net_state.client = err return end
+            if not conn then
+                net_state.client = err
+                return
+            end
             net_state.client = "connected"
-            conn:on_close(function(reason) net_state.client = net_state.client .. " " .. reason end)
+            conn:on_close(function(reason)
+                net_state.client = net_state.client .. " " .. reason
+            end)
             conn:send(text)
             conn:close()
             net_state.client = "sent"
@@ -307,37 +386,49 @@ OW_COMMANDS.net = function(what, a, b, ...)
     elseif what == "client" then
         return net_state.client
     elseif what == "udp" then
-        udp_echo:send(a, assert(tonumber(b)), table.concat({...}, " "))
+        udp_echo:send(a, assert(tonumber(b)), table.concat({ ... }, " "))
     elseif what == "ping" then
         net_state.ping = "pending"
-        net:ping(a, function(ok, ms) net_state.ping = ok and string.format("ok %.0f", ms) or "fail" end)
+        net:ping(a, function(ok, ms)
+            net_state.ping = ok and string.format("ok %.0f", ms) or "fail"
+        end)
     elseif what == "pingres" then
         return net_state.ping
     elseif what == "conns" then
         local n = 0
-        for _ in pairs(net.conns) do n = n + 1 end
+        for _ in pairs(net.conns) do
+            n = n + 1
+        end
         return tostring(n)
     else
         error("net: unknown command " .. tostring(what))
     end
 end
 
-local ow_ctl = {resp = "", pos = 1}
+local ow_ctl = { resp = "", pos = 1 }
 function ow_ctl:select(read)
-    if not read then self.cmd = {} end
+    if not read then
+        self.cmd = {}
+    end
     self.pos = 1
     return true
 end
-function ow_ctl:write(byte) table.insert(self.cmd, string.char(byte)) end
+function ow_ctl:write(byte)
+    table.insert(self.cmd, string.char(byte))
+end
 function ow_ctl:read()
     local b = self.resp:byte(self.pos) or 0
     self.pos = self.pos + 1
     return b
 end
 function ow_ctl:stop()
-    if not self.cmd then return end
+    if not self.cmd then
+        return
+    end
     local args = {}
-    for w in table.concat(self.cmd):gmatch("%S+") do args[#args + 1] = w end
+    for w in table.concat(self.cmd):gmatch("%S+") do
+        args[#args + 1] = w
+    end
     self.cmd = nil
     local fn = OW_COMMANDS[args[1] or ""]
     if not fn then
@@ -350,13 +441,15 @@ end
 i2c.attach("I2C:0", 0x30, ow_ctl)
 
 -- I2C:1
-eeprom.new{type = "24c02"}:attach("I2C:1", 0x50)
+eeprom.new({ type = "24c02" }):attach("I2C:1", 0x50)
 
 -- SPI:0: test memory, returns data of the last transaction that contains other
 -- bytes than 0x00 and 0xFF (read transaction does not overwrite data)
 local function spi_memory()
-    local d = {mode = 0, buf = ""}
-    function d:select() self.rx, self.n = {}, 0 end
+    local d = { mode = 0, buf = "" }
+    function d:select()
+        self.rx, self.n = {}, 0
+    end
     function d:transfer(byte)
         self.n = self.n + 1
         self.rx[self.n] = string.char(byte)
@@ -364,52 +457,62 @@ local function spi_memory()
     end
     function d:deselect()
         local data = table.concat(self.rx or {})
-        if data:find("[^\0\xFF]") then self.buf = data end
+        if data:find("[^\0\xFF]") then
+            self.buf = data
+        end
     end
     return d
 end
 
 spi.attach("SPI:0", "PA4", spi_memory())
 spi.attach("SPI:0", "PA6", spi_memory())
-spiee.new{type = "25lc256"}:attach("SPI:0", "PA7")
-sdcard.new{type = "sdhc", size = 16 * 1024 * 1024}:attach("SPI:0", "PA15")
-sdcard.new{type = "sdv1", size = 2 * 1024 * 1024}:attach("SPI:0", "PA17")
+spiee.new({ type = "25lc256" }):attach("SPI:0", "PA7")
+sdcard.new({ type = "sdhc", size = 16 * 1024 * 1024 }):attach("SPI:0", "PA15")
+sdcard.new({ type = "sdv1", size = 2 * 1024 * 1024 }):attach("SPI:0", "PA17")
 
 -- SPI:2: two MCP23S17 on one CS (hardware addresses 0 and 1)
-local mcp0 = mcp23s17.new{address = 0, int_a = "PC17", int_b = "PC18", reset = "PC16"}:attach("SPI:2", "PB2")
-local mcp1 = mcp23s17.new{address = 1, int_a = "PC18", int_b = "PC19", reset = "PC16"}:attach("SPI:2", "PB2")
+local mcp0 = mcp23s17.new({ address = 0, int_a = "PC17", int_b = "PC18", reset = "PC16" }):attach("SPI:2", "PB2")
+local mcp1 = mcp23s17.new({ address = 1, int_a = "PC18", int_b = "PC19", reset = "PC16" }):attach("SPI:2", "PB2")
 for i = 0, 7 do
     mcp0:connect_output(i, "PC" .. i)
     mcp0:connect_input(8 + i, "PC" .. (8 + i))
 end
 local function mcp1_wire(_, changed)
     for i = 0, 7 do
-        if changed == nil or (changed >> i) & 1 == 1 then mcp1:set_input(8 + i, mcp1:pin(i)) end
+        if changed == nil or (changed >> i) & 1 == 1 then
+            mcp1:set_input(8 + i, mcp1:pin(i))
+        end
     end
 end
 mcp1:on_change(mcp1_wire)
 mcp1_wire()
 
 -- SPI:1
-hc595.new{outputs = {"PA20", "PA21", "PA22", "PA23", "PA24", "PA25", "PA26", "PA27"}}:attach("SPI:1", "PA16")
+hc595.new({ outputs = { "PA20", "PA21", "PA22", "PA23", "PA24", "PA25", "PA26", "PA27" } }):attach("SPI:1", "PA16")
 
 -- panel
 panel.output("P_OUT", "PA18")
 panel.input("P_IN", "PA19")
 panel.value("P_VAL", 0)
-panel.control("P_CTL", function(v) panel.set("P_VAL", v * 2) end)
+panel.control("P_CTL", function(v)
+    panel.set("P_VAL", v * 2)
+end)
 
-local ts = ft5336.new{int = "PA28"}:attach("I2C:0", 0x38)
-panel.on_touch(function(x, y, pressed) ts:touch(x, y, pressed) end, "ltdc")
+local ts = ft5336.new({ int = "PA28" }):attach("I2C:0", 0x38)
+panel.on_touch(function(x, y, pressed)
+    ts:touch(x, y, pressed)
+end, "ltdc")
 
 -- SPI:3: LCD of board model
 panel.value("P_TOUCH", "")
-st7789.new{id = "tft", width = 240, height = 320, dc = "PB0"}:attach("SPI:3", "PB1")
+st7789.new({ id = "tft", width = 240, height = 320, dc = "PB0" }):attach("SPI:3", "PB1")
 panel.on_touch(function(x, y, pressed, id)
-    if id ~= "ltdc" then panel.set("P_TOUCH", string.format("%d %d %d %s", x, y, pressed and 1 or 0, id)) end
+    if id ~= "ltdc" then
+        panel.set("P_TOUCH", string.format("%d %d %d %s", x, y, pressed and 1 or 0, id))
+    end
 end)
 
 -- controls of UDP sensor 192.168.77.52: P_ETH, P_ETH_EN, P_ETH_SEND, P_ETH_TX, P_ETH_TEXT
-udp_sensor.panel(sensor_eth2, "P_ETH", {label = "UDP sensor", min = -40, max = 85})
+udp_sensor.panel(sensor_eth2, "P_ETH", { label = "UDP sensor", min = -40, max = 85 })
 
 print("test board loaded")

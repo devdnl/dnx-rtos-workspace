@@ -9,18 +9,22 @@ local T = require("testlib")
 local lfs = require("lfs")
 local test, expect = T.test, T.expect
 
-local MNT    = "/mnt/aux"
+local MNT = "/mnt/aux"
 local MNTSUB = "/mnt/auxsub"
 
 local function run(cmd)
     local ok, out = T.run(cmd)
-    if not ok then error(cmd .. ": " .. out, 2) end
+    if not ok then
+        error(cmd .. ": " .. out, 2)
+    end
     return out
 end
 
 local function read_file(path)
     local f, err = io.open(path, "rb")
-    if not f then error(err, 2) end
+    if not f then
+        error(err, 2)
+    end
     local data = f:read("a")
     f:close()
     return data

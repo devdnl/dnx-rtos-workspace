@@ -11,15 +11,17 @@ local T = require("testlib")
 local lfs = require("lfs")
 local test, expect = T.test, T.expect
 
-local DEV    = "/dev/blk"
-local MNT    = "/mnt/blk"
+local DEV = "/dev/blk"
+local MNT = "/mnt/blk"
 local SECTOR = 512
-local BASE   = 100 * SECTOR -- tested area
-local AREA   = 16 * SECTOR  -- tested area size
+local BASE = 100 * SECTOR -- tested area
+local AREA = 16 * SECTOR -- tested area size
 
 local function run(cmd)
     local ok, out = T.run(cmd)
-    if not ok then error(cmd .. ": " .. out, 2) end
+    if not ok then
+        error(cmd .. ": " .. out, 2)
+    end
     return out
 end
 
@@ -35,22 +37,30 @@ end
 local function dev_write(f, pos, data)
     f:seek("set", pos)
     local ok, err = f:write(data)
-    if not ok then error("write error at " .. pos .. ": " .. tostring(err), 2) end
+    if not ok then
+        error("write error at " .. pos .. ": " .. tostring(err), 2)
+    end
 end
 
 local function dev_read(f, pos, len)
     f:seek("set", pos)
     local data, err = f:read(len)
-    if not data then error("read error at " .. pos .. ": " .. tostring(err), 2) end
+    if not data then
+        error("read error at " .. pos .. ": " .. tostring(err), 2)
+    end
     return data
 end
 
 -- returns iostat counters: requests, bytes, driver calls, unaligned, bounce, errors
 local function iostat(dir)
     local out = run("iostat " .. DEV)
-    local v = {out:match(dir .. "%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)")}
-    if #v == 0 then error("iostat output: " .. out, 2) end
-    for i = 1, #v do v[i] = tonumber(v[i]) end
+    local v = { out:match(dir .. "%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)") }
+    if #v == 0 then
+        error("iostat output: " .. out, 2)
+    end
+    for i = 1, #v do
+        v[i] = tonumber(v[i])
+    end
     return table.unpack(v)
 end
 
@@ -79,13 +89,13 @@ test("Unaligned writes (read-modify-write)", function()
     -- head, middle and tail parts; the same source buffer is written from two
     -- different offsets, so its middle part can not be aligned in both cases
     local data = pattern(1300, 2)
-    for _, off in ipairs({100, 2600}) do
+    for _, off in ipairs({ 100, 2600 }) do
         dev_write(f, BASE + off, data)
         model = model:sub(1, off) .. data .. model:sub(off + #data + 1)
     end
 
     -- small writes inside one sector and across sector boundary
-    for i, w in ipairs({{3, 1}, {511, 2}, {1023, 3}, {5000, 700}, {7000, 1}}) do
+    for i, w in ipairs({ { 3, 1 }, { 511, 2 }, { 1023, 3 }, { 5000, 700 }, { 7000, 1 } }) do
         local off, len = w[1], w[2]
         local d = pattern(len, 10 + i)
         dev_write(f, BASE + off, d)
@@ -100,7 +110,7 @@ end)
 test("Unaligned reads", function()
     local f = assert(io.open(DEV, "rb"))
     f:setvbuf("no")
-    for _, r in ipairs({{0, 1}, {1, 511}, {100, 1300}, {511, 2}, {700, 3000}, {AREA - 5, 5}}) do
+    for _, r in ipairs({ { 0, 1 }, { 1, 511 }, { 100, 1300 }, { 511, 2 }, { 700, 3000 }, { AREA - 5, 5 } }) do
         local off, len = r[1], r[2]
         local rd = dev_read(f, BASE + off, len)
         expect(rd == model:sub(off + 1, off + len), "data mismatch at " .. off .. ", size " .. len)

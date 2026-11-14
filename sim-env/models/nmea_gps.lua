@@ -68,17 +68,26 @@ local M = {}
 local GPS = {}
 GPS.__index = GPS
 
-local DEFAULT_SENTENCES = {GGA = 1, GSA = 1, GSV = 1, RMC = 1, VTG = 1, GLL = 0, ZDA = 0}
-local ORDER = {"GGA", "GLL", "GSA", "GSV", "RMC", "VTG", "ZDA"}
-local PMTK314_FIELDS = {[0] = "GLL", "RMC", "VTG", "GGA", "GSA", "GSV", [17] = "ZDA"}
-local BAUDS = {[4800] = true, [9600] = true, [14400] = true, [19200] = true, [38400] = true,
-               [57600] = true, [115200] = true}
-local SAT_PRN = {1, 3, 6, 9, 11, 14, 17, 19, 22, 24, 28, 31}
+local DEFAULT_SENTENCES = { GGA = 1, GSA = 1, GSV = 1, RMC = 1, VTG = 1, GLL = 0, ZDA = 0 }
+local ORDER = { "GGA", "GLL", "GSA", "GSV", "RMC", "VTG", "ZDA" }
+local PMTK314_FIELDS = { [0] = "GLL", "RMC", "VTG", "GGA", "GSA", "GSV", [17] = "ZDA" }
+local BAUDS = {
+    [4800] = true,
+    [9600] = true,
+    [14400] = true,
+    [19200] = true,
+    [38400] = true,
+    [57600] = true,
+    [115200] = true,
+}
+local SAT_PRN = { 1, 3, 6, 9, 11, 14, 17, 19, 22, 24, 28, 31 }
 
 -- NMEA checksum (XOR of characters between $ and *)
 function M.checksum(body)
     local cs = 0
-    for i = 1, #body do cs = cs ~ body:byte(i) end
+    for i = 1, #body do
+        cs = cs ~ body:byte(i)
+    end
     return string.format("%02X", cs)
 end
 
@@ -88,7 +97,9 @@ end
 
 local function copy(t)
     local c = {}
-    for k, v in pairs(t) do c[k] = v end
+    for k, v in pairs(t) do
+        c[k] = v
+    end
     return c
 end
 
@@ -106,12 +117,16 @@ function M.new(opts)
     g.baud = opts.baud or 9600
     g.rate = opts.rate or 1000
     g.default_sentences = copy(DEFAULT_SENTENCES)
-    for k, v in pairs(opts.sentences or {}) do g.default_sentences[k] = v end
+    for k, v in pairs(opts.sentences or {}) do
+        g.default_sentences[k] = v
+    end
     g.sentences = copy(g.default_sentences)
     g.talker = opts.talker or "GP"
     g.start_time = opts.start_time or os.time()
-    g.ttff = {hot = 1000, warm = 5000, cold = 15000}
-    for k, v in pairs(opts.ttff or {}) do g.ttff[k] = v end
+    g.ttff = { hot = 1000, warm = 5000, cold = 15000 }
+    for k, v in pairs(opts.ttff or {}) do
+        g.ttff[k] = v
+    end
     g.boot = opts.boot ~= false
     g.enabled = true
     g.no_fix_until = 0
@@ -130,8 +145,15 @@ function GPS:mismatched()
     local bad = (cfg.baud ~= self.baud) or (cfg.parity ~= "none")
     local key = string.format("%d %s %d", cfg.baud, cfg.parity, self.baud)
     if bad and self.mismatch ~= key then
-        print(string.format("nmea_gps %s: UART configured to %d baud, parity %s; receiver uses %d 8N1: data unreadable",
-                            self.uart, cfg.baud, cfg.parity, self.baud))
+        print(
+            string.format(
+                "nmea_gps %s: UART configured to %d baud, parity %s; receiver uses %d 8N1: data unreadable",
+                self.uart,
+                cfg.baud,
+                cfg.parity,
+                self.baud
+            )
+        )
     end
     self.mismatch = bad and key or nil
     return bad
@@ -152,7 +174,9 @@ end
 
 function GPS:send_sentence(body)
     local s = sentence(body)
-    for _, fn in ipairs(self.handlers) do fn(s) end
+    for _, fn in ipairs(self.handlers) do
+        fn(s)
+    end
     self:send(s .. "\r\n")
 end
 
@@ -164,11 +188,15 @@ function GPS:receive(data)
     self.rx = self.rx .. data
     while true do
         local line, rest = self.rx:match("^([^\n]*)\n(.*)$")
-        if not line then break end
+        if not line then
+            break
+        end
         self.rx = rest
         self:command((line:gsub("\r$", "")))
     end
-    if #self.rx > 256 then self.rx = "" end
+    if #self.rx > 256 then
+        self.rx = ""
+    end
 end
 
 function GPS:configure()
@@ -179,14 +207,20 @@ function GPS:attach(name, opts)
     self.uart = name
     uart.attach(name, self, opts)
     self.t0 = host.time_ms()
-    if self.boot then self:boot_messages() end
+    if self.boot then
+        self:boot_messages()
+    end
     self:start_timer()
     return self
 end
 
 function GPS:start_timer()
-    if self.timer then self.timer:stop() end
-    self.timer = host.timer(self.rate, function() self:tick() end, true)
+    if self.timer then
+        self.timer:stop()
+    end
+    self.timer = host.timer(self.rate, function()
+        self:tick()
+    end, true)
 end
 
 function GPS:boot_messages()
@@ -201,18 +235,26 @@ end
 
 function GPS:command(line)
     local body, cs = line:match("^%$([^*]+)%*(%x%x)$")
-    if not body or M.checksum(body) ~= cs:upper() then return end
+    if not body or M.checksum(body) ~= cs:upper() then
+        return
+    end
     local fields = {}
-    for f in (body .. ","):gmatch("([^,]*),") do fields[#fields + 1] = f end
+    for f in (body .. ","):gmatch("([^,]*),") do
+        fields[#fields + 1] = f
+    end
     local cmd = tonumber((fields[1]:match("^PMTK(%d+)$")))
-    if not cmd then return end
-    local arg = function(i) return tonumber(fields[i + 1]) end
+    if not cmd then
+        return
+    end
+    local arg = function(i)
+        return tonumber(fields[i + 1])
+    end
 
     if cmd == 0 then
         self:ack(cmd, 3)
     elseif cmd >= 101 and cmd <= 104 then
         self:ack(cmd, 3)
-        self:restart(({[101] = "hot", [102] = "warm", [103] = "cold", [104] = "cold"})[cmd])
+        self:restart(({ [101] = "hot", [102] = "warm", [103] = "cold", [104] = "cold" })[cmd])
     elseif cmd == 220 then
         local ms = arg(1)
         if ms and ms >= 100 and ms <= 10000 then
@@ -224,9 +266,11 @@ function GPS:command(line)
         end
     elseif cmd == 251 then
         local baud = arg(1)
-        if baud == 0 then baud = 9600 end
+        if baud == 0 then
+            baud = 9600
+        end
         if baud and BAUDS[baud] then
-            self:ack(cmd, 3)              -- sent at the old baud rate
+            self:ack(cmd, 3) -- sent at the old baud rate
             self.baud = baud
         else
             self:ack(cmd, 2)
@@ -274,13 +318,19 @@ function GPS:move(dt)
         local c = math.rad(self.course)
         self.lat = self.lat + d * math.cos(c) / 111320
         self.lon = self.lon + d * math.sin(c) / (111320 * math.max(math.cos(math.rad(self.lat)), 0.01))
-        if self.lon > 180 then self.lon = self.lon - 360 elseif self.lon < -180 then self.lon = self.lon + 360 end
+        if self.lon > 180 then
+            self.lon = self.lon - 360
+        elseif self.lon < -180 then
+            self.lon = self.lon + 360
+        end
         self.lat = math.max(-89.9999, math.min(89.9999, self.lat))
     end
 end
 
 function GPS:tick()
-    if not self.enabled then return end
+    if not self.enabled then
+        return
+    end
     self:move(self.rate / 1000)
     self.fixes = self.fixes + 1
 
@@ -292,25 +342,48 @@ function GPS:tick()
     local fix = self:fix()
     local lat, ns = nmea_lat(self.lat)
     local lon, ew = nmea_lon(self.lon)
-    if not fix then lat, ns, lon, ew = "", "", "", "" end
+    if not fix then
+        lat, ns, lon, ew = "", "", "", ""
+    end
     local sats = fix and math.max(4, math.min(12, self.sats)) or 0
     local tk = self.talker
 
     local out = {
         GGA = function()
             if fix then
-                return string.format("%sGGA,%s,%s,%s,%s,%s,1,%02d,%.2f,%.1f,M,0.0,M,,", tk, hms, lat, ns, lon, ew,
-                                     sats, self.hdop, self.alt)
+                return string.format(
+                    "%sGGA,%s,%s,%s,%s,%s,1,%02d,%.2f,%.1f,M,0.0,M,,",
+                    tk,
+                    hms,
+                    lat,
+                    ns,
+                    lon,
+                    ew,
+                    sats,
+                    self.hdop,
+                    self.alt
+                )
             end
             return string.format("%sGGA,%s,,,,,0,00,,,M,,M,,", tk, hms)
         end,
         GLL = function()
-            return string.format("%sGLL,%s,%s,%s,%s,%s,%s,%s", tk, lat, ns, lon, ew, hms, fix and "A" or "V",
-                                 fix and "A" or "N")
+            return string.format(
+                "%sGLL,%s,%s,%s,%s,%s,%s,%s",
+                tk,
+                lat,
+                ns,
+                lon,
+                ew,
+                hms,
+                fix and "A" or "V",
+                fix and "A" or "N"
+            )
         end,
         GSA = function()
             local prn = {}
-            for i = 1, 12 do prn[i] = (i <= sats) and string.format("%02d", SAT_PRN[i]) or "" end
+            for i = 1, 12 do
+                prn[i] = (i <= sats) and string.format("%02d", SAT_PRN[i]) or ""
+            end
             local pdop, vdop = self.hdop * 1.4, self.hdop * 1.1
             if fix then
                 return string.format("%sGSA,A,3,%s,%.2f,%.2f,%.2f", tk, table.concat(prn, ","), pdop, self.hdop, vdop)
@@ -322,7 +395,7 @@ function GPS:tick()
             local total = (n + 3) // 4
             local list = {}
             for m = 1, total do
-                local f = {string.format("%sGSV,%d,%d,%02d", tk, total, m, n)}
+                local f = { string.format("%sGSV,%d,%d,%02d", tk, total, m, n) }
                 for i = (m - 1) * 4 + 1, math.min(m * 4, n) do
                     local snr = fix and string.format("%02d", 20 + (i * 7) % 25) or ""
                     f[#f + 1] = string.format("%02d,%02d,%03d,%s", SAT_PRN[i], 15 + (i * 13) % 70, (i * 47) % 360, snr)
@@ -333,8 +406,18 @@ function GPS:tick()
         end,
         RMC = function()
             if fix then
-                return string.format("%sRMC,%s,A,%s,%s,%s,%s,%.2f,%.2f,%s,,,A", tk, hms, lat, ns, lon, ew,
-                                     self.speed, self.course, date)
+                return string.format(
+                    "%sRMC,%s,A,%s,%s,%s,%s,%.2f,%.2f,%s,,,A",
+                    tk,
+                    hms,
+                    lat,
+                    ns,
+                    lon,
+                    ew,
+                    self.speed,
+                    self.course,
+                    date
+                )
             end
             return string.format("%sRMC,%s,V,,,,,0.00,0.00,%s,,,N", tk, hms, date)
         end,
@@ -354,7 +437,9 @@ function GPS:tick()
         if every > 0 and (self.fixes % every == 0) then
             local s = out[name]()
             if type(s) == "table" then
-                for _, b in ipairs(s) do self:send_sentence(b) end
+                for _, b in ipairs(s) do
+                    self:send_sentence(b)
+                end
             else
                 self:send_sentence(s)
             end
@@ -366,7 +451,9 @@ end
 function GPS:set_position(lat, lon, alt)
     assert(type(lat) == "number" and type(lon) == "number", "nmea_gps: position expected")
     self.lat, self.lon = lat, lon
-    if alt then self.alt = alt end
+    if alt then
+        self.alt = alt
+    end
 end
 
 function GPS:position()
@@ -393,7 +480,9 @@ end
 function GPS:restart(kind)
     local tmo = self.ttff[kind or "hot"] or self.ttff.hot
     self.no_fix_until = host.time_ms() + tmo
-    if self.boot then self:send_sentence("PMTK010,001") end
+    if self.boot then
+        self:send_sentence("PMTK010,001")
+    end
 end
 
 function GPS:on_sentence(fn)

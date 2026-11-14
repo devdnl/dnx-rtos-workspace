@@ -14,8 +14,8 @@ local T = require("testlib")
 local dnx = require("dnx")
 local test, expect = T.test, T.expect
 
-local DEV = "192.168.77.50"         -- netdev of test board
-local SYS = "192.168.77.2"          -- system (app-romfs/netmgr.conf)
+local DEV = "192.168.77.50" -- netdev of test board
+local SYS = "192.168.77.2" -- system (app-romfs/netmgr.conf)
 
 -- test control device ------------------------------------------------------------
 local ctl
@@ -25,7 +25,9 @@ local function control(cmd)
     assert(ctl:write(cmd))
     ctl:seek("set", 0)
     local r = assert(ctl:read(128)):match("^[^%z]*")
-    if r:find("^error") then error("control '" .. cmd .. "': " .. r, 2) end
+    if r:find("^error") then
+        error("control '" .. cmd .. "': " .. r, 2)
+    end
     return r
 end
 
@@ -35,7 +37,9 @@ local function wait_for(fn, timeout)
     local v
     repeat
         v = fn()
-        if v then return v end
+        if v then
+            return v
+        end
         dnx.sys.msleep(50)
     until dnx.sys.uptime() - t0 > timeout
     return v
@@ -43,7 +47,9 @@ end
 
 local function read_file(path)
     local f = io.open(path, "rb")
-    if not f then return nil end
+    if not f then
+        return nil
+    end
     local s = f:read("a")
     f:close()
     return s
@@ -51,7 +57,7 @@ end
 
 -- start program in background, output to file
 local function spawn(cmd, out)
-    return assert(dnx.proc.spawn(cmd, {stdout = out, stderr = out}))
+    return assert(dnx.proc.spawn(cmd, { stdout = out, stderr = out }))
 end
 
 local function wait(pid, timeout)
@@ -67,8 +73,10 @@ end
 -- test pattern: byte i = i % 251 (the same as TCP source of the model), files are
 -- written and checked in blocks (small heap of the system)
 local BLOCK = {}
-for i = 0, 250 do BLOCK[#BLOCK + 1] = string.char(i) end
-BLOCK = table.concat(BLOCK):rep(16)        -- 4016 bytes (multiple of 251)
+for i = 0, 250 do
+    BLOCK[#BLOCK + 1] = string.char(i)
+end
+BLOCK = table.concat(BLOCK):rep(16) -- 4016 bytes (multiple of 251)
 
 local function write_pattern(path, n)
     local f = assert(io.open(path, "wb"))
@@ -83,11 +91,15 @@ end
 -- file contains pattern of n bytes: true or nil, message
 local function check_pattern(path, n)
     local f = io.open(path, "rb")
-    if not f then return nil, "no file " .. path end
+    if not f then
+        return nil, "no file " .. path
+    end
     local pos = 0
     while true do
         local s = f:read(#BLOCK)
-        if not s then break end
+        if not s then
+            break
+        end
         if s ~= BLOCK:sub(1, #s) then
             f:close()
             return nil, "data differ in block at " .. pos
@@ -95,14 +107,18 @@ local function check_pattern(path, n)
         pos = pos + #s
     end
     f:close()
-    if pos ~= n then return nil, "size " .. pos .. ", expected " .. n end
+    if pos ~= n then
+        return nil, "size " .. pos .. ", expected " .. n
+    end
     return true
 end
 
 -- sum32 of pattern of n bytes (as TCP sink of the model)
 local function pattern_sum(n)
     local sum = 0
-    for i = 0, n - 1 do sum = sum + i % 251 end
+    for i = 0, n - 1 do
+        sum = sum + i % 251
+    end
     return sum & 0xFFFFFFFF
 end
 
@@ -170,7 +186,7 @@ end)
 test("UDP sensor disabled: no transmissions", function()
     local tx0 = control("net sensor_tx")
     expect(control("net sensor_send") == "false", "send() of disabled sensor returned true")
-    dnx.sys.msleep(1200)                    -- more than 2 periods (500 ms)
+    dnx.sys.msleep(1200) -- more than 2 periods (500 ms)
     expect(control("net sensor_tx") == tx0, "transmissions: " .. tx0 .. " -> " .. control("net sensor_tx"))
 end)
 
@@ -184,14 +200,18 @@ local function sensor2_receive(count, timeout, fn)
     local status = wait(pid, (timeout + 5) * 1000)
     local lines = {}
     for l in (read_file("/tmp/net_s2") or ""):gmatch("[^\n]+") do
-        if l:find("^192%.168%.77%.52:5001 ") then lines[#lines + 1] = l:sub(20) end
+        if l:find("^192%.168%.77%.52:5001 ") then
+            lines[#lines + 1] = l:sub(20)
+        end
     end
     return lines, status
 end
 
 test("UDP sensor: unicast, format function, send after change", function()
     local tx0 = tonumber(control("net sensor2_tx"))
-    local lines, status = sensor2_receive(1, 5, function() control("net sensor2 12.5") end)
+    local lines, status = sensor2_receive(1, 5, function()
+        control("net sensor2 12.5")
+    end)
     expect(status == 0 and #lines == 1, "datagrams: " .. table.concat(lines, " | "))
     expect(lines[1] == string.format("S52 12.50 #%d", tx0 + 1), "datagram: " .. tostring(lines[1]))
     expect(tonumber(control("net sensor2_tx")) == tx0 + 1, "transmissions")
@@ -214,8 +234,10 @@ test("UDP sensor: send on request", function()
     local lines, status = sensor2_receive(1, 5, function()
         expect(control("net sensor2_send") == "true", "send() returned false")
     end)
-    expect(status == 0 and lines[1] == string.format("S52 3.25 #%d", tx0 + 1),
-           "datagrams: " .. table.concat(lines, " | "))
+    expect(
+        status == 0 and lines[1] == string.format("S52 3.25 #%d", tx0 + 1),
+        "datagrams: " .. table.concat(lines, " | ")
+    )
 end)
 
 test("TCP echo", function()
@@ -292,7 +314,7 @@ end)
 
 test("Close", function()
     ctl:close()
-    for _, f in ipairs({"net_ping", "net_udp", "net_in", "net_out", "net_src", "net_srv", "net_srv_log", "net_s2"}) do
+    for _, f in ipairs({ "net_ping", "net_udp", "net_in", "net_out", "net_src", "net_srv", "net_srv_log", "net_s2" }) do
         os.remove("/tmp/" .. f)
     end
 end)

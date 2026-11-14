@@ -9,19 +9,23 @@ local T = require("testlib")
 local test, expect = T.test, T.expect
 
 local I2C_DEV = "/dev/i2c-24c256"
-local EE_DEV  = "/dev/24c256"
-local MNT     = "/mnt/i2cee"
-local SIZE    = 32768
+local EE_DEV = "/dev/24c256"
+local MNT = "/mnt/i2cee"
+local SIZE = 32768
 
 local function run(cmd)
     local ok, out = T.run(cmd)
-    if not ok then error(cmd .. ": " .. out, 2) end
+    if not ok then
+        error(cmd .. ": " .. out, 2)
+    end
     return out
 end
 
 local function exists(path)
     local f = io.open(path, "rb")
-    if f then f:close() end
+    if f then
+        f:close()
+    end
     return f ~= nil
 end
 
@@ -43,17 +47,19 @@ end
 
 local function read_file(path)
     local f, err = io.open(path, "rb")
-    if not f then return nil, err end
+    if not f then
+        return nil, err
+    end
     local data = f:read("a")
     f:close()
     return data
 end
 
 local FILES = {
-    {MNT .. "/small.txt", "Hello from I2C EEPROM!\n"},
-    {MNT .. "/block.bin", pattern(128, 1)},
-    {MNT .. "/multi.bin", pattern(3000, 2)},
-    {MNT .. "/dir/nested.bin", pattern(777, 3)},
+    { MNT .. "/small.txt", "Hello from I2C EEPROM!\n" },
+    { MNT .. "/block.bin", pattern(128, 1) },
+    { MNT .. "/multi.bin", pattern(3000, 2) },
+    { MNT .. "/dir/nested.bin", pattern(777, 3) },
 }
 
 test("Create I2C and I2CEE devices (modprobe -c)", function()
@@ -61,8 +67,15 @@ test("Create I2C and I2CEE devices (modprobe -c)", function()
         run("modprobe -i I2C 0 0 " .. I2C_DEV .. " -c address=0x50,sub_addr_mode=2")
     end
     if not exists(EE_DEV) then
-        run("modprobe -i I2CEE 0 0 " .. EE_DEV .. " -c i2c_path=" .. I2C_DEV
-            .. ",memory_size=" .. SIZE .. ",page_size=64,page_prog_time_ms=5")
+        run(
+            "modprobe -i I2CEE 0 0 "
+                .. EE_DEV
+                .. " -c i2c_path="
+                .. I2C_DEV
+                .. ",memory_size="
+                .. SIZE
+                .. ",page_size=64,page_prog_time_ms=5"
+        )
     end
 end)
 
@@ -97,7 +110,9 @@ end)
 
 test("Write files", function()
     run("mkdir " .. MNT .. "/dir")
-    for _, f in ipairs(FILES) do write_file(f[1], f[2]) end
+    for _, f in ipairs(FILES) do
+        write_file(f[1], f[2])
+    end
 end)
 
 test("Read files", function()
@@ -115,7 +130,9 @@ test("Remount and read files", function()
 end)
 
 test("Remove files and free space", function()
-    for i = #FILES, 1, -1 do expect(os.remove(FILES[i][1]), "remove " .. FILES[i][1]) end
+    for i = #FILES, 1, -1 do
+        expect(os.remove(FILES[i][1]), "remove " .. FILES[i][1])
+    end
     expect(os.remove(MNT .. "/dir"), "remove dir")
     -- space of removed files can be used again
     local big = pattern(20000, 5)

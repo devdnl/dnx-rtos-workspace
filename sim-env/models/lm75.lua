@@ -24,13 +24,15 @@ LM75.__index = LM75
 
 local function to_reg(c)
     local v = math.floor(c * 2 + 0.5)
-    v = math.max(-110, math.min(250, v))   -- -55 .. 125 C
+    v = math.max(-110, math.min(250, v)) -- -55 .. 125 C
     return (v & 0x1FF) << 7
 end
 
 local function from_reg(r)
     local v = (r >> 7) & 0x1FF
-    if v & 0x100 ~= 0 then v = v - 0x200 end
+    if v & 0x100 ~= 0 then
+        v = v - 0x200
+    end
     return v / 2
 end
 
@@ -38,7 +40,7 @@ function M.new(opts)
     opts = opts or {}
     local dev = setmetatable({}, LM75)
     dev.os = opts.os
-    dev.reg = {[0] = to_reg(opts.temperature or 25), [1] = 0, [2] = to_reg(75), [3] = to_reg(80)}
+    dev.reg = { [0] = to_reg(opts.temperature or 25), [1] = 0, [2] = to_reg(75), [3] = to_reg(80) }
     dev.ptr = 0
     dev.alarm = false
     dev.armed_low = false

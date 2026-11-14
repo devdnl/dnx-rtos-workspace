@@ -7,34 +7,40 @@
 local T = require("testlib")
 local test, expect = T.test, T.expect
 
-local DELAY = 50     -- ms, time for board reaction
+local DELAY = 50 -- ms, time for board reaction
 local WRITE_TIME = 6 -- ms, EEPROM write cycle (model: 5 ms)
 
 -- I2C devices: path, major (bus), minor, configuration
 local DEVICES = {
-    {"/dev/i2c-io",   0, 10, "address=0x20"},                   -- PCF8574
-    {"/dev/i2c-temp", 0, 11, "address=0x48,sub_addr_mode=1"},   -- LM75
-    {"/dev/i2c-ee",   0, 12, "address=0x51,sub_addr_mode=2"},   -- 24C32
-    {"/dev/i2c-none", 0, 13, "address=0x57,sub_addr_mode=2"},   -- not connected
-    {"/dev/i2c2-ee",  1, 10, "address=0x50,sub_addr_mode=1"},   -- 24C02 on I2C:1
+    { "/dev/i2c-io", 0, 10, "address=0x20" }, -- PCF8574
+    { "/dev/i2c-temp", 0, 11, "address=0x48,sub_addr_mode=1" }, -- LM75
+    { "/dev/i2c-ee", 0, 12, "address=0x51,sub_addr_mode=2" }, -- 24C32
+    { "/dev/i2c-none", 0, 13, "address=0x57,sub_addr_mode=2" }, -- not connected
+    { "/dev/i2c2-ee", 1, 10, "address=0x50,sub_addr_mode=1" }, -- 24C02 on I2C:1
 }
 
 local function exists(path)
     local f = io.open(path, "rb")
-    if f then f:close() end
+    if f then
+        f:close()
+    end
     return f ~= nil
 end
 
 local function open(path)
     local f, err = io.open(path, "r+b")
-    if not f then error(path .. ": " .. tostring(err), 3) end
+    if not f then
+        error(path .. ": " .. tostring(err), 3)
+    end
     f:setvbuf("no")
     return f
 end
 
 local function dev_write(path, pos, data)
     local f = open(path)
-    if pos then f:seek("set", pos) end
+    if pos then
+        f:seek("set", pos)
+    end
     local ok, err = f:write(data)
     f:close()
     return ok ~= nil, err
@@ -42,14 +48,18 @@ end
 
 local function dev_read(path, pos, n)
     local f = open(path)
-    if pos then f:seek("set", pos) end
+    if pos then
+        f:seek("set", pos)
+    end
     local data, err = f:read(n)
     f:close()
     return data, err
 end
 
 local function hex(s)
-    return (tostring(s):gsub(".", function(c) return string.format("%02X ", c:byte()) end))
+    return (tostring(s):gsub(".", function(c)
+        return string.format("%02X ", c:byte())
+    end))
 end
 
 test("Create I2C devices (modprobe -c)", function()
@@ -89,7 +99,9 @@ end)
 
 test("EEPROM sequential read across pages", function()
     local data = {}
-    for i = 0, 99 do data[#data + 1] = string.char((i * 7) & 0xFF) end
+    for i = 0, 99 do
+        data[#data + 1] = string.char((i * 7) & 0xFF)
+    end
     data = table.concat(data)
     for off = 0, #data - 1, 32 do
         expect(dev_write("/dev/i2c-ee", 0x800 + off, data:sub(off + 1, off + 32)), "write error")
@@ -105,12 +117,14 @@ test("EEPROM on second bus (I2C:1, 1-byte sub-address)", function()
 end)
 
 test("PCF8574 outputs and inputs (P0..P3 -> P4..P7)", function()
-    for _, v in ipairs({0x05, 0x0A, 0x0F, 0x00}) do
+    for _, v in ipairs({ 0x05, 0x0A, 0x0F, 0x00 }) do
         expect(dev_write("/dev/i2c-io", nil, string.char(0xF0 | v)), "write error")
         local rd = dev_read("/dev/i2c-io", nil, 1)
         local expected = (v << 4) | v
-        expect(rd and rd:byte() == expected,
-               string.format("written 0x%02X, read %s, expected 0x%02X", 0xF0 | v, hex(rd), expected))
+        expect(
+            rd and rd:byte() == expected,
+            string.format("written 0x%02X, read %s, expected 0x%02X", 0xF0 | v, hex(rd), expected)
+        )
     end
 end)
 

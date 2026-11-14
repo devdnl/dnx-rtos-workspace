@@ -56,16 +56,22 @@ function M.new(opts)
     local d = setmetatable({}, DEV)
     d.width = opts.width or 240
     d.height = opts.height or 320
-    d.id_bytes = opts.id_bytes or {0x85, 0x85, 0x52}
-    d.mode = {[0] = true, [3] = true}
-    d.lcd = panel.lcd(opts.id or "st7789", d.width, d.height, {format = opts.format, enabled = false})
-    d.rgb565 = (d.lcd.format == "rgb565")      -- 16-bit pixels are written without conversion
+    d.id_bytes = opts.id_bytes or { 0x85, 0x85, 0x52 }
+    d.mode = { [0] = true, [3] = true }
+    d.lcd = panel.lcd(opts.id or "st7789", d.width, d.height, { format = opts.format, enabled = false })
+    d.rgb565 = (d.lcd.format == "rgb565") -- 16-bit pixels are written without conversion
 
     d.dc = gpio.get(opts.dc)
-    gpio.on_change(opts.dc, function(level) d.dc = level end)
+    gpio.on_change(opts.dc, function(level)
+        d.dc = level
+    end)
 
     if opts.reset then
-        gpio.on_change(opts.reset, function(level) if not level then d:reset() end end)
+        gpio.on_change(opts.reset, function(level)
+            if not level then
+                d:reset()
+            end
+        end)
     end
 
     d:reset()
@@ -77,7 +83,7 @@ function DEV:reset()
     self.sleep = true
     self.on = false
     self.madctl = 0
-    self.bpp = 2                -- bytes per pixel (COLMOD)
+    self.bpp = 2 -- bytes per pixel (COLMOD)
     self.cmd = nil
     self:window(0, 0, self.width - 1, self.height - 1)
     self:update()
@@ -90,7 +96,9 @@ end
 
 -- logical size (MV exchanges rows and columns)
 function DEV:size()
-    if self.madctl & 0x20 ~= 0 then return self.height, self.width end
+    if self.madctl & 0x20 ~= 0 then
+        return self.height, self.width
+    end
     return self.width, self.height
 end
 
@@ -104,9 +112,15 @@ function DEV:put(v)
     local x, y = self.x, self.y
     if x < w and y < h then
         local m = self.madctl
-        if m & 0x40 ~= 0 then x = w - 1 - x end     -- MX
-        if m & 0x80 ~= 0 then y = h - 1 - y end     -- MY
-        if m & 0x20 ~= 0 then x, y = y, x end       -- MV
+        if m & 0x40 ~= 0 then
+            x = w - 1 - x
+        end -- MX
+        if m & 0x80 ~= 0 then
+            y = h - 1 - y
+        end -- MY
+        if m & 0x20 ~= 0 then
+            x, y = y, x
+        end -- MV
         self.lcd:pixel(x, y, v)
     end
     if self.x >= self.xe then
@@ -144,9 +158,9 @@ function DEV:command(cmd)
     elseif cmd == RAMWRC then
         self.cmd, self.n = RAMWR, 0
     elseif cmd == RDDID then
-        self.rd = {table.unpack(self.id_bytes)}
+        self.rd = { table.unpack(self.id_bytes) }
     elseif cmd == RDDPM then
-        self.rd = {0x08 | (self.sleep and 0 or 0x90) | (self.on and 0x04 or 0)}  -- booster, sleep out, normal, on
+        self.rd = { 0x08 | (self.sleep and 0 or 0x90) | (self.on and 0x04 or 0) } -- booster, sleep out, normal, on
     end
 end
 
@@ -156,14 +170,16 @@ function DEV:data_byte(byte)
     if cmd == RAMWR then
         local n = self.n + 1
         if n < self.bpp then
-            self[n], self.n = byte, n   -- first bytes of pixel: self[1], self[2]
+            self[n], self.n = byte, n -- first bytes of pixel: self[1], self[2]
             return
         end
         self.n = 0
         local bgr = self.madctl & 0x08 ~= 0
         if self.bpp == 2 then
             local v = (self[1] << 8) | byte
-            if bgr then v = ((v & 0x1F) << 11) | (v & 0x07E0) | (v >> 11) end
+            if bgr then
+                v = ((v & 0x1F) << 11) | (v & 0x07E0) | (v >> 11)
+            end
             if not self.rgb565 then
                 local r, g, b = (v >> 11) & 0x1F, (v >> 5) & 0x3F, v & 0x1F
                 v = self.lcd:color((r << 3) | (r >> 2), (g << 2) | (g >> 4), (b << 3) | (b >> 2))
@@ -171,24 +187,27 @@ function DEV:data_byte(byte)
             self:put(v)
         else
             local r, g, b = self[1] & 0xFC, self[2] & 0xFC, byte & 0xFC
-            if bgr then r, b = b, r end
+            if bgr then
+                r, b = b, r
+            end
             self:put(self.lcd:color(r | (r >> 6), g | (g >> 6), b | (b >> 6)))
         end
-
     elseif cmd == CASET or cmd == RASET then
         local a = self.args
         a[#a + 1] = byte
         if #a == 4 then
             local s, e = (a[1] << 8) | a[2], (a[3] << 8) | a[4]
-            if cmd == CASET then self.xs, self.xe = s, e else self.ys, self.ye = s, e end
+            if cmd == CASET then
+                self.xs, self.xe = s, e
+            else
+                self.ys, self.ye = s, e
+            end
         end
-
     elseif cmd == MADCTL then
         self.madctl = byte
         self.cmd = nil
-
     elseif cmd == COLMOD then
-        self.bpp = ((byte & 0x07) == 0x06) and 3 or 2  -- 0x66/0x06: 18-bit, other: 16-bit
+        self.bpp = ((byte & 0x07) == 0x06) and 3 or 2 -- 0x66/0x06: 18-bit, other: 16-bit
         self.cmd = nil
     end
 end
@@ -203,7 +222,9 @@ function DEV:transfer(byte)
         return table.remove(self.rd, 1) or 0xFF
     end
 
-    if self.cmd then self:data_byte(byte) end
+    if self.cmd then
+        self:data_byte(byte)
+    end
     return 0xFF
 end
 

@@ -36,12 +36,14 @@ function M.new(opts)
     local dev = setmetatable({}, FT)
     dev.int = opts.int
     dev.swap_xy = opts.swap_xy and true or false
-    dev.reg = {[0x80] = 0x16, [0xA3] = 0x0A, [0xA4] = 0x00, [0xA6] = 0x10, [0xA8] = 0x51}
+    dev.reg = { [0x80] = 0x16, [0xA3] = 0x0A, [0xA4] = 0x00, [0xA6] = 0x10, [0xA8] = 0x51 }
     dev.ptr = 0
     dev.points = 0
     dev.event = EVENT_UP
     dev.x, dev.y = 0, 0
-    if dev.int then gpio.set(dev.int, true) end
+    if dev.int then
+        gpio.set(dev.int, true)
+    end
     return dev
 end
 
@@ -49,7 +51,9 @@ function FT:release()
     self.event = EVENT_UP
     self.points = 0
     self.release_pending = false
-    if self.int then gpio.set(self.int, true) end
+    if self.int then
+        gpio.set(self.int, true)
+    end
 end
 
 function FT:touch(x, y, pressed)
@@ -59,7 +63,9 @@ function FT:touch(x, y, pressed)
         self.reported = false
         self.release_pending = false
         self.x, self.y = math.tointeger(x) or 0, math.tointeger(y) or 0
-        if self.int then gpio.set(self.int, false) end
+        if self.int then
+            gpio.set(self.int, false)
+        end
     elseif self.points > 0 and not self.reported then
         self.release_pending = true -- touch was not read yet (short touch)
     else
@@ -70,22 +76,33 @@ end
 -- value of register
 function FT:value(r)
     local x, y = self.x, self.y
-    if self.swap_xy then x, y = y, x end
+    if self.swap_xy then
+        x, y = y, x
+    end
     if r == 0x02 then
-        if self.points > 0 then self.reported = true end
+        if self.points > 0 then
+            self.reported = true
+        end
         return self.points
-    elseif r == 0x03 then return (self.event << 6) | ((x >> 8) & 0x0F)
-    elseif r == 0x04 then return x & 0xFF
-    elseif r == 0x05 then return (y >> 8) & 0x0F
-    elseif r == 0x06 then return y & 0xFF
-    elseif r == 0x07 then return self.points > 0 and 0x20 or 0
+    elseif r == 0x03 then
+        return (self.event << 6) | ((x >> 8) & 0x0F)
+    elseif r == 0x04 then
+        return x & 0xFF
+    elseif r == 0x05 then
+        return (y >> 8) & 0x0F
+    elseif r == 0x06 then
+        return y & 0xFF
+    elseif r == 0x07 then
+        return self.points > 0 and 0x20 or 0
     end
     return self.reg[r] or 0
 end
 
 -- bus interface
 function FT:select(read)
-    if self.release_pending and self.reported then self:release() end
+    if self.release_pending and self.reported then
+        self:release()
+    end
     self.first = not read
     return true
 end

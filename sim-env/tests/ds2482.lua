@@ -15,7 +15,7 @@ local test, expect = T.test, T.expect
 local ST_1WB, ST_PPD, ST_SD, ST_LL, ST_RST, ST_SBR, ST_TSB, ST_DIR = 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
 local CFG_APU, CFG_SPU, CFG_1WS = 0x01, 0x04, 0x08
 
-local BUSY_TIMEOUT = 500  -- ms (host load: simulator thread can be suspended for a while)
+local BUSY_TIMEOUT = 500 -- ms (host load: simulator thread can be suspended for a while)
 
 local function uptime()
     return dnx.sys.uptime()
@@ -23,7 +23,9 @@ end
 
 local function hex(t)
     local s = {}
-    for i, b in ipairs(t) do s[i] = string.format("%02X", b) end
+    for i, b in ipairs(t) do
+        s[i] = string.format("%02X", b)
+    end
     return table.concat(s)
 end
 
@@ -34,7 +36,9 @@ local function crc8(bytes, n)
         for _ = 1, 8 do
             local mix = (crc ~ b) & 1
             crc = crc >> 1
-            if mix ~= 0 then crc = crc ~ 0x8C end
+            if mix ~= 0 then
+                crc = crc ~ 0x8C
+            end
             b = b >> 1
         end
     end
@@ -51,9 +55,11 @@ Dev.__index = Dev
 
 local function device(path)
     local f, err = io.open(path, "r+b")
-    if not f then error(path .. ": " .. tostring(err), 2) end
+    if not f then
+        error(path .. ": " .. tostring(err), 2)
+    end
     f:setvbuf("no")
-    return setmetatable({f = f, path = path}, Dev)
+    return setmetatable({ f = f, path = path }, Dev)
 end
 
 function Dev:write(...)
@@ -65,7 +71,9 @@ end
 function Dev:read(n)
     self.f:seek("set", 0)
     local s, err = self.f:read(n or 1)
-    if not s then error(self.path .. ": read: " .. tostring(err), 2) end
+    if not s then
+        error(self.path .. ": read: " .. tostring(err), 2)
+    end
     return s
 end
 
@@ -81,7 +89,9 @@ local function control(cmd)
     expect(ok, "control: " .. tostring(err))
     local r = ctl:read(1024)
     r = r:match("^[^%z]*")
-    if r:find("^error") then error("control '" .. cmd .. "': " .. r, 2) end
+    if r:find("^error") then
+        error("control '" .. cmd .. "': " .. r, 2)
+    end
     return r
 end
 
@@ -91,9 +101,17 @@ local function sensors()
     for line in control("list"):gmatch("[^\n]+") do
         local n, bus, att, rom, temp, par = line:match("^(%d+) (%a) (%d) (%x+) (%S+) (%d)$")
         local r = {}
-        for b in rom:gmatch("%x%x") do r[#r + 1] = tonumber(b, 16) end
-        list[tonumber(n)] = {n = tonumber(n), bus = bus, attached = att == "1", rom = r,
-                             temp = tonumber(temp), parasite = par == "1"}
+        for b in rom:gmatch("%x%x") do
+            r[#r + 1] = tonumber(b, 16)
+        end
+        list[tonumber(n)] = {
+            n = tonumber(n),
+            bus = bus,
+            attached = att == "1",
+            rom = r,
+            temp = tonumber(temp),
+            parasite = par == "1",
+        }
     end
     return list
 end
@@ -101,7 +119,9 @@ end
 local function roms_of(list, bus)
     local t = {}
     for _, s in ipairs(list) do
-        if s.bus == bus and s.attached then t[hex(s.rom)] = s end
+        if s.bus == bus and s.attached then
+            t[hex(s.rom)] = s
+        end
     end
     return t
 end
@@ -111,12 +131,14 @@ local OW = {}
 OW.__index = OW
 
 local function master(path)
-    return setmetatable({dev = device(path)}, OW)
+    return setmetatable({ dev = device(path) }, OW)
 end
 
 function OW:cmd(...)
     local ok, err = self.dev:write(...)
-    if not ok then error(string.format("command 0x%02X: %s", (...), tostring(err)), 2) end
+    if not ok then
+        error(string.format("command 0x%02X: %s", (...), tostring(err)), 2)
+    end
 end
 
 function OW:rd()
@@ -128,10 +150,14 @@ function OW:wait()
     local t0 = uptime()
     while true do
         local st = self:rd()
-        if st & ST_1WB == 0 then return st end
+        if st & ST_1WB == 0 then
+            return st
+        end
         if uptime() - t0 > BUSY_TIMEOUT then
-            st = self:rd()   -- status after timeout (thread suspended for timeout time)
-            if st & ST_1WB == 0 then return st end
+            st = self:rd() -- status after timeout (thread suspended for timeout time)
+            if st & ST_1WB == 0 then
+                return st
+            end
             error("1-Wire busy timeout", 2)
         end
     end
@@ -165,7 +191,9 @@ function OW:write_byte(b)
 end
 
 function OW:write_bytes(t)
-    for _, b in ipairs(t) do self:write_byte(b) end
+    for _, b in ipairs(t) do
+        self:write_byte(b)
+    end
 end
 
 function OW:read_byte()
@@ -177,7 +205,9 @@ end
 
 function OW:read_bytes(n)
     local t = {}
-    for i = 1, n do t[i] = self:read_byte() end
+    for i = 1, n do
+        t[i] = self:read_byte()
+    end
     return t
 end
 
@@ -201,7 +231,7 @@ end
 ]]
 function OW:search(opts)
     opts = opts or {}
-    local rom = {0, 0, 0, 0, 0, 0, 0, 0}
+    local rom = { 0, 0, 0, 0, 0, 0, 0, 0 }
     local last_disc, last_device = 0, false
     local found = {}
 
@@ -229,8 +259,12 @@ function OW:search(opts)
             local id, cmp
             if opts.bits then
                 id, cmp = self:bit(1), self:bit(1)
-                if id ~= cmp then dir = id end
-                if not (id == 1 and cmp == 1) then self:bit(dir) end
+                if id ~= cmp then
+                    dir = id
+                end
+                if not (id == 1 and cmp == 1) then
+                    self:bit(dir)
+                end
             else
                 id, cmp, dir = self:triplet(dir)
             end
@@ -238,15 +272,25 @@ function OW:search(opts)
             if id == 1 and cmp == 1 then
                 return found, string.format("no device responds at bit %d", n)
             end
-            if id == 0 and cmp == 0 and dir == 0 then last_zero = n end
+            if id == 0 and cmp == 0 and dir == 0 then
+                last_zero = n
+            end
 
-            if dir ~= 0 then rom[i] = rom[i] | mask else rom[i] = rom[i] & ~mask end
+            if dir ~= 0 then
+                rom[i] = rom[i] | mask
+            else
+                rom[i] = rom[i] & ~mask
+            end
         end
 
         last_disc = last_zero
-        if last_disc == 0 then last_device = true end
-        found[#found + 1] = {table.unpack(rom)}
-        if #found > 64 then return found, "too many devices (search loop)" end
+        if last_disc == 0 then
+            last_device = true
+        end
+        found[#found + 1] = { table.unpack(rom) }
+        if #found > 64 then
+            return found, "too many devices (search loop)"
+        end
     until last_device or opts.family
 
     return found
@@ -254,7 +298,9 @@ end
 
 -- select device: MATCH ROM (rom) or SKIP ROM (nil), returns presence
 function OW:select(rom)
-    if not self:reset() then return false end
+    if not self:reset() then
+        return false
+    end
     if rom then
         self:write_byte(0x55)
         self:write_bytes(rom)
@@ -274,25 +320,31 @@ end
 
 local function sp_temperature(sp)
     local v = sp[1] | (sp[2] << 8)
-    if v & 0x8000 ~= 0 then v = v - 0x10000 end
+    if v & 0x8000 ~= 0 then
+        v = v - 0x10000
+    end
     return v / 16
 end
 
 -- read temperature, returns temperature or error
 function OW:temperature(rom)
     local sp, ok = self:scratchpad(rom)
-    if not ok then return nil, "scratchpad CRC error: " .. hex(sp) end
+    if not ok then
+        return nil, "scratchpad CRC error: " .. hex(sp)
+    end
     return sp_temperature(sp)
 end
 
 -- CONVERT T, wait for end of conversion (read slots), returns time (ms)
 function OW:convert(rom, spu)
     expect(self:select(rom), "no presence")
-    if spu then expect(self:config(CFG_SPU) == CFG_SPU, "SPU not set") end
+    if spu then
+        expect(self:config(CFG_SPU) == CFG_SPU, "SPU not set")
+    end
     local t0 = uptime()
     self:write_byte(0x44)
     if spu then
-        T.msleep(800)       -- parasite power: device cannot signal end of conversion
+        T.msleep(800) -- parasite power: device cannot signal end of conversion
     else
         while self:read_byte() == 0 do
             expect(uptime() - t0 < 2000, "conversion timeout")
@@ -303,7 +355,7 @@ end
 
 function OW:write_scratchpad(rom, th, tl, cfg)
     expect(self:select(rom), "no presence")
-    self:write_bytes({0x4E, th & 0xFF, tl & 0xFF, cfg})
+    self:write_bytes({ 0x4E, th & 0xFF, tl & 0xFF, cfg })
 end
 
 local function set_of(list)
@@ -355,7 +407,7 @@ end)
 test("Configuration register", function()
     expect(a:config(CFG_APU) == CFG_APU, "APU not set")
     expect(a:status() & ST_RST == 0, "RST not cleared by WCFG")
-    a:cmd(0xD2, 0x11)  -- upper nibble is not complement: ignored
+    a:cmd(0xD2, 0x11) -- upper nibble is not complement: ignored
     expect(a:rd() == CFG_APU, "invalid configuration byte accepted")
     expect(a:config(0) == 0, "configuration not cleared")
 end)
@@ -371,7 +423,9 @@ test("1-Wire reset, presence and busy bit", function()
     local busy_seen = false
     for _ = 1, 5 do
         a:cmd(0xB4)
-        if a:rd() & ST_1WB ~= 0 then busy_seen = true end
+        if a:rd() & ST_1WB ~= 0 then
+            busy_seen = true
+        end
         local st = a:wait()
         expect(st & ST_PPD ~= 0, "no presence")
         expect(st & ST_SD == 0, "short detected")
@@ -384,11 +438,13 @@ test("SEARCH ROM (triplets)", function()
     local found, err = a:search()
     expect(not err, err)
     compare_sets(found, roms_of(board, "a"))
-    for _, r in ipairs(found) do expect(rom_crc_ok(r), "ROM CRC error: " .. hex(r)) end
+    for _, r in ipairs(found) do
+        expect(rom_crc_ok(r), "ROM CRC error: " .. hex(r))
+    end
 end)
 
 test("SEARCH ROM (single bits)", function()
-    local found, err = a:search{bits = true}
+    local found, err = a:search({ bits = true })
     expect(not err, err)
     compare_sets(found, roms_of(board, "a"))
 end)
@@ -397,11 +453,13 @@ test("SEARCH ROM repeated (stable order)", function()
     local f1 = a:search()
     local f2 = a:search()
     expect(#f1 == #f2, "different number of devices")
-    for i = 1, #f1 do expect(hex(f1[i]) == hex(f2[i]), "different order at " .. i) end
+    for i = 1, #f1 do
+        expect(hex(f1[i]) == hex(f2[i]), "different order at " .. i)
+    end
 end)
 
 test("SEARCH ROM target setup (family 0x10)", function()
-    local found, err = a:search{family = 0x10}
+    local found, err = a:search({ family = 0x10 })
     expect(not err, err)
     expect(#found == 1 and found[1][1] == 0x10, "family 0x10 not found first: " .. hex(found[1] or {}))
     expect(hex(found[1]) == hex(board[7].rom), "wrong device")
@@ -422,9 +480,11 @@ test("READ ROM (single device, collision)", function()
     expect(a:reset(), "no presence")
     a:write_byte(0x33)
     rom = a:read_bytes(8)
-    local wired_and = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
+    local wired_and = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF }
     for _, s in pairs(roms_of(board, "a")) do
-        for i = 1, 8 do wired_and[i] = wired_and[i] & s.rom[i] end
+        for i = 1, 8 do
+            wired_and[i] = wired_and[i] & s.rom[i]
+        end
     end
     expect(hex(rom) == hex(wired_and), "collision is not wired-AND: " .. hex(rom))
 end)
@@ -506,17 +566,19 @@ test("SKIP ROM CONVERT T, all temperatures", function()
 end)
 
 test("ALARM SEARCH", function()
-    a:write_scratchpad(nil, 30, -5, 0x7F)  -- all devices: TH = 30 C, TL = -5 C
+    a:write_scratchpad(nil, 30, -5, 0x7F) -- all devices: TH = 30 C, TL = -5 C
     a:convert(nil, true)
     local expected = {}
     for _, s in pairs(roms_of(board, "a")) do
         local tint = math.floor(s.temp)
-        if tint >= 30 or tint <= -5 then expected[hex(s.rom)] = s end
+        if tint >= 30 or tint <= -5 then
+            expected[hex(s.rom)] = s
+        end
     end
-    local found, err = a:search{cmd = 0xEC}
+    local found, err = a:search({ cmd = 0xEC })
     expect(not err, err)
     compare_sets(found, expected)
-    found, err = a:search{cmd = 0xEC, bits = true}
+    found, err = a:search({ cmd = 0xEC, bits = true })
     expect(not err, err)
     compare_sets(found, expected)
 end)
@@ -527,7 +589,9 @@ test("COPY SCRATCHPAD and RECALL E2", function()
     expect(a:select(rom), "no presence")
     local t0 = uptime()
     a:write_byte(0x48)
-    while a:read_byte() == 0 do expect(uptime() - t0 < 100, "copy timeout") end
+    while a:read_byte() == 0 do
+        expect(uptime() - t0 < 100, "copy timeout")
+    end
     a:write_scratchpad(rom, 0x33, 0x44, 0x1F)
     expect(a:select(rom), "no presence")
     a:write_byte(0xB8)
@@ -544,7 +608,7 @@ test("ALARM SEARCH without alarms (triplet: no response)", function()
     a:write_byte(0xEC)
     local id, cmp, dir = a:triplet(0)
     expect(id == 1 and cmp == 1 and dir == 1, string.format("triplet: %d %d %d, expected 1 1 1", id, cmp, dir))
-    local found, err = a:search{cmd = 0xEC}
+    local found, err = a:search({ cmd = 0xEC })
     expect(#found == 0 and err, "devices found by ALARM SEARCH")
 end)
 
@@ -568,7 +632,9 @@ test("Fault: ROM CRC", function()
     expect(not err, err)
     local bad = 0
     for _, r in ipairs(found) do
-        if not rom_crc_ok(r) then bad = bad + 1 end
+        if not rom_crc_ok(r) then
+            bad = bad + 1
+        end
     end
     control("fault 4 rom_crc 0")
     expect(#found == 7, "found " .. #found .. " devices")

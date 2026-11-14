@@ -75,9 +75,11 @@ local DEV = {}
 DEV.__index = DEV
 
 -- registers in address order (BANK = 0: index * 2 + port, BANK = 1: port * 0x10 + index)
-local REGS = {"IODIR", "IPOL", "GPINTEN", "DEFVAL", "INTCON", "IOCON", "GPPU", "INTF", "INTCAP", "GPIO", "OLAT"}
+local REGS = { "IODIR", "IPOL", "GPINTEN", "DEFVAL", "INTCON", "IOCON", "GPPU", "INTF", "INTCAP", "GPIO", "OLAT" }
 local REG_INDEX = {}
-for i, name in ipairs(REGS) do REG_INDEX[name] = i - 1 end
+for i, name in ipairs(REGS) do
+    REG_INDEX[name] = i - 1
+end
 
 local IOCON_BANK, IOCON_MIRROR, IOCON_SEQOP = 0x80, 0x40, 0x20
 local IOCON_HAEN, IOCON_ODR, IOCON_INTPOL = 0x08, 0x04, 0x02
@@ -88,14 +90,18 @@ local lines = {}
 local function line_drive(pin, key, level)
     local line = lines[pin]
     if not line then
-        line = {drivers = {}}
+        line = { drivers = {} }
         lines[pin] = line
     end
     line.drivers[key] = level
     local value, high = true, false
     for _, v in pairs(line.drivers) do
-        if v == false then value = false end
-        if v == true then high = true end   -- push-pull output (open drain is low or released)
+        if v == false then
+            value = false
+        end
+        if v == true then
+            high = true
+        end -- push-pull output (open drain is low or released)
     end
     local conflict = high and not value
     if conflict and not line.conflict then
@@ -113,9 +119,15 @@ local function bit(v)
 end
 
 local function to_level(level)
-    if level == nil then return nil end
-    if level == 0 then return false end
-    if level == 1 then return true end
+    if level == nil then
+        return nil
+    end
+    if level == 0 then
+        return false
+    end
+    if level == 1 then
+        return true
+    end
     return level and true or false
 end
 
@@ -134,8 +146,12 @@ local function pin_index(pin)
 end
 
 local function port_index(port)
-    if port == "A" or port == "a" or port == 0 then return 0 end
-    if port == "B" or port == "b" or port == 1 then return 1 end
+    if port == "A" or port == "a" or port == 0 then
+        return 0
+    end
+    if port == "B" or port == "b" or port == 1 then
+        return 1
+    end
     error("mcp23s17: invalid port: " .. tostring(port), 3)
 end
 
@@ -146,13 +162,12 @@ function M.new(opts)
     count = count + 1
     local d = setmetatable({}, DEV)
     d.address = opts.address or 0
-    assert(math.type(d.address) == "integer" and d.address >= 0 and d.address <= 7,
-           "mcp23s17: address must be 0..7")
+    assert(math.type(d.address) == "integer" and d.address >= 0 and d.address <= 7, "mcp23s17: address must be 0..7")
     d.name = string.format("mcp23s17 #%d (address %d)", count, d.address)
-    d.int_pins = {opts.int_a, opts.int_b}
+    d.int_pins = { opts.int_a, opts.int_b }
     d.reset_pin = opts.reset
     d.floating = opts.floating and true or false
-    d.mode = {[0] = true, [3] = true}
+    d.mode = { [0] = true, [3] = true }
     d.ext = {}
     d.handlers = {}
     d.warned = {}
@@ -164,7 +179,9 @@ function M.new(opts)
     if d.reset_pin then
         gpio.on_change(d.reset_pin, function(level)
             d.held = not level
-            if d.held then d:reset() end
+            if d.held then
+                d:reset()
+            end
         end)
     end
 
@@ -175,8 +192,17 @@ end
 function DEV:reset()
     self.r = {}
     for p = 0, 1 do
-        self.r[p] = {IODIR = 0xFF, IPOL = 0, GPINTEN = 0, DEFVAL = 0, INTCON = 0, GPPU = 0,
-                     INTF = 0, INTCAP = 0, OLAT = 0}
+        self.r[p] = {
+            IODIR = 0xFF,
+            IPOL = 0,
+            GPINTEN = 0,
+            DEFVAL = 0,
+            INTCON = 0,
+            GPPU = 0,
+            INTF = 0,
+            INTCAP = 0,
+            OLAT = 0,
+        }
     end
     self.iocon = 0
     self.state_spi = "ignore"
@@ -186,10 +212,14 @@ end
 -- register of address: name, port (nil: unimplemented)
 function DEV:decode(addr)
     if self.iocon & IOCON_BANK == 0 then
-        if addr <= 0x15 then return REGS[(addr >> 1) + 1], addr & 1 end
+        if addr <= 0x15 then
+            return REGS[(addr >> 1) + 1], addr & 1
+        end
     else
         local idx = addr & 0x0F
-        if (addr & 0xE0) == 0 and idx <= 0x0A then return REGS[idx + 1], (addr >> 4) & 1 end
+        if (addr & 0xE0) == 0 and idx <= 0x0A then
+            return REGS[idx + 1], (addr >> 4) & 1
+        end
     end
     return nil
 end
@@ -197,12 +227,18 @@ end
 function DEV:next_address(addr)
     local bank1 = self.iocon & IOCON_BANK ~= 0
     if self.iocon & IOCON_SEQOP ~= 0 then
-        if not bank1 and addr <= 0x15 then return addr ~ 1 end
+        if not bank1 and addr <= 0x15 then
+            return addr ~ 1
+        end
         return addr
     end
     if bank1 then
-        if addr == 0x0A then return 0x10 end
-        if addr == 0x1A then return 0x00 end
+        if addr == 0x0A then
+            return 0x10
+        end
+        if addr == 0x1A then
+            return 0x00
+        end
     elseif addr == 0x15 then
         return 0x00
     end
@@ -222,8 +258,12 @@ end
 
 function DEV:read_reg(addr)
     local name, p = self:decode(addr)
-    if not name then return 0 end
-    if name == "IOCON" then return self.iocon end
+    if not name then
+        return 0
+    end
+    if name == "IOCON" then
+        return self.iocon
+    end
     local r = self.r[p]
     if name == "GPIO" then
         local v = self:gpio_value(p)
@@ -239,7 +279,9 @@ end
 
 function DEV:write_reg(addr, value)
     local name, p = self:decode(addr)
-    if not name or name == "INTF" or name == "INTCAP" then return end
+    if not name or name == "INTF" or name == "INTCAP" then
+        return
+    end
     if name == "IOCON" then
         self.iocon = value & 0xFE
     elseif name == "GPIO" then
@@ -260,8 +302,16 @@ function DEV:pin_level(n)
         if ext ~= nil and ext ~= out then
             if not self.warned[n] then
                 self.warned[n] = true
-                print(string.format("%s: GP%s%d is output (%d), driven externally to %d",
-                                    self.name, n < 8 and "A" or "B", n & 7, bit(out), bit(ext)))
+                print(
+                    string.format(
+                        "%s: GP%s%d is output (%d), driven externally to %d",
+                        self.name,
+                        n < 8 and "A" or "B",
+                        n & 7,
+                        bit(out),
+                        bit(ext)
+                    )
+                )
             end
         else
             self.warned[n] = nil
@@ -269,15 +319,21 @@ function DEV:pin_level(n)
         return out
     end
     self.warned[n] = nil
-    if ext ~= nil then return ext end
-    if r.GPPU & mask ~= 0 then return true end
+    if ext ~= nil then
+        return ext
+    end
+    if r.GPPU & mask ~= 0 then
+        return true
+    end
     return self.floating
 end
 
 -- interrupt conditions of port, changed: pins changed since last update
 function DEV:check_interrupt(p, changed)
     local r = self.r[p]
-    if r.INTF ~= 0 then return end
+    if r.INTF ~= 0 then
+        return
+    end
     local en = r.GPINTEN & r.IODIR
     local trig = (changed & en & ~r.INTCON) | ((self:pins(p) ~ r.DEFVAL) & en & r.INTCON)
     trig = trig & 0xFF
@@ -302,12 +358,14 @@ function DEV:update_int()
     end
     local odr = self.iocon & IOCON_ODR ~= 0
     local pol = self.iocon & IOCON_INTPOL ~= 0
-    for i, active in ipairs({a, b}) do
+    for i, active in ipairs({ a, b }) do
         local pin = self.int_pins[i]
         if pin then
             local level
             if odr then
-                if active then level = false end    -- open drain: low or released (nil)
+                if active then
+                    level = false
+                end -- open drain: low or released (nil)
             else
                 level = (active and pol) or (not active and not pol)
             end
@@ -320,7 +378,9 @@ end
 function DEV:update()
     local levels = 0
     for n = 0, 15 do
-        if self:pin_level(n) then levels = levels | (1 << n) end
+        if self:pin_level(n) then
+            levels = levels | (1 << n)
+        end
     end
     local changed = levels ~ self.levels
     self.levels = levels
@@ -330,7 +390,9 @@ function DEV:update()
     self:update_int()
 
     if changed ~= 0 then
-        for _, fn in ipairs(self.handlers) do fn(levels, changed) end
+        for _, fn in ipairs(self.handlers) do
+            fn(levels, changed)
+        end
     end
 end
 
@@ -344,7 +406,9 @@ function DEV:deselect()
 end
 
 function DEV:transfer(byte)
-    if self.held then return nil end
+    if self.held then
+        return nil
+    end
     local s = self.state_spi
     if s == "opcode" then
         local addr = (self.iocon & IOCON_HAEN ~= 0) and self.address or 0
@@ -401,9 +465,13 @@ end
 function DEV:register(name, port)
     name = tostring(name):upper()
     assert(REG_INDEX[name], "mcp23s17: unknown register: " .. name)
-    if name == "IOCON" then return self.iocon end
+    if name == "IOCON" then
+        return self.iocon
+    end
     local p = port_index(port or "A")
-    if name == "GPIO" then return self:gpio_value(p) end
+    if name == "GPIO" then
+        return self:gpio_value(p)
+    end
     return self.r[p][name]
 end
 
@@ -422,7 +490,9 @@ function DEV:connect_output(pin, sys, invert)
         gpio.set(sys, self:pin(n) ~= (invert and true or false))
     end
     self:on_change(function(_, changed)
-        if (changed >> n) & 1 == 1 then set() end
+        if (changed >> n) & 1 == 1 then
+            set()
+        end
     end)
     set()
 end

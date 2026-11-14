@@ -14,13 +14,15 @@ local dnx = require("dnx")
 local lfs = require("lfs")
 
 local W, H = 240, 320
-local DC, CS = 0x01, 0x02     -- PB0, PB1 (CS is controlled by the SPI driver)
+local DC, CS = 0x01, 0x02 -- PB0, PB1 (CS is controlled by the SPI driver)
 local BOX = 24
 
 local function run(cmd)
     local p = assert(io.popen(cmd, "r"))
     local out = p:read("a")
-    if not p:close() then error(cmd .. ": " .. out) end
+    if not p:close() then
+        error(cmd .. ": " .. out)
+    end
 end
 
 if not lfs.attributes("/dev/gpiob") then
@@ -55,28 +57,36 @@ local function color(r, g, b)
 end
 
 local function rect(x, y, w, h, c)
-    cmd(0x2A, string.pack(">I2I2", x, x + w - 1))     -- CASET
-    cmd(0x2B, string.pack(">I2I2", y, y + h - 1))     -- RASET
-    cmd(0x2C, c:rep(w * h))                           -- RAMWR
+    cmd(0x2A, string.pack(">I2I2", x, x + w - 1)) -- CASET
+    cmd(0x2B, string.pack(">I2I2", y, y + h - 1)) -- RASET
+    cmd(0x2C, c:rep(w * h)) -- RAMWR
 end
 
 -- initialization
-cmd(0x01)                   -- SWRESET
+cmd(0x01) -- SWRESET
 dnx.sys.msleep(5)
-cmd(0x11)                   -- SLPOUT
-cmd(0x3A, "\x55")           -- COLMOD: 16-bit pixels
-cmd(0x36, "\x00")           -- MADCTL: portrait
-cmd(0x21)                   -- INVON (IPS panels)
+cmd(0x11) -- SLPOUT
+cmd(0x3A, "\x55") -- COLMOD: 16-bit pixels
+cmd(0x36, "\x00") -- MADCTL: portrait
+cmd(0x21) -- INVON (IPS panels)
 
 local BG = color(16, 18, 24)
 local BARS = {
-    color(255, 255, 255), color(255, 255, 0), color(0, 255, 255), color(0, 255, 0),
-    color(255, 0, 255), color(255, 0, 0), color(0, 0, 255), color(0, 0, 0),
+    color(255, 255, 255),
+    color(255, 255, 0),
+    color(0, 255, 255),
+    color(0, 255, 0),
+    color(255, 0, 255),
+    color(255, 0, 0),
+    color(0, 0, 255),
+    color(0, 0, 0),
 }
 
 rect(0, 0, W, H, BG)
-for i, c in ipairs(BARS) do rect((i - 1) * W // #BARS, 0, W // #BARS, 80, c) end
-cmd(0x29)                   -- DISPON
+for i, c in ipairs(BARS) do
+    rect((i - 1) * W // #BARS, 0, W // #BARS, 80, c)
+end
+cmd(0x29) -- DISPON
 
 -- moving square below the bars
 local time = tonumber(arg[1]) or 10
@@ -89,14 +99,18 @@ while os.time() - t0 < time do
     rect(x, y, BOX, BOX, BG)
     x = math.max(0, math.min(W - BOX, x + dx))
     y = math.max(82, math.min(H - BOX, y + dy))
-    if x == 0 or x == W - BOX then dx = -dx end
-    if y == 82 or y == H - BOX then dy = -dy end
+    if x == 0 or x == W - BOX then
+        dx = -dx
+    end
+    if y == 82 or y == H - BOX then
+        dy = -dy
+    end
     rect(x, y, BOX, BOX, square)
     dnx.sys.msleep(20)
 end
 
-cmd(0x28)                   -- DISPOFF
-cmd(0x10)                   -- SLPIN
+cmd(0x28) -- DISPOFF
+cmd(0x10) -- SLPIN
 spi:close()
 gpio:close()
 print("bye")

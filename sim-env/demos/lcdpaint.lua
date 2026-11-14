@@ -13,14 +13,16 @@
 local dnx = require("dnx")
 local lfs = require("lfs")
 
-local W = 480       -- __LTDC_WIDTH__ of configuration
-local BOX = 40      -- size of palette box
+local W = 480 -- __LTDC_WIDTH__ of configuration
+local BOX = 40 -- size of palette box
 local BRUSH = 6
 
 local function run(cmd)
     local p = assert(io.popen(cmd, "r"))
     local out = p:read("a")
-    if not p:close() then error(cmd .. ": " .. out) end
+    if not p:close() then
+        error(cmd .. ": " .. out)
+    end
 end
 
 if not lfs.attributes("/dev/lcd") then
@@ -42,10 +44,16 @@ local function color(r, g, b)
 end
 
 local function rect(x, y, w, h, c)
-    if x < 0 then w, x = w + x, 0 end
-    if y < 0 then h, y = h + y, 0 end
+    if x < 0 then
+        w, x = w + x, 0
+    end
+    if y < 0 then
+        h, y = h + y, 0
+    end
     w, h = math.min(w, W - x), math.min(h, H - y)
-    if w <= 0 or h <= 0 then return end
+    if w <= 0 or h <= 0 then
+        return
+    end
     local row = c:rep(w)
     for j = y, y + h - 1 do
         lcd:seek("set", (j * W + x) * 2)
@@ -57,14 +65,22 @@ end
 local function touch()
     ts:seek("set", 2)
     local d = ts:read(5)
-    if not d or #d < 5 or (d:byte(1) & 0x0F) == 0 then return nil end
+    if not d or #d < 5 or (d:byte(1) & 0x0F) == 0 then
+        return nil
+    end
     return ((d:byte(2) & 0x0F) << 8) | d:byte(3), ((d:byte(4) & 0x0F) << 8) | d:byte(5)
 end
 
 local BG = color(16, 18, 24)
 local PALETTE = {
-    color(255, 255, 255), color(239, 68, 68), color(245, 158, 11), color(234, 179, 8),
-    color(34, 197, 94), color(59, 130, 246), color(168, 85, 247), color(236, 72, 153),
+    color(255, 255, 255),
+    color(239, 68, 68),
+    color(245, 158, 11),
+    color(234, 179, 8),
+    color(34, 197, 94),
+    color(59, 130, 246),
+    color(168, 85, 247),
+    color(236, 72, 153),
 }
 local GRAY, DARK = color(100, 100, 110), color(40, 40, 48)
 
@@ -72,18 +88,22 @@ local function letter(x, y, pattern)
     -- 5x5 bitmap scaled by 4
     for j, line in ipairs(pattern) do
         for i = 1, #line do
-            if line:sub(i, i) == "#" then rect(x + (i - 1) * 4, y + (j - 1) * 4, 4, 4, color(230, 230, 230)) end
+            if line:sub(i, i) == "#" then
+                rect(x + (i - 1) * 4, y + (j - 1) * 4, 4, 4, color(230, 230, 230))
+            end
         end
     end
 end
 
 local function screen()
     rect(0, 0, W, H, BG)
-    for i, c in ipairs(PALETTE) do rect((i - 1) * BOX + 2, 2, BOX - 4, BOX - 4, c) end
+    for i, c in ipairs(PALETTE) do
+        rect((i - 1) * BOX + 2, 2, BOX - 4, BOX - 4, c)
+    end
     rect(W - 2 * BOX + 2, 2, BOX - 4, BOX - 4, DARK)
-    letter(W - 2 * BOX + 10, 10, {".###.", "#....", "#....", "#....", ".###."})
+    letter(W - 2 * BOX + 10, 10, { ".###.", "#....", "#....", "#....", ".###." })
     rect(W - BOX + 2, 2, BOX - 4, BOX - 4, color(127, 29, 29))
-    letter(W - BOX + 10, 10, {"#...#", ".#.#.", "..#..", ".#.#.", "#...#"})
+    letter(W - BOX + 10, 10, { "#...#", ".#.#.", "..#..", ".#.#.", "#...#" })
     rect(0, BOX, W, 1, GRAY)
 end
 
@@ -120,7 +140,7 @@ while running do
             local py = math.max(ly + (y - ly) * s // steps, BOX + BRUSH // 2 + 1)
             rect(px - BRUSH // 2, py - BRUSH // 2, BRUSH, BRUSH, current)
         end
-        last = {x, y}
+        last = { x, y }
     else
         last = nil
     end

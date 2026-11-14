@@ -117,15 +117,15 @@ local st7789 = require("models.st7789")
 gpio.on_change("PA0", function(level)
     print(string.format("%8.1f ms: LED %s", host.time_ms(), level and "off" or "on"))
 end)
-panel.output("LED", "PA0", {active_low = true, label = "LED (PA0)", color = "#22c55e"})
+panel.output("LED", "PA0", { active_low = true, label = "LED (PA0)", color = "#22c55e" })
 
 -- button on the panel: idle state is high (pull-up), pressed state is low
-panel.input("BUTTON", "PA1", {active_low = true, label = "Button (PA1)"})
+panel.input("BUTTON", "PA1", { active_low = true, label = "Button (PA1)" })
 
 -- logic gate between pins of the system
 gpio.connect("PA2", "PA3", true)
-panel.output("PA2", "PA2", {label = "Inverter input (PA2)"})
-panel.output("PA3", "PA3", {label = "Inverter output (PA3)"})
+panel.output("PA2", "PA2", { label = "Inverter input (PA2)" })
+panel.output("PA3", "PA3", { label = "Inverter output (PA3)" })
 
 -- heartbeat signal
 local hb = false
@@ -133,11 +133,11 @@ host.timer(500, function()
     hb = not hb
     gpio.set("PA4", hb)
 end, true)
-panel.output("HEARTBEAT", "PA4", {label = "Heartbeat (PA4)", color = "#3b82f6"})
+panel.output("HEARTBEAT", "PA4", { label = "Heartbeat (PA4)", color = "#3b82f6" })
 
 -- I2C:0: LEDs on I/O expander (active low)
 local leds = pcf8574.new({ int = "PA5" }):attach("I2C:0", 0x20)
-panel.value("LEDS1", leds.latch, {label = "PCF8574 LEDs (active low)", format = "0x%02X"})
+panel.value("LEDS1", leds.latch, { label = "PCF8574 LEDs (active low)", format = "0x%02X" })
 leds:on_change(function(latch)
     local t = {}
     for n = 7, 0, -1 do
@@ -156,21 +156,26 @@ host.timer(1000, function()
         sensor:set_temperature(25 + 5 * math.sin(host.time_ms() / 60000 * 2 * math.pi))
     end
 end, true)
-panel.value("TEMP", function() return sensor:temperature() end,
-            {period = 200, label = "LM75 temperature", unit = "°C", format = "%.1f"})
-panel.control("TEMP_AUTO", function(v) auto = v end, {value = true, label = "Automatic temperature"})
+panel.value("TEMP", function()
+    return sensor:temperature()
+end, { period = 200, label = "LM75 temperature", unit = "°C", format = "%.1f" })
+panel.control("TEMP_AUTO", function(v)
+    auto = v
+end, { value = true, label = "Automatic temperature" })
 panel.control("TEMP_SET", function(v)
     auto = false
     panel.set("TEMP_AUTO", false)
     sensor:set_temperature(v)
-end, {value = 25, min = -20, max = 100, step = 0.5, label = "Set temperature", unit = "°C"})
-panel.output("OS", "PA6", {active_low = true, label = "LM75 OS (PA6)", color = "#f59e0b"})
+end, { value = 25, min = -20, max = 100, step = 0.5, label = "Set temperature", unit = "°C" })
+panel.output("OS", "PA6", { active_low = true, label = "LM75 OS (PA6)", color = "#f59e0b" })
 
 -- I2C:0: touch panel controller of the LCD (LTDC driver), touch of the LCD in
 -- the board panel
 local ts = ft5336.new({ int = "PA9" }):attach("I2C:0", 0x38)
-panel.on_touch(function(x, y, pressed) ts:touch(x, y, pressed) end, "ltdc")
-panel.output("TOUCH", "PA9", {active_low = true, label = "Touch INT (PA9)", color = "#a855f7"})
+panel.on_touch(function(x, y, pressed)
+    ts:touch(x, y, pressed)
+end, "ltdc")
+panel.output("TOUCH", "PA9", { active_low = true, label = "Touch INT (PA9)", color = "#a855f7" })
 
 -- I2C:0: EEPROM
 -- files with content of memories are kept in the build directory of the
@@ -184,26 +189,50 @@ eeprom.new({ type = "24c256", file = DATA .. "example-24c256.bin" }):attach("I2C
 -- disconnected (hot-plug) and the 1-Wire line shorted
 local ow = ds2482.new():attach("I2C:0", 0x18)
 local OW_SENSORS = {
-    {serial = 0x00000A1B2C01, temperature = 21.5},
-    {serial = 0x00000A1B2C02, temperature = 4.0},
-    {serial = 0x00000A1B2C03, temperature = -12.25, parasite = true},
+    { serial = 0x00000A1B2C01, temperature = 21.5 },
+    { serial = 0x00000A1B2C02, temperature = 4.0 },
+    { serial = 0x00000A1B2C03, temperature = -12.25, parasite = true },
 }
 for n, o in ipairs(OW_SENSORS) do
-    local s = ds18b20.new({ serial = o.serial, temperature = o.temperature, parasite = o.parasite,
-                            file = DATA .. "example-ds18b20-" .. n .. ".bin" }):attach(ow)
+    local s = ds18b20
+        .new({
+            serial = o.serial,
+            temperature = o.temperature,
+            parasite = o.parasite,
+            file = DATA .. "example-ds18b20-" .. n .. ".bin",
+        })
+        :attach(ow)
     local id = "OW" .. n
-    panel.value(id .. "_ROM", s:rom_string(), {label = "DS18B20 " .. n .. " ROM"})
-    panel.value(id .. "_REG", function() return s:register() end,
-                {period = 250, label = "DS18B20 " .. n .. " last conversion", unit = "°C", format = "%.4f"})
-    panel.control(id .. "_SET", function(v) s:set_temperature(v) end,
-                  {value = o.temperature, min = -55, max = 125, step = 0.25,
-                   label = "DS18B20 " .. n .. " temperature", unit = "°C"})
+    panel.value(id .. "_ROM", s:rom_string(), { label = "DS18B20 " .. n .. " ROM" })
+    panel.value(id .. "_REG", function()
+        return s:register()
+    end, { period = 250, label = "DS18B20 " .. n .. " last conversion", unit = "°C", format = "%.4f" })
+    panel.control(
+        id .. "_SET",
+        function(v)
+            s:set_temperature(v)
+        end,
+        {
+            value = o.temperature,
+            min = -55,
+            max = 125,
+            step = 0.25,
+            label = "DS18B20 " .. n .. " temperature",
+            unit = "°C",
+        }
+    )
     panel.control(id .. "_PLUG", function(v)
-        if v then s:attach(ow) else s:detach() end
+        if v then
+            s:attach(ow)
+        else
+            s:detach()
+        end
         print(string.format("DS18B20 %s %s", s:rom_string(), v and "connected" or "disconnected"))
-    end, {value = true, label = "DS18B20 " .. n .. " connected"})
+    end, { value = true, label = "DS18B20 " .. n .. " connected" })
 end
-panel.control("OW_SHORT", function(v) ow.ow:set_short(v) end, {value = false, label = "1-Wire line shorted"})
+panel.control("OW_SHORT", function(v)
+    ow.ow:set_short(v)
+end, { value = false, label = "1-Wire line shorted" })
 
 -- SPI:0: EEPROM and SD card
 spiee.new({ type = "25lc256", file = DATA .. "example-25lc256.bin" }):attach("SPI:0", "PA7")
@@ -211,7 +240,7 @@ sdcard.new({ file = DATA .. "example-sd.img", size = 64 * 1024 * 1024 }):attach(
 
 -- SPI:1: LEDs on shift register (active high)
 local leds2 = hc595.new():attach("SPI:1", "PA16")
-panel.value("LEDS2", leds2:state(), {label = "74HC595 LEDs", format = "0x%02X"})
+panel.value("LEDS2", leds2:state(), { label = "74HC595 LEDs", format = "0x%02X" })
 leds2:on_change(function(state)
     local t = {}
     for n = 7, 0, -1 do
@@ -223,16 +252,22 @@ end)
 
 -- SPI:1: MCP23S17, port A: LEDs, port B: buttons to ground (pull-up of the expander)
 local mcp = mcp23s17.new({ address = 0, int_a = "PA10", int_b = "PA11" }):attach("SPI:1", "PA17")
-panel.value("MCP_A", mcp:port("A"), {label = "MCP23S17 port A LEDs", format = "0x%02X"})
-panel.output("MCP_INTA", "PA10", {active_low = true, label = "MCP23S17 INTA (PA10, active low)"})
-panel.output("MCP_INTB", "PA11", {active_low = true, label = "MCP23S17 INTB (PA11, active low)"})
+panel.value("MCP_A", mcp:port("A"), { label = "MCP23S17 port A LEDs", format = "0x%02X" })
+panel.output("MCP_INTA", "PA10", { active_low = true, label = "MCP23S17 INTA (PA10, active low)" })
+panel.output("MCP_INTB", "PA11", { active_low = true, label = "MCP23S17 INTB (PA11, active low)" })
 mcp:on_change(function(state, changed)
-    if changed & 0xFF ~= 0 then panel.set("MCP_A", state & 0xFF) end
+    if changed & 0xFF ~= 0 then
+        panel.set("MCP_A", state & 0xFF)
+    end
 end)
 for n = 0, 7 do
     panel.control("MCP_B" .. n, function(pressed)
-        if pressed then mcp:set_input(8 + n, false) else mcp:release(8 + n) end
-    end, {value = false, label = "MCP23S17 button GPB" .. n})
+        if pressed then
+            mcp:set_input(8 + n, false)
+        else
+            mcp:release(8 + n)
+        end
+    end, { value = false, label = "MCP23S17 button GPB" .. n })
 end
 
 -- UART:1: GPS receiver (not used when UART:1 is connected by simulator option --uart 1=...)
@@ -241,31 +276,53 @@ if uart.available("UART:1") then
     gps:attach("UART:1")
     local function pos()
         local lat, lon = gps:position()
-        return string.format("%.5f %s  %.5f %s", math.abs(lat), lat >= 0 and "N" or "S",
-                             math.abs(lon), lon >= 0 and "E" or "W")
+        return string.format(
+            "%.5f %s  %.5f %s",
+            math.abs(lat),
+            lat >= 0 and "N" or "S",
+            math.abs(lon),
+            lon >= 0 and "E" or "W"
+        )
     end
-    panel.value("GPS_POS", pos, {period = 1000, label = "GPS position"})
-    panel.value("GPS_LAST", "", {label = "GPS last RMC sentence"})
+    panel.value("GPS_POS", pos, { period = 1000, label = "GPS position" })
+    panel.value("GPS_LAST", "", { label = "GPS last RMC sentence" })
     gps:on_sentence(function(s)
-        if s:find("^%$GPRMC") then panel.set("GPS_LAST", s) end
+        if s:find("^%$GPRMC") then
+            panel.set("GPS_LAST", s)
+        end
     end)
-    panel.control("GPS_FIX", function(v) gps:set_fix(v) end, {value = true, label = "GPS fix"})
-    local motion = {speed = 0, course = 0}
-    panel.control("GPS_SPEED", function(v) motion.speed = v; gps:set_motion(motion.speed, motion.course) end,
-                  {value = 0, min = 0, max = 200, step = 1, label = "GPS speed", unit = "kn"})
-    panel.control("GPS_COURSE", function(v) motion.course = v; gps:set_motion(motion.speed, motion.course) end,
-                  {value = 0, min = 0, max = 359, step = 1, label = "GPS course", unit = "°"})
+    panel.control("GPS_FIX", function(v)
+        gps:set_fix(v)
+    end, { value = true, label = "GPS fix" })
+    local motion = { speed = 0, course = 0 }
+    panel.control("GPS_SPEED", function(v)
+        motion.speed = v
+        gps:set_motion(motion.speed, motion.course)
+    end, { value = 0, min = 0, max = 200, step = 1, label = "GPS speed", unit = "kn" })
+    panel.control("GPS_COURSE", function(v)
+        motion.course = v
+        gps:set_motion(motion.speed, motion.course)
+    end, { value = 0, min = 0, max = 359, step = 1, label = "GPS course", unit = "°" })
 end
 
 -- Ethernet: temperature sensor sending UDP broadcast (models/udp_sensor.lua)
-local eth_sensor = udp_sensor.new{ip = "192.168.77.51", port = 5000, value = 20.5, format = "%.1f",
-                                  interval = 5000}:attach()
-udp_sensor.panel(eth_sensor, "ETH_TEMP", {label = "Ethernet sensor", min = -40, max = 85, step = 0.1, unit = "°C"})
+local eth_sensor = udp_sensor
+    .new({
+        ip = "192.168.77.51",
+        port = 5000,
+        value = 20.5,
+        format = "%.1f",
+        interval = 5000,
+    })
+    :attach()
+udp_sensor.panel(eth_sensor, "ETH_TEMP", { label = "Ethernet sensor", min = -40, max = 85, step = 0.1, unit = "°C" })
 
 -- SPI:2: TFT display (LCD "tft" of the panel), touch of the display in the
 -- board panel is only shown
 local tft = st7789.new({ id = "tft", width = 240, height = 320, dc = "PB0" }):attach("SPI:2", "PB1")
-panel.value("TFT_TOUCH", "", {label = "TFT touch"})
-tft:on_touch(function(x, y, pressed) panel.set("TFT_TOUCH", pressed and string.format("%d, %d", x, y) or "") end)
+panel.value("TFT_TOUCH", "", { label = "TFT touch" })
+tft:on_touch(function(x, y, pressed)
+    panel.set("TFT_TOUCH", pressed and string.format("%d, %d", x, y) or "")
+end)
 
 print("example board loaded")

@@ -27,22 +27,30 @@ local function dev_read(path, n)
 end
 
 local function hex(s)
-    return (tostring(s):gsub(".", function(c) return string.format("%02X ", c:byte()) end))
+    return (tostring(s):gsub(".", function(c)
+        return string.format("%02X ", c:byte())
+    end))
 end
 
 local function rev(s)
-    return (s:gsub(".", function(c)
-        local v, r = c:byte(), 0
-        for b = 0, 7 do if (v >> b) & 1 == 1 then r = r | (1 << (7 - b)) end end
-        return string.char(r)
-    end))
+    return (
+        s:gsub(".", function(c)
+            local v, r = c:byte(), 0
+            for b = 0, 7 do
+                if (v >> b) & 1 == 1 then
+                    r = r | (1 << (7 - b))
+                end
+            end
+            return string.char(r)
+        end)
+    )
 end
 
 test("Create SPI devices (modprobe -c, CS inactive)", function()
     T.spi_devices()
     T.msleep(DELAY)
     local port = T.port_read()
-    for _, pin in ipairs({4, 6, 7, 15, 16, 17}) do
+    for _, pin in ipairs({ 4, 6, 7, 15, 16, 17 }) do
         expect((port >> pin) & 1 == 1, "CS PA" .. pin .. " is not inactive (high)")
     end
 end)
@@ -84,7 +92,7 @@ test("Bus without devices (MISO high)", function()
 end)
 
 test("74HC595 outputs (SPI:1, outputs -> PA20..PA27)", function()
-    for _, v in ipairs({0xA5, 0x3C, 0x00, 0xFF}) do
+    for _, v in ipairs({ 0xA5, 0x3C, 0x00, 0xFF }) do
         expect(dev_write("/dev/spi-595", string.char(v)), "write error")
         T.msleep(DELAY)
         local out = (T.port_read() >> 20) & 0xFF

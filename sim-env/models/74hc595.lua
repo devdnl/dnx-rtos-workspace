@@ -31,9 +31,11 @@ function M.new(opts)
     opts = opts or {}
     local sr = setmetatable({}, HC595)
     sr.chips = opts.chips or 1
-    sr.mode = {[0] = true, [3] = true}
+    sr.mode = { [0] = true, [3] = true }
     sr.shift = {}
-    for i = 1, sr.chips do sr.shift[i] = 0 end
+    for i = 1, sr.chips do
+        sr.shift[i] = 0
+    end
     sr.latched = 0
     sr.outputs = opts.outputs or {}
     sr.handlers = {}
@@ -63,19 +65,25 @@ end
 -- SPI interface: byte is shifted through all chips, QH' of the last chip is returned
 function HC595:transfer(byte)
     local out = self.shift[self.chips]
-    for i = self.chips, 2, -1 do self.shift[i] = self.shift[i - 1] end
+    for i = self.chips, 2, -1 do
+        self.shift[i] = self.shift[i - 1]
+    end
     self.shift[1] = byte
     return out
 end
 
 function HC595:deselect()
     local state = 0
-    for i = 1, self.chips do state = state | (self.shift[i] << (8 * (i - 1))) end
+    for i = 1, self.chips do
+        state = state | (self.shift[i] << (8 * (i - 1)))
+    end
     local changed = state ~ self.latched
     self.latched = state
     if changed ~= 0 then
         self:update_pins()
-        for _, fn in ipairs(self.handlers) do fn(state, changed) end
+        for _, fn in ipairs(self.handlers) do
+            fn(state, changed)
+        end
     end
 end
 

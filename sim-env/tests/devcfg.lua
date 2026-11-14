@@ -14,7 +14,9 @@ local test, expect = T.test, T.expect
 
 local function run(cmd)
     local ok, out = T.run(cmd)
-    if not ok then error(cmd .. ": " .. out, 2) end
+    if not ok then
+        error(cmd .. ": " .. out, 2)
+    end
     return out
 end
 
@@ -48,8 +50,7 @@ end
 test("PART on file (path, block_size, offset_blocks, total_blocks)", function()
     local data = pattern(8192, 1)
     write_file("/tmp/part.bin", data)
-    T.modprobe("PART", 0, 10, "/dev/part-test",
-               "path=/tmp/part.bin,block_size=512,offset_blocks=4,total_blocks=8")
+    T.modprobe("PART", 0, 10, "/dev/part-test", "path=/tmp/part.bin,block_size=512,offset_blocks=4,total_blocks=8")
     expect(lfs.attributes("/dev/part-test", "size") == 4096, "partition size")
     expect(read_file("/dev/part-test") == data:sub(2049, 6144), "partition data")
 end)

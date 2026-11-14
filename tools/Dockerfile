@@ -31,6 +31,7 @@ RUN zypper --non-interactive refresh &&\
     wine wine-gecko wine-mono\
     ccache distcc rsync libxml2-tools\
     clang clang-tools\
+    StyLua\
     lua55 lua55-devel lua55-luarocks lua55-luafilesystem\
     dosfstools e2fsprogs
 RUN zypper clean -a

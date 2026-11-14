@@ -33,9 +33,9 @@ local M = {}
 local SECTOR = 512
 local ZERO = string.rep("\0", SECTOR)
 
-local R1_IDLE      = 0x01
-local R1_ILLEGAL   = 0x04
-local R1_ADDR_ERR  = 0x20
+local R1_IDLE = 0x01
+local R1_ILLEGAL = 0x04
+local R1_ADDR_ERR = 0x20
 local R1_PARAM_ERR = 0x40
 
 local SD = {}
@@ -64,7 +64,9 @@ function M.new(opts)
         end
         size = f:seek("end")
         sd.f = f
-        host.on_exit(function() sd:close() end)
+        host.on_exit(function()
+            sd:close()
+        end)
     else
         sd.sectors = {}
     end
@@ -97,10 +99,12 @@ end
 
 function SD:make_csd(unit)
     local c = {}
-    for i = 0, 15 do c[i] = 0 end
+    for i = 0, 15 do
+        c[i] = 0
+    end
     if self.type == "sdhc" then
         local csize = self.size // unit - 1
-        c[0] = 0x40                      -- CSD v2
+        c[0] = 0x40 -- CSD v2
         c[1], c[2], c[3] = 0x0E, 0x00, 0x32
         c[4], c[5], c[6] = 0x5B, 0x59, 0x00
         c[7] = (csize >> 16) & 0x3F
@@ -113,17 +117,19 @@ function SD:make_csd(unit)
         c[0] = 0x00
         c[1], c[2], c[3] = 0x26, 0x00, 0x32
         c[4] = 0x5F
-        c[5] = 0x50 | 9                  -- CCC, READ_BL_LEN
+        c[5] = 0x50 | 9 -- CCC, READ_BL_LEN
         c[6] = 0x80 | ((csize >> 10) & 3)
         c[7] = (csize >> 2) & 0xFF
         c[8] = ((csize & 3) << 6) | 0x2D
-        c[9] = 0xB4 | 3                  -- C_SIZE_MULT[2:1]
-        c[10] = 0x80 | 0x7F              -- C_SIZE_MULT[0]
+        c[9] = 0xB4 | 3 -- C_SIZE_MULT[2:1]
+        c[10] = 0x80 | 0x7F -- C_SIZE_MULT[0]
         c[11], c[12], c[13], c[14] = 0x80, 0x0A, 0x40, 0x00
     end
     c[15] = 0x01
     local t = {}
-    for i = 0, 15 do t[#t + 1] = string.char(c[i]) end
+    for i = 0, 15 do
+        t[#t + 1] = string.char(c[i])
+    end
     return table.concat(t)
 end
 
@@ -131,7 +137,9 @@ function SD:read_sector(n)
     if self.f then
         self.f:seek("set", n * SECTOR)
         local data = self.f:read(SECTOR) or ""
-        if #data < SECTOR then data = data .. string.rep("\0", SECTOR - #data) end
+        if #data < SECTOR then
+            data = data .. string.rep("\0", SECTOR - #data)
+        end
         return data
     end
     return self.sectors[n] or ZERO
@@ -162,7 +170,9 @@ end
 
 function SD:pop()
     local s = self.out[1]
-    if not s then return 0xFF end
+    if not s then
+        return 0xFF
+    end
     local v = s:byte(self.out_pos)
     self.out_pos = self.out_pos + 1
     if self.out_pos > #s then
@@ -183,7 +193,9 @@ function SD:respond(...)
 end
 
 function SD:block_addr(arg)
-    if self.type == "sdhc" then return arg end
+    if self.type == "sdhc" then
+        return arg
+    end
     return arg // SECTOR
 end
 
@@ -196,7 +208,7 @@ function SD:command(cmd, arg)
     self.app = false
     local r1 = self.idle and R1_IDLE or 0
 
-    if app and cmd == 41 then                                   -- ACMD41
+    if app and cmd == 41 then -- ACMD41
         if self.init_cnt < self.init_delay then
             self.init_cnt = self.init_cnt + 1
             self:respond(R1_IDLE)
@@ -204,48 +216,48 @@ function SD:command(cmd, arg)
             self.idle = false
             self:respond(0)
         end
-    elseif app and cmd == 23 then                               -- ACMD23
+    elseif app and cmd == 23 then -- ACMD23
         self:respond(r1)
-    elseif cmd == 0 then                                        -- GO_IDLE_STATE
+    elseif cmd == 0 then -- GO_IDLE_STATE
         self:reset()
         self:respond(R1_IDLE)
-    elseif cmd == 8 then                                        -- SEND_IF_COND
+    elseif cmd == 8 then -- SEND_IF_COND
         if self.type == "sdv1" then
             self:respond(r1 | R1_ILLEGAL)
         else
             self:respond(r1, 0x00, 0x00, (arg >> 8) & 0x0F, arg & 0xFF)
         end
-    elseif cmd == 55 then                                       -- APP_CMD
+    elseif cmd == 55 then -- APP_CMD
         self.app = true
         self:respond(r1)
-    elseif cmd == 58 then                                       -- READ_OCR
+    elseif cmd == 58 then -- READ_OCR
         local ocr0 = (self.idle and 0 or 0x80) | ((self.type == "sdhc") and 0x40 or 0)
         self:respond(r1, ocr0, 0xFF, 0x80, 0x00)
     elseif self.idle then
         self:respond(r1 | R1_ILLEGAL)
-    elseif cmd == 9 or cmd == 10 then                           -- SEND_CSD, SEND_CID
+    elseif cmd == 9 or cmd == 10 then -- SEND_CSD, SEND_CID
         self:respond(0)
         self:push("\xFF\xFE" .. (cmd == 9 and self.csd or self.cid) .. "\xFF\xFF")
-    elseif cmd == 12 then                                       -- STOP_TRANSMISSION
+    elseif cmd == 12 then -- STOP_TRANSMISSION
         self.multi_read = nil
         self:clear_out()
         self:push("\xFF\x00\x00\x00")
-    elseif cmd == 13 then                                       -- SEND_STATUS
+    elseif cmd == 13 then -- SEND_STATUS
         self:respond(0, 0)
-    elseif cmd == 16 then                                       -- SET_BLOCKLEN
+    elseif cmd == 16 then -- SET_BLOCKLEN
         self:respond(arg == SECTOR and 0 or R1_PARAM_ERR)
     elseif cmd == 17 or cmd == 18 or cmd == 24 or cmd == 25 then
         local n = self:block_addr(arg)
         if n >= self.blocks or (self.type ~= "sdhc" and arg % SECTOR ~= 0) then
             self:respond(R1_ADDR_ERR)
-        elseif cmd == 17 then                                   -- READ_SINGLE_BLOCK
+        elseif cmd == 17 then -- READ_SINGLE_BLOCK
             self:respond(0)
             self:data_block(n)
-        elseif cmd == 18 then                                   -- READ_MULTIPLE_BLOCK
+        elseif cmd == 18 then -- READ_MULTIPLE_BLOCK
             self:respond(0)
             self:data_block(n)
             self.multi_read = n + 1
-        else                                                    -- WRITE_BLOCK, WRITE_MULTIPLE_BLOCK
+        else -- WRITE_BLOCK, WRITE_MULTIPLE_BLOCK
             self:respond(0)
             self.wr_block = n
             self.multi_write = (cmd == 25)
@@ -268,28 +280,26 @@ function SD:receive(byte)
                 self:command(b[1] & 0x3F, (b[2] << 24) | (b[3] << 16) | (b[4] << 8) | b[5])
             end
         elseif byte & 0xC0 == 0x40 then
-            self.cmdbuf = {byte}
+            self.cmdbuf = { byte }
         end
-
     elseif state == "wr_wait" then
         if byte == 0xFE or (self.multi_write and byte == 0xFC) then
             self.state = "wr_data"
             self.wr_data = {}
-        elseif self.multi_write and byte == 0xFD then               -- stop token
+        elseif self.multi_write and byte == 0xFD then -- stop token
             self.multi_write = false
             self.state = "cmd"
             self:push("\xFF\x00\x00")
         end
-
     elseif state == "wr_data" then
         local d = self.wr_data
         d[#d + 1] = string.char(byte)
-        if #d == SECTOR + 2 then                                    -- data + CRC
+        if #d == SECTOR + 2 then -- data + CRC
             if self.wr_block < self.blocks then
                 self:write_sector(self.wr_block, table.concat(d, "", 1, SECTOR))
-                self:push("\xE5\x00\x00")                           -- data accepted, busy
+                self:push("\xE5\x00\x00") -- data accepted, busy
             else
-                self:push("\xED\x00")                               -- write error
+                self:push("\xED\x00") -- write error
             end
             self.wr_block = self.wr_block + 1
             self.wr_data = nil
@@ -312,8 +322,7 @@ function SD:transfer(byte)
     return r
 end
 
-function SD:select()
-end
+function SD:select() end
 
 function SD:deselect()
     self:clear_out()

@@ -31,18 +31,18 @@
 local M = {}
 
 M.TYPES = {
-    ["24c01"]   = {size = 128,    page = 8,   addr_bytes = 1},
-    ["24c02"]   = {size = 256,    page = 8,   addr_bytes = 1},
-    ["24c04"]   = {size = 512,    page = 16,  addr_bytes = 1},
-    ["24c08"]   = {size = 1024,   page = 16,  addr_bytes = 1},
-    ["24c16"]   = {size = 2048,   page = 16,  addr_bytes = 1},
-    ["24c32"]   = {size = 4096,   page = 32,  addr_bytes = 2},
-    ["24c64"]   = {size = 8192,   page = 32,  addr_bytes = 2},
-    ["24c128"]  = {size = 16384,  page = 64,  addr_bytes = 2},
-    ["24c256"]  = {size = 32768,  page = 64,  addr_bytes = 2},
-    ["24c512"]  = {size = 65536,  page = 128, addr_bytes = 2},
-    ["24m01"]   = {size = 131072, page = 256, addr_bytes = 2},
-    ["m24m02"]  = {size = 262144, page = 256, addr_bytes = 2},
+    ["24c01"] = { size = 128, page = 8, addr_bytes = 1 },
+    ["24c02"] = { size = 256, page = 8, addr_bytes = 1 },
+    ["24c04"] = { size = 512, page = 16, addr_bytes = 1 },
+    ["24c08"] = { size = 1024, page = 16, addr_bytes = 1 },
+    ["24c16"] = { size = 2048, page = 16, addr_bytes = 1 },
+    ["24c32"] = { size = 4096, page = 32, addr_bytes = 2 },
+    ["24c64"] = { size = 8192, page = 32, addr_bytes = 2 },
+    ["24c128"] = { size = 16384, page = 64, addr_bytes = 2 },
+    ["24c256"] = { size = 32768, page = 64, addr_bytes = 2 },
+    ["24c512"] = { size = 65536, page = 128, addr_bytes = 2 },
+    ["24m01"] = { size = 131072, page = 256, addr_bytes = 2 },
+    ["m24m02"] = { size = 262144, page = 256, addr_bytes = 2 },
 }
 
 local EEPROM = {}
@@ -51,15 +51,17 @@ EEPROM.__index = EEPROM
 function M.new(opts)
     opts = opts or {}
     local t = opts.type and M.TYPES[string.lower(opts.type)]
-    if opts.type and not t then error("24cxx: unknown type: " .. tostring(opts.type), 2) end
+    if opts.type and not t then
+        error("24cxx: unknown type: " .. tostring(opts.type), 2)
+    end
     t = t or {}
 
     local ee = setmetatable({}, EEPROM)
-    ee.size       = opts.size or t.size
-    ee.page       = opts.page or t.page
+    ee.size = opts.size or t.size
+    ee.page = opts.page or t.page
     ee.addr_bytes = opts.addr_bytes or t.addr_bytes
     ee.write_time = opts.write_time or 5
-    ee.name       = opts.name or opts.type or "24cxx"
+    ee.name = opts.name or opts.type or "24cxx"
 
     assert(math.type(ee.size) == "integer" and ee.size > 0, "24cxx: invalid size")
     assert(math.type(ee.page) == "integer" and ee.page > 0, "24cxx: invalid page size")
@@ -77,14 +79,18 @@ function M.new(opts)
     if opts.file then
         ee.file = opts.file
         ee:load(ee.file)
-        host.on_exit(function() ee:flush() end)
+        host.on_exit(function()
+            ee:flush()
+        end)
     end
 
     return ee
 end
 
 function EEPROM:fill(value)
-    for i = 0, self.size - 1 do self.mem[i] = value & 0xFF end
+    for i = 0, self.size - 1 do
+        self.mem[i] = value & 0xFF
+    end
     self:mark_dirty()
 end
 
@@ -99,10 +105,14 @@ end
 
 function EEPROM:load(file)
     local f = io.open(file, "rb")
-    if not f then return false end
+    if not f then
+        return false
+    end
     local data = f:read("a")
     f:close()
-    for i = 1, math.min(#data, self.size) do self.mem[i - 1] = data:byte(i) end
+    for i = 1, math.min(#data, self.size) do
+        self.mem[i - 1] = data:byte(i)
+    end
     return true
 end
 
@@ -123,9 +133,13 @@ end
 
 -- content is saved with delay (many write cycles are saved once)
 function EEPROM:mark_dirty()
-    if not self.file or self.dirty then return end
+    if not self.file or self.dirty then
+        return
+    end
     self.dirty = true
-    host.timer(500, function() self:flush() end)
+    host.timer(500, function()
+        self:flush()
+    end)
 end
 
 function EEPROM:flush()

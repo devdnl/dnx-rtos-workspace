@@ -67,8 +67,8 @@ DS.__index = DS
 
 local next_serial = 1
 
-local CONV_TIME = {[9] = 93.75, [10] = 187.5, [11] = 375, [12] = 750}  -- ms
-local COPY_TIME = 10                                                    -- ms
+local CONV_TIME = { [9] = 93.75, [10] = 187.5, [11] = 375, [12] = 750 } -- ms
+local COPY_TIME = 10 -- ms
 
 -- Maxim/Dallas CRC8 (x^8 + x^5 + x^4 + 1)
 function M.crc8(bytes, n)
@@ -78,7 +78,9 @@ function M.crc8(bytes, n)
         for _ = 1, 8 do
             local mix = (crc ~ b) & 1
             crc = crc >> 1
-            if mix ~= 0 then crc = crc ~ 0x8C end
+            if mix ~= 0 then
+                crc = crc ~ 0x8C
+            end
             b = b >> 1
         end
     end
@@ -93,12 +95,16 @@ local function to_reg(c, resolution)
 end
 
 local function from_reg(r)
-    if r & 0x8000 ~= 0 then r = r - 0x10000 end
+    if r & 0x8000 ~= 0 then
+        r = r - 0x10000
+    end
     return r / 16
 end
 
 local function to_s8(v)
-    if v & 0x80 ~= 0 then return v - 0x100 end
+    if v & 0x80 ~= 0 then
+        return v - 0x100
+    end
     return v
 end
 
@@ -113,25 +119,33 @@ function M.new(opts)
     if opts.rom then
         assert(type(opts.rom) == "table" and #opts.rom == 8, "ds18b20: rom must be table of 8 bytes")
         d.rom_code = {}
-        for i = 1, 8 do d.rom_code[i] = opts.rom[i] & 0xFF end
+        for i = 1, 8 do
+            d.rom_code[i] = opts.rom[i] & 0xFF
+        end
     else
         local serial = opts.serial
         if serial == nil then
             serial = next_serial
             next_serial = next_serial + 1
         end
-        assert(math.type(serial) == "integer" and serial >= 0 and serial < (1 << 48),
-               "ds18b20: serial must be 48-bit integer")
-        d.rom_code = {opts.family or 0x28}
-        for i = 0, 5 do d.rom_code[i + 2] = (serial >> (8 * i)) & 0xFF end
+        assert(
+            math.type(serial) == "integer" and serial >= 0 and serial < (1 << 48),
+            "ds18b20: serial must be 48-bit integer"
+        )
+        d.rom_code = { opts.family or 0x28 }
+        for i = 0, 5 do
+            d.rom_code[i + 2] = (serial >> (8 * i)) & 0xFF
+        end
         d.rom_code[8] = M.crc8(d.rom_code, 7)
     end
 
     local resolution = opts.resolution or 12
     assert(CONV_TIME[resolution], "ds18b20: resolution must be 9..12")
-    d.ee = {th = (opts.th or 75) & 0xFF, tl = (opts.tl or 70) & 0xFF, cfg = config_byte(resolution)}
+    d.ee = { th = (opts.th or 75) & 0xFF, tl = (opts.tl or 70) & 0xFF, cfg = config_byte(resolution) }
     d.file = opts.file
-    if d.file then d:load() end
+    if d.file then
+        d:load()
+    end
 
     d.parasite = opts.parasite and true or false
     d.timing = opts.timing ~= false
@@ -139,13 +153,15 @@ function M.new(opts)
     d.faults = {}
     d.alarm_flag = false
     d.treg = to_reg(85, 12)
-    d.sp = {th = d.ee.th, tl = d.ee.tl, cfg = d.ee.cfg}
+    d.sp = { th = d.ee.th, tl = d.ee.tl, cfg = d.ee.cfg }
     d.busy = nil
     d.co = nil
     d.drive = 1
 
     if d.file then
-        host.on_exit(function() d:save() end)
+        host.on_exit(function()
+            d:save()
+        end)
     end
 
     return d
@@ -179,9 +195,13 @@ end
 
 -- host interface --------------------------------------------------------------
 function DS:attach(bus)
-    if type(bus) == "table" and bus.ow then bus = bus.ow end
+    if type(bus) == "table" and bus.ow then
+        bus = bus.ow
+    end
     assert(type(bus) == "table" and bus.add, "ds18b20: 1-Wire bus expected")
-    if self.bus then self.bus:remove(self) end
+    if self.bus then
+        self.bus:remove(self)
+    end
     self.bus = bus
     bus:add(self)
     self.co = nil
@@ -217,12 +237,14 @@ function DS:alarm()
 end
 
 function DS:rom()
-    return {table.unpack(self.rom_code)}
+    return { table.unpack(self.rom_code) }
 end
 
 function DS:rom_string()
     local s = string.format("%02x-", self.rom_code[1])
-    for i = 7, 2, -1 do s = s .. string.format("%02x", self.rom_code[i]) end
+    for i = 7, 2, -1 do
+        s = s .. string.format("%02x", self.rom_code[i])
+    end
     return s
 end
 
@@ -233,7 +255,7 @@ function DS:power_cycle()
     self.busy = nil
     self.alarm_flag = false
     self.treg = to_reg(85, 12)
-    self.sp = {th = self.ee.th, tl = self.ee.tl, cfg = self.ee.cfg}
+    self.sp = { th = self.ee.th, tl = self.ee.tl, cfg = self.ee.cfg }
 end
 
 function DS:set_fault(name, on)
@@ -248,7 +270,9 @@ end
 -- ROM code as sent on the bus (fault rom_crc: CRC inverted)
 function DS:bus_rom()
     local r = self:rom()
-    if self.faults.rom_crc then r[8] = r[8] ~ 0xFF end
+    if self.faults.rom_crc then
+        r[8] = r[8] ~ 0xFF
+    end
     return r
 end
 
@@ -262,7 +286,9 @@ end
 -- returns true when operation is in progress
 function DS:update(force)
     local b = self.busy
-    if not b then return false end
+    if not b then
+        return false
+    end
     local due
     if self.timing then
         due = force or self:now() >= b.done
@@ -283,7 +309,10 @@ function DS:update(force)
             self.dirty = true
             if self.file then
                 if not self.save_timer then
-                    self.save_timer = host.timer(500, function() self.save_timer = nil; self:save() end)
+                    self.save_timer = host.timer(500, function()
+                        self.save_timer = nil
+                        self:save()
+                    end)
                 end
             end
         end
@@ -292,7 +321,7 @@ function DS:update(force)
 end
 
 function DS:start(name, time, value)
-    self.busy = {name = name, done = self:now() + time, value = value, powered = false, lost = false}
+    self.busy = { name = name, done = self:now() + time, value = value, powered = false, lost = false }
     self:update()
 end
 
@@ -314,13 +343,17 @@ end
 local function rx_byte()
     local v = 0
     for i = 0, 7 do
-        if slot(1) == 1 then v = v | (1 << i) end
+        if slot(1) == 1 then
+            v = v | (1 << i)
+        end
     end
     return v
 end
 
 local function tx_byte(v)
-    for i = 0, 7 do slot((v >> i) & 1) end
+    for i = 0, 7 do
+        slot((v >> i) & 1)
+    end
 end
 
 local function rom_bit(rom, n)
@@ -331,25 +364,35 @@ function DS:transaction()
     local cmd = rx_byte()
 
     if cmd == 0xF0 or cmd == 0xEC then
-        if cmd == 0xEC and not self:alarm() then return end
+        if cmd == 0xEC and not self:alarm() then
+            return
+        end
         local rom = self:bus_rom()
         for n = 0, 63 do
             local b = rom_bit(rom, n)
             slot(b)
             slot(b ~ 1)
-            if slot(1) ~= b then return end  -- other direction: device is deselected
+            if slot(1) ~= b then
+                return
+            end -- other direction: device is deselected
         end
     elseif cmd == 0x33 then
-        for _, b in ipairs(self:bus_rom()) do tx_byte(b) end
+        for _, b in ipairs(self:bus_rom()) do
+            tx_byte(b)
+        end
     elseif cmd == 0x55 then
         local rom = self:bus_rom()
         local match = true
         for n = 0, 63 do
-            if slot(1) ~= rom_bit(rom, n) then match = false end
+            if slot(1) ~= rom_bit(rom, n) then
+                match = false
+            end
         end
-        if not match then return end
+        if not match then
+            return
+        end
     elseif cmd ~= 0xCC then
-        return  -- unknown or overdrive command (not supported)
+        return -- unknown or overdrive command (not supported)
     end
 
     self:function_command(rx_byte())
@@ -358,34 +401,41 @@ end
 function DS:function_command(cmd)
     self:update()
 
-    if cmd == 0x44 then                          -- CONVERT T
-        if self.busy then return end
+    if cmd == 0x44 then -- CONVERT T
+        if self.busy then
+            return
+        end
         local res = self:resolution()
         self:start("conversion", CONV_TIME[res], to_reg(self.temp, res))
         self:busy_slots()
-
-    elseif cmd == 0xBE then                      -- READ SCRATCHPAD
-        local sp = {self.treg & 0xFF, self.treg >> 8, self.sp.th, self.sp.tl, self.sp.cfg, 0xFF, 0x0C, 0x10}
+    elseif cmd == 0xBE then -- READ SCRATCHPAD
+        local sp = { self.treg & 0xFF, self.treg >> 8, self.sp.th, self.sp.tl, self.sp.cfg, 0xFF, 0x0C, 0x10 }
         sp[9] = M.crc8(sp, 8)
-        if self.faults.crc then sp[9] = sp[9] ~ 0xFF end
-        for _, b in ipairs(sp) do tx_byte(b) end
-        while true do slot(1) end
-
-    elseif cmd == 0x4E then                      -- WRITE SCRATCHPAD
+        if self.faults.crc then
+            sp[9] = sp[9] ~ 0xFF
+        end
+        for _, b in ipairs(sp) do
+            tx_byte(b)
+        end
+        while true do
+            slot(1)
+        end
+    elseif cmd == 0x4E then -- WRITE SCRATCHPAD
         self.sp.th = rx_byte()
         self.sp.tl = rx_byte()
         self.sp.cfg = (rx_byte() & 0x60) | 0x1F
-
-    elseif cmd == 0x48 then                      -- COPY SCRATCHPAD
-        if self.busy then return end
+    elseif cmd == 0x48 then -- COPY SCRATCHPAD
+        if self.busy then
+            return
+        end
         self:start("copy", COPY_TIME)
         self:busy_slots()
-
-    elseif cmd == 0xB8 then                      -- RECALL E2
+    elseif cmd == 0xB8 then -- RECALL E2
         self.sp.th, self.sp.tl, self.sp.cfg = self.ee.th, self.ee.tl, self.ee.cfg
-
-    elseif cmd == 0xB4 then                      -- READ POWER SUPPLY
-        while true do slot(self.parasite and 0 or 1) end
+    elseif cmd == 0xB4 then -- READ POWER SUPPLY
+        while true do
+            slot(self.parasite and 0 or 1)
+        end
     end
 end
 
@@ -394,10 +444,14 @@ end
 -- pull-up)
 function DS:busy_slots()
     local drive = function()
-        if self.parasite then return 1 end
+        if self.parasite then
+            return 1
+        end
         return self:update() and 0 or 1
     end
-    while true do slot(drive) end
+    while true do
+        slot(drive)
+    end
 end
 
 -- device interface of the 1-Wire bus --------------------------------------
@@ -409,24 +463,37 @@ function DS:ow_reset(overdrive)
     if self.faults.mute or overdrive or (self.bus and self.bus.short) then
         return false
     end
-    self.co = coroutine.create(function() self:transaction() end)
+    self.co = coroutine.create(function()
+        self:transaction()
+    end)
     local ok, v = coroutine.resume(self.co)
-    if not ok then self.co = nil; error(v) end
+    if not ok then
+        self.co = nil
+        error(v)
+    end
     self.drive = v
     return true
 end
 
 function DS:ow_drive()
     local v = self.drive
-    if type(v) == "function" then v = v() end
+    if type(v) == "function" then
+        v = v()
+    end
     return v
 end
 
 function DS:ow_sample(level)
     self:activity()
-    if not self.co then return end
+    if not self.co then
+        return
+    end
     local ok, v = coroutine.resume(self.co, level)
-    if not ok then self.co = nil; self.drive = 1; error(v) end
+    if not ok then
+        self.co = nil
+        self.drive = 1
+        error(v)
+    end
     if coroutine.status(self.co) == "dead" then
         self.co = nil
         self.drive = 1
@@ -439,13 +506,17 @@ end
 -- switched off before the end of operation breaks it
 function DS:ow_power(on)
     local b = self.busy
-    if not (b and self.parasite) then return end
+    if not (b and self.parasite) then
+        return
+    end
     if on then
         b.powered = true
         self:update()
     elseif self:update() then
         b.lost = true
-        if not self.timing then self:update(true) end
+        if not self.timing then
+            self:update(true)
+        end
     end
 end
 
