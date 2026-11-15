@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 
 //#include <signal.h>
 
@@ -33,9 +34,14 @@
 
 #define LUA_INITVARVERSION	LUA_INIT_VAR LUA_VERSUFFIX
 
+#define LUA_HISTORY 16
+
 GLOBAL_VARIABLES_SECTION {
         lua_State *globalL;
         const char *progname;
+        char *history[LUA_HISTORY];
+        int history_count;
+        int history_pos;
 };
 PROGRAM_PARAMS(lua, STACK_DEPTH_LARGE);
 
@@ -390,6 +396,82 @@ static int handle_luainit (lua_State *L) {
 
 
 /*
+** dnx RTOS: line history of interactive mode. TTY sends arrow up/down keys
+** as separate lines ("\033^[A", "\033^[B"), selected line is set in TTY by
+** IOCTL_TTY__SET_EDITLINE. Tab key sends line with "\033^[T" (line is
+** restored).
+*/
+#define KEY_ARROW_UP   "\033^[A\n"
+#define KEY_ARROW_DOWN "\033^[B\n"
+#define KEY_TAB        "\033^[T"
+
+static void dnx_history_select (int older) {
+  if (older && global->history_pos > 0)
+    global->history_pos--;
+  else if (!older && global->history_pos < global->history_count)
+    global->history_pos++;
+  else
+    return;
+
+  ioctl(fileno(stdin), IOCTL_TTY__SET_EDITLINE,
+        global->history_pos < global->history_count
+        ? global->history[global->history_pos] : "");
+}
+
+static int dnx_readline (char *b, const char *prompt) {
+  fputs(prompt, stdout);  /* show prompt */
+  fflush(stdout);
+  global->history_pos = global->history_count;
+
+  for (;;) {
+    if (fgets(b, LUA_MAXINPUT, stdin) == NULL)
+      return 0;
+
+    char *tab = strstr(b, KEY_TAB);
+    if (strcmp(b, KEY_ARROW_UP) == 0)
+      dnx_history_select(1);
+    else if (strcmp(b, KEY_ARROW_DOWN) == 0)
+      dnx_history_select(0);
+    else if (tab) {
+      *tab = '\0';
+      ioctl(fileno(stdin), IOCTL_TTY__SET_EDITLINE, b);
+    }
+    else if (b[0] != '\033')
+      return 1;
+  }
+}
+
+static void dnx_saveline (const char *line) {
+  if (line[0] == '\0' || (global->history_count > 0 &&
+      strcmp(global->history[global->history_count - 1], line) == 0))
+    return;  /* empty line or the same as the last one */
+
+  char *copy = strdup(line);
+  if (copy == NULL)
+    return;
+
+  for (char *c = copy; *c; c++) {  /* multi-line statement in one line */
+    if (*c == '\n')
+      *c = ' ';
+  }
+
+  if (global->history_count == LUA_HISTORY) {  /* remove the oldest line */
+    free(global->history[0]);
+    memmove(&global->history[0], &global->history[1],
+            (LUA_HISTORY - 1) * sizeof(char *));
+    global->history_count--;
+  }
+
+  global->history[global->history_count++] = copy;
+}
+
+#define lua_initreadline(L)	((void)L)
+#define lua_readline(L,b,p)	((void)L, dnx_readline(b, p))
+#define lua_saveline(L,line)	((void)L, dnx_saveline(line))
+#define lua_freeline(L,b)	{ (void)L; (void)b; }
+
+
+/*
 ** lua_readline defines how to show a prompt and then read a line from
 ** the standard input.
 ** lua_saveline defines how to "save" a read line in a "history".
@@ -641,6 +723,8 @@ int main (int argc, char **argv) {
   result = lua_toboolean(L, -1);  /* get result */
   report(L, status);
   lua_close(L);
+  for (int i = 0; i < global->history_count; i++)
+    free(global->history[i]);
   return (result && status == LUA_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
