@@ -103,6 +103,13 @@ build could not be verified.
 
 ## Build commands (top-level `Makefile`)
 
+The top-level `Makefile` belongs to the project (settings and targets of its
+partitions: `app-*`, `btl-*` in the workspace example) and includes the core
+`tools/workspace.mk` (macros, simulator, `test-sim`, `test-drvset`, `help`,
+`clean`). Change the core only for workspace features; partitions and project
+targets go to the `Makefile` (`help ::` / `clean ::` rules extend help and
+cleaning).
+
 ```sh
 make help               # list targets
 make build-app          # app kernel + appset + romfs -> build/project_app.hex, project-app.fpkg

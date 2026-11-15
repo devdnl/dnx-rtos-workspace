@@ -195,7 +195,45 @@ BSP file (`bsp/*.bsp`). Included BSPs:
   Docker image, simulator tests `simtest.py`, board panel `simpanel.py`),
   updated with the workspace (see `tools/README.md`),
 - `utils` – scripts and tools of the user project (not changed by the
-  workspace).
+  workspace),
+- `Makefile` – build of the project: settings, the core of the workspace
+  `tools/workspace.mk` and targets of the project partitions (see below).
+
+### Makefile of the project
+The top-level `Makefile` belongs to the project, the core of the workspace
+`tools/workspace.mk` (macros, POSIX simulator, tests, `help`, `clean`) is
+updated with the workspace and is only included. Partitions are defined by the
+project: names of kernels, appsets and romfs images (configurations in
+`config/<name>`) and their targets. The `Makefile` of the workspace contains
+the example layout: application (`app-kernel`, `app-appset`, `app-romfs`) and
+boot loader (`btl-kernel`, `btl-appset`); a project with another layout (e.g.
+a framework without bootloader) replaces these targets. Minimal project:
+```make
+PROJECT = myproject
+# appset and romfs of the simulator
+SIM_APPSET_DIR = my-appset
+SIM_ROMFS_DIR = my-romfs
+include tools/workspace.mk
+
+help ::
+	@$(ECHO) "Project targets:"
+	@$(ECHO) "   build-my            build kernel, appset and romfs"
+
+build-my : _build_prepare
+	@$(call build_romfs, my-romfs, my-romfs)
+	@$(call clean_kernel)
+	@$(call build_kernel, my-kernel)
+	@$(call build_appset, my-appset, my-appset, myboard, myopts)
+```
+Settings of the core are defined by `?=` and set before `include` (names of
+simulator configurations `SIM_KERNEL_CONFIG`, `SIM_APPSET_CONFIG`,
+`SIM_ROMFS_CONFIG`, options of `run-sim-example` `SIM_EXAMPLE_OPTS`, programs,
+...), help of the project is added by `help ::` rules, additional cleaning by
+`clean ::` rules (`clean` of the core cleans the kernel and removes the build
+directory). Macros: `build_kernel <config>`, `build_appset <appset directory>
+<config> <board name> <project options>`, `build_romfs <directory> <config>`,
+`clean_kernel`, `clean_appset <config>`, `clean_romfs <config>`, `install_hex
+<file in build directory>`, `config_kernel|config_appset|config_romfs <config>`.
 
 ## Getting started
 
