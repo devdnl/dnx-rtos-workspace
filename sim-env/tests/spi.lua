@@ -80,6 +80,31 @@ test("LSB first bit order", function()
     expect(dev_read("/dev/spi-b-lsb", 3) == "LSB", "LSB first read")
 end)
 
+-- control device of test board (I2C:0 address 30h), returns response
+local function control(c)
+    local f = io.open("/dev/i2c-ow-ctl", "r+b")
+    if not f then
+        T.modprobe("I2C", 0, 22, "/dev/i2c-ow-ctl", "address=0x30")
+        f = assert(io.open("/dev/i2c-ow-ctl", "r+b"))
+    end
+    f:setvbuf("no")
+    assert(f:write(c))
+    f:seek("set", 0)
+    local r = assert(f:read(128)):match("^[^%z]*")
+    f:close()
+    return r
+end
+
+test("Block transfers: two devices on one CS, nil falls back to transfer()", function()
+    local before = tonumber(control("spi fallback"))
+    expect(dev_write("/dev/spi-b", "block data"), "write error")
+    expect(tonumber(control("spi fallback")) == before + 10, "bytes of transfer(): " .. control("spi fallback"))
+    local rd = dev_read("/dev/spi-b", 10)
+    expect(rd == "block data", "read (AND of devices): " .. hex(rd))
+    rd = dev_read("/dev/spi-b", 12)
+    expect(rd == "block data\xFF\xFF", "missing bytes of block transfer: " .. hex(rd))
+end)
+
 test("Not supported SPI mode (no response)", function()
     local rd = dev_read("/dev/spi-a-mode1", 4)
     expect(rd == "\xFF\xFF\xFF\xFF", "data received in mode 1: " .. hex(rd))

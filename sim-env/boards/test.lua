@@ -75,6 +75,11 @@
   SPI:3:
     PB1   ST7789 LCD 240x320 (LCD "tft" of the panel), D/C -> PB0,
           tests/spilcd.lua
+    PD0   BT817 EVE3 video controller 480x272 (LCD "eve" of the panel), INT_N
+          -> PD1, tests/bt817.lua; control commands "eve pixel <x> <y>" (pixel
+          of LCD, RGB565 hex), "eve touch <x> <y> <0|1>", "eve touch_slot <n> <x>
+          <y> <0|1>", "eve skipped" (swaps without render), "eve shown" (LCD
+          shown in the panel)
 
   Panel (tools/simtest.py, test of panel protocol, tests/panel.lua):
     P_OUT  shows PA18 (system output)
@@ -99,6 +104,7 @@ local mcp23s17 = require("models.mcp23s17")
 local nmea_gps = require("models.nmea_gps")
 local netdev = require("models.netdev")
 local udp_sensor = require("models.udp_sensor")
+local bt817 = require("models.bt817")
 
 gpio.connect("PA0", "PA8", true)
 gpio.connect("PA1", "PA9")
@@ -348,6 +354,26 @@ local sensor_eth2 = udp_sensor
     })
     :attach()
 
+-- SPI:3: BT817
+local eve = bt817.new({ id = "eve", width = 480, height = 272, int = "PD1" })
+eve:attach("SPI:3", "PD0")
+
+OW_COMMANDS.eve = function(what, a, b, c, d)
+    if what == "pixel" then
+        return string.format("%04X", eve.lcd:pixel(assert(tonumber(a)), assert(tonumber(b))) or 0)
+    elseif what == "touch" then
+        eve:touch(assert(tonumber(a)), assert(tonumber(b)), c == "1")
+    elseif what == "touch_slot" then -- "eve touch_slot <n> <x> <y> <0|1>"
+        eve:touch_slot(assert(tonumber(a)), assert(tonumber(b)), assert(tonumber(c)), d == "1")
+    elseif what == "skipped" then -- "eve skipped": swaps without render (unchanged frame)
+        return tostring(eve.skipped or 0)
+    elseif what == "shown" then
+        return tostring(eve.lcd.enabled)
+    else
+        error("eve: unknown command " .. tostring(what))
+    end
+end
+
 OW_COMMANDS.net = function(what, a, b, ...)
     if what == "sensor" then
         sensor_eth:set_value(assert(tonumber(a)))
@@ -444,9 +470,18 @@ i2c.attach("I2C:0", 0x30, ow_ctl)
 eeprom.new({ type = "24c02" }):attach("I2C:1", 0x50)
 
 -- SPI:0: test memory, returns data of the last transaction that contains other
--- bytes than 0x00 and 0xFF (read transaction does not overwrite data)
-local function spi_memory()
+-- bytes than 0x00 and 0xFF (read transaction does not overwrite data);
+-- block: transfers by dev:transfer_block()
+local function spi_memory(block)
     local d = { mode = 0, buf = "" }
+    if block then
+        function d:transfer_block(data)
+            local r = self.buf:sub(self.n + 1, self.n + #data)
+            self.rx[#self.rx + 1] = data
+            self.n = self.n + #data
+            return r -- missing bytes: 0xFF
+        end
+    end
     function d:select()
         self.rx, self.n = {}, 0
     end
@@ -465,7 +500,23 @@ local function spi_memory()
 end
 
 spi.attach("SPI:0", "PA4", spi_memory())
-spi.attach("SPI:0", "PA6", spi_memory())
+spi.attach("SPI:0", "PA6", spi_memory(true))
+-- second device on PA6: block transfer refused (nil: dev:transfer() for every
+-- byte), sends 0xFF (data of PA6 memory combined by AND are not changed)
+local spi_fallback = { mode = 0, count = 0 }
+function spi_fallback:transfer_block()
+    return nil
+end
+function spi_fallback:transfer()
+    self.count = self.count + 1
+    return 0xFF
+end
+spi.attach("SPI:0", "PA6", spi_fallback)
+OW_COMMANDS.spi = function(what) -- "spi fallback": bytes received by transfer() of second PA6 device
+    if what == "fallback" then
+        return tostring(spi_fallback.count)
+    end
+end
 spiee.new({ type = "25lc256" }):attach("SPI:0", "PA7")
 sdcard.new({ type = "sdhc", size = 16 * 1024 * 1024 }):attach("SPI:0", "PA15")
 sdcard.new({ type = "sdv1", size = 2 * 1024 * 1024 }):attach("SPI:0", "PA17")

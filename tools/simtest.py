@@ -942,7 +942,7 @@ class TestRunner:
 
         # board model (before fstest on hostfs, test files are removed after test)
         board_tests = ("board: gpio", "board: i2c", "board: i2cee", "board: ds2482", "board: spi", "board: spiee",
-                       "board: mcp23s17", "board: uart", "board: net",
+                       "board: mcp23s17", "board: uart", "board: net", "board: bt817",
                        "board: sdcard", "fstest: ext2 on sdspi", "board: panel")
         if args.board:
             # Ethernet models of the board: netmgr configures the network in background, its
@@ -964,6 +964,7 @@ class TestRunner:
             self.summary_test(sim, "board: mcp23s17", "/host/sim-env", "lua mcp23s17.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: uart", "/host/sim-env", "lua uart.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: net", "/host/sim-env", "lua net.lua", DEFAULT_TIMEOUT)
+            self.summary_test(sim, "board: bt817", "/host/sim-env", "lua bt817.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: spi", "/host/sim-env", "lua spi.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: spiee", "/host/sim-env", "lua spiee.lua", FSTEST_TIMEOUT)
             self.summary_test(sim, "board: sdcard", "/host/sim-env", "lua sdcard.lua", FSTEST_TIMEOUT)

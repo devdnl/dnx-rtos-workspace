@@ -10,7 +10,7 @@
   1-Wire bus (DS2482), LEDs of the I/O expander and shift register, MCP23S17
   with LEDs and buttons, GPS receiver (UART:1), Ethernet temperature sensor
   (UDP broadcast), LCD (LTDC driver) with touch panel, TFT display (ST7789
-  model on SPI:2).
+  model on SPI:2), EVE display controller (BT817 model on SPI:3) with touch.
 
   Pins (port A):
     PA0  LED (output of the system, active low)
@@ -40,6 +40,10 @@
           GPPUB should be enabled), INTA -> PA10, INTB -> PA11
   SPI:2:
     PB1   ST7789 TFT display 240x320 (LCD "tft" of the panel), D/C -> PB0
+  SPI:3:
+    PD0   BT817 EVE display controller 480x272 (LCD "eve" of the panel, touch
+          of the display in the panel: capacitive touch of the chip),
+          INT_N -> PD1
   UART:1 (/dev/ttyS1, when not connected by simulator option --uart 1=...):
           NMEA GPS receiver (9600 8N1, 1 fix per second), position, fix,
           speed and course set by the panel
@@ -94,6 +98,12 @@
     modprobe -i SPI 2 0 /dev/spi-tft -c cs_port=1,cs_pin=1
     lua /host/demos/tftdemo.lua
 
+  dnx RTOS (shell), EVE display (demo sim-env/demos/evedemo.lua, simulator
+  option --hostfs host=sim-env, registers are accessed by full duplex
+  transfers, dnx.spi.transceive()):
+    modprobe -i SPI 3 0 /dev/spi-eve -c cs_port=3,cs_pin=0,mode=0
+    lua /host/demos/evedemo.lua
+
   dnx RTOS (shell), SPI EEPROM and LEDs:
     modprobe -i SPIEE 0 0 /dev/ee1 -c spi_path=/dev/spi-ee,memory_size=32768,page_size=64,address_size=2
     modprobe -i SPI 1 0 /dev/leds2 -c cs_port=0,cs_pin=16
@@ -112,6 +122,7 @@ local ft5336 = require("models.ft5336")
 local sdcard = require("models.sdcard")
 local hc595 = require("models.74hc595")
 local st7789 = require("models.st7789")
+local bt817 = require("models.bt817")
 
 -- LED: print state when system changes the output
 gpio.on_change("PA0", function(level)
@@ -324,5 +335,13 @@ panel.value("TFT_TOUCH", "", { label = "TFT touch" })
 tft:on_touch(function(x, y, pressed)
     panel.set("TFT_TOUCH", pressed and string.format("%d, %d", x, y) or "")
 end)
+
+-- SPI:3: EVE display controller (LCD "eve" of the panel), touch of the display
+-- in the board panel goes to the touch engine of the chip
+local eve = bt817.new({ id = "eve", width = 480, height = 272, int = "PD1" }):attach("SPI:3", "PD0")
+panel.on_touch(function(x, y, pressed)
+    eve:touch(x, y, pressed)
+end, "eve")
+panel.output("EVE_INT", "PD1", { active_low = true, label = "EVE INT_N (PD1)", color = "#a855f7" })
 
 print("example board loaded")

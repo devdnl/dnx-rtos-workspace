@@ -235,6 +235,7 @@ help :
 	@$(ECHO) "                       run-sim SIM_OPTS=\"--drvset build/sim-drvset.bin\")"
 	@$(ECHO) "   run-sim             build and start POSIX simulator (options: SIM_OPTS=..., PANEL=1"
 	@$(ECHO) "                       board panel in web browser, needs --board, PANEL_OPTS=...)"
+	@$(ECHO) "   run-sim-example     build and start POSIX example simulation (options: SIM_OPTS=...)
 	@$(ECHO) "   test-sim            build and test system in POSIX simulator (options: SIMTEST_OPTS=...)"
 	@$(ECHO) "                       other appsets in simulator: SIM_APPSETS=\"<appset>[:<config>] ...\""
 	@$(ECHO) "                       (test-sim adds sim-env/testappset)"
@@ -315,6 +316,16 @@ build-sim-drvset : _build_prepare
 .PHONY : build-sim-romfs
 build-sim-romfs : _build_prepare
 	@$(call build_romfs, app-romfs, sim-romfs)
+
+.PHONY : run-sim-example
+run-sim-example : build-sim
+	@$(PYTHON3) tools/simpanel.py --exit-with-parent --socket $(SIM_PANEL_SOCKET) --port $(SIM_PANEL_PORT)\
+	 $(PANEL_OPTS) >$(TARGET_DIR_NAME)/simpanel.log 2>&1 & pid=$$!;\
+	 sleep 0.5; if ! kill -0 $$pid 2>/dev/null; then $(CAT) $(TARGET_DIR_NAME)/simpanel.log; exit 1; fi;\
+	 $(ECHO) "Board panel: http://localhost:$(SIM_PANEL_PORT) (log: $(TARGET_DIR_NAME)/simpanel.log)";\
+	 $(TARGET_DIR_NAME)/dnx-sim --disk 0=$(TARGET_DIR_NAME)/sim-romfs.bin:ro --panel $(SIM_PANEL_SOCKET) \
+	 --board sim-env/boards/example.lua --hostfs host=sim-env --tap tap0 $(SIM_OPTS);\
+	 st=$$?; kill $$pid 2>/dev/null; exit $$st
 
 .PHONY : run-sim
 run-sim : build-sim

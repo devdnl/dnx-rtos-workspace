@@ -184,7 +184,7 @@ Notes:
   -c <config>` (new device) or `modprobe -c <path> <config>` (existing device).
 - `make test-sim` (`tools/simtest.py`) runs driver configuration string tests
   (`devcfg`), board tests (`sim-env/tests/*.lua`: GPIO, I2C, I2CEE, DS2482, SPI,
-  SPIEE, MCP23S17, UART (echo, NMEA GPS), Ethernet (netdev: ping, UDP, TCP), SDSPI, board panel protocol with LCD and touch), the block layer test
+  SPIEE, MCP23S17, UART (echo, NMEA GPS), Ethernet (netdev: ping, UDP, TCP), SDSPI, board panel protocol with LCD and touch, BT817 EVE), the block layer test
   (`blkdev`: host disk with emulated constraints), `fstest` (ramfs, hostfs,
   FAT/ext4 image, flatfs/eefs/ext2/ext3 partitions formatted in dnx, ext2 on
   the SD card model and on the constrained disk, read-only romfs image),

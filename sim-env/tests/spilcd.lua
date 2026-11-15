@@ -18,6 +18,7 @@ local CS = 0x02 -- PB1 (controlled by SPI driver, kept high between transfers)
 
 T.modprobe("GPIO", 1, 0, "/dev/gpiob")
 T.modprobe("SPI", 3, 0, "/dev/spi-lcd", "cs_port=1,cs_pin=1,mode=0")
+T.modprobe("SPI", 3, 1, "/dev/spi-eve", "cs_port=3,cs_pin=0,mode=0") -- CS of BT817 inactive
 
 local gpio = assert(io.open("/dev/gpiob", "r+b"))
 gpio:setvbuf("no")

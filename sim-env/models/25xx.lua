@@ -214,6 +214,43 @@ function EEPROM:transfer(byte)
     return 0xFF
 end
 
+-- whole SPI transfer (board engine): command and address by transfer(), data
+-- of READ/WRITE in bulk
+function EEPROM:transfer_block(data)
+    local n, i, res = #data, 1, {}
+    while i <= n do
+        local state = self.state
+        if state == "read" then
+            local mem, ptr, size, t = self.mem, self.ptr, self.size, {}
+            for k = i, n, 4096 do
+                local m = math.min(4096, n - k + 1)
+                for j = 1, m do
+                    t[j] = mem[ptr] or 0xFF
+                    ptr = (ptr + 1) % size
+                end
+                res[#res + 1] = string.char(table.unpack(t, 1, m))
+            end
+            self.ptr = ptr
+            break
+        elseif state == "write" then
+            local d, off, page = self.data, self.offset, self.page
+            for k = i, n, 4096 do
+                local bytes = { data:byte(k, math.min(k + 4095, n)) }
+                for j = 1, #bytes do
+                    d[off] = bytes[j]
+                    off = (off + 1) % page
+                end
+            end
+            self.offset, self.count = off, self.count + (n - i + 1)
+            res[#res + 1] = string.rep("\xFF", n - i + 1)
+            break
+        end
+        res[#res + 1] = string.char((self:transfer(data:byte(i)) or 0xFF) & 0xFF)
+        i = i + 1
+    end
+    return table.concat(res)
+end
+
 function EEPROM:deselect()
     local cmd = self.cmd
     self.cmd = nil

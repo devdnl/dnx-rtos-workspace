@@ -228,6 +228,45 @@ function DEV:transfer(byte)
     return 0xFF
 end
 
+-- whole SPI transfer (board engine): pixels of RAMWR (16-bit RGB565 LCD, no
+-- rotation/mirror/BGR) are written in bulk by rows of the window to the LCD
+-- framebuffer, other data by transfer() (nil)
+function DEV:transfer_block(data)
+    if not self.dc or self.cmd ~= RAMWR or self.rd or self.bpp ~= 2 or not self.rgb565 or self.madctl & 0xE8 ~= 0 then
+        return nil
+    end
+    local n, i = #data, 1
+    if self.n ~= 0 then -- second byte of started pixel
+        self:data_byte(data:byte(1))
+        i = 2
+    end
+    local lcd, W, H = self.lcd, self.width, self.height
+    local x, y, xs, xe, ys, ye = self.x, self.y, self.xs, self.xe, self.ys, self.ye
+    while n - i + 1 >= 2 do
+        local run = math.min(xe - x + 1, (n - i + 1) // 2) -- pixels to the end of window row
+        if run <= 0 then -- window narrower than the pointer (invalid window): one pixel
+            run = 1
+        end
+        if y < H and x < W then
+            local vis = math.min(run, W - x)
+            local be = data:sub(i, i + vis * 2 - 1) -- SPI: high byte first, LCD: little endian
+            lcd:write((y * W + x) * 2, (be:gsub("(.)(.)", "%2%1")))
+        end
+        i = i + run * 2
+        if x + run - 1 >= xe then
+            x = xs
+            y = (y >= ye) and ys or y + 1
+        else
+            x = x + run
+        end
+    end
+    self.x, self.y = x, y
+    if i <= n then -- first byte of next pixel
+        self:data_byte(data:byte(i))
+    end
+    return string.rep("\xFF", n)
+end
+
 function DEV:attach(bus, cs)
     spi.attach(bus, cs, self)
     return self

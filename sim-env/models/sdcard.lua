@@ -285,26 +285,32 @@ function SD:receive(byte)
     elseif state == "wr_wait" then
         if byte == 0xFE or (self.multi_write and byte == 0xFC) then
             self.state = "wr_data"
-            self.wr_data = {}
+            self.wr_data, self.wr_len = {}, 0
         elseif self.multi_write and byte == 0xFD then -- stop token
             self.multi_write = false
             self.state = "cmd"
             self:push("\xFF\x00\x00")
         end
     elseif state == "wr_data" then
-        local d = self.wr_data
-        d[#d + 1] = string.char(byte)
-        if #d == SECTOR + 2 then -- data + CRC
-            if self.wr_block < self.blocks then
-                self:write_sector(self.wr_block, table.concat(d, "", 1, SECTOR))
-                self:push("\xE5\x00\x00") -- data accepted, busy
-            else
-                self:push("\xED\x00") -- write error
-            end
-            self.wr_block = self.wr_block + 1
-            self.wr_data = nil
-            self.state = self.multi_write and "wr_wait" or "cmd"
+        self:write_data(string.char(byte))
+    end
+end
+
+-- data of written block (pieces of strings), block + CRC complete: write
+function SD:write_data(str)
+    local d = self.wr_data
+    d[#d + 1] = str
+    self.wr_len = self.wr_len + #str
+    if self.wr_len >= SECTOR + 2 then -- data + CRC
+        if self.wr_block < self.blocks then
+            self:write_sector(self.wr_block, table.concat(d):sub(1, SECTOR))
+            self:push("\xE5\x00\x00") -- data accepted, busy
+        else
+            self:push("\xED\x00") -- write error
         end
+        self.wr_block = self.wr_block + 1
+        self.wr_data = nil
+        self.state = self.multi_write and "wr_wait" or "cmd"
     end
 end
 
@@ -320,6 +326,65 @@ function SD:transfer(byte)
     local r = self:pop()
     self:receive(byte)
     return r
+end
+
+-- bytes from the output queue (0xFF when empty)
+function SD:take(m)
+    local s = self.out[1]
+    if not s then
+        return string.rep("\xFF", m)
+    end
+    local r = s:sub(self.out_pos, self.out_pos + m - 1)
+    self.out_pos = self.out_pos + m
+    if self.out_pos > #s then
+        table.remove(self.out, 1)
+        self.out_pos = 1
+    end
+    return r
+end
+
+-- whole SPI transfer (board engine): spans of bytes that do not change the
+-- state (host sends 0xFF while it reads responses and data blocks) and data
+-- of written blocks are processed in bulk, other bytes by transfer()
+function SD:transfer_block(data)
+    local n, i, res = #data, 1, {}
+    while i <= n do
+        if self.multi_read and #self.out == 0 and self.multi_read < self.blocks then
+            self:data_block(self.multi_read)
+            self.multi_read = self.multi_read + 1
+        end
+        local s, state = self.out[1], self.state
+        local avail = s and (#s - self.out_pos + 1) or math.huge
+        local m = 0
+        if state == "wr_data" then -- data of block (output: busy/response bytes or 0xFF)
+            m = math.min(SECTOR + 2 - self.wr_len, n - i + 1, avail)
+            if m > 0 then
+                res[#res + 1] = self:take(m)
+                self:write_data(data:sub(i, i + m - 1))
+            end
+        else
+            local pat -- bytes changing the state
+            if state == "cmd" and not self.cmdbuf then
+                pat = "[\64-\127]" -- command start 01xxxxxx
+            elseif state == "wr_wait" then
+                pat = "[\252-\254]" -- tokens FCh, FDh, FEh
+            end
+            if pat then
+                local stop = data:find(pat, i) or (n + 1)
+                m = math.min(stop - i, avail)
+                if m > 0 then
+                    res[#res + 1] = self:take(m)
+                end
+            end
+        end
+        if m > 0 then
+            i = i + m
+        else
+            res[#res + 1] = string.char(self:transfer(data:byte(i)))
+            i = i + 1
+        end
+    end
+    return table.concat(res)
 end
 
 function SD:select() end

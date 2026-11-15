@@ -102,6 +102,26 @@ test("Write at the end of memory", function()
     expect(rd == "0123456789", "data mismatch: " .. tostring(rd))
 end)
 
+test("Acknowledge polling (page program time shorter than write cycle)", function()
+    local dev, i2c = "/dev/24c256-fast", "/dev/i2c-24c256-fast" -- driver waits 1 ms, write cycle of model: 5 ms
+    if not exists(i2c) then
+        run("modprobe -i I2C 0 1 " .. i2c .. " -c address=0x50,sub_addr_mode=2")
+    end
+    if not exists(dev) then
+        run("modprobe -i I2CEE 0 1 " .. dev .. " -c i2c_path=" .. i2c .. ",memory_size=" .. SIZE .. ",page_size=64")
+    end
+    local data = pattern(640, 6) -- 10 pages
+    local f = assert(io.open(dev, "r+b"))
+    f:setvbuf("no")
+    f:seek("set", 4096)
+    local ok, err = f:write(data)
+    expect(ok, "write: " .. tostring(err))
+    f:seek("set", 4096)
+    local rd = f:read(#data)
+    f:close()
+    expect(rd == data, "data mismatch")
+end)
+
 test("Format eefs and mount", function()
     run("mkeefs " .. EE_DEV)
     run("mkdir " .. MNT)

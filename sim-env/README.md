@@ -17,7 +17,9 @@ Directories:
   sensor), `25xx` (SPI EEPROM), `sdcard` (SD card in SPI mode, host image
   file), `74hc595` (SPI shift register), `ft5336` (I2C touch panel
   controller), `st7789` (SPI TFT LCD controller, ST7789/ILI9341 compatible,
-  shown by the board panel), `ds2482` (I2C to 1-Wire bridge DS2482-100),
+  shown by the board panel), `bt817` (Bridgetek EVE3 display controller:
+  registers, command FIFO, display list rendered to the board panel, touch,
+  see [EVE display](#eve-display)), `ds2482` (I2C to 1-Wire bridge DS2482-100),
   `ds18b20` (1-Wire thermometer), `onewire` (1-Wire bus used by them, see
   [1-Wire](#1-wire)), `mcp23s17` (SPI 16-bit I/O expander, see
   [MCP23S17](#mcp23s17)), `nmea_gps` (NMEA GPS receiver on UART, see
@@ -32,6 +34,7 @@ Directories:
 - `demos/` – demo programs executed in dnx RTOS, e.g. `lcdpaint.lua` (drawing
   on the LCD of the board panel, see [LCD and touch](#lcd-and-touch)),
   `tftdemo.lua` (drawing on the SPI TFT display, ST7789 model),
+  `evedemo.lua` (animation on the EVE display, BT817 model),
 - `panel/` – pages of the board panel shown in a web browser (`default/` –
   generic page, `example/` – page of `boards/example.lua`), see
   [Board panel](#board-panel).
@@ -168,10 +171,15 @@ Device model is a table with optional fields and methods:
 | `dev.lsb_first` | device bit order is LSB first (data are bit reversed when the transfer uses other order) |
 | `dev:select()` | CS activated |
 | `dev:transfer(byte)` | byte received from the system, returns byte sent to the system (`nil`: 0xFF) |
+| `dev:transfer_block(data)` | optional: whole transfer at once – string received from the system, returns string sent to the system (missing bytes: 0xFF) or `nil` (this transfer is done by `transfer()` byte by byte); used instead of `transfer()` for every transfer when defined (bit order and more selected devices are handled by the engine) |
 | `dev:deselect()` | CS deactivated |
 
 When more devices are selected, received bytes are combined by AND (bus
-conflict). Without devices the system receives 0xFF.
+conflict). Without devices the system receives 0xFF. Every transfer of the
+system (`write()`, `read()`, one segment of `IOCTL_SPI__TRANSCEIVE`) is one
+block: models of devices with large data (memories, displays) should handle
+the data phase in `transfer_block()` (e.g. `models/25xx.lua`, `sdcard.lua`,
+`st7789.lua`, `bt817.lua`), bytes of commands can be passed to `transfer()`.
 
 Example – shift register:
 ```lua
@@ -589,6 +597,47 @@ modprobe -i GPIO 1 0 /dev/gpiob
 modprobe -i SPI 2 0 /dev/spi-tft -c cs_port=1,cs_pin=1
 lua /host/demos/tftdemo.lua
 ```
+
+### EVE display
+`models/bt817.lua` is a model of the BT817/BT818 EVE display controller: the
+SPI host interface (memory reads/writes, host commands), registers, the
+command FIFO (`REG_CMD_WRITE` or `REG_CMDB_WRITE` bursts) with memory
+commands of the coprocessor (`CMD_MEMWRITE`, `CMD_INFLATE` zlib,
+`CMD_APPEND`, `CMD_MEMCRC`, `CMD_GETPTR`, ...) and the display list rendered
+at swap to the LCD of the panel (clear, points, lines, rectangles, bitmaps in
+RGB/ARGB/luminance/paletted formats, alpha blending, scissor, call/jump/macro).
+Widgets of the coprocessor (`CMD_BUTTON`, `CMD_KEYS`, `CMD_SLIDER`, `CMD_DIAL`,
+...) are drawn as simple shapes without text; fonts (`CMD_TEXT`,
+`CMD_NUMBER`), edge strips, stencil and bitmap transforms are not drawn
+(warning once in the simulator output). The LCD is shown when the display is
+started (`REG_PCLK` not 0). Touch of the LCD in the panel goes to the touch
+registers of the chip (`REG_TOUCH_SCREEN_XY`, extended mode
+`REG_CTOUCH_TOUCH*`) and sets the TOUCH interrupt flag. Touch tags work as in
+the chip: the display list writes the tag buffer (`TAG`, `TAG_MASK`,
+`CLEAR_TAG`, tags of widgets, keys of `CMD_KEYS` have tags of their
+characters), `REG_TOUCH_TAG` (and `REG_TOUCH_TAG1..4` in extended mode) is the
+tag at the touch point, `CMD_TRACK` reports the value of sliders/dials in
+`REG_TRACKER`. Options and methods are described in the model file.
+
+Example (`boards/example.lua`, page `panel/example/`, demo
+`demos/evedemo.lua`) – BT817 on SPI:3, CS PD0, INT_N PD1:
+```lua
+local bt817 = require("models.bt817")
+local eve = bt817.new{id = "eve", width = 480, height = 272, int = "PD1"}:attach("SPI:3", "PD0")
+panel.on_touch(function(x, y, pressed) eve:touch(x, y, pressed) end, "eve")
+```
+In dnx RTOS registers and memory are accessed by full duplex transfers
+(`dnx.spi.transceive()`, read: 3 address bytes, dummy byte and data):
+```
+modprobe -i SPI 3 0 /dev/spi-eve -c cs_port=3,cs_pin=0,mode=0
+lua /host/demos/evedemo.lua
+```
+The demo uses touch tags: button (tag 1), keys and a tracked slider. Rendering
+is done in Lua at every swap (fast paths for rectangles, points and RGB565/L1..L8
+bitmaps, colors converted to the LCD format once, only changed rows written to
+the LCD): about 17 ms for a cleared frame with shapes, about 30 ms with a full
+screen RGB565 bitmap (`tests/bt817.lua` prints the times). `tests/bt817.lua` (board
+`boards/test.lua`) tests the model as an EVE host driver.
 
 ## Writing device models
 A device model is a Lua module in `models/` loaded by the board script by
