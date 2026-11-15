@@ -64,6 +64,7 @@
 /*==============================================================================
   External objects
 ==============================================================================*/
+extern bool _libc_stream_is_buffered(FILE *file);
 
 /*==============================================================================
   Function definitions
@@ -97,7 +98,18 @@ char *fgets_buffered(char *str, int size, FILE *stream, char *buf, size_t buflen
 
                 size--;
 
-                if (S_ISFIFO(file_stat.st_mode) || S_ISCHR(file_stat.st_mode) || S_ISBLK(file_stat.st_mode)) {
+                if (_libc_stream_is_buffered(stream)) {
+                        while ((c != '\n') && size--) {
+
+                                c = fgetc(stream);
+                                if (c == EOF) {
+                                        break;
+                                } else {
+                                        *p++ = c;
+                                }
+                        }
+
+                } else if (S_ISFIFO(file_stat.st_mode) || S_ISCHR(file_stat.st_mode) || S_ISBLK(file_stat.st_mode)) {
 
                         while ((c != '\n') && size--) {
 

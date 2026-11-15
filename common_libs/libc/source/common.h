@@ -64,9 +64,26 @@ struct _libc_file {
         int fd;
         char *tmppath;
 
+        struct _libc_file *next; //!< next stream of process (list of opened streams)
+
+        unsigned char *buf; //!< stream buffer (NULL: not allocated yet or unbuffered)
+        size_t bufsize;     //!< buffer size
+        size_t pos;         //!< read: position of next byte, write: number of buffered bytes
+        size_t len;         //!< read: number of bytes in buffer
+        int unget;          //!< character pushed back by ungetc() (EOF: none)
+
+        uint32_t lock; //!< stream lock (futex_t)
+        int owner;     //!< thread which locked stream by flockfile() (-2: none)
+        int lockcnt;   //!< flockfile() lock counter
+
         struct {
                 bool eof:1;
                 bool error:1;
+                bool setup:1;   //!< buffer mode selected
+                bool own_buf:1; //!< buffer allocated by libc
+                bool rd:1;      //!< buffer contains read data
+                bool wr:1;      //!< buffer contains data to write
+                uint8_t mode:2; //!< _IOFBF, _IOLBF or _IONBF
         } flag;
 };
 
@@ -91,6 +108,9 @@ typedef struct {
         struct _libc_file *_stdin;
         struct _libc_file *_stdout;
         struct _libc_file *_stderr;
+
+        struct _libc_file *_files; //!< list of opened streams (flushed at exit)
+        uint32_t _files_lock;      //!< list lock (futex_t)
 
         _libc_heap_t *_heap;
 } _libc_app_ctx_t;

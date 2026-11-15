@@ -188,8 +188,9 @@ Notes:
   (`blkdev`: host disk with emulated constraints), `fstest` (ramfs, hostfs,
   FAT/ext4 image, flatfs/eefs/ext2/ext3 partitions formatted in dnx, ext2 on
   the SD card model and on the constrained disk, read-only romfs image),
-  `udstest`, drvset partition (`--drvset`: example driver, fstest on its file
-  system `dsramfs`, incorrect image) and
+  `udstest`, shell pipeline (`dsh: pipeline`: EOF of pipe), libc streams
+  (`stdiotest` of the test appset), drvset partition (`--drvset`: example
+  driver, fstest on its file system `dsramfs`, incorrect image) and
   `inettest` (`--tap`) in the simulator and checks their
   `SUMMARY:` lines (ext2/ext3/ext4/FAT images are checked by e2fsck/fsck.fat);
   use it to verify kernel/appset changes on PC. A test name filter runs a
@@ -251,8 +252,8 @@ Notes:
   searched in the main appset, then in `__OS_PROGRAM_PATH__` of
   `config/sim-kernel` (`/bin:/opt/testappset`). `make test-sim` adds the test
   appset `sim-env/testappset` (`appsettest`, tests `appsets: testappset` and
-  `appsetfs: mount/umount`; they are skipped when the simulator was built
-  without it).
+  `appsetfs: mount/umount`; `stdiotest`, test `libc: stdio`; they are skipped
+  when the simulator was built without it).
 - A program fault (SIGSEGV, ...) is reported as APP CRASH like a CPU exception
   on the microcontroller; the simulator keeps running.
 
@@ -355,6 +356,25 @@ both C preprocessor and make**. Rules:
   `posix_memalign()` with alignment `sysconf(_SC_LEVEL1_DCACHE_LINESIZE)`
   (at least `sizeof(void *)`), so DMA transfers on CPUs with data cache
   (STM32F7/H7) do not need kernel bounce buffers (see `dd`, `cp`).
+- libc streams (`common_libs/libc/source/stream.c`): regular files are fully
+  buffered (`BUFSIZ`, buffer allocated at the first read/write), other files
+  (terminals, pipes, devices) and `stderr` are unbuffered, so programs that
+  read keys from the terminal, share a descriptor with a child process or mix
+  `printf()` with `write()` on a terminal work as without buffering.
+  `setvbuf()`/`setbuf()` (all modes, own buffer), `ungetc()` (one character),
+  `fflush(NULL)` and `flockfile()`/`getc_unlocked()`/`putc_unlocked()` are
+  supported; `FILE` has a recursive lock. Output streams are flushed by
+  `exit()`, at return from `main()` (kernel calls `at_exit` of the process
+  attributes, set by libc) and by `process_create()`/`system()` before the
+  child is started; a killed process loses its buffered data. When a program
+  writes a regular file with `write()` on `fileno(f)` too, call `fflush(f)`
+  before. On an unbuffered stream a short read sets the EOF indicator and
+  `getc()` does not check it before reading (keyboard polling, CTRL+C).
+  `struct _libc_file` and `_libc_app_ctx_t` are shared between the libc of
+  the parent and of the child process (stdin/stdout/stderr are created by
+  the parent's libc), so all appsets must be built with the same libc.
+  Speed: `perf -b stdio [-f dir]` (buffered and unbuffered streams);
+  tests: `stdiotest` in `sim-env/testappset`.
 - Atomic test and set of libc (futex, heap lock: `libc/source/atomic.h`):
   C11 `atomic_flag` (ldrex/strex) on CPUs with `__ARM_FEATURE_LDREX`, kernel
   `SYSCALL_ATOMICTAS` on Cortex-M0+ (compiler generates not atomic code). A

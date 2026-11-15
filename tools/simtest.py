@@ -43,6 +43,8 @@
 #           - fstest -r (read tests and read-only checks) on romfs image with reference data
 #             created by fstest_ref.py and mkfpkg.py,
 #           - udstest (UNIX domain sockets),
+#           - pipeline of shell (EOF of pipe), stdiotest of sim-env/testappset (libc streams: buffering,
+#             setvbuf(), ungetc(), fseek()/ftell(), flush at exit, pipe EOF, flockfile()),
 #           - perf stress tests (threads, heap, synchronization objects, processes), with --perf
 #             option also performance measurements of perf program,
 #           - inettest (TCP/IP, only with --tap option, TAP interface must be prepared),
@@ -354,7 +356,22 @@ class TestRunner:
             return
 
         self.summary_test(sim, name, None, "appsettest", DEFAULT_TIMEOUT)
+        self.summary_test(sim, "libc: stdio", "/tmp", "stdiotest", DEFAULT_TIMEOUT)
         self.appsetfs_mount_test(sim)
+
+    # shell pipeline: reader gets EOF when writer finishes (grep was blocked on closed pipe)
+    def pipeline_test(self, sim):
+        name = "dsh: pipeline"
+        if not self.selected(name):
+            return
+
+        ok, out = sim.run("ls /bin | grep un | grep ame", 10)
+        if not ok:
+            self.result(name, FAIL, "pipeline does not finish")
+        elif "uname" not in out:
+            self.result(name, FAIL, "no output")
+        else:
+            self.result(name, PASS)
 
     # appsetfs: unmount of appset that is not used, start of its program fails, mount again,
     # second mount of the same appset is refused (EBUSY)
@@ -963,6 +980,9 @@ class TestRunner:
             for name in board_tests:
                 if self.selected(name):
                     self.result(name, SKIP, "board model not selected (--board none)")
+
+        # shell pipeline
+        self.pipeline_test(sim)
 
         # other appset linked with simulator (make test-sim links sim-env/testappset)
         self.appset_test(sim)

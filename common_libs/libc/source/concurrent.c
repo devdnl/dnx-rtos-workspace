@@ -78,6 +78,7 @@ typedef struct {
 typedef struct {
         void (*at_init)(void *); //!< function called at init before main()
         void *at_init_ctx;       //!< context of at_init function
+        void (*at_exit)(void);   //!< function called at return from main()
         const char *cwd;         //!< working directory path
         size_t app_ctx_size;     //!< size of application context object
         int fd_stdin;            //!< stdin file descriptor (major)
@@ -107,6 +108,7 @@ static_assert(sizeof(futex_t) >= sizeof(atomic_flag), "");
 /*==============================================================================
   External objects
 ==============================================================================*/
+extern void _libc_stdio_exit(void);
 
 /*==============================================================================
   Function definitions
@@ -175,7 +177,22 @@ static void process_at_init(void *arg)
 
         if (fstat(2, &buf) == 0) {
                 stderr = fdopen(2, "r");
+                if (stderr) {
+                        // stderr is never buffered (also when redirected to regular file)
+                        setvbuf(stderr, NULL, _IONBF, 0);
+                }
         }
+}
+
+//==============================================================================
+/**
+ * @brief  Function called at return from main(): buffered data of streams is
+ *         written.
+ */
+//==============================================================================
+static void process_at_exit(void)
+{
+        _libc_stdio_exit();
 }
 
 //==============================================================================
@@ -204,11 +221,15 @@ pid_t process_create(const char *cmd, const process_attr_t *attr)
         sys_attr.priority = attr->priority;
         sys_attr.at_init = process_at_init;
         sys_attr.at_init_ctx = (void *)attr;
+        sys_attr.at_exit = process_at_exit;
         sys_attr.app_ctx_size = sizeof(_libc_app_ctx_t);
 
         // keep _syscall_process_attr_t as small as possible because is stored
         // on stack.
         static_assert(sizeof(_libc_app_ctx_t) < 128, "_libc_app_ctx_t is bigger than 128 bytes!");
+
+        // child process can use the same files: buffered data is written before
+        fflush(NULL);
 
         int err = _libc_syscall(_LIBC_SYS_PROCESSCREATE, cmd, &sys_attr, &pid);
         return err ? 0 : pid;

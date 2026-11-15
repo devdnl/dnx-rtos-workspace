@@ -66,6 +66,9 @@ Brief   Performance measurement and stress test program.
 #define THREAD_MEM_LIMIT  (32 * 1024) /* max memory of finished threads not released yet */
 #define CMD_LEN           64          /* child process command line */
 #define CMDLINE_LEN       48          /* command line read from process statistics */
+#define STDIO_FILE_SIZE   4096        /* size of file of stdio measurements */
+#define STDIO_LINE_LEN    32          /* line length of fgets() measurement (with '\n') */
+#define STDIO_PATH_LEN    64          /* path of file of stdio measurements */
 
 /*==============================================================================
   Include files
@@ -402,6 +405,9 @@ static void bench_ctx_switch(size_t unused);
 static void bench_mutex(size_t unused);
 static void bench_queue(size_t unused);
 static void bench_process(size_t unused);
+static void bench_stdio_putc(size_t unbuffered);
+static void bench_stdio_getc(size_t unbuffered);
+static void bench_stdio_fgets(size_t unbuffered);
 static float measure_tick_us(void);
 
 static const char *test_thread_create_join(void);
@@ -438,6 +444,7 @@ GLOBAL_VARIABLES_SECTION {
         u32_t bench_duration;
         u32_t stress_duration;
         const char *progname;
+        const char *stdio_dir; //!< directory of file of stdio measurements
         u32_t cpu_freq;
         u32_t seed_ctr;
         float cpu_single_pt;
@@ -515,6 +522,12 @@ static const bench_entry_t BENCH_TAB[] = {
         {.name = "mutex lock/unlock", .fn = bench_mutex},
         {.name = "queue transfer (2 threads)", .fn = bench_queue},
         {.name = "process create/wait", .fn = bench_process},
+        {.name = "stdio fputc() to file, buffered", .fn = bench_stdio_putc, .param = 0},
+        {.name = "stdio fputc() to file, unbuffered", .fn = bench_stdio_putc, .param = 1},
+        {.name = "stdio getc() from file, buffered", .fn = bench_stdio_getc, .param = 0},
+        {.name = "stdio getc() from file, unbuffered", .fn = bench_stdio_getc, .param = 1},
+        {.name = "stdio fgets() from file, buffered", .fn = bench_stdio_fgets, .param = 0},
+        {.name = "stdio fgets() from file, unbuffered", .fn = bench_stdio_fgets, .param = 1},
 };
 
 /*==============================================================================
@@ -553,6 +566,7 @@ int main(int argc, char *argv[])
         global->progname = argv[0];
         global->bench_duration = PERF_BENCH_DURATION;
         global->stress_duration = PERF_STRESS_DURATION;
+        global->stdio_dir = "/tmp";
 
         for (int i = 1; i < argc; i++) {
                 const char *arg = argv[i];
@@ -575,6 +589,8 @@ int main(int argc, char *argv[])
                         global->stress_duration = max(100U, ms);
                 } else if (isstreq(arg, "-r") && (i + 1 < argc)) {
                         repeat = strtoul(argv[++i], NULL, 0);
+                } else if (isstreq(arg, "-f") && (i + 1 < argc)) {
+                        global->stdio_dir = argv[++i];
                 } else if (isstreq(arg, "-h")) {
                         print_usage(argv[0]);
                         return EXIT_SUCCESS;
@@ -684,7 +700,7 @@ int main(int argc, char *argv[])
 //==============================================================================
 static void print_usage(const char *name)
 {
-        printf("Usage: %s [-b|-s|-l] [-v] [-x] [-d ms] [-t ms] [-r n] [filter]\n", name);
+        printf("Usage: %s [-b|-s|-l] [-v] [-x] [-d ms] [-t ms] [-r n] [-f dir] [filter]\n", name);
         puts("  (none)  performance measurements, then stress tests");
         puts("  -b      performance measurements only");
         puts("  -s      stress tests only");
@@ -695,6 +711,7 @@ static void print_usage(const char *name)
         puts("  -d      duration of single measurement in ms");
         puts("  -t      duration of single stress test in ms");
         puts("  -r      repeat stress tests n times (0: until failure)");
+        puts("  -f      directory of temporary file of stdio measurements (default /tmp)");
         puts("  filter  run only measurements/tests which name contains given text");
         puts("Stress tests load the system heavily, other programs can be slowed down.");
 }
@@ -892,6 +909,179 @@ static void res_printf(const char *fmt, ...)
                 vsnprintf(global->res_buf + len, sizeof(global->res_buf) - len, fmt, args);
                 va_end(args);
         }
+}
+
+//==============================================================================
+/**
+ * @brief  Open temporary file of stdio measurements.
+ *
+ * @param  path         path buffer (STDIO_PATH_LEN)
+ * @param  mode         open mode
+ * @param  unbuffered   true: stream unbuffered (setvbuf(_IONBF))
+ *
+ * @return Stream or NULL (result is set).
+ */
+//==============================================================================
+static FILE *stdio_open(char *path, const char *mode, bool unbuffered)
+{
+        snprintf(path, STDIO_PATH_LEN, "%s/perf-%u.tmp", global->stdio_dir, (unsigned)getpid());
+
+        FILE *f = fopen(path, mode);
+        if (!f) {
+                res_printf("cannot open %s", path);
+                return NULL;
+        }
+
+        if (unbuffered) {
+                setvbuf(f, NULL, _IONBF, 0);
+        }
+
+        return f;
+}
+
+//==============================================================================
+/**
+ * @brief  Create file of stdio measurements (lines of STDIO_LINE_LEN bytes).
+ *
+ * @param  path         path buffer (STDIO_PATH_LEN)
+ *
+ * @return true on success (result is set on error).
+ */
+//==============================================================================
+static bool stdio_prepare(char *path)
+{
+        FILE *f = stdio_open(path, "w", false);
+        if (!f) {
+                return false;
+        }
+
+        for (size_t i = 0; i < STDIO_FILE_SIZE; i++) {
+                fputc(((i % STDIO_LINE_LEN) == (STDIO_LINE_LEN - 1)) ? '\n' : 'a' + (i % 26), f);
+        }
+
+        bool ok = (fclose(f) == 0);
+        if (!ok) {
+                res_printf("cannot write %s", path);
+                remove(path);
+        }
+
+        return ok;
+}
+
+//==============================================================================
+/**
+ * @brief  Speed of fputc() to file.
+ *
+ * @param  unbuffered   0: default buffering (regular file: buffered),
+ *                      1: unbuffered stream (each character is a write())
+ */
+//==============================================================================
+static void bench_stdio_putc(size_t unbuffered)
+{
+        char path[STDIO_PATH_LEN];
+        FILE *f = stdio_open(path, "w", unbuffered);
+        if (!f) {
+                return;
+        }
+
+        u64_t bytes = 0;
+        u32_t dt = 1;
+        bool err = false;
+        clock_t tref = get_uptime_ms();
+
+        do {
+                rewind(f);
+                for (size_t i = 0; i < STDIO_FILE_SIZE; i++) {
+                        if (fputc('a' + (i % 26), f) == EOF) {
+                                err = true;
+                                break;
+                        }
+                }
+                bytes += STDIO_FILE_SIZE;
+        } while (!err && ((dt = elapsed_ms(tref)) < global->bench_duration));
+
+        err |= (fclose(f) != 0);
+        remove(path);
+
+        if (err) {
+                res_printf("write error");
+        } else {
+                res_speed(bytes, dt);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Speed of getc() from file.
+ *
+ * @param  unbuffered   0: default buffering (regular file: buffered),
+ *                      1: unbuffered stream (each character is a read())
+ */
+//==============================================================================
+static void bench_stdio_getc(size_t unbuffered)
+{
+        char path[STDIO_PATH_LEN];
+        if (!stdio_prepare(path)) {
+                return;
+        }
+
+        FILE *f = stdio_open(path, "r", unbuffered);
+        if (f) {
+                u64_t bytes = 0;
+                u32_t dt;
+                clock_t tref = get_uptime_ms();
+
+                do {
+                        rewind(f);
+                        int c;
+                        while ((c = getc(f)) != EOF) {
+                                global->sink += c;
+                                bytes++;
+                        }
+                } while ((dt = elapsed_ms(tref)) < global->bench_duration);
+
+                fclose(f);
+                res_speed(bytes, dt);
+        }
+
+        remove(path);
+}
+
+//==============================================================================
+/**
+ * @brief  Rate of fgets() from file (lines of STDIO_LINE_LEN bytes).
+ *
+ * @param  unbuffered   0: default buffering (regular file: buffered),
+ *                      1: unbuffered stream
+ */
+//==============================================================================
+static void bench_stdio_fgets(size_t unbuffered)
+{
+        char path[STDIO_PATH_LEN];
+        if (!stdio_prepare(path)) {
+                return;
+        }
+
+        FILE *f = stdio_open(path, "r", unbuffered);
+        if (f) {
+                char line[STDIO_LINE_LEN + 1];
+                u32_t lines = 0;
+                u32_t dt;
+                clock_t tref = get_uptime_ms();
+
+                do {
+                        rewind(f);
+                        while (fgets(line, sizeof(line), f)) {
+                                global->sink += line[0];
+                                lines++;
+                        }
+                } while ((dt = elapsed_ms(tref)) < global->bench_duration);
+
+                fclose(f);
+                res_rate(lines, dt, "lines");
+        }
+
+        remove(path);
 }
 
 //==============================================================================

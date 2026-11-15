@@ -1028,15 +1028,15 @@ extern void perror(const char *s);
 
 //==============================================================================
 /**
- * @brief Function sets stream buffer mode.
+ * @brief Function sets stream buffer.
  *
- * The routine exist in dnx RTOS only for compatible reasons. Function in this
- * case do nothing.
- *
- * @note Function not supported.
+ * The function is equivalent to setvbuf(file, buffer, _IOFBF, BUFSIZ) when
+ * <i>buffer</i> is not NULL, otherwise to setvbuf(file, NULL, _IONBF, 0).
+ * Buffer must have at least @ref BUFSIZ bytes and must exist until stream is
+ * closed.
  *
  * @param file      stream
- * @param buffer    buffer
+ * @param buffer    buffer (NULL: stream unbuffered)
  *
  * @b Example
  * @code
@@ -1046,8 +1046,7 @@ extern void perror(const char *s);
 
         FILE *file = fopen("/foo/bar", "r");
         if (file) {
-               char buffer[100];
-               setbuf(file, buffer);
+               setbuf(file, NULL); // unbuffered
 
                // ...
         }
@@ -1059,23 +1058,27 @@ extern void perror(const char *s);
 //==============================================================================
 static inline void setbuf(FILE *file, char *buffer)
 {
-        (void) file;
-        (void) buffer;
+        extern int _libc_setvbuf(FILE *file, char *buffer, int mode, size_t size);
+        _libc_setvbuf(file, buffer, buffer ? _IOFBF : _IONBF, BUFSIZ);
 }
 
 //==============================================================================
 /**
  * @brief Function sets stream buffer mode.
  *
- * The routine exist in dnx RTOS only for compatible reasons. Function in this
- * case do nothing.
- *
- * @note Function not supported.
+ * By default regular files are fully buffered (@ref BUFSIZ bytes), other
+ * files (terminals, pipes, devices) and stderr are unbuffered. The function
+ * selects other mode and buffer. Buffered data is written before the change.
  *
  * @param file      stream
- * @param buffer    buffer
+ * @param buffer    buffer (NULL: buffer of <i>size</i> bytes is allocated by
+ *                  libc at first operation), user buffer must exist until
+ *                  stream is closed
  * @param mode      buffer mode (@ref _IONBF, @ref _IOLBF, @ref _IOFBF)
- * @param size      buffer size
+ * @param size      buffer size (0: @ref BUFSIZ)
+ *
+ * @return On success 0 is returned, otherwise nonzero value and @ref errno
+ * is set.
  *
  * @b Example
  * @code
@@ -1098,12 +1101,8 @@ static inline void setbuf(FILE *file, char *buffer)
 //==============================================================================
 static inline int setvbuf(FILE *file, char *buffer, int mode, size_t size)
 {
-        (void) file;
-        (void) buffer;
-        (void) mode;
-        (void) size;
-
-        return 0;
+        extern int _libc_setvbuf(FILE *file, char *buffer, int mode, size_t size);
+        return _libc_setvbuf(file, buffer, mode, size);
 }
 
 //==============================================================================
@@ -2399,23 +2398,19 @@ static inline int fgetc(FILE *stream)
  *
  * ungetc() pushes <i>c</i> back to stream, cast to unsigned char, where
  * it is available for subsequent read operations. Pushed-back characters will
- * be returned in reverse order; only one pushback is guaranteed.<p>
+ * be returned in reverse order; only one pushback is supported.<p>
  *
  * Calls to the functions described here can be mixed with each other and with
  * calls to other input functions from the stdio library for the same input
- * stream.<p>
+ * stream. The pushed-back character is dropped by fseek() and fflush().<p>
  *
- * @note Function not supported.
- *
- * @param c             output stream
+ * @param c             character
  * @param stream        input stream
  *
- * @exception | @ref ENOMEM
  * @exception | @ref EINVAL
  *
- * @return Return the character read as an unsigned char cast to an int or
- * @ref EOF on end of file or error. Function is not supported by dnx RTOS
- * and always @ref EOF is returned.
+ * @return Return <i>c</i> as an unsigned char cast to an int or @ref EOF on
+ * error (also when character is already pushed back).
  *
  * @b Example
  * @code
@@ -2433,10 +2428,8 @@ static inline int fgetc(FILE *stream)
 //==============================================================================
 static inline int ungetc(int c, FILE *stream)
 {
-        (void) c;
-        (void) stream;
-
-        return EOF;
+        extern int _libc_ungetc(int c, FILE *stream);
+        return _libc_ungetc(c, stream);
 }
 
 //==============================================================================
@@ -2475,6 +2468,97 @@ static inline int ungetc(int c, FILE *stream)
  */
 //==============================================================================
 extern char *fgets(char *str, int size, FILE *stream);
+
+//==============================================================================
+/**
+ * @brief Function locks stream for the calling thread.
+ *
+ * The lock is recursive. Other threads wait in stdio functions until the
+ * stream is unlocked by funlockfile().
+ *
+ * @param file      stream
+ *
+ * @see funlockfile(), ftrylockfile(), getc_unlocked(), putc_unlocked()
+ */
+//==============================================================================
+extern void flockfile(FILE *file);
+
+//==============================================================================
+/**
+ * @brief Function tries to lock stream for the calling thread.
+ *
+ * @param file      stream
+ *
+ * @return 0 if stream is locked, otherwise nonzero value.
+ *
+ * @see flockfile(), funlockfile()
+ */
+//==============================================================================
+extern int ftrylockfile(FILE *file);
+
+//==============================================================================
+/**
+ * @brief Function unlocks stream locked by flockfile() or ftrylockfile().
+ *
+ * @param file      stream
+ *
+ * @see flockfile(), ftrylockfile()
+ */
+//==============================================================================
+extern void funlockfile(FILE *file);
+
+//==============================================================================
+/**
+ * @brief Function getc() without stream locking.
+ *
+ * Use when stream is locked by flockfile() or used by one thread only.
+ *
+ * @param stream    stream
+ *
+ * @return Character or @ref EOF.
+ */
+//==============================================================================
+extern int getc_unlocked(FILE *stream);
+
+//==============================================================================
+/**
+ * @brief Function getchar() without stream locking.
+ *
+ * @return Character or @ref EOF.
+ */
+//==============================================================================
+static inline int getchar_unlocked(void)
+{
+        return getc_unlocked(stdin);
+}
+
+//==============================================================================
+/**
+ * @brief Function putc() without stream locking.
+ *
+ * Use when stream is locked by flockfile() or used by one thread only.
+ *
+ * @param c         character
+ * @param stream    stream
+ *
+ * @return Character or @ref EOF.
+ */
+//==============================================================================
+extern int putc_unlocked(int c, FILE *stream);
+
+//==============================================================================
+/**
+ * @brief Function putchar() without stream locking.
+ *
+ * @param c         character
+ *
+ * @return Character or @ref EOF.
+ */
+//==============================================================================
+static inline int putchar_unlocked(int c)
+{
+        return putc_unlocked(c, stdout);
+}
 
 #ifdef __cplusplus
 }

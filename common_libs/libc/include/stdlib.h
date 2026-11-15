@@ -705,7 +705,7 @@ static inline void abort(void)
  * @brief Function kills program with exit status.
  *
  * The exit() function kills program which execute it and program return
- * <i>status</i> value.
+ * <i>status</i> value. Buffered data of all output streams is written before.
  *
  * @param status        status to be return by program
  *
@@ -723,6 +723,8 @@ static inline void abort(void)
 //==============================================================================
 static inline void exit(int status)
 {
+        extern void _libc_stdio_exit(void);
+        _libc_stdio_exit();
         _libc_syscall(_LIBC_SYS_PROCESSEXIT, &status);
 }
 

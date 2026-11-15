@@ -86,7 +86,9 @@ The `app-appset` contains a reference set of programs, e.g.:
   server with Lua scripting), `ftpd`, `telnetd`, `sntpd`, `mqtt_broker`,
 - interpreters: `lua`, `luac`, `tcl`,
 - tests: `fstest` (file systems), `udstest` (Unix domain sockets), `inettest`
-  (TCP/IP), `keytest` and `ttyread` (terminal),
+  (TCP/IP), `keytest` and `ttyread` (terminal), `perf` (performance
+  measurements and stress tests, e.g. `perf -b stdio` compares buffered and
+  unbuffered file streams),
 - examples: `usbdevmouse`.
 
 The `initd` program is started by the kernel as the first process and is
@@ -149,7 +151,9 @@ and the space used by the appset image.
 
 ### Common libraries
 The `common_libs` directory contains libraries shared by all appsets (and by
-possible other sub projects): `libc` (dnx RTOS C library), `lua`, `zlib`,
+possible other sub projects): `libc` (dnx RTOS C library: POSIX-like API,
+buffered streams — regular files are fully buffered, terminals, pipes, devices
+and `stderr` unbuffered, `setvbuf()` selects other mode), `lua`, `zlib`,
 `luadnx` (Lua bindings to dnx RTOS services), `fastlz`, `libmqtt`,
 `http-parser`, `http-multipart-parser`, `fpkg`, `bs` (binary serialization),
 `conf_parser`, `libtui` (text user interface), `llist`, `tinyexpr`, `utcl`,
@@ -317,7 +321,7 @@ program names in the source code; the table of the appset is
 always links the test appset `sim-env/testappset` (program `appsettest`: libc,
 threads and child process in other appset, search order of programs, start by
 path and program search path, files of `appsetfs`; mount and unmount from the
-shell).
+shell; program `stdiotest`: libc streams).
 The simulator is built by the `i686-unknown-linux-musl-` toolchain (installed
 in the Docker image on x86_64 hosts) as a static executable, so it can be
 started also outside the container. Program options:
@@ -437,6 +441,8 @@ test programs are executed in the shell and their `SUMMARY:` lines are checked:
 | `fstest: ext2 on blkdev` | `fstest` on ext2 file system of that disk, checked by `e2fsck` after test |
 | `fstest: romfs`  | `fstest -r` (read tests and read-only checks) on romfs image with reference data (`fstest_ref.py`, `mkfpkg.py`) |
 | `udstest`        | Unix domain sockets |
+| `dsh: pipeline`  | shell pipeline finishes when the writer ends (EOF of pipe) |
+| `libc: stdio`    | `stdiotest` (test appset): buffering of regular files, `setvbuf()` modes and user buffer, `fseek()`/`ftell()`, update mode, `ungetc()`, `fgets()`, big blocks, `fflush(NULL)`, flush at return from `main()` and `exit()`, EOF of closed pipe, `flockfile()` with threads |
 | `inettest`       | TCP/IP (only with `--tap`) |
 | no crash/panic   | no APP CRASH or KERNEL PANIC during tests |
 
