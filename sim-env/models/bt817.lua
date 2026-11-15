@@ -62,7 +62,9 @@
   coprocessor commands CMD_MEMZERO/MEMSET/MEMCPY/MEMWRITE/APPEND, CMD_GETPTR/
   REGREAD/MEMCRC (standard CRC-32; results are written to the result argument
   in the command buffer, as by the chip), CMD_INFLATE (zlib stream following in
-  the FIFO, padded to words; GETPTR returns the end of inflated data),
+  the FIFO, padded to words, decoded in C by gfx.inflater - resumed at deflate
+  blocks, Adler-32 mismatch is reported once; GETPTR returns the end of
+  inflated data),
   CMD_INTERRUPT (CMDFLAG interrupt after ms), CMD_WAIT (us, processing of the
   rest of the FIFO is delayed), CMD_SWAP are executed; MEMWRITE and INFLATE data
   may be longer than the FIFO (they are processed while they are written).
@@ -101,9 +103,12 @@
   CALL/JUMP (instruction index)/RETURN, MACRO (executes REG_MACRO_0/1) and
   SAVE/RESTORE_CONTEXT. ALPHA_FUNC/BLEND_FUNC/
   STENCIL_*/COLOR_MASK are accepted without effect, bitmap transforms/swizzle
-  ignored (warning once), EDGE_STRIP_* and ROM fonts are not drawn. Pixels
-  are alpha blended into a shadow framebuffer which is pushed to the panel LCD
-  on every swap.
+  ignored (warning once), EDGE_STRIP_* and ROM fonts are not drawn. The display
+  list is interpreted in Lua, pixels are drawn in C (board API gfx: RAM_G and
+  the command FIFO are gfx.memory buffers, the frame with the tag buffer is a
+  gfx.canvas, alpha blended) and the changed rows are copied to the panel LCD
+  on swap; a swap of the same display list (and macros) without RAM_G changes
+  is not rendered again.
 
   Touch: method touch(x, y [, pressed]) as in the FT5336 model updates the
   first touch point, touch_slot(n, x, y [, pressed]) (n = 0..4) any of the five
@@ -279,41 +284,6 @@ local P_BITMAPS, P_POINTS, P_LINES, P_LINE_STRIP, P_RECTS = 1, 2, 3, 4, 9
 local F_ARGB1555, F_L1, F_L4, F_L8, F_RGB332, F_ARGB2, F_ARGB4, F_RGB565 = 0, 1, 2, 3, 4, 5, 6, 7
 local F_PALETTED, F_PALETTED565, F_PALETTED4444, F_PALETTED8, F_L2 = 8, 14, 15, 16, 17
 
--- RGB565 -> packed RGBA (opaque), built at the first use
-local RGB565_LUT
-local function rgb565_lut()
-    if not RGB565_LUT then
-        RGB565_LUT = {}
-        for v = 0, 0xFFFF do
-            local r5, g6, b5 = (v >> 11) & 0x1F, (v >> 5) & 0x3F, v & 0x1F
-            RGB565_LUT[v] = (((r5 << 3) | (r5 >> 2)) << 24)
-                | (((g6 << 2) | (g6 >> 4)) << 16)
-                | (((b5 << 3) | (b5 >> 2)) << 8)
-                | 255
-        end
-    end
-    return RGB565_LUT
-end
-
--- L1/L2/L4: luminance (0..255) of pixel k of byte b at LUM_LUT[bits][b * per + k]
--- (first pixel in the high bits), built at the first use
-local LUM_LUT = {}
-local function lum_lut(bits)
-    local t = LUM_LUT[bits]
-    if not t then
-        t = {}
-        local per, mask = 8 // bits, (1 << bits) - 1
-        local scale = 255 // mask
-        for b = 0, 255 do
-            for k = 0, per - 1 do
-                t[b * per + k] = ((b >> ((per - 1 - k) * bits)) & mask) * scale
-            end
-        end
-        LUM_LUT[bits] = t
-    end
-    return t
-end
-
 local DEV = {}
 DEV.__index = DEV
 
@@ -351,223 +321,6 @@ local function crc32(bytes)
         crc = (crc >> 8) ~ crc_table[(crc ~ b) & 0xFF]
     end
     return ~crc & 0xFFFFFFFF
-end
-
--- zlib stream decoder (RFC 1950/1951, CMD_INFLATE): getbyte() returns the next
--- input byte (the decoder runs in a coroutine, getbyte yields until data are
--- written to the FIFO), put(byte) stores output, ref(distance) returns output
--- byte at distance; errors are raised by error()
-local LBASE = {
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    13,
-    15,
-    17,
-    19,
-    23,
-    27,
-    31,
-    35,
-    43,
-    51,
-    59,
-    67,
-    83,
-    99,
-    115,
-    131,
-    163,
-    195,
-    227,
-    258,
-}
-local LEXT = { 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0 }
-local DBASE = {
-    1,
-    2,
-    3,
-    4,
-    5,
-    7,
-    9,
-    13,
-    17,
-    25,
-    33,
-    49,
-    65,
-    97,
-    129,
-    193,
-    257,
-    385,
-    513,
-    769,
-    1025,
-    1537,
-    2049,
-    3073,
-    4097,
-    6145,
-    8193,
-    12289,
-    16385,
-    24577,
-}
-local DEXT = { 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13 }
-local CLORDER = { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 }
-
-local function huffman(lengths, n) -- canonical code: counts of lengths and sorted symbols
-    local count, symbol, offs = {}, {}, { [1] = 0 }
-    for i = 0, 15 do
-        count[i] = 0
-    end
-    for sym = 0, n - 1 do
-        local l = lengths[sym] or 0
-        count[l] = count[l] + 1
-    end
-    for i = 1, 14 do
-        offs[i + 1] = offs[i] + count[i]
-    end
-    for sym = 0, n - 1 do
-        local l = lengths[sym] or 0
-        if l ~= 0 then
-            symbol[offs[l]] = sym
-            offs[l] = offs[l] + 1
-        end
-    end
-    return { count = count, symbol = symbol }
-end
-
-local fixed_lcode, fixed_dcode
-
-local function inflate(getbyte, put, ref)
-    local bitbuf, bitcnt = 0, 0
-    local function bits(n)
-        while bitcnt < n do
-            bitbuf = bitbuf | (getbyte() << bitcnt)
-            bitcnt = bitcnt + 8
-        end
-        local v = bitbuf & ((1 << n) - 1)
-        bitbuf, bitcnt = bitbuf >> n, bitcnt - n
-        return v
-    end
-    local function decode(h)
-        local code, first, index = 0, 0, 0
-        for len = 1, 15 do
-            code = code | bits(1)
-            local c = h.count[len]
-            if code - c < first then
-                return h.symbol[index + (code - first)]
-            end
-            index, first, code = index + c, (first + c) << 1, code << 1
-        end
-        error("invalid Huffman code")
-    end
-
-    local cmf, flg = getbyte(), getbyte()
-    if (cmf & 0x0F) ~= 8 or ((cmf << 8) | flg) % 31 ~= 0 or (flg & 0x20) ~= 0 then
-        error("invalid zlib header")
-    end
-    repeat
-        local last, typ = bits(1), bits(2)
-        if typ == 0 then -- stored
-            bitbuf, bitcnt = 0, 0
-            local len = getbyte() | (getbyte() << 8)
-            local nlen = getbyte() | (getbyte() << 8)
-            if len ~ 0xFFFF ~= nlen then
-                error("invalid stored block")
-            end
-            for _ = 1, len do
-                put(getbyte())
-            end
-        elseif typ == 1 or typ == 2 then -- fixed or dynamic Huffman codes
-            local lcode, dcode
-            if typ == 1 then
-                if not fixed_lcode then
-                    local l, d = {}, {}
-                    for sym = 0, 287 do
-                        l[sym] = (sym < 144 and 8) or (sym < 256 and 9) or (sym < 280 and 7) or 8
-                    end
-                    for sym = 0, 29 do
-                        d[sym] = 5
-                    end
-                    fixed_lcode, fixed_dcode = huffman(l, 288), huffman(d, 30)
-                end
-                lcode, dcode = fixed_lcode, fixed_dcode
-            else
-                local nlen, ndist, ncode = bits(5) + 257, bits(5) + 1, bits(4) + 4
-                local lengths = {}
-                for i = 1, 19 do
-                    lengths[CLORDER[i]] = (i <= ncode) and bits(3) or 0
-                end
-                local lencode, ll, idx = huffman(lengths, 19), {}, 0
-                while idx < nlen + ndist do
-                    local sym = decode(lencode)
-                    if sym < 16 then
-                        ll[idx], idx = sym, idx + 1
-                    else
-                        local len, rep = 0, 0
-                        if sym == 16 then
-                            if idx == 0 then
-                                error("invalid repeat of code length")
-                            end
-                            len, rep = ll[idx - 1], 3 + bits(2)
-                        elseif sym == 17 then
-                            rep = 3 + bits(3)
-                        else
-                            rep = 11 + bits(7)
-                        end
-                        for _ = 1, rep do
-                            ll[idx], idx = len, idx + 1
-                        end
-                    end
-                end
-                local lit, dist = {}, {}
-                for i = 0, nlen - 1 do
-                    lit[i] = ll[i]
-                end
-                for i = 0, ndist - 1 do
-                    dist[i] = ll[nlen + i]
-                end
-                lcode, dcode = huffman(lit, nlen), huffman(dist, ndist)
-            end
-            while true do
-                local sym = decode(lcode)
-                if sym < 256 then
-                    put(sym)
-                elseif sym == 256 then
-                    break
-                else
-                    sym = sym - 257
-                    if sym >= 29 then
-                        error("invalid length code")
-                    end
-                    local len = LBASE[sym + 1] + bits(LEXT[sym + 1])
-                    local ds = decode(dcode)
-                    if ds >= 30 then
-                        error("invalid distance code")
-                    end
-                    local d = DBASE[ds + 1] + bits(DEXT[ds + 1])
-                    for _ = 1, len do
-                        put(ref(d))
-                    end
-                end
-            end
-        else
-            error("invalid block type")
-        end
-    until last == 1
-    for _ = 1, 4 do -- Adler-32 (not checked)
-        getbyte()
-    end
 end
 
 --------------------------------------------------------------------------------
@@ -609,12 +362,25 @@ function M.new(opts)
     return d
 end
 
-function DEV:reset()
-    self.regs, self.ram_g, self.ram_dl, self.ram_cmd = {}, {}, {}, {}
-    self.last_render = nil -- memory lost: next swap renders
-    for i, b in ipairs({ 0x08, PARTS[self.part], 0x01, 0x00 }) do -- chip ID (writable)
-        self.ram_g[CHIP_ID + i - 1] = b
+-- memories are cleared (power on, core off): RAM_G in C (gfx.memory)
+function DEV:clear_memory()
+    if not self.ram_g then
+        self.ram_g = gfx.memory(RAM_G_TOP + 1)
+    else
+        self.ram_g:fill(0, RAM_G_TOP + 1, 0)
     end
+    if not self.ram_cmd then
+        self.ram_cmd = gfx.memory(CMD_SIZE) -- command FIFO (ring buffer)
+    else
+        self.ram_cmd:fill(0, CMD_SIZE, 0)
+    end
+    self.regs, self.ram_dl = {}, {}
+    self.last_render = nil -- memory lost: next swap renders
+    self.ram_g:write(CHIP_ID, string.char(0x08, PARTS[self.part], 0x01, 0x00)) -- chip ID (writable)
+end
+
+function DEV:reset()
+    self:clear_memory()
     self.state = "sleep" -- power on: sleep until ACTIVE
     self.core_lost = false
     self.frames_count, self.display_on, self.fps = 0, false, 60
@@ -627,7 +393,6 @@ function DEV:reset()
     self.pins = { [0] = false, false, false, false } -- levels driven to chip inputs
     self.gpio_out = {} -- levels driven by chip outputs
     self.touches = {} -- touch points [n] = {x, y}
-    self.tagbuf = {} -- tag buffer of the displayed frame (pixel index -> tag, nil: 0)
     self.trackers = {} -- CMD_TRACK: [tag] = {x, y, w, h}
     self.tracker_regs = { 0, 0, 0, 0, 0 } -- REG_TRACKER, REG_TRACKER_1..4
     self.fgcolor, self.bgcolor = 0x003870, 0x002040 -- CMD_FGCOLOR/CMD_BGCOLOR
@@ -663,10 +428,9 @@ function DEV:reset()
 
     self:update_touch_regs()
 
-    self.fb = {} -- shadow framebuffer (packed RGBA)
-    for i = 0, self.width * self.height - 1 do
-        self.fb[i] = 0xFF
-    end -- black opaque
+    -- frame and tag buffer (gfx.canvas: drawing in C), black
+    self.canvas = self.canvas or gfx.canvas(self.width, self.height)
+    self.canvas:reset()
     self.lcd:enable(false)
 end
 
@@ -691,11 +455,7 @@ end
 
 -- core switched off (PD_N or PWRDOWN): registers, RAM and FIFO are lost
 function DEV:core_off()
-    self.regs, self.ram_g, self.ram_dl, self.ram_cmd = {}, {}, {}, {}
-    self.last_render = nil -- memory lost: next swap renders
-    for i, b in ipairs({ 0x08, PARTS[self.part], 0x01, 0x00 }) do -- chip ID (writable)
-        self.ram_g[CHIP_ID + i - 1] = b
-    end
+    self:clear_memory()
     self.cmd_read, self.cmd_write, self.dl_off, self.dl_top = 0, 0, 0, 0
     self.stream, self.fifo_pending = nil, nil
     self.flags = 0
@@ -727,7 +487,7 @@ end
 function DEV:mem_read(addr)
     local a = addr & 0x3FFFFF
     if a <= RAM_G_TOP then
-        return self.ram_g[a] or 0
+        return self.ram_g:get(a)
     end
     if a < DL_BASE + DL_SIZE then
         return self.ram_dl[a - DL_BASE] or 0
@@ -737,7 +497,7 @@ function DEV:mem_read(addr)
         return (v >> ((a & 3) * 8)) & 0xFF
     end
     if a < CMD_BASE + CMD_SIZE then
-        return self.ram_cmd[a - CMD_BASE] or 0
+        return self.ram_cmd:get(a - CMD_BASE)
     end
     if a >= TRACKER_BASE and a < TRACKER_BASE + 20 then -- REG_TRACKER..REG_TRACKER_4
         local v = self.tracker_regs[((a - TRACKER_BASE) >> 2) + 1] or 0
@@ -749,7 +509,7 @@ end
 function DEV:mem_write(addr, byte)
     local a = addr & 0x3FFFFF
     if a <= RAM_G_TOP then
-        self.ram_g[a] = byte & 0xFF
+        self.ram_g:set(a, byte)
         self.mem_gen = (self.mem_gen or 0) + 1 -- RAM_G changed (render of the same display list)
     elseif a < DL_BASE + DL_SIZE then
         local o = a - DL_BASE
@@ -760,7 +520,7 @@ function DEV:mem_write(addr, byte)
     elseif a < REG_BASE + REG_SIZE then
         local off, sh = (a - REG_BASE) >> 2, ((a & 3) * 8)
         if off == R_CMDB_WRITE then -- FIFO port: every byte access appends one byte
-            self.ram_cmd[self.cmd_write] = byte & 0xFF
+            self.ram_cmd:set(self.cmd_write, byte)
             self.cmd_write = (self.cmd_write + 1) & (CMD_SIZE - 1)
             self.fifo_pending = true -- processed at the end of the transaction
         else
@@ -768,7 +528,7 @@ function DEV:mem_write(addr, byte)
             self:reg_write(off, (cur & ~(0xFF << sh)) | ((byte & 0xFF) << sh))
         end
     elseif a < CMD_BASE + CMD_SIZE then
-        self.ram_cmd[a - CMD_BASE] = byte & 0xFF
+        self.ram_cmd:set(a - CMD_BASE, byte)
     end
 end
 
@@ -955,38 +715,17 @@ function DEV:transfer_block(data)
         if self.tx == "data" and self.state ~= "off" then
             local cnt, a = n - i + 1, self.addr
             if self.wr and (a & ~3) == REG_BASE + R_CMDB_WRITE * 4 then -- FIFO burst
-                local cmd, w = self.ram_cmd, self.cmd_write
-                for k = i, n, CHUNK do
-                    local bytes = { data:byte(k, math.min(k + CHUNK - 1, n)) }
-                    for j = 1, #bytes do
-                        cmd[w] = bytes[j]
-                        w = (w + 1) & (CMD_SIZE - 1)
-                    end
-                end
-                self.cmd_write, self.fifo_pending = w, true
+                self.cmd_write = self:fifo_put(self.cmd_write, i == 1 and data or data:sub(i))
+                self.fifo_pending = true
                 res[#res + 1] = string.rep("\xFF", cnt)
                 break
             elseif a + cnt - 1 <= RAM_G_TOP then -- RAM_G (continuous address)
-                local ram = self.ram_g
                 if self.wr then
-                    for k = i, n, CHUNK do
-                        local bytes = { data:byte(k, math.min(k + CHUNK - 1, n)) }
-                        local o = a + (k - i) - 1
-                        for j = 1, #bytes do
-                            ram[o + j] = bytes[j]
-                        end
-                    end
+                    self.ram_g:write(a, i == 1 and data or data:sub(i))
                     self.mem_gen = (self.mem_gen or 0) + 1
                     res[#res + 1] = string.rep("\xFF", cnt)
                 else
-                    local t = {}
-                    for k = 0, cnt - 1, CHUNK do
-                        local m = math.min(CHUNK, cnt - k)
-                        for j = 1, m do
-                            t[j] = ram[a + k + j - 1] or 0
-                        end
-                        res[#res + 1] = string.char(table.unpack(t, 1, m))
-                    end
+                    res[#res + 1] = self.ram_g:read(a, cnt)
                 end
                 self.addr = (a + cnt) & 0x3FFFFF
                 break
@@ -1069,17 +808,43 @@ end
 --------------------------------------------------------------------------------
 
 function DEV:fifo_u32(pos)
+    pos = pos & (CMD_SIZE - 1)
+    if pos <= CMD_SIZE - 4 then
+        return string.unpack("<I4", self.ram_cmd:read(pos, 4))
+    end
     local v = 0
     for i = 0, 3 do
-        v = v | ((self.ram_cmd[(pos + i) & (CMD_SIZE - 1)] or 0) << (i * 8))
+        v = v | (self.ram_cmd:get((pos + i) & (CMD_SIZE - 1)) << (i * 8))
     end
     return v
+end
+
+-- data to the FIFO ring at position pos, returns the next position
+function DEV:fifo_put(pos, data)
+    local k, n = 1, #data
+    while k <= n do
+        local m = math.min(n - k + 1, CMD_SIZE - pos)
+        self.ram_cmd:write(pos, data:sub(k, k + m - 1))
+        pos, k = (pos + m) & (CMD_SIZE - 1), k + m
+    end
+    return pos
+end
+
+-- n bytes of the FIFO ring from position pos
+function DEV:fifo_get(pos, n)
+    local parts = {}
+    while n > 0 do
+        local m = math.min(n, CMD_SIZE - pos)
+        parts[#parts + 1] = self.ram_cmd:read(pos, m)
+        pos, n = (pos + m) & (CMD_SIZE - 1), n - m
+    end
+    return table.concat(parts)
 end
 
 function DEV:fifo_string(pos) -- string argument (without NUL)
     local t = {}
     for n = 0, CMD_SIZE - 1 do
-        local b = self.ram_cmd[(pos + n) & (CMD_SIZE - 1)] or 0
+        local b = self.ram_cmd:get((pos + n) & (CMD_SIZE - 1))
         if b == 0 then
             break
         end
@@ -1104,7 +869,7 @@ function DEV:fifo_skip_string(pos) -- bytes until NUL, padded to word
     local n = 0
     repeat
         n = n + 1
-    until (self.ram_cmd[(pos + n - 1) & (CMD_SIZE - 1)] or 0) == 0 or n > CMD_SIZE
+    until self.ram_cmd:get((pos + n - 1) & (CMD_SIZE - 1)) == 0 or n > CMD_SIZE
     return (n + 3) & ~3
 end
 
@@ -1137,7 +902,7 @@ function DEV:fifo_cmd_size(c)
     if type(spec) == "string" then -- trailing string must be terminated
         local base = (self.cmd_read + need) & (CMD_SIZE - 1) -- first byte of the string
         for i = 0, avail - need - 1 do -- look for NUL byte in written area
-            if (self.ram_cmd[(base + i) & (CMD_SIZE - 1)] or 0) == 0 then
+            if self.ram_cmd:get((base + i) & (CMD_SIZE - 1)) == 0 then
                 local total = need + ((i + 4) & ~3)
                 if avail < total then
                     return nil
@@ -1157,12 +922,9 @@ function DEV:stream_step()
     if st.kind == "memwrite" then
         local n = math.min(st.left, self:fifo_avail())
         if n > 0 and st.ptr >= 0 and st.ptr + n - 1 <= RAM_G_TOP then -- bulk copy FIFO -> RAM_G
-            local ram, cmd, rd, ptr = self.ram_g, self.ram_cmd, self.cmd_read, st.ptr
-            for k = 0, n - 1 do
-                ram[ptr + k] = cmd[rd] or 0
-                rd = (rd + 1) & (CMD_SIZE - 1)
-            end
-            self.cmd_read = rd
+            local ptr = st.ptr
+            self.ram_g:write(ptr, self:fifo_get(self.cmd_read, n))
+            self.cmd_read = (self.cmd_read + n) & (CMD_SIZE - 1)
             st.ptr, st.left, st.consumed = ptr + n, st.left - n, st.consumed + n
             self.mem_gen = (self.mem_gen or 0) + 1
         end
@@ -1170,20 +932,35 @@ function DEV:stream_step()
             if self:fifo_avail() == 0 then
                 return false
             end
-            self:mem_write(st.ptr, self.ram_cmd[self.cmd_read] or 0)
+            self:mem_write(st.ptr, self.ram_cmd:get(self.cmd_read))
             st.ptr, st.left, st.consumed = st.ptr + 1, st.left - 1, st.consumed + 1
             self.cmd_read = (self.cmd_read + 1) & (CMD_SIZE - 1)
         end
         st.kind = "pad"
     elseif st.kind == "inflate" then
-        local ok, err = coroutine.resume(st.co)
-        if not ok then
-            self:warn_once("inflate", "CMD_INFLATE: " .. tostring(err) .. ", FIFO drained")
+        -- available bytes are decoded (C: gfx.inflater), bytes of the stream are
+        -- consumed; the end of the stream is known after decoding
+        local avail = self:fifo_avail()
+        if avail == 0 then
+            return false
+        end
+        local state, used, out, adler_ok = st.z:feed(self.ram_g, self:fifo_get(self.cmd_read, avail))
+        if out > st.out then
+            st.out = out
+            self.mem_gen = (self.mem_gen or 0) + 1
+        end
+        if state == "error" then
+            self:warn_once("inflate", "CMD_INFLATE: " .. tostring(used) .. ", FIFO drained")
             self.cmd_read, self.stream = self.cmd_write, nil
             return true
         end
-        if coroutine.status(st.co) ~= "dead" then
+        self.cmd_read = (self.cmd_read + used) & (CMD_SIZE - 1)
+        st.consumed = st.consumed + used
+        if state == "more" then
             return false
+        end
+        if not adler_ok then
+            self:warn_once("adler", "CMD_INFLATE: Adler-32 of the stream does not match")
         end
         self.inflate_end = st.ptr + st.out
         st.kind = "pad"
@@ -1200,27 +977,7 @@ function DEV:stream_step()
 end
 
 function DEV:start_inflate(ptr)
-    local st = { kind = "inflate", ptr = ptr, out = 0, consumed = 0 }
-    local function getbyte()
-        while self:fifo_avail() == 0 do
-            coroutine.yield()
-        end
-        local b = self.ram_cmd[self.cmd_read] or 0
-        self.cmd_read = (self.cmd_read + 1) & (CMD_SIZE - 1)
-        st.consumed = st.consumed + 1
-        return b
-    end
-    local function put(b)
-        self:mem_write(st.ptr + st.out, b)
-        st.out = st.out + 1
-    end
-    local function ref(d)
-        return self:mem_read(st.ptr + st.out - d)
-    end
-    st.co = coroutine.create(function()
-        inflate(getbyte, put, ref)
-    end)
-    self.stream = st
+    self.stream = { kind = "inflate", ptr = ptr, out = 0, consumed = 0, z = gfx.inflater(ptr) }
 end
 
 function DEV:process_fifo()
@@ -1481,7 +1238,7 @@ function DEV:coprocessor(c, pos)
     local function result(n, v) -- write result to argument word n (1..)
         local p = pos + n * 4
         for i = 0, 3 do
-            self.ram_cmd[(p + i) & (CMD_SIZE - 1)] = (v >> (i * 8)) & 0xFF
+            self.ram_cmd:set((p + i) & (CMD_SIZE - 1), (v >> (i * 8)) & 0xFF)
         end
     end
 
@@ -1501,23 +1258,33 @@ function DEV:coprocessor(c, pos)
         local us = arg()
         finish()
         self.copro_wait = host.time_ms() + us / 1000
-    elseif c == C_MEMZERO then
-        local ptr, n = arg(), arg()
-        finish()
-        for i = 0, n - 1 do
-            self:mem_write(ptr + i, 0)
+    elseif c == C_MEMZERO or c == C_MEMSET then -- (ptr, num) / (ptr, value, num) - value in low byte
+        local ptr, vn = arg(), arg()
+        local n = vn
+        if c == C_MEMSET then
+            n = arg()
+        else
+            vn = 0
         end
-    elseif c == C_MEMSET then -- (ptr, value, num) - value in low byte
-        local ptr, vn, n = arg(), arg(), arg()
         finish()
-        for i = 0, n - 1 do
-            self:mem_write(ptr + i, vn & 0xFF)
+        if ptr >= 0 and ptr + n - 1 <= RAM_G_TOP then
+            self.ram_g:fill(ptr, n, vn & 0xFF)
+            self.mem_gen = (self.mem_gen or 0) + 1
+        else
+            for i = 0, n - 1 do
+                self:mem_write(ptr + i, vn & 0xFF)
+            end
         end
     elseif c == C_MEMCPY then
         local dst, src, n = arg(), arg(), arg()
         finish()
-        for i = 0, n - 1 do
-            self:mem_write(dst + i, self:mem_read(src + i))
+        if dst >= 0 and src >= 0 and dst + n - 1 <= RAM_G_TOP and src + n - 1 <= RAM_G_TOP then
+            self.ram_g:copy(dst, src, n)
+            self.mem_gen = (self.mem_gen or 0) + 1
+        else
+            for i = 0, n - 1 do
+                self:mem_write(dst + i, self:mem_read(src + i))
+            end
         end
     elseif c == C_MEMWRITE then -- data follow in the FIFO stream
         local ptr, n = arg(), arg()
@@ -1556,11 +1323,15 @@ function DEV:coprocessor(c, pos)
         local ptr, n = arg(), arg()
         arg()
         finish()
-        local bytes = {}
-        for i = 0, n - 1 do
-            bytes[#bytes + 1] = self:mem_read(ptr + i)
+        if ptr >= 0 and ptr + n - 1 <= RAM_G_TOP then
+            result(3, self.ram_g:crc32(ptr, n))
+        else
+            local bytes = {}
+            for i = 0, n - 1 do
+                bytes[#bytes + 1] = self:mem_read(ptr + i)
+            end
+            result(3, crc32(bytes))
         end
-        result(3, crc32(bytes))
     elseif c == C_SETBITMAP then -- source, fmt, width, height: layout instructions of the handle
         local src, a2, a3 = arg(), arg(), arg()
         finish()
@@ -1688,7 +1459,7 @@ function DEV:swap()
         return
     end
     self.last_render = { key = key, gen = self.mem_gen or 0, lcd = self.lcd }
-    local w, h, fb, lcd, dl = self.width, self.height, self.fb, self.lcd, self.ram_dl
+    local lcd, dl, cv, ram = self.lcd, self.ram_dl, self.canvas, self.ram_g
 
     -- graphics state (reset values at the beginning of the display list)
     local sx, sy, sw, sh = 0, 0, 2048, 2048 -- scissor
@@ -1699,8 +1470,20 @@ function DEV:swap()
     local point_size, line_width = 16, 16 -- 1/16 px (radius, half width)
     local prim, verts = nil, {}
     local handles, palette, cur_handle, cur_cell = {}, 0, 0, 0
-    local tbuf = {} -- tag buffer of this frame (nil: tag 0)
     local tag, tag_mask, clear_tag = 255, 1, 0 -- TAG, TAG_MASK, CLEAR_TAG
+
+    -- scissor and tag of the canvas (C) follow the state before drawing
+    local cv_sx, cv_sy, cv_sw, cv_sh, cv_tag, cv_mask
+    local function sync()
+        if sx ~= cv_sx or sy ~= cv_sy or sw ~= cv_sw or sh ~= cv_sh then
+            cv:scissor(sx, sy, sw, sh)
+            cv_sx, cv_sy, cv_sw, cv_sh = sx, sy, sw, sh
+        end
+        if tag ~= cv_tag or tag_mask ~= cv_mask then
+            cv:tag(tag, tag_mask ~= 0)
+            cv_tag, cv_mask = tag, tag_mask
+        end
+    end
 
     local function handle(n)
         local b = handles[n]
@@ -1711,137 +1494,23 @@ function DEV:swap()
         return b
     end
 
-    local function put(x, y, r, g, b, a) -- one pixel (alpha blended, tag written)
-        if x < sx or y < sy or x >= sx + sw or y >= sy + sh then
-            return
-        end -- scissor
-        if x < 0 or y < 0 or x >= w or y >= h then
-            return
-        end
-        local i = y * w + x
-        if tag_mask ~= 0 then -- ALPHA_FUNC is not modeled (ALWAYS): transparent pixels have tags
-            tbuf[i] = tag
-        end
-        if a <= 0 then
-            return
-        end
-        if a >= 255 then
-            fb[i] = (r << 24) | (g << 16) | (b << 8) | 255
-        else
-            local d = fb[i] or 0xFF
-            local dr, dg, db = (d >> 24) & 0xFF, (d >> 16) & 0xFF, (d >> 8) & 0xFF
-            fb[i] = (((r * a + dr * (255 - a)) // 255) << 24)
-                | (((g * a + dg * (255 - a)) // 255) << 16)
-                | (((b * a + db * (255 - a)) // 255) << 8)
-                | 255
-        end
+    local function color()
+        return (fr << 16) | (fg << 8) | fbc
     end
 
-    local function blend(i, r, g, b, a) -- pixel without scissor/tag (caller clips), 0 < a < 255
-        local d = fb[i] or 0xFF
-        local na = 255 - a
-        fb[i] = (((r * a + ((d >> 24) & 0xFF) * na) // 255) << 24)
-            | (((g * a + ((d >> 16) & 0xFF) * na) // 255) << 16)
-            | (((b * a + ((d >> 8) & 0xFF) * na) // 255) << 8)
-            | 255
+    local function fill(x0, y0, x1, y1) -- filled rectangle of current color, inclusive corners
+        sync()
+        cv:rect(x0, y0, x1, y1, color(), fa)
     end
 
-    local function span_tags(ya, yb, xa, xb) -- tags of a clipped rectangle
-        if tag_mask == 0 then
-            return
-        end
-        local t = tag
-        for y = ya, yb do
-            local o = y * w
-            for k = o + xa, o + xb do
-                tbuf[k] = t
-            end
-        end
-    end
-
-    local function fill(x0, y0, x1, y1, r, g, b, a) -- filled rectangle, inclusive corners
-        if x1 < x0 then
-            x0, x1 = x1, x0
-        end
-        if y1 < y0 then
-            y0, y1 = y1, y0
-        end
-        local xa, xb = math.max(math.floor(x0 + 0.5), sx, 0), math.min(math.floor(x1 + 0.5), sx + sw - 1, w - 1)
-        local ya, yb = math.max(math.floor(y0 + 0.5), sy, 0), math.min(math.floor(y1 + 0.5), sy + sh - 1, h - 1)
-        if xa > xb or ya > yb then
-            return
-        end
-        span_tags(ya, yb, xa, xb)
-        if a >= 255 then
-            local c = (r << 24) | (g << 16) | (b << 8) | 255
-            for y = ya, yb do
-                local o = y * w
-                for k = o + xa, o + xb do
-                    fb[k] = c
-                end
-            end
-        elseif a > 0 then
-            for y = ya, yb do
-                local o = y * w
-                for k = o + xa, o + xb do
-                    blend(k, r, g, b, a)
-                end
-            end
-        end
-    end
-
-    local function disc(px, py, rad) -- filled circle of current color (horizontal spans)
-        local r2 = rad * rad
-        for y = math.floor(py - rad), math.ceil(py + rad) do
-            local dy = y - py
-            local q = r2 - dy * dy
-            if q >= 0 then
-                local dx = math.sqrt(q)
-                local xa, xb = math.ceil(px - dx), math.floor(px + dx)
-                if xa <= xb then
-                    fill(xa, y, xb, y, fr, fg, fbc, fa)
-                end
-            end
-        end
+    local function disc(px, py, rad) -- filled circle of current color
+        sync()
+        cv:disc(px, py, rad, color(), fa)
     end
 
     local function line(x0, y0, x1, y1) -- line of width 2 * LINE_WIDTH
-        local half = line_width / 16
-        local len = math.max(math.abs(x1 - x0), math.abs(y1 - y0))
-        local steps = math.max(math.ceil(len), 1)
-        local done = {}
-        for k = 0, steps do
-            local x, y = x0 + (x1 - x0) * k / steps, y0 + (y1 - y0) * k / steps
-            if half <= 0.5 then
-                local px, py = math.floor(x + 0.5), math.floor(y + 0.5)
-                local key = py * 4096 + px
-                if not done[key] then
-                    done[key] = true
-                    put(px, py, fr, fg, fbc, fa)
-                end
-            else
-                for py = math.floor(y - half + 0.5), math.floor(y + half - 0.5) do
-                    for px = math.floor(x - half + 0.5), math.floor(x + half - 0.5) do
-                        local key = py * 4096 + px
-                        if not done[key] then
-                            done[key] = true
-                            put(px, py, fr, fg, fbc, fa)
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    local function expand5(v)
-        return (v << 3) | (v >> 2)
-    end
-    local function expand6(v)
-        return (v << 2) | (v >> 4)
-    end
-    local function rgb332(b0)
-        local r3, g3, b2 = (b0 >> 5) & 7, (b0 >> 2) & 7, b0 & 3
-        return (r3 << 5) | (r3 << 2) | (r3 >> 1), (g3 << 5) | (g3 << 2) | (g3 >> 1), b2 * 85
+        sync()
+        cv:line(x0, y0, x1, y1, line_width / 16, color(), fa)
     end
 
     local function tight_bytes(fmt, bw) -- bytes per row, packed
@@ -1858,63 +1527,6 @@ function DEV:swap()
             return bw * 2
         end
         return bw -- 8-bit formats
-    end
-
-    local function palette_color(fmt, idx)
-        if fmt == F_PALETTED8 then -- ARGB8888
-            local b0, g0, r0, a0 =
-                self:mem_read(palette + idx * 4),
-                self:mem_read(palette + idx * 4 + 1),
-                self:mem_read(palette + idx * 4 + 2),
-                self:mem_read(palette + idx * 4 + 3)
-            return r0, g0, b0, a0
-        end
-        local wd = self:mem_read(palette + idx * 2) | (self:mem_read(palette + idx * 2 + 1) << 8)
-        if fmt == F_PALETTED4444 then
-            return ((wd >> 8) & 0xF) * 17, ((wd >> 4) & 0xF) * 17, (wd & 0xF) * 17, ((wd >> 12) & 0xF) * 17
-        end
-        return expand5((wd >> 11) & 0x1F), expand6((wd >> 5) & 0x3F), expand5(wd & 0x1F), 255 -- RGB565
-    end
-
-    -- texel: r, g, b, a and true for luminance formats (alpha of the current color)
-    local function texel(b, row, u, v, base)
-        local function byte(i)
-            return self:mem_read(base + i)
-        end
-        local fmt = b.fmt
-        if fmt == F_ARGB1555 or fmt == F_ARGB4 or fmt == F_RGB565 then -- 16-bit formats
-            local wd = byte(v * row + u * 2) | (byte(v * row + u * 2 + 1) << 8)
-            if fmt == F_ARGB1555 then
-                return expand5((wd >> 10) & 0x1F),
-                    expand5((wd >> 5) & 0x1F),
-                    expand5(wd & 0x1F),
-                    (wd & 0x8000 ~= 0) and 255 or 0
-            elseif fmt == F_RGB565 then
-                return expand5((wd >> 11) & 0x1F), expand6((wd >> 5) & 0x3F), expand5(wd & 0x1F), 255
-            end
-            return ((wd >> 8) & 0xF) * 17, ((wd >> 4) & 0xF) * 17, (wd & 0xF) * 17, ((wd >> 12) & 0xF) * 17
-        elseif fmt == F_ARGB2 then -- A2 R2 G2 B2
-            local b0 = byte(v * row + u)
-            return ((b0 >> 4) & 3) * 85, ((b0 >> 2) & 3) * 85, (b0 & 3) * 85, ((b0 >> 6) & 3) * 85
-        elseif fmt == F_RGB332 then
-            local r, g, bl = rgb332(byte(v * row + u))
-            return r, g, bl, 255
-        elseif fmt == F_L8 then
-            return 255, 255, 255, byte(v * row + u), true
-        elseif fmt == F_L4 then -- high nibble first
-            local b0 = byte(v * row + (u >> 1))
-            local l = (u & 1 == 0) and ((b0 >> 4) & 0xF) or (b0 & 0xF)
-            return 255, 255, 255, l * 17, true
-        elseif fmt == F_L2 then -- MSB first
-            local b0 = byte(v * row + (u >> 2))
-            return 255, 255, 255, ((b0 >> (6 - 2 * (u & 3))) & 3) * 85, true
-        elseif fmt == F_L1 then -- MSB first
-            local b0 = byte(v * row + (u >> 3))
-            return 255, 255, 255, ((b0 >> (7 - (u & 7))) & 1) * 255, true
-        elseif fmt == F_PALETTED565 or fmt == F_PALETTED4444 or fmt == F_PALETTED8 or fmt == F_PALETTED then
-            return palette_color(fmt == F_PALETTED and F_PALETTED565 or fmt, byte(v * row + u))
-        end
-        return nil -- font/bargraph/ASTC formats are not drawn
     end
 
     local function blit(x, y, hd, cell) -- one bitmap (cell) of BEGIN BITMAPS
@@ -1945,123 +1557,8 @@ function DEV:swap()
             lh = bh
         end
         local base = b.source + (cell or 0) * row * lh -- cells follow each other (row * layout height)
-        x, y = math.floor(x), math.floor(y)
-
-        -- visible part (scissor, screen, bitmap size and layout height)
-        local ua = math.max(sx, 0, x) - x
-        local ub = math.min(sx + sw, w, x + bw) - 1 - x
-        local va = math.max(sy, 0, y) - y
-        local vb = math.min(sy + sh, h, y + math.min(bh, lh)) - 1 - y
-        if ua > ub or va > vb then
-            return
-        end
-        span_tags(y + va, y + vb, x + ua, x + ub) -- ALPHA_FUNC ALWAYS: whole bitmap has the tag
-
-        local ram = (base + row * (vb + 1) <= RAM_G_TOP + 1) and self.ram_g or nil
-        local plain = fr == 255 and fg == 255 and fbc == 255 -- no tint by COLOR_RGB
-        local ca = fa
-
-        if ram and fmt == F_RGB565 then
-            local lut = rgb565_lut()
-            for v = va, vb do
-                local ra, o = base + v * row, (y + v) * w + x
-                for u = ua, ub do
-                    local q = ra + u * 2
-                    local p = lut[(ram[q] or 0) | ((ram[q + 1] or 0) << 8)]
-                    if plain and ca >= 255 then
-                        fb[o + u] = p
-                    elseif ca > 0 then
-                        local r, g, bl = (p >> 24) & 0xFF, (p >> 16) & 0xFF, (p >> 8) & 0xFF
-                        if not plain then
-                            r, g, bl = (r * fr) // 255, (g * fg) // 255, (bl * fbc) // 255
-                        end
-                        if ca >= 255 then
-                            fb[o + u] = (r << 24) | (g << 16) | (bl << 8) | 255
-                        else
-                            blend(o + u, r, g, bl, ca)
-                        end
-                    end
-                end
-            end
-        elseif ram and (fmt == F_L8 or fmt == F_L4 or fmt == F_L2 or fmt == F_L1) then
-            -- luminance is the alpha of the current color
-            local c = (fr << 24) | (fg << 16) | (fbc << 8) | 255
-            local opaque = ca >= 255
-            if fmt == F_L8 then
-                for v = va, vb do
-                    local ra, o = base + v * row, (y + v) * w + x
-                    for u = ua, ub do
-                        local l = ram[ra + u] or 0
-                        if l > 0 then
-                            local a = opaque and l or (l * ca) // 255
-                            if a >= 255 then
-                                fb[o + u] = c
-                            elseif a > 0 then
-                                blend(o + u, fr, fg, fbc, a)
-                            end
-                        end
-                    end
-                end
-            else -- L1/L2/L4: whole bytes (transparent bytes skipped, opaque bytes filled)
-                local bits = fmt == F_L4 and 4 or fmt == F_L2 and 2 or 1
-                local per, lut = 8 // bits, lum_lut(bits)
-                local ba, bb = ua // per, ub // per -- bytes of the visible part
-                for v = va, vb do
-                    local ra, o = base + v * row, (y + v) * w + x
-                    for bi = ba, bb do
-                        local bt = ram[ra + bi] or 0
-                        if bt ~= 0 then
-                            local u0 = bi * per
-                            local k0 = bi == ba and ua - u0 or 0 -- clipped first/last byte
-                            local k1 = bi == bb and ub - u0 or per - 1
-                            local p0 = o + u0
-                            if bt == 0xFF and opaque then
-                                for k = p0 + k0, p0 + k1 do
-                                    fb[k] = c
-                                end
-                            else
-                                local lb = bt * per
-                                for k = k0, k1 do
-                                    local l = lut[lb + k]
-                                    if l > 0 then
-                                        if opaque and l == 255 then
-                                            fb[p0 + k] = c
-                                        else
-                                            local a = opaque and l or (l * ca) // 255
-                                            if a >= 255 then
-                                                fb[p0 + k] = c
-                                            elseif a > 0 then
-                                                blend(p0 + k, fr, fg, fbc, a)
-                                            end
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        else -- other formats (or bitmap outside RAM_G): generic texel decoder
-            for v = va, vb do
-                local o = (y + v) * w + x
-                for u = ua, ub do
-                    local r, g, bl, a, lum = texel(b, row, u, v, base)
-                    if r then
-                        if lum then
-                            r, g, bl = fr, fg, fbc
-                        elseif not plain then
-                            r, g, bl = (r * fr) // 255, (g * fg) // 255, (bl * fbc) // 255
-                        end
-                        a = (a * ca) // 255
-                        if a >= 255 then
-                            fb[o + u] = (r << 24) | (g << 16) | (bl << 8) | 255
-                        elseif a > 0 then
-                            blend(o + u, r, g, bl, a)
-                        end
-                    end
-                end
-            end
-        end
+        sync()
+        cv:bitmap(ram, base, fmt, row, bw, math.min(bh, lh), x, y, color(), fa, palette)
     end
 
     local stack = {} -- SAVE/RESTORE_CONTEXT
@@ -2201,19 +1698,8 @@ function DEV:swap()
         elseif op == 0x26 then -- CLEAR (color/stencil/tag) in the scissor rectangle
             local c, t = (wd & 4) ~= 0, (wd & 1) ~= 0
             if c or t then
-                local cv = (cr << 24) | (cg << 16) | (cb << 8) | 255
-                local ct = clear_tag ~= 0 and clear_tag or nil
-                for y = math.max(sy, 0), math.min(sy + sh, h) - 1 do
-                    for x = math.max(sx, 0), math.min(sx + sw, w) - 1 do
-                        local k = y * w + x
-                        if c then
-                            fb[k] = cv
-                        end
-                        if t then
-                            tbuf[k] = ct
-                        end
-                    end
-                end
+                sync()
+                cv:clear(c and ((cr << 16) | (cg << 8) | cb) or nil, t and clear_tag or nil)
             end
         elseif op == 0x27 then
             frac = wd & 7 -- VERTEX_FORMAT
@@ -2256,38 +1742,9 @@ function DEV:swap()
         i = nxt or (i + 1)
     end
 
-    -- push the shadow framebuffer to the panel LCD: colors converted once
-    -- (cache of pixel strings in the LCD format), only changed rows are written
-    local bpp = lcd.pixel_size or 2
-    local pfmt = "<I" .. bpp
-    local cache = self.push_cache
-    if not cache or self.push_cache_n > 65536 then
-        cache = {}
-        self.push_cache, self.push_cache_n = cache, 0
-    end
-    local rows = self.push_rows or {}
-    self.push_rows = rows
-    local parts = {}
-    for y = 0, h - 1 do
-        local o = y * w
-        for x = 0, w - 1 do
-            local p = fb[o + x] or 0xFF
-            local str = cache[p]
-            if not str then
-                str = string.pack(pfmt, lcd:color((p >> 24) & 0xFF, (p >> 16) & 0xFF, (p >> 8) & 0xFF, p & 0xFF))
-                cache[p] = str
-                self.push_cache_n = self.push_cache_n + 1
-            end
-            parts[x + 1] = str
-        end
-        local line_str = table.concat(parts, "", 1, w)
-        if rows[y] ~= line_str then
-            lcd:write(o * bpp, line_str)
-            rows[y] = line_str
-        end
-    end
+    -- canvas to the panel LCD (converted in C, only changed rows)
+    cv:push(lcd)
 
-    self.tagbuf = tbuf -- tags of the displayed frame
     self:update_touch_regs()
     self:set_flag(F_SWAP)
     if self.on_swap_cb then
@@ -2323,7 +1780,7 @@ function DEV:tag_at(x, y)
     if x < 0 or y < 0 or x >= self.width or y >= self.height then
         return 0
     end
-    return self.tagbuf[y * self.width + x] or 0
+    return self.canvas:tag_at(x, y)
 end
 
 -- REG_TRACKER value of touch point p with tag t: (value << 16) | tag, 0 when not tracked

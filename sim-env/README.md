@@ -598,6 +598,50 @@ modprobe -i SPI 2 0 /dev/spi-tft -c cs_port=1,cs_pin=1
 lua /host/demos/tftdemo.lua
 ```
 
+### Graphics helpers (gfx)
+Models of display controllers that render frames (e.g. EVE: display list,
+bitmaps in memory of the controller) use the global table `gfx` of the board
+script: pixel loops run in C, the model interprets commands in Lua.
+`gfx.memory(size)` is a byte buffer (memory of the controller, bytes 0),
+`gfx.canvas(width, height)` is a frame of `0xRRGGBB` pixels with a tag buffer
+(touch tags), a scissor rectangle and the current tag, copied to an LCD of the
+panel by `canvas:push(lcd)`.
+
+| Memory method | Description |
+|---------------|-------------|
+| `mem:get(addr)`, `mem:set(addr, byte)` | byte (out of memory: 0, not written) |
+| `mem:read(addr, n)`, `mem:write(addr, data)` | string of bytes (`write` returns number of written bytes) |
+| `mem:fill(addr, n [, byte])`, `mem:copy(dst, src, n)` | fill (default 0), copy (ranges can overlap) |
+| `mem:crc32(addr, n)` | standard CRC-32 |
+| `#mem` | size |
+
+| Canvas method / field | Description |
+|-----------------------|-------------|
+| `cv:scissor(x, y, w, h)` | drawing area (default 2048x2048 at 0, 0, clipped by the canvas) |
+| `cv:tag(tag, mask)` | tag written by drawing when `mask` is `true` (default 255, `true`) |
+| `cv:clear(color, tag)` | clear scissor area: color and/or tag (`nil`: not cleared) |
+| `cv:rect(x0, y0, x1, y1, color [, alpha])` | filled rectangle, corners in pixels (rounded, inclusive) |
+| `cv:disc(x, y, radius, color [, alpha])` | filled circle (pixels with distance <= radius) |
+| `cv:line(x0, y0, x1, y1, half, color [, alpha])` | line of width `2 * half` pixels |
+| `cv:bitmap(mem, source, format, stride, width, height, x, y, color, alpha [, palette])` | bitmap in EVE format (`BITMAP_LAYOUT`: ARGB1555, L1, L2, L4, L8, RGB332, ARGB2, ARGB4, RGB565, PALETTED565/4444/8) from memory: L formats are the alpha of `color`, other formats are multiplied by `color`; returns `false` for not supported formats |
+| `cv:tag_at(x, y)`, `cv:pixel(x, y)` | tag, pixel `0xRRGGBB` |
+| `cv:reset()` | black, tags 0, default scissor and tag |
+| `cv:push(lcd)` | copy to LCD (converted to its format, only changed rows), returns number of written rows |
+| `cv.width`, `cv.height` | size |
+
+Colors are `0xRRGGBB` with alpha 0..255 (default 255), drawing blends
+`src * a + dst * (255 - a)` and writes the tag also for transparent pixels
+(alpha test of EVE is not modeled).
+
+`gfx.inflater(addr)` is a zlib stream decoder (RFC 1950/1951, e.g. CMD_INFLATE
+of EVE) writing to address `addr` of a memory: `z:feed(mem, data)` appends
+data of the stream and decodes as far as possible, returns `"more", n, out`
+(all `n` bytes belong to the stream, more data are needed), `"done", used,
+out, adler_ok` (`used` bytes of data belong to the stream, the rest follows
+the stream) or `"error", message, out` (`out`: number of output bytes). The
+decoder continues from the beginning of the interrupted deflate block, back
+references read the output in memory (no window).
+
 ### EVE display
 `models/bt817.lua` is a model of the BT817/BT818 EVE display controller: the
 SPI host interface (memory reads/writes, host commands), registers, the
@@ -632,11 +676,11 @@ In dnx RTOS registers and memory are accessed by full duplex transfers
 modprobe -i SPI 3 0 /dev/spi-eve -c cs_port=3,cs_pin=0,mode=0
 lua /host/demos/evedemo.lua
 ```
-The demo uses touch tags: button (tag 1), keys and a tracked slider. Rendering
-is done in Lua at every swap (fast paths for rectangles, points and RGB565/L1..L8
-bitmaps, colors converted to the LCD format once, only changed rows written to
-the LCD): about 17 ms for a cleared frame with shapes, about 30 ms with a full
-screen RGB565 bitmap (`tests/bt817.lua` prints the times). `tests/bt817.lua` (board
+The demo uses touch tags: button (tag 1), keys and a tracked slider. Frames are
+rendered in C by `gfx` (RAM_G and the command FIFO are `gfx.memory` buffers,
+the frame is a `gfx.canvas`): 480x272 frame about 1-2 ms, 800x1280 frame with
+a full screen L4 bitmap about 11 ms; a swap of the same display list without
+RAM_G changes is not rendered again (`tests/bt817.lua` prints the times). `tests/bt817.lua` (board
 `boards/test.lua`) tests the model as an EVE host driver.
 
 ## Writing device models
@@ -746,7 +790,11 @@ panel (`models/st7789.lua`):
 A display with own memory layout (monochrome OLED with pages, e.g. SSD1306)
 keeps its memory in Lua and writes changed pixels to the LCD
 (`lcd:pixel(x, y, on and white or black)`), a display with the framebuffer in
-the LCD format can write whole lines by `lcd:write(offset, data)`.
+the LCD format can write whole lines by `lcd:write(offset, data)`. A
+controller that renders frames from commands and its memory (graphics
+controllers, e.g. EVE) keeps the memory in `gfx.memory`, draws to
+`gfx.canvas` and copies the frame by `canvas:push(lcd)` (see
+[Graphics helpers](#graphics-helpers-gfx), `models/bt817.lua`).
 
 ### Testing models
 Behavior of the model can be checked in the board script (calls of the

@@ -405,6 +405,99 @@ for _, name in ipairs({ "stored", "fixed", "dyn" }) do
     end)
 end
 
+-- zlib stream of data: blocks of literals coded by fixed Huffman codes and
+-- stored blocks alternately (block of `block` bytes), adler: Adler-32 of trailer
+local function zlib_stream(data, block, adler)
+    local out, bytes, acc, nacc = { "\x78\x01" }, {}, 0, 0
+    local function flush() -- bytes of bit writer to strings (memory of system)
+        for k = 1, #bytes, 4096 do
+            out[#out + 1] = string.char(table.unpack(bytes, k, math.min(k + 4095, #bytes)))
+        end
+        bytes = {}
+    end
+    local function put(v, n) -- n bits, LSB first
+        acc, nacc = acc | (v << nacc), nacc + n
+        while nacc >= 8 do
+            bytes[#bytes + 1] = acc & 0xFF
+            acc, nacc = acc >> 8, nacc - 8
+        end
+    end
+    local function code(c, len) -- Huffman code, MSB first
+        local r = 0
+        for _ = 1, len do
+            r, c = (r << 1) | (c & 1), c >> 1
+        end
+        put(r, len)
+    end
+    local nblocks = (#data + block - 1) // block
+    for b = 1, nblocks do
+        local chunk = data:sub((b - 1) * block + 1, b * block)
+        local last = (b == nblocks) and 1 or 0
+        if b % 2 == 0 then -- stored
+            put(last, 1)
+            put(0, 2)
+            if nacc > 0 then
+                put(0, 8 - nacc)
+            end
+            flush()
+            out[#out + 1] = string.pack("<I2I2", #chunk, #chunk ~ 0xFFFF) .. chunk
+        else -- fixed codes, literals
+            put(last, 1)
+            put(1, 2)
+            for i = 1, #chunk do
+                local lit = chunk:byte(i)
+                if lit < 144 then
+                    code(0x30 + lit, 8)
+                else
+                    code(0x190 + lit - 144, 9)
+                end
+            end
+            code(0, 7) -- end of block (256)
+            flush()
+        end
+    end
+    if nacc > 0 then
+        put(0, 8 - nacc)
+    end
+    flush()
+    if not adler then
+        local a, b = 1, 0
+        for i = 1, #data do
+            a = (a + data:byte(i)) % 65521
+            b = (b + a) % 65521
+        end
+        adler = (b << 16) | a
+    end
+    out[#out + 1] = string.pack(">I4", adler)
+    return table.concat(out)
+end
+
+test("CMD_INFLATE: long stream (blocks interrupted by FIFO), next command, Adler-32", function()
+    local parts, t, x = {}, {}, 1
+    for _ = 1, 24 do
+        for i = 1, 1000 do
+            x = (x * 1103515245 + 12345) & 0x7FFFFFFF
+            t[i] = (x >> 16) & 0xFF
+        end
+        parts[#parts + 1] = string.char(table.unpack(t, 1, 1000))
+    end
+    local data = table.concat(parts)
+    local z = zlib_stream(data, 3000)
+    expect(#z > 4 * 4096, "stream is too short: " .. #z)
+    -- the stream and the next command in one transfer: MEMWRITE after padding
+    cmd(words(INFLATE, 0x20000) .. padded(z) .. words(MEMWRITE, 0x30000, 4) .. "next")
+    expect(wait_idle(), "FIFO not processed")
+    expect(rd(0x20000, #data) == data, "inflated data differ")
+    expect(rd(0x30000, 4) == "next", "command after the stream: " .. rd(0x30000, 4))
+    cmd(words(GETPTR, 0))
+    expect(wait_idle() and result() == 0x20000 + #data, "GETPTR " .. result())
+    -- wrong Adler-32: data are written, the end is correct
+    local small = data:sub(1, 1000)
+    cmd(words(INFLATE, 0x40000) .. padded(zlib_stream(small, 400, 0x12345678)) .. words(GETPTR, 0))
+    expect(wait_idle() and result() == 0x40000 + #small, "GETPTR after wrong Adler-32 " .. result())
+    expect(rd(0x40000, #small) == small, "data of stream with wrong Adler-32")
+end)
+
 test("CMD_APPEND and bitmaps (RGB565, L8 colored by COLOR_RGB)", function()
     local bmp = string.rep(string.pack("<I2", 0xF800), 4) .. string.rep(string.pack("<I2", 0x07E0), 4)
     cmd(words(MEMWRITE, 0x3000, #bmp) .. bmp)
@@ -724,6 +817,28 @@ test("Performance: upload and rendering (printed)", function()
     dt = math.max(now() - t, 1)
     print(string.format("  direct write to RAM_G %d B: %d ms (%.0f kB/s)", size, dt, size / 1024 / (dt / 1000)))
 
+    collectgarbage()
+    do -- inflate of 32 kB stream (fixed/stored blocks of 4 kB)
+        local data = string.rep("\x12\x34\x56\x78\x9A\xBC\xDE\xF0", 4096)
+        local z = zlib_stream(data, 4096)
+        local t0 = now()
+        cmd(words(INFLATE, 0x80000))
+        for off = 1, #z, 8192 do
+            cmd(z:sub(off, off + 8191))
+        end
+        cmd(string.rep("\0", (4 - #z % 4) % 4))
+        expect(wait_idle(), "FIFO not processed")
+        local dt = math.max(now() - t0, 1)
+        print(
+            string.format(
+                "  inflate %d B -> %d B: %d ms (%.0f kB/s of output)",
+                #z,
+                #data,
+                dt,
+                #data / 1024 / (dt / 1000)
+            )
+        )
+    end
     frame("clear", "")
     frame(
         "clear + full screen RGB565 bitmap",
