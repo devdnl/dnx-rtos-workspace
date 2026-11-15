@@ -189,10 +189,13 @@ BSP file (`bsp/*.bsp`). Included BSPs:
 - `sim-env` – simulation environment of the POSIX simulator (board model:
   Lua description of hardware connected to the microcontroller, pages of the
   board panel, see `sim-env/README.md`),
-- `tools` – build bases of appsets (`tools/appset`) and romfs (`tools/romfs`)
-  with their default configurations, helper scripts (BSP import/export,
-  flashing, OpenOCD, terminal, linker script generator, Docker image,
-  simulator tests `simtest.py`, board panel `simpanel.py`).
+- `tools` – workspace tools: build bases of appsets (`tools/appset`) and
+  romfs (`tools/romfs`) with their default configurations, helper scripts
+  (BSP import/export, flashing, OpenOCD, terminal, linker script generator,
+  Docker image, simulator tests `simtest.py`, board panel `simpanel.py`),
+  updated with the workspace (see `tools/README.md`),
+- `utils` – scripts and tools of the user project (not changed by the
+  workspace).
 
 ## Getting started
 
@@ -301,6 +304,17 @@ x86 executable). The simulator uses its own configuration: `config/sim-kernel`,
 make build-sim      # creates build/dnx-sim and build/sim-romfs.bin
 make run-sim        # builds and starts simulator in the current terminal
 ```
+The quickest start is the example simulation (board `sim-env/boards/example.lua`
+with LEDs, buttons, sensors, displays and network devices):
+```
+tools/create_tap.sh       # once: TAP interface tap0 (192.168.77.1/24), sudo
+make run-sim-example      # simulator, board panel at http://localhost:8080
+```
+`run-sim-example` starts the board panel, connects the network to `tap0`
+(without the interface the simulator runs, the network is not visible from the
+host) and makes `sim-env` available in `/host` (demos, e.g.
+`lua /host/demos/tftdemo.lua` and `lua /host/demos/evedemo.lua`). Other
+options can be added by `SIM_OPTS`, the port of the panel by `SIM_PANEL_PORT`.
 Other appsets can be linked with the simulator too (e.g. the bootloader appset
 or an appset of another project): `SIM_APPSETS` is a list of `<appset
 directory>[:<configuration directory>]` (relative to the workspace or absolute,
@@ -392,7 +406,8 @@ Images of flatfs and eefs are formatted in the simulator by `mkflatfs` and
 `mkeefs` programs (e.g. on empty image connected by `--disk 2=raw.img`).
 
 #### Network
-TAP interface is created once (the simulator does not need root privileges):
+TAP interface is created once (the simulator does not need root privileges,
+the commands are in `tools/create_tap.sh`):
 ```
 sudo ip tuntap add tap0 mode tap user $USER
 sudo ip addr add 192.168.77.1/24 dev tap0

@@ -235,7 +235,9 @@ help :
 	@$(ECHO) "                       run-sim SIM_OPTS=\"--drvset build/sim-drvset.bin\")"
 	@$(ECHO) "   run-sim             build and start POSIX simulator (options: SIM_OPTS=..., PANEL=1"
 	@$(ECHO) "                       board panel in web browser, needs --board, PANEL_OPTS=...)"
-	@$(ECHO) "   run-sim-example     build and start POSIX example simulation (options: SIM_OPTS=...)
+	@$(ECHO) "   run-sim-example     build and start POSIX simulator with example board and panel"
+	@$(ECHO) "                       (http://localhost:$(SIM_PANEL_PORT), /host = sim-env, network tap0,"
+	@$(ECHO) "                       tools/create_tap.sh, options: SIM_OPTS=...)"
 	@$(ECHO) "   test-sim            build and test system in POSIX simulator (options: SIMTEST_OPTS=...)"
 	@$(ECHO) "                       other appsets in simulator: SIM_APPSETS=\"<appset>[:<config>] ...\""
 	@$(ECHO) "                       (test-sim adds sim-env/testappset)"

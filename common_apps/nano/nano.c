@@ -45,7 +45,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define VERSION       "1.1"
+#define VERSION       "1.2"
 #define TAB_WIDTH     8
 #define LINE_MIN_CAP  16
 #define LINES_MIN_CAP 64
@@ -60,6 +60,7 @@
 #define ATTR_KEY       (TUI_ATTR_DEFAULT | TUI_REVERSE)
 #define ATTR_KEY_LABEL TUI_ATTR_DEFAULT
 #define ATTR_SELECT    (TUI_ATTR_DEFAULT | TUI_REVERSE)
+#define ATTR_LINENUM   TUI_ATTR_DEFAULT
 
 /*==============================================================================
   Local types, enums definitions
@@ -139,6 +140,8 @@ GLOBAL_VARIABLES_SECTION {
         int hl_len;
         int drawn_rowoff; /* text offsets of last drawn screen (-1: not known) */
         int drawn_coloff;
+        int drawn_margin;
+        bool linenums; /* line numbers in the left margin (-l, M-N) */
         char *filename;
         int cy;
         int cx;
@@ -208,6 +211,7 @@ static const char *const HELP_TEXT[] = {
         "  ^C              Show cursor position",
         "  ^_  M-G         Go to line (\"line\" or \"line,column\")",
         "  ^L              Refresh screen",
+        "  M-N             Show/hide line numbers (option -l)",
         "",
         "  Arrows, Home/^A, End/^E, PgUp/^Y, PgDn/^V   Move cursor",
         "  Ctrl+Left, Ctrl+Right                       Previous/next word",
@@ -695,17 +699,24 @@ static void scroll(int text_rows, int cols)
  * @param line          line
  * @param idx           line index
  * @param y             screen row
- * @param cols          screen columns
+ * @param margin        width of line number margin (0: no numbers)
+ * @param cols          screen columns of text
  * @param r             region
  */
 //==============================================================================
-static void draw_line(const line_t *line, int idx, int y, int cols, const region_t *r)
+static void draw_line(const line_t *line, int idx, int y, int margin, int cols, const region_t *r)
 {
         tui_t *tui = global->tui;
         int col = 0;
         int end = global->coloff + cols;
 
-        tui_move(tui, 0, y);
+        if (margin > 0) {
+                tui_set_attr(tui, ATTR_LINENUM);
+                tui_move(tui, 0, y);
+                tui_printf(tui, "%*d ", margin - 1, idx + 1);
+        }
+
+        tui_move(tui, margin, y);
 
         for (int pos = 0; (pos < line->len) && (col < end);) {
                 int n = char_len(line, pos);
@@ -784,16 +795,32 @@ static void draw(bar_t bar)
         int rows = tui_rows(tui);
         int text_rows = (rows > 5) ? rows - 4 : 1;
 
-        scroll(text_rows, cols);
+        /* line numbers: digits of the last line and space (as nano) */
+        int margin = 0;
+        if (global->linenums) {
+                margin = 2;
+                for (int n = global->buf.n; n >= 10; n /= 10) {
+                        margin++;
+                }
+
+                if (margin > cols / 2) {
+                        margin = 0; /* too narrow screen */
+                }
+        }
+
+        int text_cols = cols - margin;
+
+        scroll(text_rows, text_cols);
 
         /* text moved vertically: terminal scrolls, only new lines are sent */
         if ((global->drawn_rowoff >= 0) && (global->coloff == global->drawn_coloff) &&
-                (global->rowoff != global->drawn_rowoff)) {
+                (margin == global->drawn_margin) && (global->rowoff != global->drawn_rowoff)) {
                 tui_scroll(tui, 1, text_rows, global->rowoff - global->drawn_rowoff);
         }
 
         global->drawn_rowoff = global->rowoff;
         global->drawn_coloff = global->coloff;
+        global->drawn_margin = margin;
 
         /* highlighted region: mark or search result */
         region_t region = mark_region();
@@ -830,7 +857,7 @@ static void draw(bar_t bar)
         for (int r = 0; r < text_rows; r++) {
                 int idx = global->rowoff + r;
                 if (idx < global->buf.n) {
-                        draw_line(&global->buf.v[idx], idx, 1 + r, cols, &region);
+                        draw_line(&global->buf.v[idx], idx, 1 + r, margin, text_cols, &region);
                 }
         }
 
@@ -868,7 +895,7 @@ static void draw(bar_t bar)
                 }
 
                 int col = col_of(cur_line(), global->cx);
-                tui_set_cursor(tui, col - global->coloff, 1 + global->cy - global->rowoff);
+                tui_set_cursor(tui, margin + col - global->coloff, 1 + global->cy - global->rowoff);
         }
 
         draw_shortcuts(bar, rows, cols);
@@ -2052,6 +2079,12 @@ static void handle_key(int key)
                 set_msg(global->mark ? "Mark Set" : "Mark Unset");
                 break;
 
+        case TUI_MOD_ALT | 'n':
+        case TUI_MOD_ALT | 'N':
+                global->linenums = !global->linenums;
+                set_msg(global->linenums ? "Line numbering enabled" : "Line numbering disabled");
+                break;
+
         case TUI_MOD_ALT | '^':
         case TUI_MOD_ALT | 'c':
         case TUI_MOD_ALT | 'C':
@@ -2241,8 +2274,12 @@ int main(int argc, char *argv[])
         for (int i = 1; i < argc; i++) {
                 if (argv[i][0] == '+') {
                         start_line = strtol(&argv[i][1], NULL, 10);
+                } else if ((strcmp(argv[i], "-l") == 0) || (strcmp(argv[i], "--linenumbers") == 0)) {
+                        global->linenums = true;
                 } else if ((strcmp(argv[i], "-h") == 0) || (strcmp(argv[i], "--help") == 0)) {
-                        printf("Usage: %s [+LINE] [FILE]\n", argv[0]);
+                        printf("Usage: %s [-l] [+LINE] [FILE]\n", argv[0]);
+                        printf("  -l, --linenumbers   show line numbers in front of the text\n");
+                        printf("  +LINE               start at line LINE\n");
                         return EXIT_SUCCESS;
                 } else {
                         file = argv[i];

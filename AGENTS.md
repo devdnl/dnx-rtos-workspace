@@ -71,9 +71,11 @@ The default configuration targets **stm32h7** (`__CPU_ARCH__` in
   models (`models/`), tests and demos executed in dnx (`tests/`, `demos/`),
   pages of the board panel (`panel/`); API in `sim-env/README.md`.
 - `app-dist/` — manifest for the `.fpkg` update package.
-- `tools/` — Dockerfile, flashing (`flash.sh`, `runocd.sh`), linker-script
-  generator, BSP import/export, simulator tests (`simtest.py`) and board panel
-  (`simpanel.py`).
+- `tools/` — workspace tools: Dockerfile, flashing (`flash.sh`, `runocd.sh`),
+  linker-script generator, BSP import/export, simulator tests (`simtest.py`)
+  and board panel (`simpanel.py`). Scripts of the user project go to `utils/`,
+  not here (`tools/README.md`).
+- `utils/` — scripts and tools of the user project.
 - `build/` — output (git-ignored): images and build directories of appsets and
   romfs (`build/<config name>/`). Never edit or commit.
 
