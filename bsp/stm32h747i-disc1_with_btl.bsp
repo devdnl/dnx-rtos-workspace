@@ -1374,6 +1374,8 @@
 		["__ENABLE_ROMFS__"]="_YES_";
 	};
 	["config/app-kernel/filesystems/flatfs_flags.h"]={
+		["__FLATFS_ASYNC_ENABLE__"]="_YES_";
+		["__FLATFS_CACHE_ENABLE__"]="_YES_";
 		["__FLATFS_INDEX_SIZE__"]="32";
 		["__FLATFS_LOG_ENABLE__"]="_NO_";
 	};
@@ -3002,6 +3004,8 @@
 		["__ENABLE_ROMFS__"]="_YES_";
 	};
 	["config/btl-kernel/filesystems/flatfs_flags.h"]={
+		["__FLATFS_ASYNC_ENABLE__"]="_NO_";
+		["__FLATFS_CACHE_ENABLE__"]="_NO_";
 		["__FLATFS_INDEX_SIZE__"]="32";
 		["__FLATFS_LOG_ENABLE__"]="_NO_";
 	};

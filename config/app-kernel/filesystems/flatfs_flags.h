@@ -51,6 +51,20 @@ this:AddWidget("Spinbox", 0, 512, "Number of index entries")
 --*/
 #define __FLATFS_INDEX_SIZE__ 32
 
+/*--
+this:AddWidget("Combobox", "Enable option async (deferred update of file size)")
+this:AddItem("Yes", "_YES_")
+this:AddItem("No", "_NO_")
+--*/
+#define __FLATFS_ASYNC_ENABLE__ _YES_
+
+/*--
+this:AddWidget("Combobox", "Enable option cache=N (write-through block cache)")
+this:AddItem("Yes", "_YES_")
+this:AddItem("No", "_NO_")
+--*/
+#define __FLATFS_CACHE_ENABLE__ _YES_
+
 #endif /* _FLATFS_FLAGS_H_ */
 /*==============================================================================
   End of file

@@ -25,6 +25,9 @@
 #           - fstest on flatfs, eefs, ext2 and ext3 (journal) partitions of the second disk
 #             (formatted by mkflatfs, mkeefs and mkext programs), ext2 and ext3 are checked by
 #             e2fsck after test (requires e2fsprogs, otherwise check is skipped),
+#           - fstest and fsbench on flatfs mounted with options async (deferred file descriptor)
+#             and cache=8 (write-through block cache),
+#           - fsbench on flatfs (smoke test, results are printed with option --perf),
 #           - other appset linked with simulator (sim-env/testappset mounted by siminit in
 #             /opt/testappset by appsetfs, program appsettest: libc, threads, child process,
 #             search order of programs, start by path and program search path, files of
@@ -509,6 +512,37 @@ class TestRunner:
                 if line.startswith("  ") and ((" KiB/s" in line) or (" us " in line) or ("/s" in line)):
                     print("    " + line.strip())
 
+    # fsbench smoke test: all measurements finished, statistics of device read, files removed;
+    # results are printed with option --perf
+    def fsbench_test(self, sim, name, cmd, dir):
+        if not self.selected(name):
+            return
+
+        t = time.time()
+        ok, out = sim.run(cmd, FSTEST_TIMEOUT)
+        dt = time.time() - t
+        _, ls = sim.run("ls " + dir)
+
+        lines = [l.rstrip() for l in out.splitlines()]
+        done = any(l.startswith("meta remove") for l in lines)
+        if not ok:
+            self.result(name, FAIL, "timeout or simulator terminated")
+        elif CRASH.search(out):
+            self.result(name, FAIL, "program crashed")
+        elif not done:
+            self.result(name, FAIL, "not finished: %s" % (lines[-2] if len(lines) > 1 else ""))
+        elif ("-D" in cmd) and not any(" W " in l for l in lines):
+            self.result(name, FAIL, "no device statistics")
+        elif "fsbench" in ls:
+            self.result(name, FAIL, "files not removed")
+        else:
+            self.result(name, PASS, "(%.1f s)" % dt)
+
+        if self.args.perf and ok:
+            for l in lines:
+                if (" ms " in l) or l.startswith("test "):
+                    print("    " + l)
+
     # board panel: the test connects to the panel socket like tools/simpanel.py, signals of board
     # boards/test.lua: P_OUT shows PA18, P_IN drives PA19, P_CTL sets P_VAL = 2 * P_CTL; LCD of LTDC
     # driver (frame sent to the panel) and touch of LCD read from FT5336 model by I2C driver; LCD "tft"
@@ -965,6 +999,11 @@ class TestRunner:
         self.summary_test(sim, "fstest: flatfs", "/mnt/flatfs", "fstest", FSTEST_TIMEOUT,
                           ("mkflatfs /dev/sdb1 %u" % FLATFS_MAX_FILE_KIB, "mkdir /mnt/flatfs",
                            "mount /dev/sdb1 flatfs /mnt/flatfs"), "/dev/sdb1")
+        self.fsbench_test(sim, "fsbench: flatfs", "fsbench -s 64 -D /dev/sdb1 /mnt/flatfs", "/mnt/flatfs")
+        self.summary_test(sim, "fstest: flatfs (async,cache)", "/mnt/flatfs", "fstest", FSTEST_TIMEOUT,
+                          ("umount /mnt/flatfs", "mount /dev/sdb1 flatfs /mnt/flatfs async,cache=8"), "/dev/sdb1")
+        self.fsbench_test(sim, "fsbench: flatfs (async,cache)", "fsbench -s 64 -D /dev/sdb1 /mnt/flatfs",
+                          "/mnt/flatfs")
         self.summary_test(sim, "fstest: eefs", "/mnt/eefs", "fstest", FSTEST_TIMEOUT,
                           ("mkeefs /dev/sdb2", "mkdir /mnt/eefs", "mount /dev/sdb2 eefs /mnt/eefs"),
                           "/dev/sdb2")

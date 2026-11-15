@@ -1,0 +1,5 @@
+# Makefile for GNU make
+
+CSRC_PROGRAMS   += $(PROG_ROOT_FSBENCH)fsbench/fsbench.c
+CXXSRC_PROGRAMS +=
+HDRLOC_PROGRAMS +=

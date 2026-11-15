@@ -405,6 +405,8 @@
 		["__ENABLE_ROMFS__"]="_YES_";
 	};
 	["config/app-kernel/filesystems/flatfs_flags.h"]={
+		["__FLATFS_ASYNC_ENABLE__"]="_NO_";
+		["__FLATFS_CACHE_ENABLE__"]="_NO_";
 		["__FLATFS_INDEX_SIZE__"]="0";
 		["__FLATFS_LOG_ENABLE__"]="_NO_";
 	};

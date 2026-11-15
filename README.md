@@ -77,7 +77,8 @@ The `app-appset` contains a reference set of programs, e.g.:
   `hexdump`, `md5sum`, `echo`, `mount`, `umount`, `df`, `sync`, `mkfifo`,
   `mknod`,
 - storage: `mkext`, `mkeefs`, `mkflatfs` (file system formatters), `storinit`
-  (storage initialization),
+  (storage initialization), `iostat` (block device statistics), `fsbench`
+  (file system performance of directory, e.g. `fsbench -D /dev/sda1 /mnt`),
 - system tools: `initd`, `siminit`, `top`, `free`, `memmon`, `dmesg`, `lsmod`,
   `modprobe`, `uptime`, `uname`, `date`, `dstd` (daylight saving
   time), `time`, `perf`, `reboot`, `shutdown`,
@@ -426,6 +427,9 @@ test programs are executed in the shell and their `SUMMARY:` lines are checked:
 | `fstest: fatfs`  | `fstest` on FAT partition of temporary disk image, checked by `fsck.fat` after test |
 | `fstest: ext4fs` | `fstest` on ext4 partition of temporary disk image, checked by `e2fsck` after test |
 | `fstest: flatfs` | partition formatted by `mkflatfs`, then `fstest` |
+| `fsbench: flatfs` | `fsbench` (performance measurement) on flatfs partition: all measurements finished, device statistics, files removed; results with `--perf` |
+| `fstest: flatfs (async,cache)` | `fstest` on flatfs mounted with options `async` (file size written by close, flush and sync) and `cache=8` (write-through block cache) |
+| `fsbench: flatfs (async,cache)` | `fsbench` on flatfs mounted with options `async,cache=8` |
 | `fstest: eefs`   | partition formatted by `mkeefs`, then `fstest` |
 | `fstest: ext2 (mkext)` | partition formatted by `mkext -e 2`, then `fstest`, checked by `e2fsck` after test |
 | `fstest: ext3 (mkext)` | partition formatted by `mkext -e 3 -j` (journal), then `fstest`, checked by `e2fsck` after test |
