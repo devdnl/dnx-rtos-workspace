@@ -31,6 +31,8 @@ as host disk 0 and mounted by the siminit program in the /etc folder:
 
 Files:
     netmgr.conf  - network configuration used by the netmgr program when the
-                   simulator is started with the --tap <name> option,
+                   simulator is started with the --tap <name> option (network
+                   inet: sections [interface] and [IP], other networks:
+                   sections [interface:<name>] and [IP:<name>]),
     dns.conf     - DNS servers (one address per line, max 128 bytes), used
                    when the host routes traffic of the TAP interface (NAT).

@@ -33,6 +33,7 @@ Brief   Ping.
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -188,44 +189,73 @@ static void send_icmp_echo_packet(void)
 
 //==============================================================================
 /**
- * @brief  Receive ICMP reply packet.
+ * @brief  Receive ICMP reply packet of the last echo request. Other packets
+ *         (echo requests seen by raw socket on loopback interface, late
+ *         replies of previous requests, packets of other programs) are
+ *         skipped.
  */
 //==============================================================================
 static void recv_icmp_reply_packet(void)
 {
-        socket_set_recv_timeout(global->socket, 2000);
+        const u32_t TIMEOUT = 2000;
+        clock_t tstart = get_uptime_ms();
 
-        u8_t buf[sizeof(ip_header_t) + sizeof(icmp_packet_t)];
+        u8_t buf[sizeof(ip_header_t) + 40 + sizeof(icmp_packet_t)];
 
-        NET_INET_sockaddr_t from;
-
-        errno = 0;
-        int n = socket_recvfrom(global->socket, &buf, sizeof(buf), 0, &from, sizeof(from));
-        if (n > 0) {
-                ip_header_t *ip = cast(typeof(ip), buf);
-                icmp_packet_t *icmp = cast(typeof(icmp), ip->data);
-
-                if ((icmp->type == ICMP_ECHOREPLY) and (icmp->id == getpid())) {
-                        clock_t tref;
-                        memcpy(&tref, icmp->data, sizeof(tref));
-
-                        u32_t travel_time = get_uptime_ms() - tref;
-
-                        global->tmin = min(global->tmin, travel_time);
-                        global->tmax = max(global->tmax, travel_time);
-                        global->tsum += travel_time;
-
-                        global->packets_received++;
-
-                        printf("%u bytes from %s (%u.%u.%u.%u): icmp_seq=%u ttl=%u time=%lu ms\n", n,
-                                global->hostname, NET_INET_IPv4_a(global->hostname_addr.addr),
-                                NET_INET_IPv4_b(global->hostname_addr.addr),
-                                NET_INET_IPv4_c(global->hostname_addr.addr),
-                                NET_INET_IPv4_d(global->hostname_addr.addr), icmp->seqno, ip->ttl,
-                                travel_time);
+        for (;;) {
+                u32_t elapsed = get_uptime_ms() - tstart;
+                if (elapsed >= TIMEOUT) {
+                        printf("Request timeout for icmp_seq=%u\n", global->icmp_num);
+                        return;
                 }
-        } else {
-                perror("ICMP ECHO REPLY");
+
+                socket_set_recv_timeout(global->socket, TIMEOUT - elapsed);
+
+                NET_INET_sockaddr_t from;
+
+                errno = 0;
+                int n = socket_recvfrom(global->socket, &buf, sizeof(buf), 0, &from, sizeof(from));
+                if (n <= 0) {
+                        if (errno == ETIME || errno == EAGAIN || errno == 0) {
+                                printf("Request timeout for icmp_seq=%u\n", global->icmp_num);
+                        } else {
+                                perror("ICMP ECHO REPLY");
+                        }
+                        return;
+                }
+
+                ip_header_t *ip = cast(typeof(ip), buf);
+                size_t ihl = (ip->version_ihl & 0x0F) * 4;
+                if ((ihl < sizeof(ip_header_t)) || (cast(size_t, n) < ihl + 8 + sizeof(clock_t))) {
+                        continue;
+                }
+
+                icmp_packet_t *icmp = cast(typeof(icmp), &buf[ihl]);
+
+                if ((icmp->type != ICMP_ECHOREPLY) || (icmp->id != cast(u16_t, getpid())) ||
+                        (icmp->seqno != cast(u16_t, global->icmp_num)) ||
+                        (from.addr != global->hostname_addr.addr)) {
+                        continue;
+                }
+
+                clock_t tref;
+                memcpy(&tref, icmp->data, sizeof(tref));
+
+                u32_t travel_time = get_uptime_ms() - tref;
+
+                global->tmin = min(global->tmin, travel_time);
+                global->tmax = max(global->tmax, travel_time);
+                global->tsum += travel_time;
+
+                global->packets_received++;
+
+                printf("%u bytes from %s (%u.%u.%u.%u): icmp_seq=%u ttl=%u time=%lu ms\n",
+                        n - ihl + sizeof(ip_header_t), global->hostname,
+                        NET_INET_IPv4_a(global->hostname_addr.addr),
+                        NET_INET_IPv4_b(global->hostname_addr.addr),
+                        NET_INET_IPv4_c(global->hostname_addr.addr),
+                        NET_INET_IPv4_d(global->hostname_addr.addr), icmp->seqno, ip->ttl, travel_time);
+                return;
         }
 }
 
@@ -305,15 +335,18 @@ int main(int argc, char *argv[])
         ioctl(fileno(stdin), IOCTL_VFS__DEFAULT_RD_MODE);
 
         u32_t work_time = get_uptime_ms() - start_time;
-        u32_t loss = ((global->packets_sent - global->packets_received) * 100) / global->packets_sent;
+        u32_t sent = max(global->packets_sent, 1U);
+        u32_t loss = ((global->packets_sent - global->packets_received) * 100) / sent;
 
         printf("--- %s ping statistics ---\n", global->hostname);
 
         printf("%u packets transmitted, %u received, %u%% packet loss, time %lu ms\n", global->packets_sent,
                 global->packets_received, loss, work_time);
 
-        printf("rtt min/avg/max = %lu/%lu/%lu ms\n", global->tmin, global->tsum / global->packets_received,
-                global->tmax);
+        if (global->packets_received) {
+                printf("rtt min/avg/max = %lu/%lu/%lu ms\n", global->tmin,
+                        global->tsum / global->packets_received, global->tmax);
+        }
 
 cleanup:
         socket_close(global->socket);

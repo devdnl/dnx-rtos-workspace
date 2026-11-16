@@ -411,7 +411,9 @@ make run-sim SIM_OPTS="--hostfs host=."
   `--uart 0=pty` moves the system console to PTY,
 - `--tap` connects the `ETH` driver (`/dev/eth`) to the host TAP interface,
   `siminit` starts `netmgr` with `/etc/netmgr.conf` (static address
-  192.168.77.2/24, gateway 192.168.77.1, file `app-romfs/netmgr.conf`),
+  192.168.77.2/24, gateway 192.168.77.1, file `app-romfs/netmgr.conf`;
+  additional networks are defined by sections `[interface:<name>]` and
+  `[IP:<name>]`, e.g. `inet1` on W5500 of the test board),
 - `--board` loads the board model – Lua script which describes hardware
   connected to the microcontroller (e.g. LEDs, buttons, connections between
   GPIO pins, I2C devices: EEPROM, I/O expander, temperature sensor, SPI
@@ -475,6 +477,12 @@ test programs are executed in the shell and their `SUMMARY:` lines are checked:
 | `board: i2cee`   | I2CEE driver and eefs on 24C256 model (`sim-env/tests/i2cee.lua`) |
 | `board: spi`     | SPI test (`sim-env/tests/spi.lua`): CS selection, bit order, mode, 74HC595 |
 | `board: spiee`   | SPIEE driver and eefs on 25LC256 model (`sim-env/tests/spiee.lua`) |
+| `board: max310x` | MAX310X driver on MAX3107/3108/3109 models (SPI, I2C, two UARTs of MAX3109): loopback, buffers of driver, serial lines to UARTs, baud rates, flow control, invalid configuration, chip detection, release (`sim-env/tests/max310x.lua`) |
+| `board: norflash` | NORFLASH driver on NOR flash models (W25Q16 with SFDP, MX25L8005 without SFDP in deep power-down, W25Q256 with 4-byte address, protected SST26VF016): detection, program without erase, skipped identical data, unaligned writes, unprotect, flatfs (`sim-env/tests/norflash.lua`) |
+| `board: onewire` | ONEWIRE driver on 1-Wire master model on UART:6 with DS18B20 sensors (`sim-env/tests/onewire.lua`, luadnx `dnx.onewire`): reset, SEARCH ROM, ALARM SEARCH, MATCH ROM, strong pull-up of parasite sensor, hot-plug, shorted line |
+| `board: w5500`   | W5500 driver (MACRAW) on W5500 model connected to Ethernet segment `lan2` of the simulator (`sim-env/tests/w5500.lua`, luadnx `dnx.eth`): ARP, ICMP and UDP echo of netdev model, RX memory wrap, MAC filter, link state, restart |
+| `board: inet2`   | second network `inet1` of the TCP/IP stack on W5500 (segment `lan2`) next to `inet` on `/dev/eth`, both configured by `netmgr` (`sim-env/tests/inet2.lua`): network configured when its interface file is created, ping and TCP echo through both interfaces, routing by destination, link loss and recovery of W5500 |
+| `board: adc`     | ADC driver of the simulator, voltages of channels set by the board (`sim-env/tests/adc.lua`, luadnx `dnx.adc`): read of file, resolution, oversampling, sample time, reference voltage, temperature sensor |
 | `board: sdcard`  | SDSPI driver on SD card models (SDHC, SD v1), ext2 created by `mkext` (`sim-env/tests/sdcard.lua`) |
 | `fstest: ext2 on sdspi` | `fstest` on ext2 file system of the SD card model (SDSPI driver) |
 | `board: panel`   | board panel protocol: socket of `tools/simpanel.py`, output, input and control signals (`sim-env/tests/panel.lua`), LCD frame of `LTDC` driver and touch read from FT5336 model (`sim-env/tests/lcd.lua`) |

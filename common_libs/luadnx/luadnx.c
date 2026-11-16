@@ -57,6 +57,9 @@ static const luaL_Reg preload_libs[] = {
         {"dnx.sys", luaopen_dnx_sys},
         {"dnx.proc", luaopen_dnx_proc},
         {"dnx.spi", luaopen_dnx_spi},
+        {"dnx.onewire", luaopen_dnx_onewire},
+        {"dnx.eth", luaopen_dnx_eth},
+        {"dnx.adc", luaopen_dnx_adc},
         {NULL, NULL},
 };
 
@@ -73,9 +76,10 @@ static const luaL_Reg preload_libs[] = {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief  Open 'dnx' module. Module contains sub-modules 'sys', 'proc' and
- *         'spi' that are also available directly by require("dnx.sys"),
- *         require("dnx.proc") and require("dnx.spi").
+ * @brief  Open 'dnx' module. Module contains sub-modules 'sys', 'proc', 'spi',
+ *         'onewire', 'eth' and 'adc' that are also available directly by
+ *         require("dnx.sys"), require("dnx.proc"), require("dnx.spi"),
+ *         require("dnx.onewire"), require("dnx.eth") and require("dnx.adc").
  *
  * @param  L            Lua state
  *
@@ -94,6 +98,15 @@ int luaopen_dnx(lua_State *L)
 
         luaL_requiref(L, "dnx.spi", luaopen_dnx_spi, 0);
         lua_setfield(L, -2, "spi");
+
+        luaL_requiref(L, "dnx.onewire", luaopen_dnx_onewire, 0);
+        lua_setfield(L, -2, "onewire");
+
+        luaL_requiref(L, "dnx.eth", luaopen_dnx_eth, 0);
+        lua_setfield(L, -2, "eth");
+
+        luaL_requiref(L, "dnx.adc", luaopen_dnx_adc, 0);
+        lua_setfield(L, -2, "adc");
 
         lua_pushliteral(L, LUADNX_VERSION);
         lua_setfield(L, -2, "_VERSION");

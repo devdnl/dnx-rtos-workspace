@@ -84,6 +84,9 @@ extern int luaopen_dnx(lua_State *L);
 extern int luaopen_dnx_sys(lua_State *L);
 extern int luaopen_dnx_proc(lua_State *L);
 extern int luaopen_dnx_spi(lua_State *L);
+extern int luaopen_dnx_onewire(lua_State *L);
+extern int luaopen_dnx_eth(lua_State *L);
+extern int luaopen_dnx_adc(lua_State *L);
 extern void luadnx_openlibs(lua_State *L);
 
 /*==============================================================================

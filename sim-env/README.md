@@ -252,6 +252,24 @@ cat /dev/ttyS1
 `tests/uart.lua` tests UARTs of `boards/test.lua` (echo with configuration
 query on `UART:2`, GPS on `UART:3`).
 
+### adc
+Voltages of ADC channels read by the system (`ADC` driver of the simulator:
+`ADC:0`..`ADC:3`, channels 0..15, 12 bits, reference 3.3 V; internal channels
+`"temp"` (temperature sensor: 0.76 V at 25 °C, 2.5 mV/°C) and `"vref"` (1.21
+V)). A voltage is read at each conversion, so models can change it at any
+time (e.g. by a timer or GPIO event):
+```lua
+adc.set("ADC:0", 3, 1.65)                    -- channel 3: 1.65 V
+adc.set_temperature("ADC:0", 40)             -- temperature of the chip
+print(adc.get("ADC:0", "vref"))
+```
+In dnx RTOS (position of the device file / 2 is a channel, 16-bit samples;
+luadnx `dnx.adc.read()`, `dnx.adc.temperature()`, `dnx.adc.info()`):
+```
+modprobe -i ADC 0 0 /dev/adc0 -c resolution=12,oversampling=4
+```
+`tests/adc.lua` tests the driver with `boards/test.lua`.
+
 ### eth
 Ethernet models of the board script are connected to the Ethernet interface
 of the system (`ETH` driver, `/dev/eth`, configured by `netmgr`, see
@@ -275,6 +293,11 @@ eth.send(frame, dev)                          -- frame of model (14..1514 bytes)
                                               -- not delivered back to dev
 eth.detach(dev)
 ```
+Models can be attached to separate segments (hubs): `eth.attach(dev,
+"lan2")`. Only the default segment `"lan"` is connected to the system interface
+`/dev/eth` and the TAP interface, other segments connect models only, e.g. the
+W5500 model (an Ethernet interface of the system) with device models of other
+network (`netdev.new{ip = ..., segment = "lan2"}`).
 Device models usually use `models/netdev.lua`, a minimal IPv4 stack in Lua:
 ARP, ICMP echo (ping), UDP (unicast and broadcast) and TCP (client and
 server, retransmissions, window of receiver, no fragmentation and congestion
@@ -314,6 +337,91 @@ nc -w 5 -h -s hello 192.168.77.50 7           # TCP echo of test board
 Host with `--tap tap0` (TAP interface 192.168.77.1/24, see `app-romfs/netmgr.conf`):
 `ping 192.168.77.51`, `nc -u -l 5000`. `tests/net.lua` tests the network with
 `boards/test.lua` (ping, UDP, TCP in both directions).
+
+### MAX310x
+`models/max310x.lua` is the UART with 128-word FIFOs connected by SPI (mode 0
+or 3) or I2C: MAX3107, MAX3108 (1 UART) and MAX3109 (2 UARTs, UART 1 at I2C
+address lower by 0x10, extended registers with revision ID). FIFOs with
+transmission time of characters, baud rate generator (DIV, fraction, 2x and
+4x modes) with clock option of the model, line format (LCR), loopback,
+disabled transmitter and receiver, soft reset, RST pin, automatic RTS/CTS flow
+control. Serial lines of UARTs are connected to UARTs of the system (data of
+other format are unreadable) or handled by the board:
+```lua
+local max310x = require("models.max310x")
+
+local chip = max310x.new{type = "max3109", clock = 3686400, reset = "PA30"}:attach("SPI:1", "PA29")
+chip:uart(0):connect_uart("UART:4")           -- /dev/ttyS4 of the system
+chip:uart(1):on_transmit(function(data) print("TX", data) end)
+chip:uart(1):receive("hello")                 -- data received by UART 1
+print(chip:uart(0):format().baud)             -- baud rate set by the driver
+```
+In dnx RTOS (driver `MAX310X`, minor number is UART of the chip):
+```
+modprobe -i SPI 1 11 /dev/spi-max3109 -c cs_port=0,cs_pin=29
+modprobe -i MAX310X 0 0 /dev/ttyM0 -c path=/dev/spi-max3109,chip=max3109,clock=3686400,baud=115200
+modprobe -i MAX310X 0 1 /dev/ttyM1 -c baud=9600
+```
+The IRQ pin of the chip is not modeled (the IRQ driver is not in the
+simulator), so the driver works periodically. `tests/max310x.lua` tests the
+driver with `boards/test.lua` (MAX3107, MAX3108 and MAX3109 on SPI and I2C).
+
+### NOR flash
+`models/norflash.lua` is a serial NOR flash memory (SPI mode 0 or 3): JEDEC
+ID, SFDP table (JEDEC basic flash parameters: size, 4 KiB erase), READ and
+FAST READ (3- and 4-byte address), page program (only clears bits, roll-over
+in page, program time), 4 KiB and 64 KiB erase, chip erase, status register
+with WIP and WEL, block protection set at power-up (whole memory protected,
+cleared by WRSR or global unlock 0x98), deep power-down. Memory is stored
+sparsely (only programmed sectors), so big memories can be simulated, and
+the number of erases and programs is counted:
+```lua
+local norflash = require("models.norflash")
+
+local flash = norflash.new{type = "w25q16"}:attach("SPI:0", "PB3")
+norflash.new{type = "mx25l8005", power_down = true}:attach("SPI:0", "PB4")
+print(flash:stats())                          -- sector erases, page programs
+```
+In dnx RTOS (driver `NORFLASH`, block device, block size 4 KiB):
+```
+modprobe -i SPI 0 17 /dev/spi-nor-a -c cs_port=1,cs_pin=3
+modprobe -i NORFLASH 0 0 /dev/flash0 -c path=/dev/spi-nor-a
+mkflatfs /dev/flash0 64
+```
+`tests/norflash.lua` tests the driver with `boards/test.lua`.
+
+### W5500
+`models/w5500.lua` is the WIZnet W5500 Ethernet controller (SPI mode 0 or 3,
+variable data length): common and socket registers, socket 0 in MACRAW mode
+(OPEN, CLOSE, SEND, RECV commands, TX/RX memory with pointers and wrap, 2-byte
+length header of received frames, MAC filter), PHY configuration with link
+state, software reset and RSTn pin. The hardware TCP/IP stack is not modeled.
+The chip is connected to the Ethernet of the simulator (`eth.attach()`,
+option `segment`), so it talks to other device models (netdev):
+```lua
+local w5500 = require("models.w5500")
+
+local chip = w5500.new{reset = "PB10", segment = "lan2"}:attach("SPI:0", "PB9")
+chip:set_link(false)
+```
+In dnx RTOS (driver `W5500`, Ethernet interface as `ETH` and `ENC28J60`):
+```
+modprobe -i SPI 0 22 /dev/spi-w5500 -c cs_port=1,cs_pin=9
+modprobe -i W5500 0 0 /dev/eth1 -c spi_path=/dev/spi-w5500,reset_port=1,reset_pin=10
+```
+The interface can be used by the TCP/IP stack (`path = /dev/eth1` in
+`netmgr.conf`, or as a second network next to `inet`), or by luadnx `dnx.eth`
+(raw frames, `tests/w5500.lua`). Second network of the TCP/IP stack is defined
+in `netmgr.conf` by sections `[interface:<name>]` and `[IP:<name>]` (keys as
+in `[interface]` and `[IP]`; `app-romfs/netmgr.conf` defines `inet1` on
+`/dev/eth-w5500`, configured by netmgr when `tests/inet2.lua` creates the
+device), or manually:
+```
+ifconfig inet1 add=inet:/dev/eth1
+ifconfig inet1 up=192.168.78.2,255.255.255.0,0.0.0.0
+```
+Both networks work at the same time, the interface is selected by the
+destination address (routing of lwIP), not by the network of the socket.
 
 ### MCP23S17
 `models/mcp23s17.lua` is the 16-bit I/O expander with SPI (mode 0 or 3): all
@@ -400,6 +508,31 @@ contains a Lua implementation: reset, byte and bit transfers, triplets,
 search by Maxim AN187, MATCH ROM, conversion, scratchpad with CRC):
 ```
 modprobe -i I2C 0 1 /dev/i2c-ow -c address=0x18
+```
+
+`models/onewire_uart.lua` is a 1-Wire master on UART (TX and RX connected to
+the line by an open drain buffer, or UART in single wire mode): every
+character sent by the system is received back with the state of the line, a
+character at baud rate below 38400 is the reset pulse (0xF0 is changed by the
+presence pulse), at higher baud rate a time slot (0xFF: write 1 / read slot,
+0x00: write 0 slot). Optional GPIO pin enables strong pull-up (power of
+parasite devices):
+```lua
+local onewire_uart = require("models.onewire_uart")
+
+local owu = onewire_uart.new{spu = "PB8"}:attach("UART:6")
+ds18b20.new{serial = 0x0000000A0003, parasite = true}:attach(owu)
+```
+In dnx RTOS the bus is handled by the `ONEWIRE` driver (reset, search,
+transactions by ioctl, luadnx `dnx.onewire`; `tests/onewire.lua`):
+```
+modprobe -i ONEWIRE 0 0 /dev/ow0 -c path=/dev/ttyS6,spu_port=1,spu_pin=8
+```
+```lua
+local ow = require("dnx.onewire")
+for _, rom in ipairs(ow.search("/dev/ow0")) do print(rom) end
+ow.transfer("/dev/ow0", nil, "\x44", 0, 750)            -- CONVERT T, strong pull-up
+local sp = ow.transfer("/dev/ow0", rom, "\xBE", 9)      -- READ SCRATCHPAD
 ```
 
 ## Board panel

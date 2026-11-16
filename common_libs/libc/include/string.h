@@ -818,9 +818,27 @@ extern int strncasecmp(const char *s1, const char *s2, size_t n);
 //==============================================================================
 extern const char *strerror(int errnum);
 
-/*==============================================================================
-  Exported inline functions
-==============================================================================*/
+//==============================================================================
+/**
+ * @brief Function parses a string into a sequence of tokens.
+ *
+ * The strtok() function parses a string into a sequence of tokens. On the first
+ * call to strtok() the string to be parsed should be specified in str. In each
+ * subsequent call that should parse the same string, str should be NULL.
+ *
+ * @param str           string to parse
+ * @param delim         delimiter string
+ * @param saveptr       saved pointer
+ *
+ * @return Each call to strtok() returns a pointer to a null-terminated string
+ *         containing the next token. This string does not include the delimiting
+ *         byte. If no more tokens are found, strtok() returns NULL.
+ *
+ * @see errno, perror()
+ */
+//==============================================================================
+extern char *strtok_r(char *__restrict str, const char *__restrict delim, char **__restrict saveptr);
+
 //==============================================================================
 /**
  * @brief The strndup() function is used to duplicate a string of size n.
@@ -849,6 +867,9 @@ extern const char *strerror(int errnum);
 //==============================================================================
 extern char *strndup(const char *s, size_t n);
 
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
 //==============================================================================
 /**
  * @brief The strdup() function is used to duplicate a string.

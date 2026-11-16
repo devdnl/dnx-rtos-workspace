@@ -1,7 +1,7 @@
 --[[----------------------------------------------------------------------------
   Board used by automatic tests (tools/simtest.py, test programs tests/gpio.lua,
   tests/i2c.lua, tests/i2cee.lua, tests/spi.lua, tests/spiee.lua,
-  tests/sdcard.lua, tests/ds2482.lua, tests/mcp23s17.lua, tests/uart.lua,
+  tests/sdcard.lua, tests/norflash.lua, tests/onewire.lua, tests/w5500.lua, tests/inet2.lua, tests/adc.lua, tests/ds2482.lua, tests/mcp23s17.lua, tests/uart.lua,
   tests/net.lua).
 
   GPIO connections (system outputs -> system inputs):
@@ -28,6 +28,9 @@
     0x50  24C256 (I2CEE driver and eefs)
     0x51  24C32 (raw access tests)
   I2C:1:
+    0x2C  MAX3107, chip 1 (crystal 1.8432 MHz, tests/max310x.lua)
+    0x2D  MAX3107 with wrong revision ID 0x00 (chip detection test)
+    0x6C  MAX3109, chip 3 (UART 1 at 0x5C, external clock 3.6864 MHz)
     0x50  24C02
 
   UART (UART:1 /dev/ttyS1 is used by tools/simtest.py --uart 1=<pty>):
@@ -35,6 +38,12 @@
                       configuration: "<baud> <parity> <stop bits>\n"
     UART:3 /dev/ttyS3  NMEA GPS (38400 8N1, fix every 200 ms, start time
                       2026-01-01 12:00:00 UTC, 52.2297 N 21.0122 E 100 m)
+    UART:4 /dev/ttyS4  serial line of MAX3109 (chip 0) UART 0 (SPI:1)
+    UART:5 /dev/ttyS5  serial line of MAX3109 (chip 0) UART 1 (SPI:1)
+    UART:6 /dev/ttyS6  1-Wire master (ONEWIRE driver, tests/onewire.lua): DS18B20
+                      sensors 1..3 (3: parasite power), strong pull-up <- PB8;
+                      control commands "owu temp <n> <C>", "owu short <0|1>",
+                      "owu attach <n>", "owu detach <n>"
 
   Ethernet (network of the simulator 192.168.77.0/24, system 192.168.77.2),
   tests/net.lua:
@@ -63,8 +72,29 @@
     PA7   25LC256 EEPROM (SPIEE driver)
     PA15  SD card SDHC 16 MiB (SDSPI driver)
     PA17  SD card SD v1 2 MiB (SDSPI driver)
+    PB3   W25Q16 NOR flash 2 MiB, SFDP (NORFLASH driver, tests/norflash.lua)
+    PB4   MX25L8005 NOR flash 1 MiB, no SFDP, deep power-down at start
+    PB5   W25Q256 NOR flash 32 MiB, 4-byte address instructions
+    PB6   SST26VF016 NOR flash 2 MiB, block protection set at power-up
+    PB7   no device (NOR flash detection test)
+    PB9   W5500 Ethernet controller (W5500 driver, tests/w5500.lua,
+          tests/inet2.lua), RSTn <- PB10, connected to Ethernet segment "lan2"
+          (192.168.78.0/24, separated from the network of /dev/eth):
+          192.168.78.50 netdev (ping, UDP echo port 7 in upper case, TCP echo
+          port 7), 192.168.78.51 netdev (ping); control commands "w5500 link
+          <0|1>", "w5500 stats" ("<sent> <received> <dropped>"), "net2 ping
+          <ip>" (ping from 192.168.78.50), "net2 pingres"
+          control command "nor <n> stats" (n: 3..6 = PB3..PB6): "<sector
+          erases> <page programs>"
   SPI:1:
     PA16  74HC595 (CS = RCLK), outputs QA..QH -> PA20..PA27
+    PA29  MAX3109, chip 0 (external clock 3.6864 MHz), RST <- PA30, serial
+          lines of UARTs -> UART:4, UART:5, tests/max310x.lua; control commands
+          "max310x <chip> <uart> format" ("<baud> <data bits> <parity> <stop
+          bits>" or "none"), "max310x <chip> <uart> reg <addr>" (register
+          value), "max310x <chip> <uart> cts <0|1>" (CTS input), "max310x
+          <chip> <uart> rts" (RTS output: 0|1)
+    PA31  MAX3108, chip 2 (external clock 3.6864 MHz)
   SPI:2 (/dev/spi-none: no devices on its CS):
     PB2   MCP23S17 #0 (address 0) and #1 (address 1) on one CS, RESET <- PC16,
           tests/mcp23s17.lua:
@@ -81,6 +111,10 @@
           <y> <0|1>", "eve skipped" (swaps without render), "eve shown" (LCD
           shown in the panel)
 
+  ADC (ADC driver, tests/adc.lua): ADC:0 channels 0..3: 0 V, 1.65 V, 3.3 V,
+  1.0 V, ADC:1 channel 0: 0.5 V, temperature sensors 25 C; control commands
+  "adc <n> <channel> <volts>", "adc <n> temp <C>"
+
   Panel (tools/simtest.py, test of panel protocol, tests/panel.lua):
     P_OUT  shows PA18 (system output)
     P_IN   drives PA19 (system input)
@@ -95,6 +129,7 @@ local pcf8574 = require("models.pcf8574")
 local lm75 = require("models.lm75")
 local spiee = require("models.25xx")
 local sdcard = require("models.sdcard")
+local norflash = require("models.norflash")
 local hc595 = require("models.74hc595")
 local ft5336 = require("models.ft5336")
 local st7789 = require("models.st7789")
@@ -105,6 +140,9 @@ local nmea_gps = require("models.nmea_gps")
 local netdev = require("models.netdev")
 local udp_sensor = require("models.udp_sensor")
 local bt817 = require("models.bt817")
+local max310x = require("models.max310x")
+local onewire_uart = require("models.onewire_uart")
+local w5500 = require("models.w5500")
 
 gpio.connect("PA0", "PA8", true)
 gpio.connect("PA1", "PA9")
@@ -521,6 +559,103 @@ spiee.new({ type = "25lc256" }):attach("SPI:0", "PA7")
 sdcard.new({ type = "sdhc", size = 16 * 1024 * 1024 }):attach("SPI:0", "PA15")
 sdcard.new({ type = "sdv1", size = 2 * 1024 * 1024 }):attach("SPI:0", "PA17")
 
+-- UART:6: 1-Wire master on UART (ONEWIRE driver), tests/onewire.lua
+local owu = onewire_uart.new({ spu = "PB8" }):attach("UART:6")
+local owu_sensors = {
+    ds18b20.new({ serial = 0x0000000A0001, temperature = 23.5 }),
+    ds18b20.new({ serial = 0x8000000A0002, temperature = -5.25 }),
+    ds18b20.new({ serial = 0x0000000A0003, temperature = 60.125, parasite = true }),
+}
+for _, s in ipairs(owu_sensors) do
+    s:attach(owu)
+end
+OW_COMMANDS.owu = function(what, a, b)
+    local s = owu_sensors[tonumber(a)]
+    if what == "temp" and s then
+        s:set_temperature(tonumber(b))
+        return "ok"
+    elseif what == "short" then
+        owu.ow:set_short(a == "1")
+        return "ok"
+    elseif what == "attach" and s then
+        s:attach(owu)
+        return "ok"
+    elseif what == "detach" and s then
+        s:detach()
+        return "ok"
+    end
+end
+
+-- ADC (ADC driver), tests/adc.lua
+local function adc_init()
+    for ch, v in pairs({ [0] = 0, 1.65, 3.3, 1.0 }) do
+        adc.set("ADC:0", ch, v)
+    end
+    adc.set("ADC:1", 0, 0.5)
+end
+adc_init()
+OW_COMMANDS.adc = function(n, ch, v)
+    local name = "ADC:" .. tostring(n)
+    if ch == "temp" then
+        adc.set_temperature(name, tonumber(v))
+    elseif ch == "init" then
+        adc_init()
+    else
+        adc.set(name, tonumber(ch), tonumber(v))
+    end
+    return "ok"
+end
+
+-- W5500 Ethernet controller (W5500 driver), tests/w5500.lua, tests/inet2.lua: Ethernet
+-- segment "lan2" (192.168.78.0/24) with netdev models 192.168.78.50 (ping, UDP echo port 7
+-- in upper case, TCP echo port 7) and 192.168.78.51 (ping)
+local eth_w5500 = w5500.new({ reset = "PB10", segment = "lan2" }):attach("SPI:0", "PB9")
+local net2 = netdev.new({ ip = "192.168.78.50", segment = "lan2" }):attach()
+netdev.new({ ip = "192.168.78.51", segment = "lan2" }):attach()
+local net2_udp = net2:udp(7)
+net2_udp:on_receive(function(data, ip, port)
+    net2_udp:send(ip, port, data:upper())
+end)
+net2:tcp_listen(7, function(conn)
+    conn:on_data(function(data)
+        conn:send(data)
+    end)
+end)
+local net2_ping = "none"
+OW_COMMANDS.net2 = function(what, a)
+    if what == "ping" then
+        net2_ping = "pending"
+        net2:ping(a, function(ok, ms)
+            net2_ping = ok and string.format("ok %.0f", ms) or "fail"
+        end)
+        return "ok"
+    elseif what == "pingres" then
+        return net2_ping
+    end
+end
+OW_COMMANDS.w5500 = function(what, a)
+    if what == "link" then
+        eth_w5500:set_link(a == "1")
+        return "ok"
+    elseif what == "stats" then
+        return string.format("%d %d %d", eth_w5500:stats())
+    end
+end
+
+-- NOR flash memories (NORFLASH driver), tests/norflash.lua
+local nor_chips = {
+    [3] = norflash.new({ type = "w25q16" }):attach("SPI:0", "PB3"),
+    [4] = norflash.new({ type = "mx25l8005", power_down = true }):attach("SPI:0", "PB4"),
+    [5] = norflash.new({ type = "w25q256" }):attach("SPI:0", "PB5"),
+    [6] = norflash.new({ type = "sst26vf016" }):attach("SPI:0", "PB6"),
+}
+OW_COMMANDS.nor = function(n, what)
+    local chip = nor_chips[tonumber(n)]
+    if chip and what == "stats" then
+        return string.format("%d %d", chip:stats())
+    end
+end
+
 -- SPI:2: two MCP23S17 on one CS (hardware addresses 0 and 1)
 local mcp0 = mcp23s17.new({ address = 0, int_a = "PC17", int_b = "PC18", reset = "PC16" }):attach("SPI:2", "PB2")
 local mcp1 = mcp23s17.new({ address = 1, int_a = "PC18", int_b = "PC19", reset = "PC16" }):attach("SPI:2", "PB2")
@@ -540,6 +675,38 @@ mcp1_wire()
 
 -- SPI:1
 hc595.new({ outputs = { "PA20", "PA21", "PA22", "PA23", "PA24", "PA25", "PA26", "PA27" } }):attach("SPI:1", "PA16")
+
+-- MAX310x: chips of tests/max310x.lua, chip with wrong revision ID
+local max310x_chips = {
+    [0] = max310x.new({ type = "max3109", clock = 3686400, reset = "PA30" }):attach("SPI:1", "PA29"),
+    [1] = max310x.new({ type = "max3107", clock = 1843200 }):attach("I2C:1", 0x2C),
+    [2] = max310x.new({ type = "max3108", clock = 3686400 }):attach("SPI:1", "PA31"),
+    [3] = max310x.new({ type = "max3109", clock = 3686400 }):attach("I2C:1", 0x6C),
+}
+max310x.new({ revid = 0x00 }):attach("I2C:1", 0x2D)
+if uart.available("UART:4") then
+    max310x_chips[0]:uart(0):connect_uart("UART:4")
+end
+if uart.available("UART:5") then
+    max310x_chips[0]:uart(1):connect_uart("UART:5")
+end
+
+OW_COMMANDS.max310x = function(c, n, what, a)
+    local chip = assert(max310x_chips[tonumber(c)], "max310x: unknown chip")
+    local u = chip:uart(tonumber(n))
+    if what == "format" then
+        local f = u:format()
+        return f and string.format("%.0f %d %s %d", f.baud, f.data_bits, f.parity, f.stop_bits) or "none"
+    elseif what == "reg" then
+        return tostring(u:register(assert(tonumber(a))))
+    elseif what == "cts" then
+        u:set_cts(a == "1")
+    elseif what == "rts" then
+        return u:rts() and "1" or "0"
+    else
+        error("max310x: unknown command " .. tostring(what))
+    end
+end
 
 -- panel
 panel.output("P_OUT", "PA18")

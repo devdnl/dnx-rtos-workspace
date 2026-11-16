@@ -941,8 +941,9 @@ class TestRunner:
             self.check_uart_config()
 
         # board model (before fstest on hostfs, test files are removed after test)
-        board_tests = ("board: gpio", "board: i2c", "board: i2cee", "board: ds2482", "board: spi", "board: spiee",
-                       "board: mcp23s17", "board: uart", "board: net", "board: bt817",
+        board_tests = ("board: gpio", "board: adc", "board: i2c", "board: i2cee", "board: ds2482",
+                       "board: onewire", "board: spi", "board: spiee", "board: norflash", "board: mcp23s17",
+                       "board: uart", "board: max310x", "board: net", "board: w5500", "board: inet2", "board: bt817",
                        "board: sdcard", "fstest: ext2 on sdspi", "board: panel")
         if args.board:
             # Ethernet models of the board: netmgr configures the network in background, its
@@ -957,16 +958,22 @@ class TestRunner:
                 sim.read(0.5)
 
             self.summary_test(sim, "board: gpio", "/host/sim-env", "lua gpio.lua", DEFAULT_TIMEOUT)
+            self.summary_test(sim, "board: adc", "/host/sim-env", "lua adc.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: i2c", "/host/sim-env", "lua i2c.lua", DEFAULT_TIMEOUT)
 
             self.summary_test(sim, "board: i2cee", "/host/sim-env", "lua i2cee.lua", FSTEST_TIMEOUT)
             self.summary_test(sim, "board: ds2482", "/host/sim-env", "lua ds2482.lua", DEFAULT_TIMEOUT)
+            self.summary_test(sim, "board: onewire", "/host/sim-env", "lua onewire.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: mcp23s17", "/host/sim-env", "lua mcp23s17.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: uart", "/host/sim-env", "lua uart.lua", DEFAULT_TIMEOUT)
+            self.summary_test(sim, "board: max310x", "/host/sim-env", "lua max310x.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: net", "/host/sim-env", "lua net.lua", DEFAULT_TIMEOUT)
+            self.summary_test(sim, "board: w5500", "/host/sim-env", "lua w5500.lua", DEFAULT_TIMEOUT)
+            self.summary_test(sim, "board: inet2", "/host/sim-env", "lua inet2.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: bt817", "/host/sim-env", "lua bt817.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: spi", "/host/sim-env", "lua spi.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: spiee", "/host/sim-env", "lua spiee.lua", FSTEST_TIMEOUT)
+            self.summary_test(sim, "board: norflash", "/host/sim-env", "lua norflash.lua", FSTEST_TIMEOUT)
             self.summary_test(sim, "board: sdcard", "/host/sim-env", "lua sdcard.lua", FSTEST_TIMEOUT)
 
             # SD card (SDSPI driver) formatted by sdcard.lua

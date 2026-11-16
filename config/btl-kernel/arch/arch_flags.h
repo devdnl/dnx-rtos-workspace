@@ -138,75 +138,75 @@
 #         end
 #     end
 #
-#     uC.PERIPH["STM32F301C6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART"}
-#     uC.PERIPH["STM32F301C8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART"}
-#     uC.PERIPH["STM32F301K6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART"}
-#     uC.PERIPH["STM32F301K8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART"}
-#     uC.PERIPH["STM32F301R6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART"}
-#     uC.PERIPH["STM32F301R8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART"}
-#     uC.PERIPH["STM32F302C6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302C8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302CBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302CCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302K6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302K8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302R6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302R8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302RBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302RCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302RDxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302RExx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302VBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302VCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302VDxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302VExx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302ZDxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F302ZExx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303C6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303C8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303CBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303CCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303K6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303K8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303R6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303R8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303RBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303RCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303RDxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303RExx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303VBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303VCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303VDxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303VExx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303ZDxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F303ZExx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F318C8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART"}
-#     uC.PERIPH["STM32F318K8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART"}
-#     uC.PERIPH["STM32F328C8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F334C4xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F334C6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F334C8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F334K4xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F334K6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F334K8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F334R6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F334R8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F358CCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F358RCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F358VCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F373C8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F373CBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F373CCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F373R8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F373RBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F373RCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F373V8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F373VBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F373VCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F378CCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F378RCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F378VCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
-#     uC.PERIPH["STM32F398VExx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN"}
+#     uC.PERIPH["STM32F301C6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "ADC"}
+#     uC.PERIPH["STM32F301C8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "ADC"}
+#     uC.PERIPH["STM32F301K6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "ADC"}
+#     uC.PERIPH["STM32F301K8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "ADC"}
+#     uC.PERIPH["STM32F301R6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "ADC"}
+#     uC.PERIPH["STM32F301R8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "ADC"}
+#     uC.PERIPH["STM32F302C6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302C8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302CBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302CCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302K6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302K8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302R6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302R8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302RBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302RCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302RDxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302RExx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302VBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302VCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302VDxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302VExx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302ZDxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F302ZExx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303C6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303C8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303CBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303CCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303K6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303K8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303R6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303R8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303RBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303RCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303RDxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303RExx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303VBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303VCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303VDxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303VExx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303ZDxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F303ZExx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F318C8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "ADC"}
+#     uC.PERIPH["STM32F318K8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "ADC"}
+#     uC.PERIPH["STM32F328C8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F334C4xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F334C6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F334C8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F334K4xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F334K6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F334K8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F334R6xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F334R8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F358CCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F358RCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F358VCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F373C8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F373CBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F373CCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F373R8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F373RBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F373RCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F373V8xx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F373VBxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F373VCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F378CCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F378RCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F378VCxx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
+#     uC.PERIPH["STM32F398VExx"]={"GPIO", "CLK", "I2C", "IRQ", "DMA", "PWM", "UART", "CAN", "ADC"}
 # end
 #
 # if uC.ARCH == "stm32f4" then
@@ -219,155 +219,155 @@
 #         end
 #     end
 #
-#     uC.PERIPH["STM32F401CBxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F401RBxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F401VBxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F401CCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F401RCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F401VCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F401CDxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F401RDxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F401VDxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F401CExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F401RExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F401VExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F405RGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F405OExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F405OGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F405VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F405ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F407VExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F407VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F407ZExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F407ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F407IExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F407IGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F410T8xx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F410TBxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F410C8xx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F410CBxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F410R8xx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F410RBxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F411CCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F411RCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F411VCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F411CExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F411RExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F411VExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F412CExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F412CGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F412RExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F412RGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F412VExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F412VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F412ZExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F412ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F413CGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F413RGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F413MGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F413VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F413ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F413CHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F413RHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F413MHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F413VHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F413ZHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F415RGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F415OGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F415VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F415ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F417VExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F417VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F417ZExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F417ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F417IExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F417IGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F423CHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART"}
-#     uC.PERIPH["STM32F423RHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F423MHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F423VHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F423ZHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI"}
-#     uC.PERIPH["STM32F427VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F427VIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F427ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F427ZIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F427AGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F427AIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F427IGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F427IIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F429VExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F429VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F429VIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F429ZExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F429ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F429ZIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F429AGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F429AIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F429IExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F429IGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F429IIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F429BExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F429BGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F429BIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F429NExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F429NGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F429NIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH"}
-#     uC.PERIPH["STM32F437VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F437VIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F437ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F437ZIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F437IGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F437IIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F437AIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F439VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F439VIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F439ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F439ZIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F439IGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F439IIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F439BGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F439BIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F439NGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F439NIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F439AIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F446MCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "QSPI", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F446RCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "QSPI", "SDMMC", "WDG", "SPI", "UART", "DCI"}
-#     uC.PERIPH["STM32F446VCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F446ZCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F446MExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "QSPI", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F446RExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F446VExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F446ZExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F469VExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F469VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F469VIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F469ZExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F469ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F469ZIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F469AExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F469AGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F469AIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F469IExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F469IGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F469IIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F469BExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F469BGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F469BIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F469NExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F469NGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F469NIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F479VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F479VIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F479ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F479ZIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F479AGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F479AIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI"}
-#     uC.PERIPH["STM32F479IGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F479IIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F479BGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F479BIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F479NGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
-#     uC.PERIPH["STM32F479NIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI"}
+#     uC.PERIPH["STM32F401CBxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F401RBxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F401VBxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F401CCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F401RCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F401VCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F401CDxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F401RDxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F401VDxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F401CExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F401RExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F401VExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F405RGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F405OExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F405OGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F405VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F405ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F407VExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F407VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F407ZExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F407ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F407IExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F407IGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F410T8xx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F410TBxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F410C8xx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F410CBxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F410R8xx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F410RBxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F411CCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F411RCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F411VCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F411CExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F411RExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F411VExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F412CExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F412CGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F412RExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F412RGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F412VExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F412VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F412ZExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F412ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F413CGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F413RGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F413MGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F413VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F413ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F413CHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F413RHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F413MHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F413VHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F413ZHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "QSPI", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F415RGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F415OGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F415VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F415ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F417VExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F417VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F417ZExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F417ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F417IExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F417IGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F423CHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "ADC"}
+#     uC.PERIPH["STM32F423RHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F423MHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F423VHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F423ZHxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ADC"}
+#     uC.PERIPH["STM32F427VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F427VIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F427ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F427ZIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F427AGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F427AIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F427IGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F427IIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F429VExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F429VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F429VIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F429ZExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F429ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F429ZIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F429AGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F429AIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F429IExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F429IGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F429IIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F429BExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F429BGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F429BIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F429NExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F429NGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F429NIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "USBH", "ADC"}
+#     uC.PERIPH["STM32F437VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F437VIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F437ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F437ZIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F437IGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F437IIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F437AIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F439VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F439VIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F439ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F439ZIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F439IGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F439IIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F439BGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F439BIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F439NGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F439NIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F439AIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F446MCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "QSPI", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F446RCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "QSPI", "SDMMC", "WDG", "SPI", "UART", "DCI", "ADC"}
+#     uC.PERIPH["STM32F446VCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F446ZCxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F446MExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "QSPI", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F446RExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F446VExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F446ZExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "CAN", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469VExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469VIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469ZExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469ZIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469AExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469AGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469AIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469IExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469IGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469IIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469BExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469BGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469BIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469NExx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469NGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F469NIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "CAN", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F479VGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F479VIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F479ZGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F479ZIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F479AGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F479AIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "DCI", "ADC"}
+#     uC.PERIPH["STM32F479IGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F479IIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F479BGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F479BIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F479NGxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
+#     uC.PERIPH["STM32F479NIxx"]={"GPIO", "CLK", "CRC", "RTC", "I2C", "DMA", "AFM", "SND", "IRQ", "NVM", "PWM", "QSPI", "SDMMC", "WDG", "SPI", "UART", "EMI", "ETH", "DCI", "ADC"}
 # end
 #
 # if uC.ARCH == "stm32f7" then
@@ -380,94 +380,94 @@
 #         end
 #     end
 #
-#     uC.PERIPH["STM32F722ICxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F722IExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F722RCxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F722RExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "LTDC"}
-#     uC.PERIPH["STM32F722VCxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F722VExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F722ZCxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F722ZExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F723ICxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F723IExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F723VCxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F723VExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F723ZCxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F723ZExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F730I8xx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F730R8xx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F730V8xx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F730Z8xx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F732IExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F732RExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F732VExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F732ZExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F733IExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F733VExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F733ZExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC"}
-#     uC.PERIPH["STM32F745IExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F745IGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F745VExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F745VGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F745ZExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F745ZGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F746BExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F746BGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F746IExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F746IGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F746NExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F746NGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F746VExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F746VGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F746ZExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F746ZGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F750N8xx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F750V8xx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F750Z8xx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F756BGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F756IGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F756NGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F756VGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F756ZGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F765BGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F765BIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F765IGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F765IIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F765NGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F765NIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F765VGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F765VIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F765ZGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F765ZIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F767BGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F767BIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F767IGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F767IIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F767NGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F767NIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F767VGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F767VIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F767ZGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F767ZIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F768AIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F769AGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH"}
-#     uC.PERIPH["STM32F769AIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F769BGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F769BIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F769IGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F769IIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F769NGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F769NIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F777BIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F777IIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F777NIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F777VIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F777ZIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F778AIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F779AIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F779BIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F779IIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
-#     uC.PERIPH["STM32F779NIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC"}
+#     uC.PERIPH["STM32F722ICxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F722IExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F722RCxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F722RExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F722VCxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F722VExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F722ZCxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F722ZExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F723ICxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F723IExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F723VCxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F723VExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F723ZCxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F723ZExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F730I8xx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F730R8xx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F730V8xx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F730Z8xx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F732IExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F732RExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F732VExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F732ZExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F733IExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F733VExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F733ZExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ADC"}
+#     uC.PERIPH["STM32F745IExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F745IGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F745VExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F745VGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F745ZExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F745ZGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F746BExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F746BGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F746IExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F746IGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F746NExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F746NGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F746VExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F746VGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F746ZExx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F746ZGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F750N8xx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F750V8xx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F750Z8xx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F756BGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F756IGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F756NGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F756VGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F756ZGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F765BGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F765BIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F765IGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F765IIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F765NGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F765NIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F765VGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F765VIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F765ZGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F765ZIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F767BGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F767BIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F767IGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F767IIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F767NGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F767NIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F767VGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F767VIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F767ZGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F767ZIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F768AIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F769AGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "ADC"}
+#     uC.PERIPH["STM32F769AIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F769BGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F769BIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F769IGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F769IIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F769NGxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F769NIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F777BIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F777IIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F777NIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F777VIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F777ZIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F778AIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F779AIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F779BIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F779IIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
+#     uC.PERIPH["STM32F779NIxx"]={"GPIO", "WDG", "UART", "AFM", "DMA", "PWM", "IRQ", "SPI", "CAN", "EMI", "CLK", "I2C", "NVM", "SDMMC", "RTC", "TIMENC", "ETH", "LTDC", "ADC"}
 # end
 #
 # if uC.ARCH == "stm32h7" then
@@ -494,8 +494,8 @@
 #     uC.PERIPH["STM32H725VGxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "SPI", "I2C", "SDMMC", "NVM", "EMI", "ETH", "LTDC", "CAN", "IRQ"}
 #     uC.PERIPH["STM32H725ZExx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "SPI", "I2C", "SDMMC", "NVM", "EMI", "ETH", "LTDC", "CAN", "IRQ"}
 #     uC.PERIPH["STM32H725ZGxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "SPI", "I2C", "SDMMC", "NVM", "EMI", "ETH", "LTDC", "CAN", "IRQ"}
-#     uC.PERIPH["STM32H730ABxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "SPI", "I2C", "SDMMC", "NVM", "EMI", "ETH", "LTDC", "CAN", "IRQ"}
-#     uC.PERIPH["STM32H730IBxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "SPI", "I2C", "SDMMC", "NVM", "EMI", "ETH", "LTDC", "CAN", "IRQ"}
+#     uC.PERIPH["STM32H730ABxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "SPI", "I2C", "SDMMC", "NVM", "EMI", "ETH", "LTDC", "CAN", "IRQ", "ADC"}
+#     uC.PERIPH["STM32H730IBxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "SPI", "I2C", "SDMMC", "NVM", "EMI", "ETH", "LTDC", "CAN", "IRQ", "ADC"}
 #     uC.PERIPH["STM32H730VBxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "SPI", "I2C", "SDMMC", "NVM", "EMI", "ETH", "LTDC", "CAN", "IRQ"}
 #     uC.PERIPH["STM32H730ZBxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "SPI", "I2C", "SDMMC", "NVM", "EMI", "ETH", "LTDC", "CAN", "IRQ"}
 #     uC.PERIPH["STM32H733VGxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "SPI", "I2C", "SDMMC", "NVM", "EMI", "ETH", "LTDC", "CAN", "IRQ"}
@@ -566,45 +566,45 @@
 #     uC.PERIPH["STM32H757IIxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "SPI", "I2C", "SDMMC", "NVM", "EMI", "ETH", "LTDC", "CAN", "IRQ"}
 #     uC.PERIPH["STM32H757XIxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "SPI", "I2C", "SDMMC", "NVM", "EMI", "ETH", "LTDC", "CAN", "IRQ"}
 #     uC.PERIPH["STM32H757ZIxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "SPI", "I2C", "SDMMC", "NVM", "EMI", "ETH", "LTDC", "CAN", "IRQ"}
-#     uC.PERIPH["STM32H7A3AGxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
+#     uC.PERIPH["STM32H7A3AGxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
 #     uC.PERIPH["STM32H7A3IGxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7A3IGxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7A3LGxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
+#     uC.PERIPH["STM32H7A3IGxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
+#     uC.PERIPH["STM32H7A3LGxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
 #     uC.PERIPH["STM32H7A3NGxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7A3QGxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
+#     uC.PERIPH["STM32H7A3QGxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
 #     uC.PERIPH["STM32H7A3RGxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
 #     uC.PERIPH["STM32H7A3VGxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7A3VGxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
+#     uC.PERIPH["STM32H7A3VGxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
 #     uC.PERIPH["STM32H7A3ZGxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7A3ZGxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7A3AIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
+#     uC.PERIPH["STM32H7A3ZGxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
+#     uC.PERIPH["STM32H7A3AIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
 #     uC.PERIPH["STM32H7A3IIxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7A3IIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7A3LIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
+#     uC.PERIPH["STM32H7A3IIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
+#     uC.PERIPH["STM32H7A3LIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
 #     uC.PERIPH["STM32H7A3NIxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7A3QIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
+#     uC.PERIPH["STM32H7A3QIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
 #     uC.PERIPH["STM32H7A3RIxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
 #     uC.PERIPH["STM32H7A3VIxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7A3VIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
+#     uC.PERIPH["STM32H7A3VIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
 #     uC.PERIPH["STM32H7A3ZIxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7A3ZIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7B0ABxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7B0IBKxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
+#     uC.PERIPH["STM32H7A3ZIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
+#     uC.PERIPH["STM32H7B0ABxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
+#     uC.PERIPH["STM32H7B0IBKxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
 #     uC.PERIPH["STM32H7B0IBxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
 #     uC.PERIPH["STM32H7B0RBxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
 #     uC.PERIPH["STM32H7B0VBxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
 #     uC.PERIPH["STM32H7B0ZBxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7B3AIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
+#     uC.PERIPH["STM32H7B3AIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
 #     uC.PERIPH["STM32H7B3IIxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7B3IIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7B3LIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
+#     uC.PERIPH["STM32H7B3IIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
+#     uC.PERIPH["STM32H7B3LIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
 #     uC.PERIPH["STM32H7B3NIxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7B3QIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
+#     uC.PERIPH["STM32H7B3QIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
 #     uC.PERIPH["STM32H7B3RIxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
 #     uC.PERIPH["STM32H7B3VIxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7B3VIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
+#     uC.PERIPH["STM32H7B3VIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
 #     uC.PERIPH["STM32H7B3ZIxx" ]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
-#     uC.PERIPH["STM32H7B3ZIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ"}
+#     uC.PERIPH["STM32H7B3ZIxxQ"]={"GPIO", "CLK", "AFM", "RTC", "DMA", "UART", "QSPI", "I2C", "SDMMC", "NVM", "EMI", "LTDC", "IRQ", "ADC"}
 # end
 #
 # if uC.ARCH == "rpcm0" then
@@ -618,7 +618,7 @@
 #         end
 #     end
 #
-#     uC.PERIPH["RP2040"]={"GPIO", "CLK", "UART"}
+#     uC.PERIPH["RP2040"]={"GPIO", "CLK", "UART", "ADC"}
 # end
 #
 # if uC.ARCH == "posix" then
@@ -626,7 +626,7 @@
 #         this:AddItem("Priority 0", "0")
 #     end
 #
-#     uC.PERIPH["POSIX"]={"GPIO", "UART", "HOSTDISK", "RTC", "ETH", "I2C", "SPI", "LTDC"}
+#     uC.PERIPH["POSIX"]={"GPIO", "UART", "HOSTDISK", "RTC", "ETH", "I2C", "SPI", "LTDC", "ADC"}
 # end
 #++*/
 
@@ -985,6 +985,15 @@ __ENABLE_LTDC__=_NO_
 #*/
 
 #/*--
+# this:PutWidgets("MAX310X")
+# this:SetToolTip("MAX310x SPI/I2C UART driver (MAX3107, MAX3108, MAX3109).")
+#--*/
+#define __ENABLE_MAX310X__ _NO_
+#/*
+__ENABLE_MAX310X__=_NO_
+#*/
+
+#/*--
 # this:PutWidgets("MEMBLOCK")
 # this:SetToolTip("Memory Block driver represented as file.")
 #--*/
@@ -1019,6 +1028,24 @@ __ENABLE_NVM__=_YES_
 #define __ENABLE_QSPI__ _NO_
 #/*
 __ENABLE_QSPI__=_NO_
+#*/
+
+#/*--
+# this:PutWidgets("NORFLASH")
+# this:SetToolTip("Serial NOR flash memory driver (SPI, QSPI).")
+#--*/
+#define __ENABLE_NORFLASH__ _NO_
+#/*
+__ENABLE_NORFLASH__=_NO_
+#*/
+
+#/*--
+# this:PutWidgets("ONEWIRE")
+# this:SetToolTip("1-Wire bus master on UART.")
+#--*/
+#define __ENABLE_ONEWIRE__ _NO_
+#/*
+__ENABLE_ONEWIRE__=_NO_
 #*/
 
 #/*--
@@ -1206,6 +1233,15 @@ __ENABLE_USBH__=_NO_
 #define __ENABLE_WDG__ _NO_
 #/*
 __ENABLE_WDG__=_NO_
+#*/
+
+#/*--
+# this:PutWidgets("W5500")
+# this:SetToolTip("W5500 SPI Ethernet controller driver (MACRAW mode).")
+#--*/
+#define __ENABLE_W5500__ _NO_
+#/*
+__ENABLE_W5500__=_NO_
 #*/
 
 #/*--

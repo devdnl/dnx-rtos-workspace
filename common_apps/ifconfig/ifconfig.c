@@ -34,6 +34,7 @@
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <dnx/net.h>
 #include <dnx/misc.h>
@@ -86,11 +87,15 @@ PROGRAM_PARAMS(ifconfig, STACK_DEPTH_LOW);
 //==============================================================================
 static void print_help_msg(const char *prog_name)
 {
-        printf("Usage: %s <network> [up=<options>] [down]\n", prog_name);
+        printf("Usage: %s <network> [add=<family>:<path>] [up=<options>] [down] [rm]\n", prog_name);
         printf("General options:\n");
         printf("  network       network name\n");
+        printf("  add=<family>:<path>\n");
+        printf("                add network of family (inet, sipc, cannet, uds) with\n");
+        printf("                interface file (e.g. inet1 add=inet:/dev/eth1)\n");
         printf("  up=<options>  configure network\n");
         printf("  down          disable network\n");
+        printf("  rm            remove network\n");
         printf("  -h, --help    this help\n");
         printf("\n");
         printf("Options for INET:\n");
@@ -389,6 +394,41 @@ static void print_network_status(const char *network, NET_family_t family)
 
 //==============================================================================
 /**
+ * @brief  Add network.
+ *
+ * @param  netname      network name
+ * @param  args         <family>:<interface path>
+ *
+ * @return Program status.
+ */
+//==============================================================================
+static int add_network(const char *netname, const char *args)
+{
+        static const char *const FAMILY[] = {"inet", "sipc", "cannet", "uds"};
+        static const NET_family_t FAMILY_ID[] = {NET_FAMILY__INET, NET_FAMILY__SIPC, NET_FAMILY__CANNET,
+                NET_FAMILY__UDS};
+
+        const char *path = strchr(args, ':');
+        if (path) {
+                for (size_t i = 0; i < ARRAY_SIZE(FAMILY); i++) {
+                        if ((strlen(FAMILY[i]) == cast(size_t, path - args)) &&
+                                (strncmp(FAMILY[i], args, path - args) == 0)) {
+
+                                if (ifadd(netname, FAMILY_ID[i], path + 1) != 0) {
+                                        perror(netname);
+                                        return EXIT_FAILURE;
+                                }
+                                return EXIT_SUCCESS;
+                        }
+                }
+        }
+
+        fputs("Invalid family or interface path.\n", stderr);
+        return EXIT_FAILURE;
+}
+
+//==============================================================================
+/**
  * @brief Program main function
  *
  * @param  argc         count of arguments
@@ -422,6 +462,8 @@ int main(int argc, char *argv[])
 
         } else {
                 bool down = false;
+                bool rm = false;
+                const char *add_args = NULL;
                 const char *up_args = NULL;
                 const char *netname = NULL;
 
@@ -434,12 +476,31 @@ int main(int argc, char *argv[])
                         } else if (isstreq(argv[i], "down")) {
                                 down = true;
 
+                        } else if (isstreq(argv[i], "rm")) {
+                                rm = true;
+
+                        } else if (isstreqn(argv[i], "add=", 4)) {
+                                add_args = argv[i] + 4;
+
                         } else if (isstreqn(argv[i], "up=", 3)) {
                                 up_args = argv[i] + 3;
 
                         } else {
                                 netname = argv[i];
                         }
+                }
+
+                // add or remove network
+                if (netname && add_args) {
+                        return add_network(netname, add_args);
+                }
+
+                if (netname && rm) {
+                        if (ifrm(netname) != 0) {
+                                perror(netname);
+                                return EXIT_FAILURE;
+                        }
+                        return EXIT_SUCCESS;
                 }
 
                 // configure selected network

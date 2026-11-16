@@ -3,7 +3,8 @@ File    luadnx_test.lua
 
 Author  Daniel Zorychta
 
-Brief   Test of luadnx modules (lfs, dnx.sys, dnx.proc, dnx.spi).
+Brief   Test of luadnx modules (lfs, dnx.sys, dnx.proc, dnx.spi, dnx.onewire,
+        dnx.eth, dnx.adc).
 
         Usage (on target):  lua luadnx_test.lua [work_dir]
         work_dir must be writable (default: /tmp).
@@ -57,12 +58,18 @@ local dnx  = require("dnx")
 local sys  = require("dnx.sys")
 local proc = require("dnx.proc")
 local spi  = require("dnx.spi")
+local ow   = require("dnx.onewire")
+local eth  = require("dnx.eth")
+local adc  = require("dnx.adc")
 
 check("require lfs", type(lfs) == "table")
 check("require dnx", type(dnx) == "table" and type(dnx._VERSION) == "string")
 check("dnx.sys is the same module", dnx.sys == sys)
 check("dnx.proc is the same module", dnx.proc == proc)
 check("dnx.spi is the same module", dnx.spi == spi)
+check("dnx.onewire is the same module", dnx.onewire == ow)
+check("dnx.eth is the same module", dnx.eth == eth)
+check("dnx.adc is the same module", dnx.adc == adc)
 check("lfs version", type(lfs._VERSION) == "string", lfs._VERSION)
 
 -------------------------------------------------------------------------------
@@ -249,6 +256,21 @@ local r, e, code = spi.transceive(work .. "/no_such_spi_device", "\x00")
 check("transceive(missing device) fails", r == nil and type(e) == "string" and math.type(code) == "integer", e)
 check("transceive without frame raises error", not pcall(spi.transceive, "/dev/null"))
 check("transceive of empty frame raises error", not pcall(spi.transceive, "/dev/null", ""))
+
+-------------------------------------------------------------------------------
+section("dnx.onewire, dnx.eth, dnx.adc")
+-- devices are tested with models of the simulator board (sim-env/tests/onewire.lua,
+-- sim-env/tests/w5500.lua, sim-env/tests/adc.lua)
+local missing = work .. "/no_such_device"
+r, e, code = ow.reset(missing)
+check("onewire.reset(missing device) fails", r == nil and type(e) == "string" and math.type(code) == "integer", e)
+check("onewire.transfer with invalid ROM raises error", not pcall(ow.transfer, missing, "12", "\x44"))
+r, e = eth.status(missing)
+check("eth.status(missing device) fails", r == nil and type(e) == "string", e)
+check("eth.start with invalid MAC raises error", not pcall(eth.start, missing, "xx"))
+r, e = adc.read(missing, 0)
+check("adc.read(missing device) fails", r == nil and type(e) == "string", e)
+check("adc.read of invalid channel name raises error", not pcall(adc.read, missing, "abc"))
 
 -------------------------------------------------------------------------------
 print(string.format("\nPassed: %d, failed: %d", passed, failed))

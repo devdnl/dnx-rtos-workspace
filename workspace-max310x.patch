@@ -1,0 +1,1072 @@
+diff --git a/README.md b/README.md
+index 78974de..4825006 100644
+--- a/README.md
++++ b/README.md
+@@ -475,6 +475,7 @@ test programs are executed in the shell and their `SUMMARY:` lines are checked:
+ | `board: i2cee`   | I2CEE driver and eefs on 24C256 model (`sim-env/tests/i2cee.lua`) |
+ | `board: spi`     | SPI test (`sim-env/tests/spi.lua`): CS selection, bit order, mode, 74HC595 |
+ | `board: spiee`   | SPIEE driver and eefs on 25LC256 model (`sim-env/tests/spiee.lua`) |
++| `board: max310x` | MAX310X driver on MAX3107/3108/3109 models (SPI, I2C, two UARTs of MAX3109): loopback, buffers of driver, serial lines to UARTs, baud rates, flow control, invalid configuration, chip detection, release (`sim-env/tests/max310x.lua`) |
+ | `board: sdcard`  | SDSPI driver on SD card models (SDHC, SD v1), ext2 created by `mkext` (`sim-env/tests/sdcard.lua`) |
+ | `fstest: ext2 on sdspi` | `fstest` on ext2 file system of the SD card model (SDSPI driver) |
+ | `board: panel`   | board panel protocol: socket of `tools/simpanel.py`, output, input and control signals (`sim-env/tests/panel.lua`), LCD frame of `LTDC` driver and touch read from FT5336 model (`sim-env/tests/lcd.lua`) |
+diff --git a/bsp/Raspberry-Pi-Pico.bsp b/bsp/Raspberry-Pi-Pico.bsp
+index f6a7acb..0204986 100644
+--- a/bsp/Raspberry-Pi-Pico.bsp
++++ b/bsp/Raspberry-Pi-Pico.bsp
+@@ -44,6 +44,7 @@
+ 		["__ENABLE_IRQ__"]="_NO_";
+ 		["__ENABLE_LOOP__"]="_NO_";
+ 		["__ENABLE_LTDC__"]="_NO_";
++		["__ENABLE_MAX310X__"]="_NO_";
+ 		["__ENABLE_MEMBLOCK__"]="_NO_";
+ 		["__ENABLE_NVM__"]="_NO_";
+ 		["__ENABLE_PART__"]="_NO_";
+diff --git a/bsp/posix-sim.bsp b/bsp/posix-sim.bsp
+index f5b1a2b..75b33cd 100644
+--- a/bsp/posix-sim.bsp
++++ b/bsp/posix-sim.bsp
+@@ -44,6 +44,7 @@
+ 		["__ENABLE_IRQ__"]="_NO_";
+ 		["__ENABLE_LOOP__"]="_YES_";
+ 		["__ENABLE_LTDC__"]="_YES_";
++		["__ENABLE_MAX310X__"]="_YES_";
+ 		["__ENABLE_MEMBLOCK__"]="_YES_";
+ 		["__ENABLE_NVM__"]="_NO_";
+ 		["__ENABLE_PART__"]="_YES_";
+diff --git a/bsp/stm32f746g-disco.bsp b/bsp/stm32f746g-disco.bsp
+index 5e83fe8..781d879 100644
+--- a/bsp/stm32f746g-disco.bsp
++++ b/bsp/stm32f746g-disco.bsp
+@@ -44,6 +44,7 @@
+ 		["__ENABLE_IRQ__"]="_NO_";
+ 		["__ENABLE_LOOP__"]="_NO_";
+ 		["__ENABLE_LTDC__"]="_YES_";
++		["__ENABLE_MAX310X__"]="_NO_";
+ 		["__ENABLE_MEMBLOCK__"]="_YES_";
+ 		["__ENABLE_NVM__"]="_NO_";
+ 		["__ENABLE_PART__"]="_YES_";
+diff --git a/bsp/stm32h747i-disc1.bsp b/bsp/stm32h747i-disc1.bsp
+index 61019af..385fddc 100644
+--- a/bsp/stm32h747i-disc1.bsp
++++ b/bsp/stm32h747i-disc1.bsp
+@@ -44,6 +44,7 @@
+ 		["__ENABLE_IRQ__"]="_NO_";
+ 		["__ENABLE_LOOP__"]="_NO_";
+ 		["__ENABLE_LTDC__"]="_NO_";
++		["__ENABLE_MAX310X__"]="_NO_";
+ 		["__ENABLE_MEMBLOCK__"]="_YES_";
+ 		["__ENABLE_NVM__"]="_YES_";
+ 		["__ENABLE_PART__"]="_YES_";
+diff --git a/bsp/stm32h747i-disc1_with_btl.bsp b/bsp/stm32h747i-disc1_with_btl.bsp
+index 3f78ed0..132ab88 100644
+--- a/bsp/stm32h747i-disc1_with_btl.bsp
++++ b/bsp/stm32h747i-disc1_with_btl.bsp
+@@ -44,6 +44,7 @@
+ 		["__ENABLE_IRQ__"]="_NO_";
+ 		["__ENABLE_LOOP__"]="_NO_";
+ 		["__ENABLE_LTDC__"]="_NO_";
++		["__ENABLE_MAX310X__"]="_NO_";
+ 		["__ENABLE_MEMBLOCK__"]="_YES_";
+ 		["__ENABLE_NVM__"]="_YES_";
+ 		["__ENABLE_PART__"]="_YES_";
+@@ -1674,6 +1675,7 @@
+ 		["__ENABLE_IRQ__"]="_NO_";
+ 		["__ENABLE_LOOP__"]="_NO_";
+ 		["__ENABLE_LTDC__"]="_NO_";
++		["__ENABLE_MAX310X__"]="_NO_";
+ 		["__ENABLE_MEMBLOCK__"]="_YES_";
+ 		["__ENABLE_NVM__"]="_YES_";
+ 		["__ENABLE_PART__"]="_YES_";
+diff --git a/config/app-kernel/arch/arch_flags.h b/config/app-kernel/arch/arch_flags.h
+index bd48ed0..9af84ee 100644
+--- a/config/app-kernel/arch/arch_flags.h
++++ b/config/app-kernel/arch/arch_flags.h
+@@ -984,6 +984,15 @@ __ENABLE_LOOP__=_NO_
+ __ENABLE_LTDC__=_NO_
+ #*/
+ 
++#/*--
++# this:PutWidgets("MAX310X")
++# this:SetToolTip("MAX310x SPI/I2C UART driver (MAX3107, MAX3108, MAX3109).")
++#--*/
++#define __ENABLE_MAX310X__ _NO_
++#/*
++__ENABLE_MAX310X__=_NO_
++#*/
++
+ #/*--
+ # this:PutWidgets("MEMBLOCK")
+ # this:SetToolTip("Memory Block driver represented as file.")
+diff --git a/config/btl-kernel/arch/arch_flags.h b/config/btl-kernel/arch/arch_flags.h
+index e03f33f..ed2a7af 100644
+--- a/config/btl-kernel/arch/arch_flags.h
++++ b/config/btl-kernel/arch/arch_flags.h
+@@ -984,6 +984,15 @@ __ENABLE_LOOP__=_NO_
+ __ENABLE_LTDC__=_NO_
+ #*/
+ 
++#/*--
++# this:PutWidgets("MAX310X")
++# this:SetToolTip("MAX310x SPI/I2C UART driver (MAX3107, MAX3108, MAX3109).")
++#--*/
++#define __ENABLE_MAX310X__ _NO_
++#/*
++__ENABLE_MAX310X__=_NO_
++#*/
++
+ #/*--
+ # this:PutWidgets("MEMBLOCK")
+ # this:SetToolTip("Memory Block driver represented as file.")
+diff --git a/config/sim-kernel/arch/arch_flags.h b/config/sim-kernel/arch/arch_flags.h
+index daa7450..333e91e 100644
+--- a/config/sim-kernel/arch/arch_flags.h
++++ b/config/sim-kernel/arch/arch_flags.h
+@@ -984,6 +984,15 @@ __ENABLE_LOOP__=_YES_
+ __ENABLE_LTDC__=_YES_
+ #*/
+ 
++#/*--
++# this:PutWidgets("MAX310X")
++# this:SetToolTip("MAX310x SPI/I2C UART driver (MAX3107, MAX3108, MAX3109).")
++#--*/
++#define __ENABLE_MAX310X__ _YES_
++#/*
++__ENABLE_MAX310X__=_YES_
++#*/
++
+ #/*--
+ # this:PutWidgets("MEMBLOCK")
+ # this:SetToolTip("Memory Block driver represented as file.")
+diff --git a/sim-env/README.md b/sim-env/README.md
+index 61a7fbf..919cdcf 100644
+--- a/sim-env/README.md
++++ b/sim-env/README.md
+@@ -315,6 +315,34 @@ Host with `--tap tap0` (TAP interface 192.168.77.1/24, see `app-romfs/netmgr.con
+ `ping 192.168.77.51`, `nc -u -l 5000`. `tests/net.lua` tests the network with
+ `boards/test.lua` (ping, UDP, TCP in both directions).
+ 
++### MAX310x
++`models/max310x.lua` is the UART with 128-word FIFOs connected by SPI (mode 0
++or 3) or I2C: MAX3107, MAX3108 (1 UART) and MAX3109 (2 UARTs, UART 1 at I2C
++address lower by 0x10, extended registers with revision ID). FIFOs with
++transmission time of characters, baud rate generator (DIV, fraction, 2x and
++4x modes) with clock option of the model, line format (LCR), loopback,
++disabled transmitter and receiver, soft reset, RST pin, automatic RTS/CTS flow
++control. Serial lines of UARTs are connected to UARTs of the system (data of
++other format are unreadable) or handled by the board:
++```lua
++local max310x = require("models.max310x")
++
++local chip = max310x.new{type = "max3109", clock = 3686400, reset = "PA30"}:attach("SPI:1", "PA29")
++chip:uart(0):connect_uart("UART:4")           -- /dev/ttyS4 of the system
++chip:uart(1):on_transmit(function(data) print("TX", data) end)
++chip:uart(1):receive("hello")                 -- data received by UART 1
++print(chip:uart(0):format().baud)             -- baud rate set by the driver
++```
++In dnx RTOS (driver `MAX310X`, minor number is UART of the chip):
++```
++modprobe -i SPI 1 11 /dev/spi-max3109 -c cs_port=0,cs_pin=29
++modprobe -i MAX310X 0 0 /dev/ttyM0 -c path=/dev/spi-max3109,chip=max3109,clock=3686400,baud=115200
++modprobe -i MAX310X 0 1 /dev/ttyM1 -c baud=9600
++```
++The IRQ pin of the chip is not modeled (the IRQ driver is not in the
++simulator), so the driver works periodically. `tests/max310x.lua` tests the
++driver with `boards/test.lua` (MAX3107, MAX3108 and MAX3109 on SPI and I2C).
++
+ ### MCP23S17
+ `models/mcp23s17.lua` is the 16-bit I/O expander with SPI (mode 0 or 3): all
+ registers in both address maps (IOCON.BANK), sequential and byte mode
+diff --git a/sim-env/boards/test.lua b/sim-env/boards/test.lua
+index b16808e..923c941 100644
+--- a/sim-env/boards/test.lua
++++ b/sim-env/boards/test.lua
+@@ -28,6 +28,9 @@
+     0x50  24C256 (I2CEE driver and eefs)
+     0x51  24C32 (raw access tests)
+   I2C:1:
++    0x2C  MAX3107, chip 1 (crystal 1.8432 MHz, tests/max310x.lua)
++    0x2D  MAX3107 with wrong revision ID 0x00 (chip detection test)
++    0x6C  MAX3109, chip 3 (UART 1 at 0x5C, external clock 3.6864 MHz)
+     0x50  24C02
+ 
+   UART (UART:1 /dev/ttyS1 is used by tools/simtest.py --uart 1=<pty>):
+@@ -35,6 +38,8 @@
+                       configuration: "<baud> <parity> <stop bits>\n"
+     UART:3 /dev/ttyS3  NMEA GPS (38400 8N1, fix every 200 ms, start time
+                       2026-01-01 12:00:00 UTC, 52.2297 N 21.0122 E 100 m)
++    UART:4 /dev/ttyS4  serial line of MAX3109 (chip 0) UART 0 (SPI:1)
++    UART:5 /dev/ttyS5  serial line of MAX3109 (chip 0) UART 1 (SPI:1)
+ 
+   Ethernet (network of the simulator 192.168.77.0/24, system 192.168.77.2),
+   tests/net.lua:
+@@ -65,6 +70,13 @@
+     PA17  SD card SD v1 2 MiB (SDSPI driver)
+   SPI:1:
+     PA16  74HC595 (CS = RCLK), outputs QA..QH -> PA20..PA27
++    PA29  MAX3109, chip 0 (external clock 3.6864 MHz), RST <- PA30, serial
++          lines of UARTs -> UART:4, UART:5, tests/max310x.lua; control commands
++          "max310x <chip> <uart> format" ("<baud> <data bits> <parity> <stop
++          bits>" or "none"), "max310x <chip> <uart> reg <addr>" (register
++          value), "max310x <chip> <uart> cts <0|1>" (CTS input), "max310x
++          <chip> <uart> rts" (RTS output: 0|1)
++    PA31  MAX3108, chip 2 (external clock 3.6864 MHz)
+   SPI:2 (/dev/spi-none: no devices on its CS):
+     PB2   MCP23S17 #0 (address 0) and #1 (address 1) on one CS, RESET <- PC16,
+           tests/mcp23s17.lua:
+@@ -105,6 +117,7 @@ local nmea_gps = require("models.nmea_gps")
+ local netdev = require("models.netdev")
+ local udp_sensor = require("models.udp_sensor")
+ local bt817 = require("models.bt817")
++local max310x = require("models.max310x")
+ 
+ gpio.connect("PA0", "PA8", true)
+ gpio.connect("PA1", "PA9")
+@@ -541,6 +554,38 @@ mcp1_wire()
+ -- SPI:1
+ hc595.new({ outputs = { "PA20", "PA21", "PA22", "PA23", "PA24", "PA25", "PA26", "PA27" } }):attach("SPI:1", "PA16")
+ 
++-- MAX310x: chips of tests/max310x.lua, chip with wrong revision ID
++local max310x_chips = {
++    [0] = max310x.new({ type = "max3109", clock = 3686400, reset = "PA30" }):attach("SPI:1", "PA29"),
++    [1] = max310x.new({ type = "max3107", clock = 1843200 }):attach("I2C:1", 0x2C),
++    [2] = max310x.new({ type = "max3108", clock = 3686400 }):attach("SPI:1", "PA31"),
++    [3] = max310x.new({ type = "max3109", clock = 3686400 }):attach("I2C:1", 0x6C),
++}
++max310x.new({ revid = 0x00 }):attach("I2C:1", 0x2D)
++if uart.available("UART:4") then
++    max310x_chips[0]:uart(0):connect_uart("UART:4")
++end
++if uart.available("UART:5") then
++    max310x_chips[0]:uart(1):connect_uart("UART:5")
++end
++
++OW_COMMANDS.max310x = function(c, n, what, a)
++    local chip = assert(max310x_chips[tonumber(c)], "max310x: unknown chip")
++    local u = chip:uart(tonumber(n))
++    if what == "format" then
++        local f = u:format()
++        return f and string.format("%.0f %d %s %d", f.baud, f.data_bits, f.parity, f.stop_bits) or "none"
++    elseif what == "reg" then
++        return tostring(u:register(assert(tonumber(a))))
++    elseif what == "cts" then
++        u:set_cts(a == "1")
++    elseif what == "rts" then
++        return u:rts() and "1" or "0"
++    else
++        error("max310x: unknown command " .. tostring(what))
++    end
++end
++
+ -- panel
+ panel.output("P_OUT", "PA18")
+ panel.input("P_IN", "PA19")
+diff --git a/sim-env/models/max310x.lua b/sim-env/models/max310x.lua
+new file mode 100644
+index 0000000..730eaa1
+--- /dev/null
++++ b/sim-env/models/max310x.lua
+@@ -0,0 +1,507 @@
++--[[----------------------------------------------------------------------------
++  MAX310x SPI/I2C UART model: MAX3107, MAX3108 (1 UART), MAX3109 (2 UARTs),
++  128-word FIFOs.
++
++  Usage:
++    local max310x = require("models.max310x")
++    local chip = max310x.new{type = "max3109", clock = 3686400, reset = "PA30"}
++    chip:attach("SPI:1", "PA29")                 -- SPI bus, CS pin (active low)
++    -- or chip:attach("I2C:1", 0x6C)             -- I2C bus, address of UART 0
++    local u = chip:uart(0)                       -- UART of the chip (0, 1)
++    u:connect_uart("UART:4")                     -- serial line to UART of the system
++    u:on_transmit(function(data) ... end)        -- data transmitted by the UART
++    u:receive("text")                            -- data received by the UART
++
++  Options of new():
++    type        "max3107" (default), "max3108", "max3109"
++    clock       frequency of reference clock on XIN [Hz] (default 3686400), the
++                clock works when CLKSource selects external clock (ExtClock)
++                or crystal (Crystal)
++    reset       system output pin connected to RST (optional, active low: the
++                chip is reset and does not respond while the pin is low, the
++                pin is followed from the first change done by the system)
++    revid       revision ID (default: MAX3107 0xA1, MAX3109 0xC1; MAX3108 has
++                no revision ID)
++
++  Registers of UART 0x00..0x1E (datasheet names), reset values 0 except DIVLSB
++  = 0x01 and CLKSource = 0x18 (ExtClock, PLLBypass). Implemented: RHR/THR
++  (FIFOs), LSR (RxOverrun, CTS state; read clears RxOverrun), MODE1
++  (RxDisabl, TxDisabl, TrnscvCtrl), MODE2 (RST: soft reset of UART while set,
++  FIFORst, Loopback), LCR (word length, stop bits, parity), FlowLvl, FlowCtrl
++  (AutoRTS, AutoCTS), TxFIFOLvl, RxFIFOLvl, BRGConfig, DIVLSB, DIVMSB (baud rate
++  generator, 2x and 4x modes), CLKSource (ExtClock, Crystal; MAX3109: register
++  of UART 0 is used by both UARTs), STSInt (ClockReady when crystal is
++  selected). Register 0x1F: MAX3107 RevID; MAX3109 write: GlobalCommand (0xCE
++  enables, 0xCD disables extended registers: RevID at 0x05 by SPI, 0x25 by
++  I2C), read: GlobalIRQ (0xFF). Other registers are stored without effect;
++  EchoSuprs, IrDA inversion and interrupts have no effect.
++
++  SPI (mode 0 or 3): command byte (bit 7: 1 write, 0 read; bits 6..5: UART;
++  bits 4..0: register) and data, the register address is incremented after
++  each byte except of RHR/THR (FIFO). I2C: address of UART 0 is given to
++  attach(), UART 1 of MAX3109 has address lower by 0x10; first written byte
++  is register address, next bytes are written to registers, read returns
++  registers (the same increment).
++
++  Transmission: bytes of TX FIFO are transmitted with the time of character
++  (start bit, data bits, parity, stop bits at the baud rate of the generator),
++  not with disabled transmitter, without clock or with AutoCTS and inactive
++  CTS. With Loopback the bytes are received by the UART, otherwise they are
++  passed to on_transmit() and to the connected UART. Received bytes are stored
++  in RX FIFO when the receiver is enabled, bytes received when FIFO is full are
++  lost (LSR RxOverrun). Connected UART of the system: data of different format
++  (baud rate differs more than 3 %, parity, stop bits, data bits other than 8)
++  are changed to 0xFF (unreadable data).
++
++  Methods of chip:
++    chip:attach(bus, cs_or_address)   connect to SPI ("SPI:n", CS pin) or I2C bus ("I2C:n", address)
++    chip:uart(n)                      UART n of the chip
++    chip:reset()                      reset (as RST pin)
++  Methods of UART:
++    u:connect_uart(bus)               serial line to system UART ("UART:n")
++    u:on_transmit(fn)                 fn(data) for transmitted data (string)
++    u:receive(data)                   data received by the UART (string)
++    u:set_cts(active)                 CTS input (true: active, transmission allowed, default)
++    u:rts()                           RTS output with AutoRTS (true: active, receive allowed)
++    u:format()                        {baud, data_bits, parity ("none", "odd", "even"), stop_bits}
++                                      or nil without clock
++    u:register(addr)                  register value without side effects
++------------------------------------------------------------------------------]]
++
++local M = {}
++
++local CHIP = {}
++CHIP.__index = CHIP
++
++local UART = {}
++UART.__index = UART
++
++local FIFO_SIZE = 128
++
++local TYPES = {
++    max3107 = { ports = 1, revid = 0xA1 },
++    max3108 = { ports = 1 },
++    max3109 = { ports = 2, revid = 0xC1 },
++}
++
++local RHR = 0x00
++local LSR = 0x04
++local STSINT = 0x08
++local MODE1 = 0x09
++local MODE2 = 0x0A
++local LCR = 0x0B
++local FLOWLVL = 0x0F
++local TXFIFOLVL = 0x11
++local RXFIFOLVL = 0x12
++local FLOWCTRL = 0x13
++local BRGCONFIG = 0x1B
++local DIVLSB = 0x1C
++local DIVMSB = 0x1D
++local CLKSOURCE = 0x1E
++local REG_1F = 0x1F
++
++local function bit(v, n)
++    return (v >> n) & 1 == 1
++end
++
++function M.new(opts)
++    opts = opts or {}
++    local t = TYPES[opts.type or "max3107"]
++    assert(t, "max310x: unknown type " .. tostring(opts.type))
++    local c = setmetatable({}, CHIP)
++    c.type = opts.type or "max3107"
++    c.mode = { [0] = true, [3] = true } -- supported SPI modes
++    c.clock = opts.clock or 3686400
++    c.revid = opts.revid or t.revid
++    c.ports = {}
++    assert(c.clock > 0, "max310x: invalid clock")
++    for n = 0, t.ports - 1 do
++        c.ports[n] = setmetatable({ chip = c, n = n, cts = true, handlers = {} }, UART)
++    end
++    c:reset()
++
++    if opts.reset then
++        gpio.on_change(opts.reset, function(level)
++            c.in_reset = not level
++            if c.in_reset then
++                c:reset()
++            end
++        end)
++    end
++
++    return c
++end
++
++function CHIP:uart(n)
++    return assert(self.ports[n], "max310x: no UART " .. tostring(n))
++end
++
++function CHIP:reset()
++    self.extreg = false
++    for _, u in pairs(self.ports) do
++        u:reset()
++    end
++end
++
++-- UART: reset values of registers, empty FIFOs
++function UART:reset()
++    self.regs = {}
++    for a = 0, 0x1F do
++        self.regs[a] = 0
++    end
++    self.regs[DIVLSB] = 0x01
++    self.regs[CLKSOURCE] = 0x18
++    self.rx, self.tx = {}, {}
++    self.overrun = false
++    self.rts_active = true
++    self.tx_time = nil
++    self:stop_timer()
++end
++
++function UART:register(addr)
++    return self:peek(addr)
++end
++
++function UART:set_cts(active)
++    self.cts = active and true or false
++    self:service()
++end
++
++function UART:rts()
++    return self.rts_active
++end
++
++function UART:on_transmit(fn)
++    self.handlers[#self.handlers + 1] = fn
++end
++
++-- baud rate of the generator or nil (no clock: CLKSource of UART 0)
++function UART:baud()
++    local clk = self.chip.ports[0].regs[CLKSOURCE]
++    if not bit(clk, 4) and not bit(clk, 1) then
++        return nil -- ExtClock and Crystal disabled
++    end
++    local div = (self.regs[DIVMSB] << 8) | self.regs[DIVLSB]
++    local fract = self.regs[BRGCONFIG] & 0x0F
++    local mult = bit(self.regs[BRGCONFIG], 5) and 4 or (bit(self.regs[BRGCONFIG], 4) and 2 or 1)
++    if div == 0 then
++        return nil
++    end
++    return self.chip.clock * mult / (16 * div + fract)
++end
++
++function UART:format()
++    local baud = self:baud()
++    if not baud then
++        return nil
++    end
++    local lcr = self.regs[LCR]
++    local parity = bit(lcr, 3) and (bit(lcr, 4) and "even" or "odd") or "none"
++    return { baud = baud, data_bits = 5 + (lcr & 3), parity = parity, stop_bits = bit(lcr, 2) and 2 or 1 }
++end
++
++-- time of character [ms]
++function UART:char_time()
++    local f = self:format()
++    if not f then
++        return nil
++    end
++    local bits = 1 + f.data_bits + (f.parity == "none" and 0 or 1) + f.stop_bits
++    return bits * 1000 / f.baud
++end
++
++-- format of connected UART differs (data unreadable)
++function UART:format_mismatch()
++    local f = self:format()
++    if not f or not self.uart_bus then
++        return true
++    end
++    local c = uart.config(self.uart_bus)
++    return math.abs(f.baud - c.baud) > c.baud * 0.03 or f.parity ~= c.parity or f.stop_bits ~= c.stop_bits
++        or f.data_bits ~= 8
++end
++
++-- FIFOs -------------------------------------------------------------------------
++function UART:rx_push(byte)
++    if bit(self.regs[MODE1], 0) or bit(self.regs[MODE2], 0) then
++        return -- receiver disabled or UART in soft reset
++    end
++    if #self.rx >= FIFO_SIZE then
++        self.overrun = true
++    else
++        self.rx[#self.rx + 1] = byte
++    end
++    self:update_rts()
++end
++
++function UART:update_rts()
++    if bit(self.regs[FLOWCTRL], 0) then -- AutoRTS
++        local halt = (self.regs[FLOWLVL] & 0x0F) * 8
++        local resume = (self.regs[FLOWLVL] >> 4) * 8
++        if #self.rx >= halt then
++            self.rts_active = false
++        elseif #self.rx <= resume then
++            self.rts_active = true
++        end
++    end
++end
++
++function UART:receive(data)
++    for i = 1, #data do
++        self:rx_push(data:byte(i))
++    end
++end
++
++function UART:can_transmit()
++    if bit(self.regs[MODE1], 1) or bit(self.regs[MODE2], 0) then
++        return false -- transmitter disabled or soft reset
++    end
++    if bit(self.regs[FLOWCTRL], 1) and not self.cts then
++        return false -- AutoCTS: CTS inactive
++    end
++    return self:char_time() ~= nil
++end
++
++-- transmit bytes of TX FIFO whose time elapsed
++function UART:service()
++    local now = host.time_ms()
++    local out = {}
++    while #self.tx > 0 and self:can_transmit() do
++        local ct = self:char_time()
++        if not self.tx_time then
++            self.tx_time = now + ct
++        end
++        if now < self.tx_time then
++            break
++        end
++        local byte = table.remove(self.tx, 1)
++        self.tx_time = (#self.tx > 0) and (self.tx_time + ct) or nil
++        if bit(self.regs[MODE2], 5) then
++            self:rx_push(byte) -- Loopback
++        else
++            out[#out + 1] = string.char(byte)
++        end
++    end
++    if #self.tx > 0 and self:can_transmit() then
++        self:start_timer()
++    else
++        self.tx_time = nil
++        self:stop_timer()
++    end
++    if #out > 0 then
++        local data = table.concat(out)
++        for _, fn in ipairs(self.handlers) do
++            fn(data)
++        end
++        if self.uart_bus then
++            uart.send(self.uart_bus, self:format_mismatch() and string.rep("\xFF", #data) or data)
++        end
++    end
++end
++
++function UART:start_timer()
++    if not self.timer then
++        self.timer = host.timer(1, function()
++            self:service()
++        end, true)
++    end
++end
++
++function UART:stop_timer()
++    if self.timer then
++        self.timer:stop()
++        self.timer = nil
++    end
++end
++
++-- registers ----------------------------------------------------------------------
++function UART:peek(addr)
++    if addr == RHR then
++        return self.rx[1] or 0
++    elseif addr == LSR then
++        return (self.regs[LSR] & 0x7D) | (self.overrun and 0x02 or 0) | (self.cts and 0 or 0x80)
++    elseif addr == TXFIFOLVL then
++        return #self.tx
++    elseif addr == RXFIFOLVL then
++        return #self.rx
++    elseif addr == STSINT then
++        local cryst = bit(self.chip.ports[0].regs[CLKSOURCE], 1)
++        return (self.regs[STSINT] & ~0x20) | (cryst and 0x20 or 0)
++    end
++    return self.regs[addr] or 0
++end
++
++function UART:read_reg(addr, i2c)
++    local chip = self.chip
++    if chip.type == "max3109" and chip.extreg and self.n == 0 and addr == (i2c and 0x25 or 0x05) then
++        return chip.revid -- extended register: revision ID
++    elseif addr == REG_1F then
++        if chip.type == "max3107" then
++            return chip.revid
++        elseif chip.type == "max3109" then
++            return 0xFF -- GlobalIRQ: no interrupts (active low)
++        end
++        return 0
++    end
++    self:service()
++    local v = self:peek(addr)
++    if addr == RHR then
++        if #self.rx > 0 then
++            table.remove(self.rx, 1)
++            self:update_rts()
++        end
++    elseif addr == LSR then
++        self.overrun = false
++    end
++    return v
++end
++
++function UART:write_reg(addr, v)
++    local chip = self.chip
++    if addr == REG_1F then
++        if chip.type == "max3109" then -- GlobalCommand
++            if v == 0xCE then
++                chip.extreg = true
++            elseif v == 0xCD then
++                chip.extreg = false
++            end
++        end
++        return
++    elseif addr > REG_1F then
++        return
++    end
++    self:service()
++    if addr == RHR then
++        if #self.tx < FIFO_SIZE then
++            self.tx[#self.tx + 1] = v
++            self:start_timer()
++        end
++        return
++    elseif addr == TXFIFOLVL or addr == RXFIFOLVL then
++        return -- read only
++    end
++    if addr == MODE2 then
++        if bit(v, 0) then -- soft reset: registers have reset values while RST is set
++            self:reset()
++            self.regs[MODE2] = v
++            return
++        end
++        if bit(v, 1) then -- FIFORst
++            self.rx, self.tx = {}, {}
++            self.tx_time = nil
++        end
++    end
++    self.regs[addr] = v
++    self:update_rts()
++    if #self.tx > 0 then
++        self:start_timer()
++    end
++end
++
++-- register pointer (SPI and I2C transfers)
++function UART:next_addr()
++    if self.addr ~= RHR then
++        self.addr = (self.addr + 1) & 0xFF
++    end
++end
++
++-- SPI ------------------------------------------------------------------------------
++function CHIP:select()
++    self.state = "cmd"
++end
++
++function CHIP:deselect()
++    self.state = nil
++end
++
++function CHIP:transfer(byte)
++    if self.in_reset then
++        return 0xFF
++    end
++    if self.state == "cmd" then
++        self.wr = byte & 0x80 ~= 0
++        self.cur = self.ports[(byte >> 5) & 0x03]
++        if self.cur then
++            self.cur.addr = byte & 0x1F
++        end
++        self.state = "data"
++        return 0x00
++    elseif self.state == "data" and self.cur then
++        local u, v = self.cur, 0x00
++        if self.wr then
++            u:write_reg(u.addr, byte)
++        else
++            v = u:read_reg(u.addr)
++        end
++        u:next_addr()
++        return v
++    end
++    return 0xFF
++end
++
++function CHIP:transfer_block(data)
++    if self.in_reset or self.state ~= "data" then
++        return nil -- command byte: transfer()
++    end
++    local out = {}
++    for i = 1, #data do
++        out[i] = string.char(self:transfer(data:byte(i)))
++    end
++    return table.concat(out)
++end
++
++-- I2C device of UART ---------------------------------------------------------------
++local function i2c_device(u)
++    local first = false
++    return {
++        select = function(_, read)
++            if u.chip.in_reset then
++                return false
++            end
++            first = not read
++            return true
++        end,
++        write = function(_, byte)
++            if first then
++                u.addr = byte
++                first = false
++            else
++                u:write_reg(u.addr, byte)
++                u:next_addr()
++            end
++        end,
++        read = function()
++            local v = u:read_reg(u.addr, true)
++            u:next_addr()
++            return v
++        end,
++    }
++end
++
++-- connection -----------------------------------------------------------------------
++function CHIP:attach(bus, where)
++    if bus:match("^I2C:") then
++        for n, u in pairs(self.ports) do
++            i2c.attach(bus, where - n * 0x10, i2c_device(u))
++        end
++    else
++        spi.attach(bus, where, self)
++    end
++    return self
++end
++
++function UART:connect_uart(bus)
++    local u = self
++    self.uart_bus = bus
++    uart.attach(bus, {
++        receive = function(_, data)
++            if u:format_mismatch() then
++                data = string.rep("\xFF", #data)
++            end
++            u:receive(data)
++        end,
++    })
++    return self
++end
++
++return M
+diff --git a/sim-env/tests/max310x.lua b/sim-env/tests/max310x.lua
+new file mode 100644
+index 0000000..6112efa
+--- /dev/null
++++ b/sim-env/tests/max310x.lua
+@@ -0,0 +1,256 @@
++--[[----------------------------------------------------------------------------
++  MAX310X driver test executed in dnx RTOS (lua program) with board
++  boards/test.lua: MAX3109 (chip 0) on SPI:1 (CS PA29, RST PA30) with serial
++  lines of UARTs connected to UART:4 and UART:5 (/dev/ttyS4, /dev/ttyS5),
++  MAX3107 (chip 1) on I2C:1 (0x2C, crystal), MAX3108 (chip 2) on SPI:1 (CS
++  PA31), MAX3109 (chip 3) on I2C:1 (0x6C, UART 1 0x5C), chip with wrong
++  revision ID on I2C:1 (0x2D). Registers and format programmed by the driver
++  are checked by the test control device (I2C:0 0x30).
++------------------------------------------------------------------------------]]
++
++local T = require("testlib")
++local dnx = require("dnx")
++local test, expect = T.test, T.expect
++
++local M0, M1 = "/dev/ttyM0", "/dev/ttyM1" -- MAX3109 (SPI) UART 0, 1
++local M2 = "/dev/ttyM2" -- MAX3107 (I2C)
++local M3 = "/dev/ttyM3" -- MAX3108 (SPI)
++local M4, M5 = "/dev/ttyM4", "/dev/ttyM5" -- MAX3109 (I2C) UART 0, 1
++local S4, S5 = "/dev/ttyS4", "/dev/ttyS5"
++local CHIP0 = "path=/dev/spi-max3109,chip=max3109,clock=3686400,reset_port=0,reset_pin=30"
++
++local function run(cmd)
++    local ok, out = T.run(cmd)
++    if not ok then
++        error(cmd .. ": " .. tostring(out), 2)
++    end
++    return out
++end
++
++local function configure(path, cfg)
++    return T.run(string.format("modprobe -c %s %s", path, cfg))
++end
++
++local function open(path)
++    local f = assert(io.open(path, "r+b"))
++    f:setvbuf("no")
++    return f
++end
++
++local function pattern(n, seed)
++    local t, x = {}, seed
++    for i = 1, n do
++        x = (x * 1103515245 + 12345) & 0x7FFFFFFF
++        t[i] = string.char((x >> 16) & 0xFF)
++    end
++    return table.concat(t)
++end
++
++-- write data to one file and read it from other (or the same) file
++local function transfer(wpath, rpath, data)
++    local w = open(wpath)
++    local r = (rpath == wpath) and w or open(rpath)
++    assert(w:write(data))
++    local rd = r:read(#data)
++    w:close()
++    if r ~= w then
++        r:close()
++    end
++    return rd
++end
++
++-- test control device ------------------------------------------------------------
++local ctl
++
++local function control(cmd)
++    ctl:seek("set", 0)
++    assert(ctl:write(cmd))
++    ctl:seek("set", 0)
++    local r = assert(ctl:read(128)):match("^[^%z]*")
++    if r:find("^error") then
++        error("control '" .. cmd .. "': " .. r, 2)
++    end
++    return r
++end
++
++local function format(chip, n)
++    return control(string.format("max310x %d %d format", chip, n))
++end
++
++local function reg(chip, n, addr)
++    return tonumber(control(string.format("max310x %d %d reg %d", chip, n, addr)))
++end
++
++-- tests ------------------------------------------------------------------------------
++test("Create devices (modprobe -c), chip reset and detection", function()
++    T.spi_devices()
++    T.modprobe("I2C", 0, 22, "/dev/i2c-ow-ctl", "address=0x30")
++    T.modprobe("I2C", 1, 20, "/dev/i2c-max3107", "address=0x2C,sub_addr_mode=1")
++    T.modprobe("I2C", 1, 21, "/dev/i2c-max3107-bad", "address=0x2D,sub_addr_mode=1")
++    T.modprobe("I2C", 1, 22, "/dev/i2c-max3109-0", "address=0x6C,sub_addr_mode=1")
++    T.modprobe("I2C", 1, 23, "/dev/i2c-max3109-1", "address=0x5C,sub_addr_mode=1")
++    ctl = open("/dev/i2c-ow-ctl")
++    T.modprobe("MAX310X", 0, 0, M0, CHIP0 .. ",baud=115200,loopback=1")
++    T.modprobe("MAX310X", 0, 1, M1, "baud=57600,loopback=1")
++    T.modprobe("MAX310X", 1, 0, M2,
++        "path=/dev/i2c-max3107,interface=i2c,chip=max3107,clock=1843200,crystal=1,baud=9600,loopback=1")
++    T.modprobe("MAX310X", 2, 0, M3, "path=/dev/spi-max3108,chip=max3108,clock=3686400,baud=38400,loopback=1")
++    T.modprobe("MAX310X", 3, 0, M4,
++        "path=/dev/i2c-max3109-0,interface=i2c,chip=max3109,clock=3686400,baud=19200,loopback=1")
++    T.modprobe("MAX310X", 3, 1, M5, "path=/dev/i2c-max3109-1,interface=i2c,baud=4800,loopback=1")
++    local expected = {
++        { 0, 0, "115200 8 none 1" },
++        { 0, 1, "57600 8 none 1" },
++        { 1, 0, "9600 8 none 1" },
++        { 2, 0, "38400 8 none 1" },
++        { 3, 0, "19200 8 none 1" },
++        { 3, 1, "4800 8 none 1" },
++    }
++    for _, e in ipairs(expected) do
++        local f = format(e[1], e[2])
++        expect(f == e[3], string.format("format of chip %d UART %d: %s", e[1], e[2], f))
++    end
++end)
++
++test("Internal loopback of all UARTs (SPI, I2C, MAX3107/3108/3109)", function()
++    for i, path in ipairs({ M0, M1, M2, M3, M4, M5 }) do
++        local data = pattern(100, i)
++        expect(transfer(path, path, data) == data, path .. ": data mismatch")
++    end
++end)
++
++test("Data larger than FIFO (buffers of driver)", function()
++    local data = pattern(1000, 7)
++    expect(configure(M0, CHIP0 .. ",baud=115200,loopback=1,rx_buffer=1024,tx_buffer=256"), "configuration failed")
++    expect(transfer(M0, M0, data) == data, "data mismatch")
++end)
++
++test("Data received when device is not read", function()
++    run("modprobe -c " .. S4 .. " baud=115200,parity=off")
++    expect(configure(M0, CHIP0 .. ",baud=115200,rx_buffer=512"), "configuration failed")
++    local data = pattern(400, 8) -- more than FIFO of chip
++    local s = open(S4)
++    assert(s:write(data))
++    s:close()
++    dnx.sys.msleep(300)
++    local f = open(M0)
++    local rd = f:read(#data)
++    f:close()
++    expect(rd == data, "data mismatch")
++end)
++
++test("UART 1 is configured again after configuration of UART 0", function()
++    expect(format(0, 1) == "57600 8 none 1", "format of UART 1: " .. format(0, 1))
++    local data = pattern(50, 9)
++    expect(transfer(M1, M1, data) == data, "UART 1: data mismatch")
++end)
++
++test("Serial lines to system UARTs: 19200 8E1 and 9600 8N2", function()
++    run("modprobe -c " .. S4 .. " baud=19200,parity=even,stop_bits=1")
++    run("modprobe -c " .. S5 .. " baud=9600,parity=off,stop_bits=2")
++    expect(configure(M0, CHIP0 .. ",baud=19200,parity=even"), "configuration of UART 0 failed")
++    expect(configure(M1, "path=/dev/spi-max3109,baud=9600,stop_bits=2"), "configuration of UART 1 failed")
++    expect(format(0, 0) == "19200 8 even 1", "format of UART 0: " .. format(0, 0))
++    expect(format(0, 1) == "9600 8 none 2", "format of UART 1: " .. format(0, 1))
++    expect(transfer(M0, S4, "UART0 -> S4") == "UART0 -> S4", "UART 0 -> S4 mismatch")
++    expect(transfer(S4, M0, "S4 -> UART0") == "S4 -> UART0", "S4 -> UART 0 mismatch")
++    expect(transfer(M1, S5, "UART1 -> S5") == "UART1 -> S5", "UART 1 -> S5 mismatch")
++    expect(transfer(S5, M1, "S5 -> UART1") == "S5 -> UART1", "S5 -> UART 1 mismatch")
++end)
++
++test("Baud rates of generator (1x, 2x, 4x mode) and format", function()
++    local list = {
++        { "baud=300", "300 8 none 1" },
++        { "baud=57600,stop_bits=2", "57600 8 none 2" },
++        { "baud=460800,parity=odd", "460800 8 odd 1" },
++        { "baud=921600,word_length=7", "921600 7 none 1" },
++    }
++    for _, c in ipairs(list) do
++        expect(configure(M1, "path=/dev/spi-max3109," .. c[1]), c[1] .. ": configuration failed")
++        local f = format(0, 1)
++        expect(f == c[2], c[1] .. ": format " .. f)
++    end
++end)
++
++test("Different baud rate gives unreadable data", function()
++    run("modprobe -c " .. S5 .. " baud=19200,parity=off,stop_bits=1")
++    expect(configure(M1, "path=/dev/spi-max3109,baud=9600"), "configuration failed")
++    expect(transfer(M1, S5, "abc") == "\xFF\xFF\xFF", "data should be unreadable")
++end)
++
++test("Hardware flow control and RS485 registers", function()
++    expect(configure(M1, "path=/dev/spi-max3109,baud=115200,hw_flow_ctrl=1,flow_halt=64,flow_resume=16,rs485=1"),
++        "configuration failed")
++    expect(reg(0, 1, 0x13) == 0x03, "FlowCtrl: " .. reg(0, 1, 0x13))
++    expect(reg(0, 1, 0x0F) == 0x28, "FlowLvl: " .. reg(0, 1, 0x0F))
++    expect(reg(0, 1, 0x09) == 0x10, "MODE1: " .. reg(0, 1, 0x09))
++    -- configuration without these options resets registers (UART reset)
++    expect(configure(M1, "path=/dev/spi-max3109,baud=115200"), "configuration failed")
++    expect(reg(0, 1, 0x13) == 0x00 and reg(0, 1, 0x09) == 0x00, "registers of previous configuration")
++end)
++
++test("AutoCTS: transmission waits for CTS", function()
++    run("modprobe -c " .. S5 .. " baud=115200,parity=off,stop_bits=1")
++    expect(configure(M1, "path=/dev/spi-max3109,baud=115200,hw_flow_ctrl=1"), "configuration failed")
++    control("max310x 0 1 cts 0")
++    local w = open(M1)
++    assert(w:write("cts"))
++    w:close()
++    dnx.sys.msleep(100)
++    local level = reg(0, 1, 0x11)
++    control("max310x 0 1 cts 1")
++    expect(level == 3, "TX FIFO level with inactive CTS: " .. tostring(level))
++    local r = open(S5)
++    local rd = r:read(3)
++    r:close()
++    expect(rd == "cts", "data after CTS activation")
++end)
++
++test("Disabled transmitter and receiver", function()
++    expect(configure(M1, "path=/dev/spi-max3109,baud=115200,tx_enable=0,rx_enable=0"), "configuration failed")
++    local f = open(M1)
++    expect(not f:write("x"), "write with disabled transmitter")
++    expect(not f:read(1), "read with disabled receiver")
++    f:close()
++end)
++
++test("Invalid configuration is rejected", function()
++    local bad = {
++        { M0, "clock=3686400,baud=115200" },
++        { M0, "path=/dev/spi-max3109,chip=max3109,clock=0" },
++        { M1, "path=/dev/spi-max3109,baud=2000000" },
++        { M1, "path=/dev/spi-max3109,baud=0" },
++        { M1, "path=/dev/spi-max3109,word_length=9" },
++        { M1, "path=/dev/spi-max3109,hw_flow_ctrl=1,flow_halt=32,flow_resume=32" },
++        { M1, "path=/dev/spi-max3109,parity=mark" },
++        { M1, "path=/dev/spi-max3109,interface=i2c" },
++        { M0, "path=/dev/spi-max3109,chip=max3107,clock=3686400" }, -- UART 1 exists
++        { M0, "path=/dev/spi-max3109,chip=max3110" },
++    }
++    for _, b in ipairs(bad) do
++        expect(not configure(b[1], b[2]), "accepted: " .. b[1] .. " " .. b[2])
++    end
++    expect(configure(M0, CHIP0 .. ",baud=115200,loopback=1"), "valid configuration after errors")
++    expect(configure(M1, "path=/dev/spi-max3109,baud=115200,loopback=1"), "valid configuration after errors")
++    expect(transfer(M1, M1, "ok") == "ok", "device works after errors")
++end)
++
++test("Detection of chip type", function()
++    local ok = T.run("modprobe -i MAX310X 4 0 /dev/ttyM6 -c path=/dev/i2c-max3107-bad,interface=i2c,clock=3686400")
++    expect(not ok, "chip with wrong revision ID accepted")
++    expect(not configure(M2, "path=/dev/i2c-max3107,interface=i2c,chip=max3109,clock=1843200,crystal=1"),
++        "MAX3107 accepted as MAX3109")
++    expect(not configure(M4, "path=/dev/i2c-max3109-0,interface=i2c,chip=max3107,clock=3686400"),
++        "MAX3109 accepted as MAX3107")
++    expect(not T.run("modprobe -i MAX310X 1 1 /dev/ttyM7 -c path=/dev/i2c-max3107,interface=i2c"),
++        "UART 1 of MAX3107 accepted")
++end)
++
++test("Release of UARTs", function()
++    expect(not T.run("modprobe -r MAX310X 0 0"), "UART 0 released before UART 1")
++    run("modprobe -r MAX310X 0 1")
++    run("modprobe -r MAX310X 0 0")
++    expect(not io.open(M0, "r+b"), "released device can be opened")
++end)
++
++T.summary()
+diff --git a/sim-env/tests/testlib.lua b/sim-env/tests/testlib.lua
+index b473e89..4f0f2ba 100644
+--- a/sim-env/tests/testlib.lua
++++ b/sim-env/tests/testlib.lua
+@@ -110,6 +110,8 @@ T.SPI_DEVICES = {
+     { "/dev/spi-sd", 0, 15, "cs_port=0,cs_pin=15" },
+     { "/dev/spi-sdv1", 0, 16, "cs_port=0,cs_pin=17" },
+     { "/dev/spi-595", 1, 10, "cs_port=0,cs_pin=16" },
++    { "/dev/spi-max3109", 1, 11, "cs_port=0,cs_pin=29" },
++    { "/dev/spi-max3108", 1, 12, "cs_port=0,cs_pin=31" },
+     { "/dev/spi-none", 2, 10, nil },
+     { "/dev/spi-mcp", 2, 11, "cs_port=1,cs_pin=2" },
+     { "/dev/spi-lcd", 3, 0, "cs_port=1,cs_pin=1,mode=0" },
+diff --git a/tools/simtest.py b/tools/simtest.py
+index 403b096..a4ee120 100755
+--- a/tools/simtest.py
++++ b/tools/simtest.py
+@@ -942,7 +942,7 @@ class TestRunner:
+ 
+         # board model (before fstest on hostfs, test files are removed after test)
+         board_tests = ("board: gpio", "board: i2c", "board: i2cee", "board: ds2482", "board: spi", "board: spiee",
+-                       "board: mcp23s17", "board: uart", "board: net", "board: bt817",
++                       "board: mcp23s17", "board: uart", "board: max310x", "board: net", "board: bt817",
+                        "board: sdcard", "fstest: ext2 on sdspi", "board: panel")
+         if args.board:
+             # Ethernet models of the board: netmgr configures the network in background, its
+@@ -963,6 +963,7 @@ class TestRunner:
+             self.summary_test(sim, "board: ds2482", "/host/sim-env", "lua ds2482.lua", DEFAULT_TIMEOUT)
+             self.summary_test(sim, "board: mcp23s17", "/host/sim-env", "lua mcp23s17.lua", DEFAULT_TIMEOUT)
+             self.summary_test(sim, "board: uart", "/host/sim-env", "lua uart.lua", DEFAULT_TIMEOUT)
++            self.summary_test(sim, "board: max310x", "/host/sim-env", "lua max310x.lua", DEFAULT_TIMEOUT)
+             self.summary_test(sim, "board: net", "/host/sim-env", "lua net.lua", DEFAULT_TIMEOUT)
+             self.summary_test(sim, "board: bt817", "/host/sim-env", "lua bt817.lua", DEFAULT_TIMEOUT)
+             self.summary_test(sim, "board: spi", "/host/sim-env", "lua spi.lua", DEFAULT_TIMEOUT)

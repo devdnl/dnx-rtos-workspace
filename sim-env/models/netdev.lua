@@ -37,6 +37,8 @@
     gateway     default nil (only local network is reachable)
     mac         MAC address "02:00:00:00:00:32", default 02:00 + IP bytes
     name        name in messages (default IP address)
+    segment     Ethernet segment (default "lan": network of the system
+                interface /dev/eth, see eth.attach())
     trace       print sent and received packets (default false)
 
   Device methods:
@@ -171,6 +173,7 @@ function M.new(opts)
     d.mac = opts.mac and M.mac_parse(opts.mac) or ("\x02\x00" .. string.pack(">I4", d.ip))
     d.bcast = (d.ip & d.mask) | (~d.mask & 0xFFFFFFFF)
     d.name = opts.name or M.ip_str(d.ip)
+    d.segment = opts.segment
     d.trace = opts.trace
     d.arp = {} -- ip -> mac
     d.arp_wait = {} -- ip -> {packets = {}, tries, timer}
@@ -190,7 +193,7 @@ function DEV:log(fmt, ...)
 end
 
 function DEV:attach()
-    eth.attach(self)
+    eth.attach(self, self.segment)
     -- gratuitous ARP: the system and the host learn MAC address
     self:arp_send(1, BROADCAST_MAC, self.ip, string.rep("\0", 6), self.ip)
     return self
