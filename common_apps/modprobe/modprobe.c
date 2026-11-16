@@ -83,6 +83,8 @@ static void show_help(const char *name)
         puts("  -r            release module <module name> <major> <minor>");
         puts("  -R            release module <module path>");
         puts("  -h, --help    this help");
+        puts("Keys of configuration string: section \"Configuration string\" of");
+        puts("<module>_ioctl.h of the kernel (e.g. uart_ioctl.h).");
 }
 
 //==============================================================================

@@ -191,6 +191,8 @@ Notes:
   "key=value,key=value", parsed by `sys_opt_*()`, enumerations by
   `sys_opt_get_enum()`); from shell: `modprobe -i <drv> <major> <minor> <path>
   -c <config>` (new device) or `modprobe -c <path> <config>` (existing device).
+  Keys of each driver are documented in the table of section "Configuration
+  string" of `<drv>_ioctl.h` (checked by `kernel/tools/cfgstr_check.py`).
 - `make test-sim` (`tools/simtest.py`) runs driver configuration string tests
   (`devcfg`), board tests (`sim-env/tests/*.lua`: GPIO, I2C, I2CEE, DS2482, SPI,
   SPIEE, MCP23S17, UART (echo, NMEA GPS), Ethernet (netdev: ping, UDP, TCP), SDSPI, board panel protocol with LCD and touch, BT817 EVE), the block layer test
