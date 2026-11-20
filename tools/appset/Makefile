@@ -421,7 +421,9 @@ generate :
 	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" > $(TARGET_DIR_NAME)/build-tmp/defs.h
 	@$(ECHO) "#define BRANCH_NAME \"$(shell git symbolic-ref --short HEAD 2>/dev/null)"\" >> $(TARGET_DIR_NAME)/build-tmp/defs.h
 	@$(ECHO) "#define BOARD_NAME \"$(BOARD_NAME)\"" >> $(TARGET_DIR_NAME)/build-tmp/defs.h
-	@$(ECHO) "#define board_name_$(BOARD_NAME)" >> $(TARGET_DIR_NAME)/build-tmp/defs.h
+	@$(ECHO) "#define BOARD_NAME_$(BOARD_NAME)" >> $(TARGET_DIR_NAME)/build-tmp/defs.h
+	@$(ECHO) "#define PROJECT_$(BOARD_NAME)" >> $(TARGET_DIR_NAME)/build-tmp/defs.h
+	@$(ECHO) "#define PROJECT \"$(BOARD_NAME)\"" >> $(TARGET_DIR_NAME)/build-tmp/defs.h
 	@$(ECHO) "#define PROJECT_OPTS \"$(PROJECT_OPTS)\"" >> $(TARGET_DIR_NAME)/build-tmp/defs.h
 	@$(ECHO) "#define COMPILE_EPOCH_TIME $(shell $(DATE) "+%s")" > $(TARGET_DIR_NAME)/build-tmp/vars.h
 	@$(SYNCDIR) $(TARGET_DIR_NAME)/build-tmp/ $(TARGET_DIR_NAME)/build/
