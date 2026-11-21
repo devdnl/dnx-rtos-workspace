@@ -72,6 +72,68 @@ __ROMFS_NAME__="romfs"
 __ROMFS_ADDRESS__=0x080C0000
 #*/
 
+#/*--
+# this:AddWidget("Editline", false, "ROMFS partition size")
+# this:SetToolTip("Size of ROMFS partition in bytes (e.g. 0x20000). The build fails when the image is "..
+#                 "bigger. 0: not checked. The partition is given to the MEMBLOCK driver in initd, "..
+#                 "romfs finds the image by its header and df shows free space of the partition.")
+#--*/
+#define __ROMFS_SIZE__ 0x80000
+#/*
+__ROMFS_SIZE__=0x80000
+#*/
+
+#/*--
+# this:AddWidget("Editline", false, "Owner of files (user ID)")
+# this:SetToolTip("Default owner (user ID) of files of the image (0: root).")
+#--*/
+#define __ROMFS_UID__ 0
+#/*
+__ROMFS_UID__=0
+#*/
+
+#/*--
+# this:AddWidget("Editline", false, "Group of files (group ID)")
+# this:SetToolTip("Default group ID of files of the image (0: root).")
+#--*/
+#define __ROMFS_GID__ 0
+#/*
+__ROMFS_GID__=0
+#*/
+
+#/*--
+# this:AddWidget("Editline", false, "Mode of files")
+# this:SetToolTip("Default permissions of files (octal), e.g. 0444: all users read files.")
+#--*/
+#define __ROMFS_FILE_MODE__ 0444
+#/*
+__ROMFS_FILE_MODE__=0444
+#*/
+
+#/*--
+# this:AddWidget("Editline", false, "Mode of directories")
+# this:SetToolTip("Permissions of directories (octal), e.g. 0555. Directories are owned by root.")
+#--*/
+#define __ROMFS_DIR_MODE__ 0555
+#/*
+__ROMFS_DIR_MODE__=0555
+#*/
+
+#/*--
+# this:AddWidget("Editline", true, "Permissions of selected files")
+# this:SetToolTip("Permissions of selected files of the image, entries separated by spaces:\n"..
+#                 "  path:mode[:uid[:gid]]\n"..
+#                 "path: absolute path in the image (/shadow is /etc/shadow when the image is mounted in "..
+#                 "/etc), characters encoded as in URL: %20 space, %3A colon, %25 percent;\n"..
+#                 "mode: octal permissions, e.g. 0600;\n"..
+#                 "uid, gid: owner and group (default: user ID and group ID of files).\n"..
+#                 "Example: \"/shadow:0600 /app.key:0640:0:10 /my%20data/key.pem:0600:1000:1000\"")
+#--*/
+#define __ROMFS_PERMISSIONS__ "/shadow:0600"
+#/*
+__ROMFS_PERMISSIONS__="/shadow:0600"
+#*/
+
 #endif /* _ROMFS_CONFIG_H_ */
 #/*=============================================================================
 #  End of file

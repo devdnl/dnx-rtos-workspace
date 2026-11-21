@@ -218,6 +218,11 @@ typedef enum {
         _LIBC_SYS_SYSCONF,                // int errno (const int *name, long *value)
         _LIBC_SYS_ATOMICTAS,              // int errno (u8_t *flag): 0 when flag set by caller, EBUSY when flag already set
         _LIBC_SYS_CONFSTR,                // int errno (const int *name, const char **ref)
+        _LIBC_SYS_SETUID,                 // int errno (const uid_t *uid, const bool *thread)
+        _LIBC_SYS_SETGID,                 // int errno (const gid_t *gid, const bool *thread)
+        _LIBC_SYS_UMASK,                  // int errno (const mode_t *mask (NULL: get), mode_t *old)
+        _LIBC_SYS_GETEUID,                // int errno (uid_t *uid)
+        _LIBC_SYS_GETEGID,                // int errno (gid_t *gid)
 } _libc_syscall_t;
 // clang-format on
 

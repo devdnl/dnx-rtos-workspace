@@ -37,6 +37,7 @@
 ==============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <sys/ioctl.h>
@@ -52,18 +53,17 @@
 #include <time.h>
 #include <llist.h>
 #include <conf_parser.h>
+#include <auth.h>
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
 #define DEBUG_CMD_ENABLE         false
 
-#define CONFIG_KEY_USER          "user"
-#define CONFIG_KEY_PASSWORD      "password"
 #define CONFIG_KEY_PORT          "port"
 #define CONFIG_KEY_DEBUG         "debug"
-#define CONFIG_KEY_ALLOW_ENABLE  "allow.enable"
-#define CONFIG_KEY_ALLOW_BASE    "allow."
+#define CONFIG_KEY_ANONYMOUS     "anonymous"
+#define AUTH_SERVICE             "mqtt"
 #define CONFIG_KEY_STATS_PATH    "runtime_stats_path"
 
 #define MAX_TOPIC_LENGTH         128
@@ -475,7 +475,9 @@ static mqtt_reason_t topicdb_update_topic(const char *topic, const void *msg_ref
 GLOBAL_VARIABLES_SECTION {
         conf_parser_t *conf;
         bool debug;
-        bool allow_list_enabled;
+        bool anonymous;
+        auth_ratelimit_t ratelimit;
+        auth_cache_t auth_cache;
         uint32_t session_id_ctr;
 
         struct {
@@ -524,15 +526,12 @@ static void print_help(char *argv[])
         printf("\n");
 
         printf("Example configuration:\n");
-        printf("user = \"user\"\n");
-        printf("password = \"password\"\n");
         printf("port = 1883\n");
+        printf("anonymous = false\n");
         printf("debug = false\n");
         printf("\n");
-        printf("[allow]\n");
-        printf("enable = false\n");
-        printf("client_id1 = false\n");
-        printf("client_id2 = false\n");
+        printf("Clients log in with accounts of service 'mqtt' of password file (passwd\n");
+        printf("program), anonymous = true disables authentication.\n");
 }
 
 //==============================================================================
@@ -586,10 +585,18 @@ int main(int argc, char *argv[])
                 printf("[%s, info] debug enabled.\n", argv[0]);
         }
 
-        global->allow_list_enabled = conf_parser__is_value_true(
-                conf_parser__get_value(global->conf, CONFIG_KEY_ALLOW_ENABLE));
-        if (global->allow_list_enabled) {
-                printf("[%s, info] allowing connections only from allow list.\n", argv[0]);
+        global->anonymous = conf_parser__is_value_true(
+                conf_parser__get_value(global->conf, CONFIG_KEY_ANONYMOUS));
+        if (global->anonymous) {
+                printf("[%s, info] anonymous access, authentication disabled!\n", argv[0]);
+        } else if (not auth_is_configured()) {
+                printf("[%s, info] no accounts, connections are refused (set passwords by passwd program)\n",
+                        argv[0]);
+        }
+
+        if (auth_ratelimit_init(&global->ratelimit) != 0) {
+                printf("[%s, info] not enough free memory!\n", argv[0]);
+                goto cleanup;
         }
 
         global->runtime_stats.path = conf_parser__get_value(global->conf, CONFIG_KEY_STATS_PATH);
@@ -633,11 +640,6 @@ int main(int argc, char *argv[])
         if ((port <= 0) or (port > 65535)) {
                 printf("[%s, info] invalid port number!\n", argv[0]);
                 goto cleanup;
-        }
-
-        if (not conf_parser__get_value(global->conf, CONFIG_KEY_USER) and
-                not conf_parser__get_value(global->conf, CONFIG_KEY_PASSWORD)) {
-                printf("[%s, info] no user and password configured, authentication disabled!\n", argv[0]);
         }
 
         errno = 0;
@@ -705,6 +707,7 @@ cleanup:
 
         llist_delete(global->sessions);         // sessions first: subscriptions refer to topic DB
         llist_delete(global->topic_db.data);
+        auth_ratelimit_deinit(&global->ratelimit);
         conf_parser__delete(global->conf);
 
         return exit_code;
@@ -2005,51 +2008,31 @@ static bool session_cmd_connect(session_t *session)
                 reason_code = mqtt_reason__client_identifier_not_valid;
         }
 
-        if ((reason_code == mqtt_reason__success) and global->allow_list_enabled) {
-                bool client_allowed = false;
-
-                size_t i = 0;
-                const char *key = NULL;
-                const char *val = NULL;
-
-                const char *base = CONFIG_KEY_ALLOW_BASE;
-                const size_t base_len = strlen(base);
-
-                while (conf_parser__get_pair(global->conf, i, &key, &val) == 0) {
-
-                        if (key and isstreqn(key, base, base_len)) {
-                                const char *client_name = key + base_len;
-
-                                if (str_equal(client_name, session->client_id) and
-                                        (conf_parser__is_value_true(val))) {
-                                        client_allowed = true;
-                                        break;
-                                }
-                        }
-
-                        i++;
-                }
-
-                if (not client_allowed) {
-                        VERBOSE_SESSION_WARNING("client '%s' not allowed!\n", session->client_id);
+        if ((reason_code == mqtt_reason__success) and not global->anonymous) {
+                if (not auth_ratelimit_allow(&global->ratelimit, session->client_ip)) {
+                        VERBOSE_SESSION_WARNING("client '%s' blocked (too many failed logins)!\n",
+                                session->client_id);
                         reason_code = mqtt_reason__not_authorized;
+
+                } else if (not session->user_name or not session->password or
+                        (auth_check_cached(&global->auth_cache, session->user_name, session->password,
+                                 AUTH_SERVICE, NULL) != 0)) {
+
+                        VERBOSE_SESSION_WARNING("invalid credentials of client '%s' (user: '%s')!\n",
+                                session->client_id, SAFE_STR(session->user_name));
+
+                        auth_ratelimit_report(&global->ratelimit, session->client_ip, false);
+                        reason_code = mqtt_reason__bad_user_name_or_password;
+
+                } else {
+                        auth_ratelimit_report(&global->ratelimit, session->client_ip, true);
                 }
         }
 
-        if (reason_code == mqtt_reason__success) {
-                const char *cfg_user = conf_parser__get_value(global->conf, CONFIG_KEY_USER);
-                const char *cfg_password = conf_parser__get_value(global->conf, CONFIG_KEY_PASSWORD);
-
-                if (cfg_user or cfg_password) {
-                        if (not str_equal(session->user_name, cfg_user) or
-                                not str_equal(session->password, cfg_password)) {
-
-                                VERBOSE_SESSION_WARNING("invalid credentials of client '%s' (user: '%s')!\n",
-                                        session->client_id, SAFE_STR(session->user_name));
-
-                                reason_code = mqtt_reason__bad_user_name_or_password;
-                        }
-                }
+        if (session->password) {
+                auth_wipe(session->password, strlen(session->password));
+                free(session->password);
+                session->password = NULL;
         }
 
         if (reason_code == mqtt_reason__success) {

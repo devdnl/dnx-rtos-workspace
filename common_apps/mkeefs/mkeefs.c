@@ -332,8 +332,8 @@ static int mkfs(void)
         global->block.dir.magic = BLOCK_MAGIC_DIR;
         global->block.dir.ctime = t;
         global->block.dir.mtime = t;
-        global->block.dir.gid = getgid();
-        global->block.dir.uid = getuid();
+        global->block.dir.gid = getegid();
+        global->block.dir.uid = geteuid();
         global->block.dir.mode = 0666;
         global->block.dir.parent = 0;
         global->block.dir.all_items = 0;

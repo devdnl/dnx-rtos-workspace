@@ -89,6 +89,9 @@ typedef struct {
         const char *p_stderr;    //!< stderr file path (minor)
         i16_t priority;          //!< process priority
         bool detached;           //!< independent process (no parent)
+        bool set_credentials;    //!< use uid and gid (only root), otherwise credentials of creator
+        uid_t uid;               //!< user ID of process
+        gid_t gid;               //!< group ID of process
 } _syscall_process_attr_t;
 
 static_assert(sizeof(futex_t) >= sizeof(atomic_flag), "");
@@ -201,11 +204,14 @@ static void process_at_exit(void)
  *
  * @param  cmd          command
  * @param  attr         process attributes
+ * @param  set_cred     use uid and gid
+ * @param  uid          user ID
+ * @param  gid          group ID
  *
  * @return On success PID is returned, otherwise 0.
  */
 //==============================================================================
-pid_t process_create(const char *cmd, const process_attr_t *attr)
+static pid_t create_process(const char *cmd, const process_attr_t *attr, bool set_cred, uid_t uid, gid_t gid)
 {
         pid_t pid = 0;
 
@@ -219,6 +225,9 @@ pid_t process_create(const char *cmd, const process_attr_t *attr)
         sys_attr.cwd = attr->cwd;
         sys_attr.detached = attr->detached;
         sys_attr.priority = attr->priority;
+        sys_attr.set_credentials = set_cred;
+        sys_attr.uid = uid;
+        sys_attr.gid = gid;
         sys_attr.at_init = process_at_init;
         sys_attr.at_init_ctx = (void *)attr;
         sys_attr.at_exit = process_at_exit;
@@ -233,6 +242,47 @@ pid_t process_create(const char *cmd, const process_attr_t *attr)
 
         int err = _libc_syscall(_LIBC_SYS_PROCESSCREATE, cmd, &sys_attr, &pid);
         return err ? 0 : pid;
+}
+
+//==============================================================================
+/**
+ * @brief  Create new process.
+ *
+ * @param  cmd          command
+ * @param  attr         process attributes
+ *
+ * @return On success PID is returned, otherwise 0.
+ */
+//==============================================================================
+pid_t process_create(const char *cmd, const process_attr_t *attr)
+{
+        return create_process(cmd, attr, false, 0, 0);
+}
+
+//==============================================================================
+/**
+ * @brief  Create new process with selected user and group ID (only root).
+ *
+ * @param  cmd          command
+ * @param  attr         process attributes
+ * @param  uid          user ID
+ * @param  gid          group ID
+ *
+ * @return On success PID is returned, otherwise 0.
+ */
+//==============================================================================
+pid_t process_create_as(const char *cmd, const process_attr_t *attr, uid_t uid, gid_t gid)
+{
+#if __LIBC_PERMISSIONS_ENABLE__ == _YES_
+        return create_process(cmd, attr, true, uid, gid);
+#else
+        (void)cmd;
+        (void)attr;
+        (void)uid;
+        (void)gid;
+        errno = ENOSYS;
+        return 0;
+#endif
 }
 
 //==============================================================================

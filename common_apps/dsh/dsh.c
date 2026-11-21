@@ -50,6 +50,9 @@
 #include <dnx/thread.h>
 #include <dnx/misc.h>
 #include <dnx/vt100.h>
+#if __LIBC_PERMISSIONS_ENABLE__ == _YES_
+#include <auth.h>
+#endif
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -187,6 +190,10 @@ GLOBAL_VARIABLES_SECTION {
         const char *capture_file;
         u8_t capture_depth;
         bool captured;
+#if __LIBC_PERMISSIONS_ENABLE__ == _YES_
+        char user[AUTH_USER_MAX + 1]; // name of user in prompt
+        uid_t user_uid;               // user ID of name (name is read once)
+#endif
 };
 
 /*==============================================================================
@@ -230,7 +237,26 @@ static void print_prompt(void)
                 char hostname[64];
                 get_host_name(hostname, sizeof(hostname));
 
+#if __LIBC_PERMISSIONS_ENABLE__ == _YES_
+                uid_t uid = geteuid();
+                if ((global->user[0] == '\0') || (global->user_uid != uid)) {
+                        auth_user_t *account = malloc(sizeof(auth_user_t));
+                        if (account && (auth_get_user(NULL, uid, account) == 0)) {
+                                strcpy(global->user, account->name);
+                        } else if (uid == 0) {
+                                strcpy(global->user, "root");
+                        } else {
+                                snprintf(global->user, sizeof(global->user), "%u", uid);
+                        }
+                        free(account);
+                        global->user_uid = uid;
+                }
+
+                printf(VT100_FONT_COLOR_GREEN "%s@%s:%s" VT100_RESET_ATTRIBUTES "\n", global->user, hostname,
+                        global->cwd);
+#else
                 printf(VT100_FONT_COLOR_GREEN "%s:%s" VT100_RESET_ATTRIBUTES "\n", hostname, global->cwd);
+#endif
 
                 printf(VT100_FONT_COLOR_GREEN "$ " VT100_RESET_ATTRIBUTES);
 
@@ -654,7 +680,8 @@ static char *find_arg(char *cmd)
 
 //==============================================================================
 /**
- * @brief Function change current working path
+ * @brief Function change current working path (without argument or with '~':
+ *        home directory of user).
  *
  * @param str          command name with arguments
  */
@@ -665,7 +692,21 @@ static void change_directory(char *str)
 
         memset(global->cwd, 0, sizeof(global->cwd));
 
-        if (arg[0] == '/') {
+        if ((arg[0] == '\0') || (arg[0] == '~')) {
+                /* home directory of user (cd, cd ~, cd ~/dir) */
+                strcpy(global->cwd, "/");
+#if __LIBC_PERMISSIONS_ENABLE__ == _YES_
+                auth_user_t *account = malloc(sizeof(auth_user_t));
+                if (account && (auth_get_user(NULL, geteuid(), account) == 0) && account->home[0]) {
+                        strlcpy(global->cwd, account->home, sizeof(global->cwd));
+                }
+                free(account);
+#endif
+                if (arg[0] == '~') {
+                        strlcat(global->cwd, "/", sizeof(global->cwd));
+                        strlcat(global->cwd, arg + 1, sizeof(global->cwd));
+                }
+        } else if (arg[0] == '/') {
                 strlcpy(global->cwd, arg, sizeof(global->cwd));
         } else {
                 getcwd(global->cwd, sizeof(global->cwd));
@@ -2918,7 +2959,7 @@ int main(int argc, char *argv[])
         global->pipe_file = "/run/dsh-";
 
         /* working directory and pipe directory are needed also by -e option */
-        mkdir("/run", 0666);
+        mkdir("/run", 0777);
 
         getcwd(global->cwd, CWD_PATH_LEN);
         chdir(global->cwd);

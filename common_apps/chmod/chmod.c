@@ -82,7 +82,7 @@ static void print_help(const char *name)
         printf("Usage: %s MODE FILE\n\n", name);
         printf("Mode:\n");
         printf("   [+|-][x|r|w]  flag selection (only USR)\n");
-        printf("   value         mode value\n");
+        printf("   value         octal mode value (e.g. 644, 0750)\n");
 }
 
 //==============================================================================
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
                         } else {
                                 if (isdigit(argv[1][0])) {
                                         char *end;
-                                        st.st_mode = strtol(argv[1], &end, 0);
+                                        st.st_mode = strtol(argv[1], &end, 8);
                                 } else {
                                         print_help(argv[0]);
                                         return EXIT_FAILURE;

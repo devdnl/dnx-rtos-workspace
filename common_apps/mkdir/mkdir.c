@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 {
         (void)argc;
 
-        if (mkdir(argv[1], 0666) != 0) {
+        if (mkdir(argv[1], 0777) != 0) {
                 perror(argv[1]);
                 return EXIT_FAILURE;
         }

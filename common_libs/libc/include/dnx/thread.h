@@ -212,6 +212,8 @@ typedef struct {
         u16_t stack_max_usage;    //!< max stack usage
         i16_t priority;           //!< priority
         u16_t syscalls_per_sec;   //!< syscalls per second
+        uid_t uid;                //!< user ID of main thread (0 without permissions)
+        gid_t gid;                //!< group ID of main thread (0 without permissions)
 } process_stat_t;
 
 /**
@@ -306,6 +308,106 @@ typedef struct {
  */
 //==============================================================================
 extern pid_t process_create(const char *cmd, const process_attr_t *attr);
+
+//==============================================================================
+/**
+ * @brief Function creates new process with selected user and group ID.
+ *
+ * The function process_create_as() works as process_create(), the process
+ * gets selected user and group ID instead of credentials of the calling
+ * thread. Only root (user ID 0) can select other credentials (e.g. initd
+ * starts service as user, login starts shell of user).
+ *
+ * @param cmd                   command
+ * @param attr                  process attributes
+ * @param uid                   user ID of process
+ * @param gid                   group ID of process
+ *
+ * @exception | @ref EPERM (caller is not root)
+ * @exception | @ref ENOSYS (system without users and file permissions)
+ *
+ * @return On success return process ID (PID), otherwise 0.
+ *
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+        static const process_attr_t attr = {.cwd = "/", .fd_stdin = -1, .fd_stdout = -1, .fd_stderr = -1};
+        pid_t pid = process_create_as("mqtt_broker --config=/etc/mqtt.conf", &attr, 1001, 1001);
+        // ...
+   @endcode
+ *
+ * @see process_create()
+ */
+//==============================================================================
+extern pid_t process_create_as(const char *cmd, const process_attr_t *attr, uid_t uid, gid_t gid);
+
+//==============================================================================
+/**
+ * @brief  Function sets user ID of the calling thread only.
+ *
+ * The thread_setuid() function works as setuid() but changes only the calling
+ * thread (dnx RTOS extension, e.g. session threads of a server started by root
+ * work as logged in users). Threads of one process share memory and opened
+ * files, so it is not a protection between threads.
+ *
+ * @param  uid          user ID
+ *
+ * @return On success 0 is returned, otherwise -1 and errno is set (EPERM: not
+ *         allowed, ENOSYS: system without users and file permissions).
+ *
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+        if ((thread_setgid(1000) != 0) || (thread_setuid(1000) != 0)) {
+                perror("thread_setuid");
+        }
+        // ...
+   @endcode
+ *
+ * @see thread_setgid(), setuid()
+ */
+//==============================================================================
+static inline int thread_setuid(uid_t uid)
+{
+#if __LIBC_PERMISSIONS_ENABLE__ == _YES_
+        bool thread = true;
+        int err = _libc_syscall(_LIBC_SYS_SETUID, &uid, &thread);
+        return err ? -1 : 0;
+#else
+        (void)uid;
+        errno = ENOSYS;
+        return -1;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  Function sets group ID of the calling thread only.
+ *
+ * @param  gid          group ID
+ *
+ * @return On success 0 is returned, otherwise -1 and errno is set (EPERM: not
+ *         allowed, ENOSYS: system without users and file permissions).
+ *
+ * @see thread_setuid(), setgid()
+ */
+//==============================================================================
+static inline int thread_setgid(gid_t gid)
+{
+#if __LIBC_PERMISSIONS_ENABLE__ == _YES_
+        bool thread = true;
+        int err = _libc_syscall(_LIBC_SYS_SETGID, &gid, &thread);
+        return err ? -1 : 0;
+#else
+        (void)gid;
+        errno = ENOSYS;
+        return -1;
+#endif
+}
 
 //==============================================================================
 /**

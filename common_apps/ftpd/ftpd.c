@@ -48,6 +48,7 @@
 #include <dnx/os.h>
 #include <dnx/thread.h>
 #include <conf_parser.h>
+#include <auth.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -60,8 +61,6 @@
 #define CONFIG_KEY_DEBUG     "debug"
 #define CONFIG_KEY_PORT      "port"
 #define CONFIG_KEY_PASV_PORT "pasv-port"
-#define CONFIG_KEY_USER      "user"
-#define CONFIG_KEY_PASSWORD  "password"
 #define CONFIG_KEY_ROOT_DIR  "root-dir"
 
 #define TIMEOUT_SEND   5000
@@ -137,8 +136,7 @@ typedef enum {
 GLOBAL_VARIABLES_SECTION {
         bool verbose;
         conf_parser_t *conf;
-        const char *user;
-        const char *password;
+        auth_ratelimit_t ratelimit;
         char root_dir[PATH_LEN];
         size_t root_len;
         uint16_t port;
@@ -153,7 +151,7 @@ GLOBAL_VARIABLES_SECTION {
                 NET_INET_sockaddr_t port_addr; // data channel address (active mode)
                 bool active_mode;              // PORT command received
                 bool pasv_pending;             // PASV/EPSV command received
-                bool user_ok;                  // correct USER received
+                bool user_ok;                  // USER received
                 bool logged_in;                // correct PASS received
                 bool discard_line;             // too long command line is discarded
                 bool quit;
@@ -161,6 +159,7 @@ GLOBAL_VARIABLES_SECTION {
                 char *cmd_args;
                 uint16_t data_port;
                 size_t cmd_len;
+                char user[AUTH_USER_MAX + 1]; // user name of USER command
                 char cmd[CMD_LINE_LEN];
                 char CWD[PATH_LEN];
                 char path[2 * PATH_LEN]; // real path: root-dir + client path
@@ -626,19 +625,19 @@ static int transmit_file(struct thread *self, FILE *file, SOCKET *socket)
 //==============================================================================
 static void handle_cmd_USER(struct thread *self)
 {
+        /* the same answer for each user (existence of account is not revealed) */
         self->logged_in = false;
-        self->user_ok = isstreq(self->cmd_args, global->user);
+        self->user_ok = true;
+        strlcpy(self->user, self->cmd_args, sizeof(self->user));
 
-        if (self->user_ok) {
-                reply(self, "331 Enter user password\r\n");
-        } else {
-                reply(self, "530 Unknown user\r\n");
-        }
+        reply(self, "331 Enter user password\r\n");
 }
 
 //==============================================================================
 /**
- * @brief  Handle PASS command.
+ * @brief  Handle PASS command. Accounts of service "ftp" of password file
+ *         (auth library) are accepted, failed logins are limited per address.
+ *         Session works with user and group ID of account.
  * @param  self         thread object
  */
 //==============================================================================
@@ -646,15 +645,44 @@ static void handle_cmd_PASS(struct thread *self)
 {
         if (not self->user_ok) {
                 reply(self, "503 Login with USER first\r\n");
+                return;
+        }
 
-        } else if (isstreq(self->cmd_args, global->password)) {
-                self->logged_in = true;
-                reply(self, "230 Hello!\r\n");
+        self->user_ok = false;
+
+        auth_account_t account;
+        NET_INET_sockaddr_t peer = {0};
+        socket_get_address(self->socket, &peer, sizeof(peer));
+
+        if (not auth_ratelimit_allow(&global->ratelimit, peer.addr)) {
+                reply(self, "421 Too many failed logins, try again later\r\n");
+                self->quit = true;
+
+        } else if (auth_check(self->user, self->cmd_args, "ftp", &account) == 0) {
+                auth_ratelimit_report(&global->ratelimit, peer.addr, true);
+
+                /*
+                 * Session thread gets credentials of account (file permissions
+                 * are checked for user). The change is permanent for non-root
+                 * account, so the next login of other account is refused.
+                 */
+                if (((thread_setgid(account.gid) == 0) && (thread_setuid(account.uid) == 0)) ||
+                        (errno == ENOSYS)) {
+                        self->logged_in = true;
+                        reply(self, "230 Hello!\r\n");
+                } else {
+                        reply(self, "530 Login incorrect\r\n");
+                        self->quit = true;
+                }
 
         } else {
-                self->user_ok = false;
-                reply(self, "530 Incorrect password!\r\n");
+                auth_ratelimit_report(&global->ratelimit, peer.addr, false);
+                VERBOSE("Login failed: user '%s'\n", self->user);
+                msleep(AUTH_FAIL_DELAY_MS);
+                reply(self, "530 Login incorrect\r\n");
         }
+
+        auth_wipe(self->cmd_args, strlen(self->cmd_args));
 }
 
 //==============================================================================
@@ -1618,13 +1646,12 @@ static void print_help(char *argv[])
         printf("\n");
 
         printf("Example configuration:\n");
-        printf("user = \"user\"\n");
-        printf("password = \"password\"\n");
         printf("port = %u\n", DEFAULT_PORT);
         printf("pasv-port = %u\n", DEFAULT_PASV_PORT);
         printf("root-dir = \"/sd/ftp\"\n");
         printf("debug = false\n");
         printf("\n");
+        printf("Accounts of service 'ftp' of password file are accepted (passwd program).\n");
         printf("Passive mode uses ports pasv-port .. pasv-port+%u.\n",
                 cast(uint, ARRAY_SIZE(global->thread) - 1));
 }
@@ -1705,13 +1732,14 @@ int main(int argc, char *argv[])
                 global->verbose = true;
         }
 
-        global->user = conf_parser__get_value(global->conf, CONFIG_KEY_USER);
-        global->password = conf_parser__get_value(global->conf, CONFIG_KEY_PASSWORD);
-
-        if (not global->user or not global->password or (*global->user == '\0') or
-                (*global->password == '\0')) {
-                printf("[%s, info] user and password must be configured!\n", argv[0]);
+        if (auth_ratelimit_init(&global->ratelimit) != 0) {
+                printf("[%s, info] not enough free memory!\n", argv[0]);
                 goto cleanup;
+        }
+
+        if (not auth_is_configured()) {
+                printf("[%s, info] no accounts, logins are refused (set passwords by passwd program)\n",
+                        argv[0]);
         }
 
         const char *root_dir = conf_parser__get_value(global->conf, CONFIG_KEY_ROOT_DIR);
@@ -1833,6 +1861,7 @@ int main(int argc, char *argv[])
         }
 
 cleanup:
+        auth_ratelimit_deinit(&global->ratelimit);
         conf_parser__delete(global->conf);
 
         return exit_code;

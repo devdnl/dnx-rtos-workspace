@@ -118,17 +118,19 @@ static void create_base_file_system_structure(void)
 {
         mount("ramfs", "", "/", "");
 
-        mkdir("/dev", 0666);
-        mkdir("/tmp", 0666);
-        mkdir("/run", 0666);
-        mkdir("/mnt", 0666);
-        mkdir("/proc", 0666);
-        mkdir("/etc", 0666);
+        mkdir("/dev", 0777);
+        mkdir("/tmp", 0777);
+        mkdir("/run", 0777);
+        mkdir("/mnt", 0777);
+        mkdir("/proc", 0777);
+        mkdir("/etc", 0777);
+        chmod("/tmp", 0777); // writable for all users
+        chmod("/run", 0777);
 
         mount("procfs", "", "/proc", "");
 
         /* programs of the main appset as files */
-        mkdir("/bin", 0666);
+        mkdir("/bin", 0777);
         if (mount("appsetfs", "", "/bin", "") != 0) {
                 remove("/bin");
         }
@@ -188,6 +190,9 @@ static void initialize_additional_drivers(void)
         driver_init("ZERO", 0, 0, "/dev/zero");
         driver_init("ZERO", 1, 0, "/dev/null");
         driver_init("URANDOM", 0, 0, "/dev/urandom");
+        chmod("/dev/zero", 0666); // device files of all users (others: only root)
+        chmod("/dev/null", 0666);
+        chmod("/dev/urandom", 0444);
 }
 
 //==============================================================================

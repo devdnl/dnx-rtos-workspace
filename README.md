@@ -83,7 +83,13 @@ The `app-appset` contains a reference set of programs, e.g.:
   `modprobe`, `uptime`, `uname`, `date`, `dstd` (daylight saving
   time), `time`, `perf`, `reboot`, `shutdown`,
 - network: `ifconfig`, `netmgr`, `ping`, `ethstat`, `canstat`, `httpsrv` (HTTP
-  server with Lua scripting), `ftpd`, `telnetd`, `sntpd`, `mqtt_broker`,
+  server with Lua scripting), `ftpd`, `telnetd`, `sntpd`, `mqtt_broker`
+  (`telnetd`, `ftpd`, `mqtt_broker` and `login` accept accounts of the
+  `passwd`/`shadow` files managed by `passwd`, see `common_libs/auth/auth.h`;
+  lines of the default files can be created on PC by `tools/mkpasswd.py`),
+- users: `su`, `sudo`, `id`, `whoami`, `chown`, `chmod`, `passwd` (optional users and
+  file permissions: kernel `__OS_ENABLE_PERMISSIONS__`, libc
+  `__LIBC_PERMISSIONS_ENABLE__`),
 - interpreters: `lua`, `luac`, `tcl`,
 - tests: `fstest` (file systems), `udstest` (Unix domain sockets), `inettest`
   (TCP/IP), `keytest` and `ttyread` (terminal), `perf` (performance
@@ -157,7 +163,8 @@ and `stderr` unbuffered, `setvbuf()` selects other mode), `lua`, `zlib`,
 `luadnx` (Lua bindings to dnx RTOS services), `fastlz`, `libmqtt`,
 `http-parser`, `http-multipart-parser`, `fpkg`, `bs` (binary serialization),
 `conf_parser`, `libtui` (text user interface), `llist`, `tinyexpr`, `utcl`,
-`crc`, `chsum`, `md5`, `sha1` and `sha256`. Libraries are attached to particular appset by
+`crc`, `chsum`, `md5`, `sha1`, `sha256` and `auth` (user authentication:
+`passwd`/`shadow` files with PBKDF2-SHA256 hashes, limit of failed logins). Libraries are attached to particular appset by
 makefiles placed in `<appset>/libs` (`<name>.mk`: `LIB_ROOT_<NAME> = $(COMMON_LIBS)/` and
 `include $(COMMON_LIBS)/<name>/Makefile.in`), local libraries of the appset are
 directories with `Makefile.in` (e.g. `app-appset/libs/liblocal`).

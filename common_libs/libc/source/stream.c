@@ -565,7 +565,7 @@ static size_t stream_read(FILE *file, void *data, size_t size)
 //==============================================================================
 FILE *_libc_fopen(const char *path, const char *mode)
 {
-        int fd = open(path, parse_flags(mode), 0600);
+        int fd = open(path, parse_flags(mode), 0666); // modified by umask
         if (fd < 0) {
                 return NULL;
         }

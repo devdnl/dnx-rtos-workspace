@@ -238,19 +238,22 @@ extern "C" {
 
 
 #define main __main
-#define PROGRAM_PARAMS(_name_, stack_depth)\
-        static int __main(int argc, char *argv[]);\
-        _PROGMAN_CXX const size_t __builtin_app_##_name_##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
-        _PROGMAN_CXX const size_t __builtin_app_##_name_##_ss__ = stack_depth;\
-        _PROGMAN_CXX const char *const *const __builtin_app_##_name_##_pref_ram__ = NULL;\
-        _PROGMAN_CXX int __builtin_app_##_name_##_main(int argc, char *argv[]) {return __main(argc, argv);}
+/* program flags (PROGRAM_PARAMS_FLAGS()) */
+#define PROGRAM_FLAG_PRIVILEGED (1 << 0) /* program runs as root (effective IDs 0), real IDs of caller */
 
-#define PROGRAM_PARAMS_EXTENDED(_name_, stack_depth, preffered_app_ram)\
+#define PROGRAM_PARAMS_FLAGS(_name_, stack_depth, preffered_app_ram, flags)\
         static int __main(int argc, char *argv[]);\
         _PROGMAN_CXX const size_t __builtin_app_##_name_##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
         _PROGMAN_CXX const size_t __builtin_app_##_name_##_ss__ = stack_depth;\
         _PROGMAN_CXX const char *const *const __builtin_app_##_name_##_pref_ram__ = preffered_app_ram;\
+        _PROGMAN_CXX const uint32_t __builtin_app_##_name_##_flags__ = flags;\
         _PROGMAN_CXX int __builtin_app_##_name_##_main(int argc, char *argv[]) {return __main(argc, argv);}
+
+#define PROGRAM_PARAMS(_name_, stack_depth)\
+        PROGRAM_PARAMS_FLAGS(_name_, stack_depth, NULL, 0)
+
+#define PROGRAM_PARAMS_EXTENDED(_name_, stack_depth, preffered_app_ram)\
+        PROGRAM_PARAMS_FLAGS(_name_, stack_depth, preffered_app_ram, 0)
 
 #define stdin  (((_libc_app_ctx_t*)(_libc_appctx_get()))->_stdin)
 #define stdout (((_libc_app_ctx_t*)(_libc_appctx_get()))->_stdout)

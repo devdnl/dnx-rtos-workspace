@@ -147,7 +147,8 @@ int main(int argc, char *argv[])
                 printf("\n");
 
                 printf(VT100_FONT_COLOR_BLACK VT100_BACK_COLOR_WHITE
-                        "PID PR   MEMBS STSLV %%STU  %%CPU  SCPS TH RES CMD" VT100_RESET_ATTRIBUTES "\n");
+                        "PID   UID PR   MEMBS STSLV %%STU  %%CPU  SCPS TH RES CMD" VT100_RESET_ATTRIBUTES
+                        "\n");
 
                 size_t seek = 0;
                 global->pstat.cmdline_buf = global->cmdline;
@@ -173,8 +174,8 @@ int main(int argc, char *argv[])
                                 stack_color = VT100_FONT_COLOR_YELLOW;
                         }
 
-                        printf("%s%3d %2d %7u %5d %s%4d%s %s %5u %2d %3d %s" VT100_RESET_ATTRIBUTES "\n",
-                                fmtbegin, global->pstat.pid, global->pstat.priority,
+                        printf("%s%3d %5u %2d %7u %5d %s%4d%s %s %5u %2d %3d %s" VT100_RESET_ATTRIBUTES "\n",
+                                fmtbegin, global->pstat.pid, (uint)global->pstat.uid, global->pstat.priority,
                                 (uint)global->pstat.memory_usage, global->pstat.stack_size, stack_color,
                                 stack_max_usage_percent, VT100_RESET_ATTRIBUTES, cpu_load_str,
                                 global->pstat.syscalls_per_sec, global->pstat.threads_count,
@@ -198,7 +199,7 @@ int main(int argc, char *argv[])
                                                         stack_color = VT100_FONT_COLOR_YELLOW;
                                                 }
 
-                                                printf("    %2d         %5d %s%4d%s %3d.%d %5u %2d\n",
+                                                printf("          %2d         %5d %s%4d%s %3d.%d %5u %2d\n",
                                                         stat.priority, stat.stack_size, stack_color,
                                                         stack_max_usage_percent, VT100_RESET_ATTRIBUTES,
                                                         stat.CPU_load / 10, stat.CPU_load % 10,

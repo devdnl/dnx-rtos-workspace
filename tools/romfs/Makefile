@@ -69,6 +69,9 @@ include $(CONFIG)
 #---------------------------------------------------------------------------------------------------
 ROMFS_NAME      = $(__ROMFS_NAME__)
 ROMFS_ADDRESS   = $(__ROMFS_ADDRESS__)
+ROMFS_SIZE      = $(__ROMFS_SIZE__)
+ROMFS_PERMS     = -u $(__ROMFS_UID__) -g $(__ROMFS_GID__) -m $(__ROMFS_FILE_MODE__) -d $(__ROMFS_DIR_MODE__) \
+                  -p $(__ROMFS_PERMISSIONS__)
 TARGET_DIR_NAME = $(BUILD_DIR)
 ECHO            = /bin/echo -e
 RM              = /bin/rm -rf
@@ -89,9 +92,14 @@ endif
 	@if [ ! -d "$(ROMFS_DIR)" ]; then $(ECHO) "ROMFS directory not found: $(ROMFS_DIR)"; exit 1; fi
 	@$(ECHO) "Creating '$(ROMFS_NAME)' ROMFS image..."
 	@$(MKDIR) $(TARGET_DIR_NAME)
-	@$(MKFPKG) $(ROMFS_DIR) $(TARGET_DIR_NAME)/$(ROMFS_NAME).bin
+	@$(MKFPKG) -s $(ROMFS_SIZE) $(ROMFS_PERMS) $(ROMFS_DIR) $(TARGET_DIR_NAME)/$(ROMFS_NAME).bin
 	@$(SREC_CAT) $(TARGET_DIR_NAME)/$(ROMFS_NAME).bin -binary -offset $(ROMFS_ADDRESS) -output $(TARGET_DIR_NAME)/$(ROMFS_NAME).hex -Intel
-	@$(ECHO) "ROMFS '$(ROMFS_NAME)' size: $$($(SIZEOF) $(TARGET_DIR_NAME)/$(ROMFS_NAME).bin) bytes."
+	@size=$$($(SIZEOF) $(TARGET_DIR_NAME)/$(ROMFS_NAME).bin); part=$$(($(ROMFS_SIZE))); \
+	 if [ $$part -gt 0 ]; then \
+	         $(ECHO) "ROMFS '$(ROMFS_NAME)' size: $$size of $$part bytes ($$((part - size)) bytes free)."; \
+	 else \
+	         $(ECHO) "ROMFS '$(ROMFS_NAME)' size: $$size bytes."; \
+	 fi
 
 .PHONY : clean
 clean :

@@ -175,6 +175,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <time.h>
+#include <fcntl.h>
 #if FSTEST_USE_STATFS
 #include <sys/statfs.h>
 #endif
@@ -318,7 +319,8 @@ typedef struct {
 ==============================================================================*/
 static void print_usage(const char *name);
 static void detect_fs_caps(void);
-static mode_t expected_mode(mode_t set, bool dir);
+static mode_t expected_mode(mode_t set, mode_t writable);
+static mode_t writable_mode(const char *path);
 static bool test_selected(const test_entry_t *test_entry, const char *filter);
 static bool group_selected(test_type_t type, const char *filter);
 static void list_tests(const char *filter);
@@ -331,6 +333,7 @@ static const char *ref_generate(void);
 static bool ref_remove(void);
 
 static const char *test_file_create_and_remove(void);
+static const char *test_exclusive_create(void);
 static const char *test_nonexistent(void);
 static const char *test_file_seek(void);
 static const char *test_seek_tell_eof(void);
@@ -402,6 +405,7 @@ static const char *SUCCESS_MSG = "SUCCESS";
 static const test_entry_t TEST_TAB[] = {
         // write tests
         {.type = TEST_W, .name = "File create and remove", .fn = test_file_create_and_remove},
+        {.type = TEST_W, .name = "Exclusive file creation (O_EXCL)", .fn = test_exclusive_create},
         {.type = TEST_W, .name = "Operations on non-existing objects", .fn = test_nonexistent},
         {.type = TEST_W, .name = "Seek/Write/Read file operations", .fn = test_file_seek},
         {.type = TEST_W, .name = "Seek/tell and EOF handling", .fn = test_seek_tell_eof},
@@ -757,12 +761,13 @@ static void detect_fs_caps(void)
  * @brief  Mode expected after chmod() on tested file system.
  *
  * @param  set          mode given to chmod()
- * @param  dir          object is a directory
+ * @param  writable     mode of writable object (file system without full
+ *                      permissions, see writable_mode())
  *
  * @return Expected permission bits.
  */
 //==============================================================================
-static mode_t expected_mode(mode_t set, bool dir)
+static mode_t expected_mode(mode_t set, mode_t writable)
 {
         if (global->full_permissions) {
                 return set & S_IPMT;
@@ -770,15 +775,30 @@ static mode_t expected_mode(mode_t set, bool dir)
 
         /*
          * Read-only attribute only: write permission is stored, other bits are
-         * fixed (files rw-rw-rw-, directories rwxrwxrwx).
+         * fixed (e.g. FAT: files rw-rw-rw-, directories rwxrwxrwx limited by
+         * masks of mount options).
          */
-        mode_t mode = (set & S_IWUSR) ? 0666 : 0444;
+        return (set & S_IWUSR) ? writable : (writable & ~(mode_t)(S_IWUSR | S_IWGRP | S_IWOTH));
+}
 
-        if (dir) {
-                mode |= 0111;
+//==============================================================================
+/**
+ * @brief  Mode of object after chmod() with all permissions.
+ *
+ * @param  path         object
+ *
+ * @return Permission bits (0 on error).
+ */
+//==============================================================================
+static mode_t writable_mode(const char *path)
+{
+        struct stat st;
+
+        if ((chmod(path, 0777) != 0) || (stat(path, &st) != 0)) {
+                return 0;
         }
 
-        return mode;
+        return st.st_mode & S_IPMT;
 }
 
 //==============================================================================
@@ -1575,6 +1595,56 @@ cleanup:
 
 //==============================================================================
 /**
+ * @brief  open() with O_CREAT | O_EXCL creates new file and fails with EEXIST
+ *         for existing file or directory without change of existing file
+ *         (O_TRUNC is ignored). Used as lock file by programs (e.g. passwd).
+ *
+ * @return Error message.
+ */
+//==============================================================================
+static const char *test_exclusive_create(void)
+{
+        const char *exit_msg = SUCCESS_MSG;
+        int fd = -1;
+        struct stat st;
+
+        remove(FILE_A);
+
+        CHECK((fd = open(FILE_A, O_WRONLY | O_CREAT | O_EXCL, 0666)) >= 0, "unable to create new file");
+        CHECK(write(fd, "abc", 3) == 3, "unable to write file");
+        CHECK(close(fd) == 0, "unable to close file");
+        fd = -1;
+
+        EXPECT_FAIL((fd = open(FILE_A, O_WRONLY | O_CREAT | O_EXCL, 0666)) < 0, EEXIST,
+                "open(O_CREAT | O_EXCL) of existing file");
+        EXPECT_FAIL((fd = open(FILE_A, O_RDWR | O_CREAT | O_EXCL | O_TRUNC, 0666)) < 0, EEXIST,
+                "open(O_CREAT | O_EXCL | O_TRUNC) of existing file");
+
+        CHECK(stat(FILE_A, &st) == 0, "file does not exist");
+        CHECK(st.st_size == 3, "existing file changed (size %llu)", (unsigned long long)st.st_size);
+
+        CHECK((fd = open(FILE_A, O_WRONLY | O_CREAT, 0666)) >= 0, "open(O_CREAT) of existing file failed");
+        CHECK(close(fd) == 0, "unable to close file");
+        fd = -1;
+
+        CHECK(mkdir(DIR_A, 0777) == 0, "unable to create directory");
+        EXPECT_FAIL((fd = open(DIR_A, O_WRONLY | O_CREAT | O_EXCL, 0666)) < 0, EEXIST,
+                "open(O_CREAT | O_EXCL) of existing directory");
+
+        CHECK(remove(FILE_A) == 0, "unable to remove file");
+        CHECK((fd = open(FILE_A, O_WRONLY | O_CREAT | O_EXCL, 0666)) >= 0, "unable to create removed file again");
+
+cleanup:
+        if (fd >= 0) {
+                close(fd);
+        }
+        remove(FILE_A);
+        remove(DIR_A);
+        return exit_msg;
+}
+
+//==============================================================================
+/**
  * @brief  Operations on non-existing files and directories must fail with ENOENT.
  *
  * @return Error message.
@@ -2066,6 +2136,8 @@ static const char *test_file_mode(void)
 
         CHECK(fclose_null(&fp) == 0, "fclose() failed");
 
+        mode_t writable = writable_mode(FILE_A);
+
         for (size_t i = 0; i < ARRAY_SIZE(MODE); i++) {
                 CHECK(chmod(FILE_A, MODE[i].set) == 0, "unable to chmod(%lo)", (unsigned long)MODE[i].set);
                 CHECK(stat(FILE_A, &stat_path) == 0, "unable to perform stat()");
@@ -2077,7 +2149,7 @@ static const char *test_file_mode(void)
 
                 CHECK(S_ISREG(stat_path.st_mode), "chmod(%lo) changed file type (mode: %lo)",
                         (unsigned long)MODE[i].set, (unsigned long)stat_path.st_mode);
-                mode_t expected = expected_mode(MODE[i].expected, false);
+                mode_t expected = expected_mode(MODE[i].expected, writable);
                 CHECK((stat_path.st_mode & S_IPMT) == expected, "chmod(%lo): mode %lo, expected %lo",
                         (unsigned long)MODE[i].set, (unsigned long)(stat_path.st_mode & S_IPMT),
                         (unsigned long)expected);
@@ -2147,14 +2219,16 @@ static const char *test_dir_mode(void)
         const char *exit_msg = SUCCESS_MSG;
         struct stat st;
 
-        CHECK(mkdir(DIR_A, 0666) == 0, "unable to create test directory");
+        CHECK(mkdir(DIR_A, 0777) == 0, "unable to create test directory");
         CHECK(stat(DIR_A, &st) == 0, "unable to perform stat()");
         CHECK(S_ISDIR(st.st_mode), "created object is not a directory (mode: %lo)",
                 (unsigned long)st.st_mode);
 
         if (global->verbose) {
-                printf("\n  mkdir(0666) -> st_mode %lo", (unsigned long)st.st_mode);
+                printf("\n  mkdir(0777) -> st_mode %lo", (unsigned long)st.st_mode);
         }
+
+        mode_t writable = writable_mode(DIR_A);
 
         for (size_t i = 0; i < ARRAY_SIZE(MODE); i++) {
                 CHECK(chmod(DIR_A, MODE[i]) == 0, "unable to chmod(%lo)", (unsigned long)MODE[i]);
@@ -2167,9 +2241,10 @@ static const char *test_dir_mode(void)
 
                 CHECK(S_ISDIR(st.st_mode), "chmod(%lo) changed directory type (mode: %lo)",
                         (unsigned long)MODE[i], (unsigned long)st.st_mode);
-                mode_t expected = expected_mode(MODE[i], true);
+                mode_t expected = expected_mode(MODE[i], writable);
                 CHECK((st.st_mode & S_IPMT) == expected, "chmod(%lo): mode %lo, expected %lo",
-                        (unsigned long)MODE[i], (unsigned long)(st.st_mode & S_IPMT), (unsigned long)expected);
+                        (unsigned long)MODE[i], (unsigned long)(st.st_mode & S_IPMT),
+                        (unsigned long)expected);
         }
 
 cleanup:

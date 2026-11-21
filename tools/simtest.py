@@ -9,11 +9,13 @@
 #         The simulator is started in the pseudo terminal, test programs are executed in the dsh
 #         shell and their SUMMARY lines are checked. Tests:
 #           - boot (shell available, simulator platform),
+#           - users and file permissions (sim-env/tests/perm.lua: su, ramfs, flatfs, FAT mount options),
 #           - driver configuration strings (sim-env/tests/devcfg.lua, modprobe -c), UART:1 is
 #             connected to the host pseudo terminal and its configuration is checked by termios,
 #           - board model (sim-env/boards/test.lua): GPIO, I2C, I2CEE/eefs, DS2482/DS18B20 (1-Wire),
 #             SPI, SPIEE/eefs, MCP23S17 (dnx.spi), UART (echo, NMEA GPS), Ethernet (netdev models: ping,
-#             UDP, TCP by nc program) and SDSPI/ext2 tests (sim-env/tests/*.lua) executed by dnx Lua
+#             UDP, TCP by nc program), authentication (/dev/urandom, passwd, logins of telnetd, ftpd,
+#             mqtt_broker) and SDSPI/ext2 tests (sim-env/tests/*.lua) executed by dnx Lua
 #             interpreter, fstest on ext2
 #             on SD card model (SDSPI driver), board panel protocol (socket of tools/simpanel.py,
 #             also controls of udp_sensor.panel()),
@@ -41,10 +43,12 @@
 #             with emulated constraints (block size, buffer alignment), fstest on ext2 on that disk,
 #             image is checked by e2fsck,
 #           - fstest -r (read tests and read-only checks) on romfs image with reference data
-#             created by fstest_ref.py and mkfpkg.py,
+#             created by fstest_ref.py and mkfpkg.py (image in bigger partition filled by 0xFF),
 #           - udstest (UNIX domain sockets),
 #           - pipeline of shell (EOF of pipe), stdiotest of sim-env/testappset (libc streams: buffering,
 #             setvbuf(), ungetc(), fseek()/ftell(), flush at exit, pipe EOF, flockfile()),
+#           - desctest of sim-env/testappset (descriptors: object type, descriptor of other process,
+#             shared descriptor of closed object),
 #           - perf stress tests (threads, heap, synchronization objects, processes), with --perf
 #             option also performance measurements of perf program,
 #           - inettest (TCP/IP, only with --tap option, TAP interface must be prepared),
@@ -309,7 +313,11 @@ def create_romfs_image(path, root, tmpdir):
     os.mkdir(content)
     run = lambda args: subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True)
     run([sys.executable, os.path.join(root, "common_apps", "fstest", "fstest_ref.py"), content])
-    run([sys.executable, os.path.join(root, "kernel", "tools", "mkfpkg.py"), content, path])
+    run([sys.executable, os.path.join(root, "kernel", "tools", "mkfpkg.py"), "-s", "0x10000", content, path])
+
+    # partition bigger than image (erased flash): romfs finds the image by size of header
+    with open(path, "ab") as f:
+        f.write(b"\xff" * (0x10000 - os.path.getsize(path)))
 
 
 def extract_partition(image, start, size, path):
@@ -347,7 +355,7 @@ class TestRunner:
     # run program which prints SUMMARY line, setup commands are executed before (e.g. format, mount)
     def appset_test(self, sim):
         name = "appsets: testappset"
-        if not self.selected(name):
+        if not any(self.selected(n) for n in (name, "libc: stdio", "kernel: descriptors", "appsetfs: mount/umount")):
             return
 
         ok, out = sim.run("appsettest", DEFAULT_TIMEOUT)
@@ -355,8 +363,10 @@ class TestRunner:
             self.result(name, SKIP, "simulator built without sim-env/testappset (make test-sim or SIM_APPSETS)")
             return
 
-        self.summary_test(sim, name, None, "appsettest", DEFAULT_TIMEOUT)
+        if self.selected(name):
+            self.summary_test(sim, name, None, "appsettest", DEFAULT_TIMEOUT)
         self.summary_test(sim, "libc: stdio", "/tmp", "stdiotest", DEFAULT_TIMEOUT)
+        self.summary_test(sim, "kernel: descriptors", None, "desctest", DEFAULT_TIMEOUT)
         self.appsetfs_mount_test(sim)
 
     # shell pipeline: reader gets EOF when writer finishes (grep was blocked on closed pipe)
@@ -943,7 +953,8 @@ class TestRunner:
         # board model (before fstest on hostfs, test files are removed after test)
         board_tests = ("board: gpio", "board: adc", "board: i2c", "board: i2cee", "board: ds2482",
                        "board: onewire", "board: spi", "board: spiee", "board: norflash", "board: mcp23s17",
-                       "board: uart", "board: max310x", "board: net", "board: w5500", "board: inet2", "board: bt817",
+                       "board: uart", "board: max310x", "board: net", "board: w5500", "board: inet2", "board: auth",
+                       "board: bt817",
                        "board: sdcard", "fstest: ext2 on sdspi", "board: panel")
         if args.board:
             # Ethernet models of the board: netmgr configures the network in background, its
@@ -970,6 +981,7 @@ class TestRunner:
             self.summary_test(sim, "board: net", "/host/sim-env", "lua net.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: w5500", "/host/sim-env", "lua w5500.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: inet2", "/host/sim-env", "lua inet2.lua", DEFAULT_TIMEOUT)
+            self.summary_test(sim, "board: auth", "/host/sim-env", "lua auth.lua", FSTEST_TIMEOUT)
             self.summary_test(sim, "board: bt817", "/host/sim-env", "lua bt817.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: spi", "/host/sim-env", "lua spi.lua", DEFAULT_TIMEOUT)
             self.summary_test(sim, "board: spiee", "/host/sim-env", "lua spiee.lua", FSTEST_TIMEOUT)
@@ -1009,6 +1021,9 @@ class TestRunner:
 
         # host directories selected by name (--hostfs host=... aux=...)
         self.summary_test(sim, "hostfs: directories", "/host/sim-env", "lua hostfs.lua", DEFAULT_TIMEOUT)
+
+        # users and file permissions (ramfs, flatfs on /dev/sdb1 before fstest, FAT mount options)
+        self.summary_test(sim, "perm: users and files", "/host/sim-env", "lua perm.lua", FSTEST_TIMEOUT)
 
         shutil.rmtree(os.path.join(args.hostfs_dir, "sim-env"), ignore_errors=True)
 

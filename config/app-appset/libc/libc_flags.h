@@ -53,6 +53,42 @@ this:SetToolTip("If this function is selected then terminal output can be colori
 #define __LIBC_COLOR_TERMINAL_ENABLE__ _YES_
 
 /*--
+this:AddWidget("Combobox", "Users and file permissions")
+this:AddItem("Yes", "_YES_")
+this:AddItem("No", "_NO_")
+this:SetToolTip("Functions setuid(), setgid(), umask() and credentials of process_create(). "..
+                "The kernel must be built with users and file permissions (Operating System settings).")
+--*/
+#define __LIBC_PERMISSIONS_ENABLE__ _YES_
+
+/*--
+this:AddWidget("Editline", true, "Account file with default accounts")
+this:SetToolTip("Read-only public account file (e.g. file of ROMFS image) used when the writable account file does not "..
+                "exist. Line format: name:x:uid:gid:description:home:shell (auth library).")
+--*/
+#define __LIBC_PASSWD_FILE__ "/etc/passwd"
+
+/*--
+this:AddWidget("Editline", true, "Password file with default passwords")
+this:SetToolTip("Read-only password file (e.g. file of ROMFS image) used with the default account file. "..
+                "Line format: name:hash:services (auth library).")
+--*/
+#define __LIBC_SHADOW_FILE__ "/etc/shadow"
+
+/*--
+this:AddWidget("Editline", true, "Writable account file")
+this:SetToolTip("Public account file changed by the passwd program (mode 0644).")
+--*/
+#define __LIBC_PASSWD_RW_FILE__ "/mnt/etc/passwd"
+
+/*--
+this:AddWidget("Editline", true, "Writable password file")
+this:SetToolTip("Password file changed by the passwd program (mode 0600). Use a file system with file permissions "..
+                "(e.g. flatfs, ext4); FAT does not store modes of files, so the file is readable by all users.")
+--*/
+#define __LIBC_SHADOW_RW_FILE__ "/mnt/etc/shadow"
+
+/*--
 this:AddWidget("Editline", true, "The system() shell program")
 this:SetToolTip("This is a program that execute command passed to system() function.")
 --*/

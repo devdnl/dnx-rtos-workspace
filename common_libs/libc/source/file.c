@@ -37,6 +37,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <dirent.h>
+#include <unistd.h>
 #include "common.h"
 
 /*==============================================================================
@@ -114,7 +115,7 @@ extern void  _libc_free(void *ptr);
 //==============================================================================
 int open(const char *path, int flags, ...)
 {
-        mode_t mode = 0600;
+        mode_t mode = 0666;
 
         if (flags & O_CREAT) {
                 va_list arg;
@@ -228,6 +229,40 @@ int unlink(const char *pathname)
 {
         int err = _libc_syscall(_LIBC_SYS_REMOVE, pathname);
         return err ? -1 : 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Function fills buffer with random bytes of cryptographic quality.
+ *
+ * @param  buffer       destination buffer
+ * @param  length       number of bytes (up to GETENTROPY_MAX)
+ *
+ * @return On success 0 is returned, otherwise -1 and errno is set.
+ */
+//==============================================================================
+int getentropy(void *buffer, size_t length)
+{
+        if (length > GETENTROPY_MAX) {
+                errno = EINVAL;
+                return -1;
+        }
+
+        int fd = open("/dev/urandom", O_RDONLY);
+        if (fd < 0) {
+                return -1;
+        }
+
+        ssize_t n = read(fd, buffer, length);
+        int err = errno;
+        close(fd);
+
+        if (n != (ssize_t)length) {
+                errno = (n < 0) ? err : EIO;
+                return -1;
+        }
+
+        return 0;
 }
 
 //==============================================================================

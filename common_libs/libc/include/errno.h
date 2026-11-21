@@ -108,6 +108,13 @@ typedef int error_t;
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern int *_libc_errno_get(void);
+#ifdef __cplusplus
+}
+#endif
 
 /*==============================================================================
   Exported inline functions

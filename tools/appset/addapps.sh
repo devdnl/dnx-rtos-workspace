@@ -242,6 +242,7 @@ function create_program_registration_file()
     echo '        _PROGMAN_EXTERN_C const size_t __builtin_app_##_name_##_gs__;\'
     echo '        _PROGMAN_EXTERN_C const size_t __builtin_app_##_name_##_ss__;\'
     echo '        _PROGMAN_EXTERN_C const char *const *const __builtin_app_##_name_##_pref_ram__;\'
+    echo '        _PROGMAN_EXTERN_C const uint32_t __builtin_app_##_name_##_flags__;\'
     echo '        _PROGMAN_EXTERN_C int __builtin_app_##_name_##_main(int, char**);'
     echo ''
 
@@ -252,6 +253,7 @@ function create_program_registration_file()
     echo '        .globals_size = &__builtin_app_##_name_##_gs__,\'
     echo '        .stack_depth = &__builtin_app_##_name_##_ss__,\'
     echo '        .pref_ram = &__builtin_app_##_name_##_pref_ram__,\'
+    echo '        .flags = &__builtin_app_##_name_##_flags__,\'
     echo '}'
     echo ''        
 
@@ -260,6 +262,7 @@ function create_program_registration_file()
     echo '        const size_t *globals_size;'
     echo '        const size_t *stack_depth;'
     echo '        const char *const *const *pref_ram;'
+    echo '        const uint32_t *flags;'
     echo '        int (*main)(int, char**);'
     echo '} _program_entry_t;'
     echo ''
@@ -288,7 +291,7 @@ function create_program_registration_file()
     echo ''
 
     echo 'const _program_table_desc_t _program_table_desc __attribute__((section (".program_descriptor_table"))) = {'
-    echo "        .magic = 0x32565341, // ASV2"
+    echo "        .magic = 0x33565341, // ASV3"
     echo "        .number_of_programs = $(echo $program_list | wc -w),"
     echo "        .data_init_start = ((void *)&__data_init_start),"
     echo "        .data_start = ((void *)&__data_start),"

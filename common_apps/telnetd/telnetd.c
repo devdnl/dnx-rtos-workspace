@@ -5,6 +5,9 @@
 
 @brief  Telnet server. Each connection gets own terminal (TTY driver instance
         connected to pipes), so line editing and full-screen programs work.
+        Users log in with accounts of service "telnet" of password file (auth
+        library), shell is started with user and group ID of account, failed
+        logins are limited per client address.
 
         MIT License
 
@@ -47,6 +50,7 @@
 #include <dnx/net.h>
 #include <dnx/thread.h>
 #include <dnx/os.h>
+#include <auth.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -61,6 +65,9 @@
 #define TTY_MAJOR_BASE        10 /* TTY driver major numbers of connections */
 #define TTY_RELEASE_ATTEMPTS  10
 #define KILL_TIMEOUT          5000
+#define LOGIN_ATTEMPTS        3
+#define LOGIN_TIMEOUT         60000 /* time of user name or password input [ms] */
+#define LOGIN_SERVICE         "telnet"
 
 /* telnet protocol (RFC 854, 857, 858) */
 #define T_IAC  255
@@ -89,6 +96,17 @@ typedef struct {
         uint8_t cmd;
 } telnet_t;
 
+/* data received during login (rest is passed to terminal) */
+typedef struct {
+        uint8_t data[BUF_SIZE];
+        size_t len;
+        size_t pos;
+        bool cr; /* the last character was CR (LF or NUL after CR is ignored) */
+        char user[AUTH_USER_MAX + 2];
+        char password[AUTH_PASSWORD_MAX + 2];
+        auth_user_t account; /* account of user (credentials, home, shell) */
+} login_t;
+
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
@@ -101,6 +119,7 @@ GLOBAL_VARIABLES_SECTION {
         mutex_t *mtx;
         uint8_t conn_cnt;
         bool slot_used[NUMBER_OF_CONNECTIONS];
+        auth_ratelimit_t ratelimit;
 };
 
 static const NET_INET_sockaddr_t IP_ADDR_ANY = {.addr = NET_INET_IPv4_ANY, .port = TELNET_PORT};
@@ -325,6 +344,161 @@ static bool telnet_send(SOCKET *sock, const uint8_t *data, size_t len, uint8_t *
 
 //==============================================================================
 /**
+ * @brief  Send text to telnet client.
+ *
+ * @param  sock         socket
+ * @param  text         text
+ *
+ * @return true on success.
+ */
+//==============================================================================
+static bool send_text(SOCKET *sock, const char *text)
+{
+        int len = strlen(text);
+        return socket_write(sock, text, len) == len;
+}
+
+//==============================================================================
+/**
+ * @brief  Read line of login (user name or password).
+ *
+ * @param  sock         socket
+ * @param  telnet       telnet parser state
+ * @param  login        login data
+ * @param  tmp          temporary buffer (answers to client)
+ * @param  line         line buffer
+ * @param  size         size of line buffer
+ * @param  echo         echo of characters
+ *
+ * @return true on success, false on connection error or timeout.
+ */
+//==============================================================================
+static bool login_read_line(SOCKET *sock, telnet_t *telnet, login_t *login, uint8_t *tmp, char *line,
+        size_t size, bool echo)
+{
+        size_t n = 0;
+        u64_t start = get_uptime_ms();
+
+        while (true) {
+                while (login->pos < login->len) {
+                        uint8_t c = login->data[login->pos++];
+                        bool cr = login->cr;
+                        login->cr = (c == '\r');
+
+                        if (cr && ((c == '\n') || (c == '\0'))) {
+                                continue;
+
+                        } else if ((c == '\r') || (c == '\n')) {
+                                line[n] = '\0';
+                                return send_text(sock, "\r\n");
+
+                        } else if ((c == 0x7F) || (c == '\b')) {
+                                if (n > 0) {
+                                        n--;
+                                        if (echo && !send_text(sock, "\b \b")) {
+                                                return false;
+                                        }
+                                }
+
+                        } else if ((c >= ' ') && (n < size - 1)) {
+                                line[n++] = c;
+                                if (echo && (socket_write(sock, &c, 1) != 1)) {
+                                        return false;
+                                }
+                        }
+                }
+
+                if ((get_uptime_ms() - start) >= LOGIN_TIMEOUT) {
+                        return false;
+                }
+
+                socket_set_recv_timeout(sock, 1000);
+
+                errno = 0;
+                int len = socket_read(sock, login->data, sizeof(login->data));
+                if ((len == -1) && (errno != ETIME)) {
+                        return false;
+                }
+
+                if (len > 0) {
+                        size_t reply_len = 0;
+                        login->len = telnet_input(telnet, login->data, len, tmp, &reply_len);
+                        login->pos = 0;
+
+                        if ((reply_len > 0) && (socket_write(sock, tmp, reply_len) != (int)reply_len)) {
+                                return false;
+                        }
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Login of user (accounts of service "telnet" of auth library).
+ *
+ * @param  sock         socket
+ * @param  telnet       telnet parser state
+ * @param  login        login data
+ * @param  tmp          temporary buffer (answers to client)
+ * @param  addr         address of client
+ *
+ * @return true if user is logged in.
+ */
+//==============================================================================
+static bool telnet_login(SOCKET *sock, telnet_t *telnet, login_t *login, uint8_t *tmp, uint32_t addr)
+{
+        if (!auth_is_configured()) {
+                send_text(sock, "No accounts (set passwords by passwd program on console).\r\n");
+                return false;
+        }
+
+        for (int attempt = 0; attempt < LOGIN_ATTEMPTS; attempt++) {
+                if (!auth_ratelimit_allow(&global->ratelimit, addr)) {
+                        send_text(sock, "Too many failed logins, try again later.\r\n");
+                        return false;
+                }
+
+                if (!send_text(sock, "Login: ") ||
+                        !login_read_line(sock, telnet, login, tmp, login->user, sizeof(login->user), true)) {
+                        return false;
+                }
+
+                if (login->user[0] == '\0') {
+                        attempt--;
+                        continue;
+                }
+
+                bool ok = false;
+                if (send_text(sock, "Password: ") &&
+                        login_read_line(sock, telnet, login, tmp, login->password, sizeof(login->password),
+                                false)) {
+                        ok = (auth_check(login->user, login->password, LOGIN_SERVICE, NULL) == 0) &&
+                                (auth_get_user(login->user, 0, &login->account) == 0);
+                        auth_wipe(login->password, sizeof(login->password));
+                } else {
+                        auth_wipe(login->password, sizeof(login->password));
+                        return false;
+                }
+
+                auth_ratelimit_report(&global->ratelimit, addr, ok);
+
+                if (ok) {
+                        return true;
+                }
+
+                printf("Login failed: user '%s'\n", login->user);
+                msleep(AUTH_FAIL_DELAY_MS);
+
+                if (!send_text(sock, "Login incorrect\r\n\r\n")) {
+                        return false;
+                }
+        }
+
+        return false;
+}
+
+//==============================================================================
+/**
  * @brief  Telnet thread
  * @param  arg   thread argument - connection
  * @return None
@@ -337,6 +511,7 @@ static int telnet_thread(void *arg)
         FILE *fout = NULL;
         uint8_t *buf = NULL;
         uint8_t *tmp = NULL;
+        login_t *login = NULL;
         pid_t proc = 0;
         char *pipe_in_name = NULL;
         char *pipe_out_name = NULL;
@@ -359,7 +534,18 @@ static int telnet_thread(void *arg)
         // buffers for data and for escaped data (or answers)
         buf = malloc(BUF_SIZE);
         tmp = malloc(BUF_SIZE * 2 + 3);
-        if (!buf || !tmp) {
+        login = calloc(1, sizeof(login_t));
+        if (!buf || !tmp || !login) {
+                goto exit;
+        }
+
+        socket_set_send_timeout(sock, SEND_TIMEOUT);
+
+        if (socket_write(sock, TELNET_INIT, sizeof(TELNET_INIT)) != (int)sizeof(TELNET_INIT)) {
+                goto exit;
+        }
+
+        if (!telnet_login(sock, &telnet, login, tmp, addr.addr)) {
                 goto exit;
         }
 
@@ -394,8 +580,16 @@ static int telnet_thread(void *arg)
                 goto exit;
         }
 
-        // start shell on terminal
-        process_attr_t process_attr = {.cwd = "/",
+        // start shell of account in home directory
+        const char *cwd = login->account.home[0] ? login->account.home : "/";
+        struct stat st;
+        if ((stat(cwd, &st) != 0) || !S_ISDIR(st.st_mode)) {
+                cwd = "/";
+        }
+
+        const char *shell = login->account.shell[0] ? login->account.shell : PROGRAM_NAME;
+
+        process_attr_t process_attr = {.cwd = cwd,
                 .fd_stdin = -1,
                 .fd_stdout = -1,
                 .fd_stderr = -1,
@@ -405,15 +599,17 @@ static int telnet_thread(void *arg)
                 .priority = PRIORITY_NORMAL,
                 .detached = false};
 
-        proc = process_create(PROGRAM_NAME, &process_attr);
+        proc = process_create_as(shell, &process_attr, login->account.uid, login->account.gid);
+        if ((proc == 0) && (errno == ENOSYS)) {
+                proc = process_create(shell, &process_attr); // system without users
+        }
         if (proc == 0) {
                 goto exit;
         }
 
-        socket_set_send_timeout(sock, SEND_TIMEOUT);
-
-        if (socket_write(sock, TELNET_INIT, sizeof(TELNET_INIT)) != (int)sizeof(TELNET_INIT)) {
-                goto exit;
+        // data received after password
+        if (login->pos < login->len) {
+                fwrite(login->data + login->pos, 1, login->len - login->pos, fin);
         }
 
         u32_t recv_timeout = RECEIVE_TIMEOUT;
@@ -501,6 +697,11 @@ exit:
         free(buf);
         free(tmp);
 
+        if (login) {
+                auth_wipe(login, sizeof(login_t));
+                free(login);
+        }
+
         NET_INET_sockaddr_t sockaddr;
         socket_get_address(sock, &sockaddr, sizeof(sockaddr));
         printf("Connection closed: %d.%d.%d.%d\n", NET_INET_IPv4_a(sockaddr.addr),
@@ -554,7 +755,7 @@ int main(int argc, char *argv[])
         }
 
         global->mtx = mutex_new(MUTEX_TYPE_NORMAL);
-        if (!global->mtx) {
+        if (!global->mtx || (auth_ratelimit_init(&global->ratelimit) != 0)) {
                 global->msg = "Mutex not created";
                 goto exit;
         }
@@ -620,6 +821,8 @@ exit:
         if (global->mtx) {
                 mutex_delete(global->mtx);
         }
+
+        auth_ratelimit_deinit(&global->ratelimit);
 
         return EXIT_FAILURE;
 }

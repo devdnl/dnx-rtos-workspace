@@ -53,6 +53,7 @@ extern "C" {
 #include <libc/include/sys/types.h>
 #include <libc/source/syscall.h>
 #include <errno.h>
+#include <stdbool.h>
 
 /*==============================================================================
   Exported macros
@@ -60,6 +61,9 @@ extern "C" {
 #define STDIN_FILENO  0
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
+
+/** Maximal length of getentropy() request. */
+#define GETENTROPY_MAX 256
 
 /* sysconf() variables (values compatible with glibc) */
 #define _SC_NPROCESSORS_CONF       83  /*!< number of configured processors (CPU cores) */
@@ -357,34 +361,32 @@ static inline void sync(void)
 
 //==============================================================================
 /**
- * @brief Function return group ID of current user.
+ * @brief Function returns real group ID of the calling thread.
  *
- * The getpid() function returns current group ID. This function is always successful.
+ * The getgid() function returns real group ID (group of user that started the
+ * process; 0 when the system is built without users and file permissions).
+ * This function is always successful.
  *
- * @b Example
- * @code
-        #include <unistd.h>
-
-        // ...
-        gid_t gid = getgid();
-        // ...
-   @endcode
+ * @see getuid(), getegid()
  */
 //==============================================================================
 static inline gid_t getgid(void)
 {
         gid_t gid = 0;
+#if __LIBC_PERMISSIONS_ENABLE__ == _YES_
         _libc_syscall(_LIBC_SYS_GETGID, &gid);
+#endif
         return gid;
 }
 
 //==============================================================================
 /**
- * @brief Function return user ID.
+ * @brief Function returns real user ID of the calling thread.
  *
- * The getuid() function returns ID of current user.
- *
- * @note Function returns always the root user ID (0). This function is always successful.
+ * The getuid() function returns real user ID: user that started the process
+ * (0: root, also when the system is built without users and file
+ * permissions). It differs from effective user ID (geteuid()) in privileged
+ * programs (e.g. sudo started by user). This function is always successful.
  *
  * @b Example
  * @code
@@ -399,8 +401,129 @@ static inline gid_t getgid(void)
 static inline uid_t getuid(void)
 {
         uid_t uid = 0;
+#if __LIBC_PERMISSIONS_ENABLE__ == _YES_
         _libc_syscall(_LIBC_SYS_GETUID, &uid);
+#endif
         return uid;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns effective group ID of the calling thread.
+ *
+ * The getegid() function returns effective group ID used by access checks
+ * (0 when the system is built without users and file permissions). This
+ * function is always successful.
+ *
+ * @see geteuid()
+ */
+//==============================================================================
+static inline gid_t getegid(void)
+{
+        gid_t gid = 0;
+#if __LIBC_PERMISSIONS_ENABLE__ == _YES_
+        _libc_syscall(_LIBC_SYS_GETEGID, &gid);
+#endif
+        return gid;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns effective user ID of the calling thread.
+ *
+ * The geteuid() function returns effective user ID used by access checks of
+ * the system (0: root). Programs check privileges by this ID. This function is
+ * always successful.
+ *
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        if (geteuid() != 0) {
+                puts("Only root can do this.");
+        }
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline uid_t geteuid(void)
+{
+        uid_t uid = 0;
+#if __LIBC_PERMISSIONS_ENABLE__ == _YES_
+        _libc_syscall(_LIBC_SYS_GETEUID, &uid);
+#endif
+        return uid;
+}
+
+//==============================================================================
+/**
+ * @brief Function sets user ID of the calling process.
+ *
+ * The setuid() function sets user ID of all threads of the calling process
+ * (POSIX). Root (effective user ID 0) sets real and effective ID to any value,
+ * so the change from root is permanent; other users set effective ID to own
+ * real or effective ID. Set group first by setgid(). Threads and processes
+ * created later get credentials of the creating thread. Credentials of one
+ * thread are changed by thread_setuid() (dnx/thread.h).
+ *
+ * @param uid           user ID
+ *
+ * @return On success 0 is returned, otherwise -1 and errno is set (EPERM: not
+ *         allowed, ENOSYS: system without users and file permissions).
+ *
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        if ((setgid(1000) != 0) || (setuid(1000) != 0)) {
+                perror("setuid");
+        }
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline int setuid(uid_t uid)
+{
+#if __LIBC_PERMISSIONS_ENABLE__ == _YES_
+        bool thread = false;
+        int err = _libc_syscall(_LIBC_SYS_SETUID, &uid, &thread);
+        return err ? -1 : 0;
+#else
+        (void)uid;
+        errno = ENOSYS;
+        return -1;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Function sets group ID of the calling process.
+ *
+ * The setgid() function sets group ID of all threads of the calling process
+ * (POSIX). Root sets real and effective ID to any value, other users set
+ * effective ID to own real or effective group.
+ *
+ * @param gid           group ID
+ *
+ * @return On success 0 is returned, otherwise -1 and errno is set (EPERM: not
+ *         allowed, ENOSYS: system without users and file permissions).
+ *
+ * @see setuid()
+ */
+//==============================================================================
+static inline int setgid(gid_t gid)
+{
+#if __LIBC_PERMISSIONS_ENABLE__ == _YES_
+        bool thread = false;
+        int err = _libc_syscall(_LIBC_SYS_SETGID, &gid, &thread);
+        return err ? -1 : 0;
+#else
+        (void)gid;
+        errno = ENOSYS;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -600,6 +723,32 @@ extern int64_t lseek64(int fd, int64_t offset, int whence);
  */
 //==============================================================================
 extern int unlink(const char *pathname);
+
+//==============================================================================
+/**
+ * @brief  Function fills buffer with random bytes of cryptographic quality
+ *         (reads /dev/urandom, URANDOM driver).
+ *
+ * @param  buffer       destination buffer
+ * @param  length       number of bytes (up to @ref GETENTROPY_MAX)
+ *
+ * @return On success 0 is returned, otherwise -1 and errno is set (EINVAL:
+ *         length greater than @ref GETENTROPY_MAX, ENOENT: no /dev/urandom).
+ *
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        uint8_t salt[16];
+        if (getentropy(salt, sizeof(salt)) == 0) {
+                // ...
+        }
+        // ...
+   @endcode
+ */
+//==============================================================================
+extern int getentropy(void *buffer, size_t length);
 
 #ifdef __cplusplus
 }

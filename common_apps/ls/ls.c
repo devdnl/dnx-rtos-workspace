@@ -239,9 +239,11 @@ int main(int argc, char *argv[])
                                         char time[24];
                                         strftime(time, sizeof(time), "%d-%m-%Y %H:%M", &tm);
 
-                                        printf("%s%s %12llu %s%s%s%s%s%s%s" VT100_RESET_ATTRIBUTES "\n", type,
-                                                mode, size, unit, CURSOR_AT(28), mod, CURSOR_AT(38), time,
-                                                CURSOR_AT(55), dirent->d_name);
+                                        printf("%s%s %5u %5u %12llu %s%s%s%s%s%s%s" VT100_RESET_ATTRIBUTES
+                                               "\n",
+                                                type, mode, (unsigned)st.st_uid, (unsigned)st.st_gid, size,
+                                                unit, CURSOR_AT(40), mod, CURSOR_AT(50), time, CURSOR_AT(67),
+                                                dirent->d_name);
 
                                         count++;
                                 } else {
@@ -250,7 +252,9 @@ int main(int argc, char *argv[])
                                 }
                         }
 
-                        if (!(errno == ESUCC || errno == ENOENT)) {
+                        if (errno == ENOENT) {
+                                errno = ESUCC; // end of directory
+                        } else if (errno) {
                                 perror("Read dir");
                         }
 

@@ -149,6 +149,8 @@ static void push_process_stat(lua_State *L, const process_stat_t *stat)
         set_int(L, "stack_max_usage", stat->stack_max_usage);
         set_int(L, "priority", stat->priority);
         set_int(L, "syscalls_per_sec", stat->syscalls_per_sec);
+        set_int(L, "uid", stat->uid);
+        set_int(L, "gid", stat->gid);
         lua_pushboolean(L, stat->threads_count == 0);
         lua_setfield(L, -2, "zombie");
 }

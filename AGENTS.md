@@ -58,7 +58,13 @@ The default configuration targets **stm32h7** (`__CPU_ARCH__` in
   (`Makefile.in` + sources).
 - `common_libs/` — libraries shared by appsets: `libc` (the dnx user-space
   libc: `stdio.h`, `dnx/misc.h`, `dnx/os.h`, `dnx/thread.h`, …), `bs`, `lua`,
-  `zlib`, `llist`, `fpkg`, `crc`, `md5`, `sha*`, `http-parser`, `libmqtt`, …
+  `zlib`, `llist`, `fpkg`, `crc`, `md5`, `sha*`, `http-parser`, `libmqtt`, `auth`
+  (accounts like in Linux: public `passwd` file
+  `name:x:uid:gid:description:home:shell` and secret `shadow` file
+  `name:hash:services`, several shadow lines of a user are separate passwords
+  of services: `shell` (login on console, su), `telnet`, `ftp`, `mqtt`,
+  `sudo`; used by telnetd, ftpd, mqtt_broker, login, passwd, su, sudo, id,
+  whoami, dsh), …
 - `config/` — the actual configuration of each partition (see below).
 - `bsp/` — exported board configurations (`*.bsp`), applied with `tools/bsp_import.sh`
   (directories of the BSP are reset to defaults before import); `bsp/posix-sim.bsp`
@@ -66,7 +72,15 @@ The default configuration targets **stm32h7** (`__CPU_ARCH__` in
   ["app*|btl*"]` exports selected directories, each optimized for its own
   `__CPU_ARCH__`; `tools/config_sync.sh` re-syncs all configs and BSPs with the
   defaults (run it after adding a configuration flag).
-- `app-romfs/` — files packed into the ROMFS image.
+- `app-romfs/` — files packed into the ROMFS image (owner and modes of files
+  set by `config/*-romfs/config.h`: `__ROMFS_UID__`, `__ROMFS_GID__`,
+  `__ROMFS_FILE_MODE__`, `__ROMFS_DIR_MODE__` and exceptions
+  `__ROMFS_PERMISSIONS__` "path:mode[:uid[:gid]] ..." (entries separated by
+  spaces, path characters encoded as in URL: `%20` space, `%3A` colon), paths in the image,
+  e.g. `/shadow` of the image mounted in `/etc`; `__ROMFS_SIZE__`: partition
+  size, bigger image fails the build). romfs finds the image in the partition
+  by its header: initd gives the whole partition to MEMBLOCK and mounts it
+  (erased partition: mount error), `df` shows free space of the partition.
 - `sim-env/` — POSIX simulator environment: board models (`boards/`), device
   models (`models/`), tests and demos executed in dnx (`tests/`, `demos/`),
   pages of the board panel (`panel/`); API in `sim-env/README.md`.
@@ -200,7 +214,9 @@ Notes:
   FAT/ext4 image, flatfs/eefs/ext2/ext3 partitions formatted in dnx, ext2 on
   the SD card model and on the constrained disk, read-only romfs image),
   `udstest`, shell pipeline (`dsh: pipeline`: EOF of pipe), libc streams
-  (`stdiotest` of the test appset), drvset partition (`--drvset`: example
+  (`stdiotest` of the test appset), descriptors (`desctest` of the test
+  appset: object type, descriptor of other process, closed shared
+  descriptor), drvset partition (`--drvset`: example
   driver, fstest on its file system `dsramfs`, incorrect image) and
   `inettest` (`--tap`) in the simulator and checks their
   `SUMMARY:` lines (ext2/ext3/ext4/FAT images are checked by e2fsck/fsck.fat);
@@ -263,7 +279,8 @@ Notes:
   searched in the main appset, then in `__OS_PROGRAM_PATH__` of
   `config/sim-kernel` (`/bin:/opt/testappset`). `make test-sim` adds the test
   appset `sim-env/testappset` (`appsettest`, tests `appsets: testappset` and
-  `appsetfs: mount/umount`; `stdiotest`, test `libc: stdio`; they are skipped
+  `appsetfs: mount/umount`; `stdiotest`, test `libc: stdio`; `desctest`, test
+  `kernel: descriptors`; they are skipped
   when the simulator was built without it).
 - A program fault (SIGSEGV, ...) is reported as APP CRASH like a CPU exception
   on the microcontroller; the simulator keeps running.
@@ -328,6 +345,53 @@ both C preprocessor and make**. Rules:
   `config/arch/...` or `config/filesystems/...`. Use existing modules (e.g.
   `drivers/zero`, `fs/ramfs`) as templates.
 
+## Users and file permissions
+
+Kernel flag `__OS_ENABLE_PERMISSIONS__` (see `kernel/AGENTS.md`) and libc flag
+`__LIBC_PERMISSIONS_ENABLE__` (off: `getuid()`/`getgid()` return 0,
+`setuid()`, `setgid()`, `thread_setuid()`, `thread_setgid()`,
+`process_create_as()` fail with `ENOSYS`, `umask()` returns 0) enable users:
+`uid`/`gid` of threads (`setuid()`/`setgid()` change all threads of the
+process as POSIX, `thread_setuid()`/`thread_setgid()` of `dnx/thread.h`
+only the calling thread), per-process umask (022),
+owner and mode checks of files, root-only syscalls (mount, chown, modprobe,
+network configuration, reboot, …) and kill of own processes only. Programs:
+`su [-c cmd] [user]` (privileged program: users give password of the
+account, service `shell`; root without password), `sudo [-u user] <command>` (privileged program
+declared by `PROGRAM_PARAMS_FLAGS(sudo, …, PROGRAM_FLAG_PRIVILEGED)`: runs as
+root, asks for password of the calling user, user needs password line with
+service `sudo`, e.g. `passwd -s shell,sudo bob`; waits for the command and
+returns its status), `id`, `whoami`, `chown <user|uid>[:<gid>]
+<files>`, `chmod <octal mode>`, `ls` (uid, gid columns), `top` (UID column),
+`passwd` (privileged program: root manages accounts, `-u <uid> -G <gid>
+-H <home> -S <shell>` change account of existing user without password;
+users change own existing passwords after the current password is checked).
+Process statistics (`process_stat_t`, Lua
+`dnx.proc.stat()`) contain effective `uid`/`gid` of the main thread.
+`getuid()`/`getgid()` return real IDs (user that started the process),
+`geteuid()`/`getegid()` effective IDs: check privileges by `geteuid()`.
+`login [-l] [prog]` (started by root, e.g. initd) and `telnetd` start the
+shell of the account (default: prog, dsh / program of telnetd) in its home
+directory by `process_create_as()`; `login` waits for the end of the session
+(the terminal is not shared with the parent) and ends, with `-l` it shows the
+login prompt again (terminal of initd). `su [-] [-c cmd] [user]` starts the
+shell of the account (`-`: in its home directory), `cd` of `dsh` without
+argument (or `~`) changes to the home directory, `ftpd` calls `thread_setgid()`/`thread_setuid()` in the
+session thread (fallback without permissions: `ENOSYS`). `initd`/`siminit`
+make `/tmp`, `/run` 0777 and `/dev/null`, `/dev/zero` 0666,
+`/dev/urandom` 0444 (other devices: root only). The `passwd` file is created
+with mode 0644 (user names for all: `dsh` prompt `user@host:path`, `id`,
+`whoami`), the `shadow` file with mode 0600. Paths: libc flags
+`__LIBC_PASSWD_FILE__`, `__LIBC_SHADOW_FILE__` (default accounts, ROMFS),
+`__LIBC_PASSWD_RW_FILE__`, `__LIBC_SHADOW_RW_FILE__` (changes; the writable
+files are used when the writable passwd file exists); keep writable files on
+a file system with modes (not FAT). `tools/mkpasswd.py` creates lines of both
+files. With
+`__LIBC_PERMISSIONS_ENABLE__` `dsh` needs the `auth` library in the appset.
+Test: `sim-env/tests/perm.lua`.
+Programs must not depend on the kernel flag; use the libc flag or the
+`ENOSYS` result.
+
 ## Appset-side conventions (programs and libraries)
 
 - A program shared by appsets is a directory `common_apps/<name>/` with a
@@ -354,6 +418,12 @@ both C preprocessor and make**. Rules:
   the `.mk`/directory name and may contain `.` and `-` (`mkfs.eefs`); the
   `PROGRAM_PARAMS` identifier is the name with other characters than letters,
   digits and `_` replaced by `_` (`mkfs_eefs`, `addapps.sh`).
+  `PROGRAM_PARAMS_EXTENDED(<name>, stack, preferred RAM)` and
+  `PROGRAM_PARAMS_FLAGS(<name>, stack, preferred RAM, flags)` (flag
+  `PROGRAM_FLAG_PRIVILEGED`: program runs as root, only for programs that
+  check the caller themselves, like `sudo`) are extended forms. After a
+  change of program macros or the program table rebuild appsets from clean
+  build directories.
 - **No global or static variables in programs and libraries.** Each program
   may run in many instances, so all state goes into
   `GLOBAL_VARIABLES_SECTION { … };` (accessed through `global->…`) or into

@@ -1,0 +1,5 @@
+# Makefile for GNU make
+
+CSRC_PROGRAMS   += $(PROG_ROOT_WHOAMI)whoami/whoami.c
+CXXSRC_PROGRAMS +=
+HDRLOC_PROGRAMS +=

@@ -162,6 +162,17 @@ this:SetToolTip("This function enables changing of file owner.")
 #define __OS_ENABLE_CHOWN__ _YES_
 
 /*--
+this:AddWidget("Combobox", "Enable users and file permissions")
+this:AddItem("Yes", "_YES_")
+this:AddItem("No", "_NO_")
+this:SetToolTip("This option enables user and group of threads (setuid(), setgid(), umask(), process_create() with "..
+                "credentials), checking of file permissions (owner, group, others), file systems management, "..
+                "drivers, network configuration, time and restart only for root and kill of own processes.\n"..
+                "The option needs chmod(), chown() and fstat() functions.")
+--*/
+#define __OS_ENABLE_PERMISSIONS__ _YES_
+
+/*--
 this:AddWidget("Combobox", "Enable statfs() and getmntentry() functions")
 this:AddItem("Yes", "_YES_")
 this:AddItem("No", "_NO_")

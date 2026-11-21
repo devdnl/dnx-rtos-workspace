@@ -67,8 +67,10 @@ Brief   File package container.
 #define FILE_ENTRY_MAGIC       0x544E4546
 #define CONTAINER_HEADER_MAGIC 0x474B5046
 
-#define FLAG_ENCRYPTED         (1 << 0)
-#define FLAG_SORTED            (1 << 1)
+#define SIGNATURE         "FPKG\n"
+#define IMAGE_SIZE_OFFSET 64 /* u32 size of image after 64 B signature block */
+#define FLAG_ENCRYPTED    (1 << 0)
+#define FLAG_SORTED       (1 << 1)
 
 #define is_encrypted(self)     ((self)->flags & FLAG_ENCRYPTED)
 #define is_sorted(self)        ((self)->flags & FLAG_SORTED)
@@ -701,11 +703,24 @@ static int read_image_info(fpkg_t *self)
 
         long size = ftell(self->file);
 
-        if ((size < cast(long, sizeof(container_header_t))) or (cast(uint64_t, size) > UINT32_MAX)) {
+        if ((size < cast(long, IMAGE_SIZE_OFFSET + sizeof(uint32_t))) or
+                (cast(uint64_t, size) > UINT32_MAX)) {
                 return -1;
         }
 
-        self->file_size = cast(uint32_t, size);
+        /* image size from header: image can be smaller than file (partition) */
+        char signature[sizeof(SIGNATURE) - 1];
+        uint32_t image_size;
+
+        if ((read_at(self, 0, signature, sizeof(signature)) != 0) or
+                (read_at(self, IMAGE_SIZE_OFFSET, &image_size, sizeof(image_size)) != 0) or
+                (memcmp(signature, SIGNATURE, sizeof(signature)) != 0) or
+                (image_size < IMAGE_SIZE_OFFSET + sizeof(uint32_t) + sizeof(container_header_t)) or
+                (image_size > cast(uint32_t, size))) {
+                return -1;
+        }
+
+        self->file_size = image_size;
 
         container_header_t header;
         if (read_container_header(self, &header) != 0) {

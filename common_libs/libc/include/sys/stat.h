@@ -278,6 +278,41 @@ static inline int chmod(const char *pathname, mode_t mode)
 
 //==============================================================================
 /**
+ * @brief Function sets file mode creation mask.
+ *
+ * The umask() function sets file mode creation mask of the process: bits of
+ * the mask are removed from mode of new files, directories and FIFOs (e.g.
+ * mask 022: files created with mode 0666 get 0644). New processes get mask of
+ * the creating process (the first process: 022). Without users and file
+ * permissions in the system the function has no effect and returns 0.
+ *
+ * @param mask          new mask
+ *
+ * @return Previous mask.
+ *
+ * @b Example
+ * @code
+        #include <sys/stat.h>
+
+        // ...
+        umask(077);   // new files only for owner
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline mode_t umask(mode_t mask)
+{
+        mode_t old = 0;
+#if __LIBC_PERMISSIONS_ENABLE__ == _YES_
+        _libc_syscall(_LIBC_SYS_UMASK, &mask, &old);
+#else
+        (void)mask;
+#endif
+        return old;
+}
+
+//==============================================================================
+/**
  * @brief Function gets file information.
  *
  * The stat() function return information about a file.

@@ -105,13 +105,15 @@ static void create_base_file_system_structure(void)
          * 2. Create basic folders. This folders can be used to store device
          *    files or to mount next file systems e.g. SD Card etc.
          */
-        mkdir("/dev", 0666);  // this folder store devices drivers
-        mkdir("/tmp", 0666);  // this folder store temporary files
-        mkdir("/run", 0666);  // this folder store runtime files
-        mkdir("/mnt", 0666);  // this folder store mounted external discs
-        mkdir("/proc", 0666); // this folder store operating system runtime files
-        mkdir("/etc", 0666);  // this folder store misc files
-        mkdir("/bin", 0666);  // this folder store programs of the main appset
+        mkdir("/dev", 0777);  // this folder store devices drivers
+        mkdir("/tmp", 0777);  // this folder store temporary files
+        mkdir("/run", 0777);  // this folder store runtime files
+        mkdir("/mnt", 0777);  // this folder store mounted external discs
+        mkdir("/proc", 0777); // this folder store operating system runtime files
+        mkdir("/etc", 0777);  // this folder store misc files
+        chmod("/tmp", 0777);  // temporary and runtime files of all users
+        chmod("/run", 0777);
+        mkdir("/bin", 0777); // this folder store programs of the main appset
 
         mount("procfs", "", "/proc", "");
 
@@ -166,6 +168,8 @@ static void initialize_basic_drivers(void)
         driver_init("AFM", 0, 0, NULL);       // alternative function configuration
         driver_init("CLK", 0, 0, "/dev/clk"); // system clock configuration
         driver_init("DMA", 0, 0, NULL);       // DMA configuration
+        driver_init("URANDOM", 0, 0, "/dev/urandom"); // random generator (after CLK: RNG clock)
+        chmod("/dev/urandom", 0444);                  // device files are only for root by default
 
         /*
          * NOTE: make sure that UART1 is used as terminal output!
@@ -310,33 +314,22 @@ static void mount_file_systems(void)
                 ioctl(fd, IOCTL_PART__READ_MBR);
         }
 
-        mkdir("/mnt", 0666);
+        mkdir("/mnt", 0777);
         mount("fatfs", "/dev/sd0p1", "/mnt", "");
         mount("flatfs", "/dev/sd0p2", "/tmp", "check");
 
         /*
-         * ROMFS at address 0x08070000
+         * ROMFS partition (config/app-romfs: __ROMFS_ADDRESS__, __ROMFS_SIZE__),
+         * romfs finds the image by its header (erased partition: mount error)
          */
-        const u32_t romfs_address = 0x08070000;
-        const u32_t *romfs_ptr = cast(typeof(romfs_ptr), romfs_address);
-        static const char *romfs_signature = "FPKG\n";
+        driver_init2("MEMBLOCK", 0, 0, "/dev/romfs",
+                &(MEMBLOCK_config_t) {
+                        .memory_address = 0x08080000,
+                        .block_size = 0x80000,
+                        .access = O_RDONLY,
+                });
 
-        if (memcmp(romfs_ptr, romfs_signature, strlen(romfs_signature)) == 0) {
-
-                const u32_t romfs_size_offset_words = 16; // romfs header size
-                u32_t romfs_size = *(romfs_ptr + romfs_size_offset_words);
-
-                if (romfs_size != UINT32_MAX) {
-                        driver_init2("MEMBLOCK", 0, 0, "/dev/romfs",
-                                &(MEMBLOCK_config_t) {
-                                        .memory_address = romfs_address,
-                                        .block_size = romfs_size,
-                                        .access = O_RDONLY,
-                                });
-
-                        mount("romfs", "/dev/romfs", "/etc", "validate");
-                }
-        }
+        mount("romfs", "/dev/romfs", "/etc", "validate");
 }
 
 //==============================================================================
