@@ -21,7 +21,11 @@ which is used for development and automatic tests without hardware.
 
 The operating system itself lives in the separate
 [dnx-rtos-kernel](https://github.com/devdnl/dnx-rtos-kernel) repository, which is
-included here as the `kernel` git submodule.
+included here as the `kernel` git submodule. The kernel is licensed under GNU
+GPL version 2: programs using it by system calls (appsets) are not covered by
+the license and drivers and file systems of the drvset partition can be
+proprietary (exception), see `kernel/doc/license.txt`. Applications and
+libraries of the workspace use the MIT license (see [Licenses](#licenses)).
 
 ### Main components
 A complete firmware image built in this workspace consists of up to three
@@ -76,12 +80,15 @@ The `app-appset` contains a reference set of programs, e.g.:
 - file tools: `ls`, `cat`, `cp`, `rm`, `mkdir`, `touch`, `chmod`, `dd`, `grep`,
   `hexdump`, `md5sum`, `echo`, `mount`, `umount`, `df`, `sync`, `mkfifo`,
   `mknod`,
-- storage: `mkext`, `mkeefs`, `mkflatfs` (file system formatters), `storinit`
+- storage: `mkext` (ext2/ext3/ext4 formatter without library, e.g. `mkext -e 4
+  -j -i /dev/sd0p2`), `mkeefs`, `mkflatfs` (file system formatters), `fdisk`
+  (GPT and MBR partition table editor, e.g. `fdisk -g -n 0::+64M -c 1:boot
+  -n 0:: -c 2:data /dev/sd0`), `storinit`
   (storage initialization), `iostat` (block device statistics), `fsbench`
   (file system performance of directory, e.g. `fsbench -D /dev/sda1 /mnt`),
 - system tools: `initd`, `siminit`, `top`, `free`, `memmon`, `dmesg`, `lsmod`,
   `modprobe`, `uptime`, `uname`, `date`, `dstd` (daylight saving
-  time), `time`, `perf`, `reboot`, `shutdown`,
+  time), `time`, `perf`, `reboot`, `shutdown`, `licenses` (prints the licenses file of the build),
 - network: `ifconfig`, `netmgr`, `ping`, `ethstat`, `canstat`, `httpsrv` (HTTP
   server with Lua scripting), `ftpd`, `telnetd`, `sntpd`, `mqtt_broker`
   (`telnetd`, `ftpd`, `mqtt_broker` and `login` accept accounts of the
@@ -328,7 +335,41 @@ Results are placed in the `build` directory:
 - `*.hex`, `*.bin`, `*.elf` files of particular parts,
 - `project_app.hex`, `project_btl.hex`, `project_btl_app.hex` – merged images,
 - `project-app.fpkg`, `project-btl.fpkg` – FPKG packages that can be used by
-  the boot loader to update the firmware.
+  the boot loader to update the firmware,
+- `project_app.spdx`, `project_btl.spdx` (SBOM, SPDX 2.3) and
+  `project_app-licenses.txt.gz`, `project_btl-licenses.txt.gz` – licenses of
+  the build (see [Licenses](#licenses)).
+
+### Licenses
+Licenses of a build are created from the sources of linked objects of the
+kernel and appset (`kernel/tools/licenses.py`, dependency files of objects):
+each source belongs to the component described by the nearest `LICENSE.spdx`
+file (directory of the file or parent directories). The list contains only
+components that are really built (e.g. lwIP only with network, lwext4 only
+with ext4fs):
+- `<name>.spdx` – SBOM (SPDX 2.3 tag-value): components, versions, licenses
+  and copyright notices, the kernel with version and commit,
+- `<name>-licenses.txt.gz` – components with copyright notices and texts of
+  used licenses (texts are in `LICENSES/<id>.txt` of the workspace and kernel).
+
+`LICENSE.spdx` contains packages separated by an empty line (SPDX fields):
+```
+PackageName: lwIP
+PackageVersion: 2.2.0
+PackageDownloadLocation: https://savannah.nongnu.org/projects/lwip/
+PackageLicenseDeclared: BSD-3-Clause
+PackageCopyrightText: Copyright (c) 2001-2004 Swedish Institute of Computer Science.
+FilesMatch: src/*.c !src/test.c        # optional: files of the package only
+```
+Directories of the workspace are covered by `LICENSE.spdx` of the workspace,
+projects added to the workspace (programs, libraries, appsets) need own
+`LICENSE.spdx` (e.g. `PackageLicenseDeclared: LicenseRef-Proprietary` and
+`LICENSES/LicenseRef-Proprietary.txt`), otherwise the build prints warnings
+with directories of files without license information.
+
+The licenses file can be delivered with the device by the project, e.g. copied
+to the romfs directory (`app-romfs/licenses.txt.gz`, `/etc/licenses.txt.gz` in
+the system), and printed by program `licenses` (`licenses [file] | more`).
 
 ### Flash
 Start OpenOCD (target is selected according to the kernel configuration) and
@@ -394,9 +435,10 @@ make run-sim SIM_OPTS="--hostfs host=."
 - `--disk` connects host file to the `HOSTDISK` driver (major number `<n>`);
   disk 0 is ROMFS image mounted by `siminit` in `/etc`
   (`--disk 0=build/sim-romfs.bin:ro`, used by `make run-sim`),
-  disks 1..3 are initialized by `siminit` as `/dev/sda`..`/dev/sdc`, MBR
-  partitions as `/dev/sdX1`..`/dev/sdX4` (`PART` driver), FAT and ext4 file
-  systems are mounted in `/mnt/sdXn` (or `/mnt/sdX` when disk has no
+  disks 1..3 are initialized by `siminit` (raw device `/dev/hostdiskN`) as
+  `/dev/sda`..`/dev/sdc` (`PART` disk), GPT or MBR partitions as
+  `/dev/sdX1`.., named GPT partitions as `/dev/sdX-<name>`, FAT and ext4
+  file systems are mounted in `/mnt/sdXn` (or `/mnt/sdX` when disk has no
   partitions), e.g. `--disk 1=sd.img`; other file systems can be mounted
   manually, e.g. `mount /dev/sdb1 flatfs /mnt/flatfs`; disks 4..7 are not
   initialized by `siminit`, the driver can emulate hardware constraints of
@@ -477,6 +519,7 @@ test programs are executed in the shell and their `SUMMARY:` lines are checked:
 | Test             | Description |
 |------------------|-------------|
 | boot             | system starts, shell responds |
+| `licenses: file and SBOM` | program `licenses` prints the licenses file of the build (`build/sim-licenses.txt.gz` in `/host`: components, license texts), `build/sim.spdx` has all fields of packages and texts of `LicenseRef-*` licenses |
 | `devcfg: config strings` | driver configuration strings (`sim-env/tests/devcfg.lua`, `modprobe -c`): PART, FBRIDGE, UART, MEMBLOCK, invalid values |
 | `devcfg: uart termios` | UART:1 configured in dnx (baud rate, stop bits) is checked on the host pseudo terminal |
 | `board: gpio`    | GPIO test (`sim-env/tests/gpio.lua`) with board model `sim-env/boards/test.lua` |
@@ -505,8 +548,11 @@ test programs are executed in the shell and their `SUMMARY:` lines are checked:
 | `fstest: eefs`   | partition formatted by `mkeefs`, then `fstest` |
 | `fstest: ext2 (mkext)` | partition formatted by `mkext -e 2`, then `fstest`, checked by `e2fsck` after test |
 | `fstest: ext3 (mkext)` | partition formatted by `mkext -e 3 -j` (journal), then `fstest`, checked by `e2fsck` after test |
+| `mkext: sizes and options` | areas of disk 6 not aligned to block group size formatted by `mkext` (ext2/3/4, journal, block sizes 1/2/4 KiB), mounted and modified by ext4fs, each area checked by `e2fsck` (`sim-env/tests/mkext.lua`) |
+| `fstest: ext4 (mkext)` | `fstest` on the last area of `mkext` test (ext4, journal, 4 KiB blocks), checked by `e2fsck` |
 | `blkdev: constraints` | block layer on host disk with emulated constraints (block size 512 B, buffer alignment 32 B): unaligned requests, bounce buffers (`sim-env/tests/blkdev.lua`) |
 | `fstest: ext2 on blkdev` | `fstest` on ext2 file system of that disk, checked by `e2fsck` after test |
+| `part: GPT, MBR, fdisk` | partition nodes of GPT disk (`/dev/sdb1`, `/dev/sdb-<name>`), `fdisk` on empty disk 5: GPT, names, delete, mounted partition, damaged primary GPT (backup GPT), damaged protective MBR, MBR, release of disk (`sim-env/tests/part.lua`) |
 | `fstest: romfs`  | `fstest -r` (read tests and read-only checks) on romfs image with reference data (`fstest_ref.py`, `mkfpkg.py`) |
 | `udstest`        | Unix domain sockets |
 | `dsh: pipeline`  | shell pipeline finishes when the writer ends (EOF of pipe) |

@@ -213,6 +213,8 @@ Notes:
   (`blkdev`: host disk with emulated constraints), `fstest` (ramfs, hostfs,
   FAT/ext4 image, flatfs/eefs/ext2/ext3 partitions formatted in dnx, ext2 on
   the SD card model and on the constrained disk, read-only romfs image),
+  partitions (`part.lua`: GPT nodes, `fdisk`), `mkext` (`mkext.lua`: areas of
+  disk 6, ext2/3/4, e2fsck),
   `udstest`, shell pipeline (`dsh: pipeline`: EOF of pipe), libc streams
   (`stdiotest` of the test appset), descriptors (`desctest` of the test
   appset: object type, descriptor of other process, closed shared
@@ -261,8 +263,26 @@ Notes:
   (`_host_drvset_map()`); the kernel stores the symbol table address in the
   first word of that RAM. Interrupts are not emulated (partitions with
   interrupt handlers are rejected). Modules are initialized by `modprobe -i`.
-- `siminit` connects `--disk 1..3` as `/dev/sda..sdc` with MBR partitions
-  (`PART`) and mounts FAT/ext4 in `/mnt/sdXn` (or whole disk in `/mnt/sdX`).
+- Licenses: `LICENSE.spdx` of components (root file covers listed workspace
+  directories only), texts in `LICENSES/`; build writes
+  `build/<name>.spdx` and `<name>-licenses.txt.gz` from `*.files` (sources of
+  linked objects of kernel and appsets, `kernel/tools/licenses.py`); new third
+  party library or program needs own `LICENSE.spdx`; program `licenses`
+  prints the gzip file (default `/etc/licenses.txt.gz`, not added to ROMFS
+  by the build).
+- Kernel version: `kernel/VERSION` (do not edit the version in sources),
+  `make bump-minor` / `bump-patch` / `tag-release` in `kernel/` (see
+  `kernel/AGENTS.md`); then commit the submodule pointer in the workspace.
+- `siminit` connects `--disk 1..3` (raw `/dev/hostdiskN`) as `PART` disks
+  `/dev/sda..sdc` with partition nodes from GPT/MBR (`/dev/sdXn`, named GPT
+  partitions `/dev/sdX-<name>`) and mounts FAT/ext4 in `/mnt/sdXn` (or whole
+  disk in `/mnt/sdX`). Test disk `sdb` is GPT (`write_gpt()` of `simtest.py`),
+  `sda` is MBR, disk 5 is empty (`part.lua`: `fdisk`), disk 6 is divided
+  into areas for `mkext` (`MKEXT_AREAS` of `simtest.py`).
+- `mkext` writes ext2/3/4 layout itself (no lwext4): every group starts with
+  its metadata, root, lost+found and journal in group 0; ext4 has extents and
+  metadata_csum, groups 1.. not initialized (lazy init by driver); ext2/3
+  write all bitmaps and inode tables.
 - Appset is linked as a relocatable object (`ld -r`), only
   `_program_table_desc` stays global, so appset symbols do not conflict with
   kernel and host library symbols. libc calls kernel by `_dnx_syscall` when
@@ -319,8 +339,9 @@ both C preprocessor and make**. Rules:
   `Function definitions`.
 - Every function has a Doxygen comment framed with `//====…` lines
   (`@brief`, `@param[in]/[out]`, `@return`).
-- Licenses: kernel files use GPL with the dnx RTOS exception; appset programs
-  and newer files use MIT. Keep the license of the file you edit; ask before
+- Licenses: kernel files (and kernel configuration) use GPL-2.0-only with the
+  note about programs and the drvset exception (`kernel/doc/license.txt`);
+  appset programs, libraries and newer files use MIT. Keep the license of the file you edit; ask before
   choosing a license for a new file if unclear.
 - Code, comments and commit messages are in English. Commit messages are short
   sentences ending with a period, e.g. `Fix in the VFS.`, `Improvements in df.`\

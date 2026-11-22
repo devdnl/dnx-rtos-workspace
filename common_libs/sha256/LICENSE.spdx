@@ -1,0 +1,5 @@
+PackageName: crypto-algorithms (SHA256)
+PackageDownloadLocation: https://github.com/B-Con/crypto-algorithms
+PackageLicenseDeclared: LicenseRef-PublicDomain
+PackageCopyrightText: Brad Conte (brad AT bradconte.com)
+PackageComment: released into the public domain by the author (README of the repository)

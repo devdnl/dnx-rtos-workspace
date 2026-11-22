@@ -85,7 +85,8 @@ int main(int argc, char *argv[])
                         status = EXIT_SUCCESS;
 
                         /* partition table is read only by drivers that support it (PART) */
-                        if ((ioctl(fileno(storage), IOCTL_STORAGE__READ_MBR) != 0) && (errno != EBADRQC)) {
+                        if ((ioctl(fileno(storage), IOCTL_STORAGE__READ_PARTITION_TABLE) != 0) &&
+                                (errno != EBADRQC)) {
                                 perror(argv[1]);
                                 status = EXIT_FAILURE;
                         }

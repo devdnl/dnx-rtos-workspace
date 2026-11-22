@@ -1,0 +1,6 @@
+PackageName: Lua
+PackageVersion: 5.5.0
+PackageDownloadLocation: https://www.lua.org/
+PackageLicenseDeclared: MIT
+PackageCopyrightText: Copyright (C) 1994-2025 Lua.org, PUC-Rio.
+FilesMatch: lua.c

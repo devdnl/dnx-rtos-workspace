@@ -10,6 +10,7 @@
 #         shell and their SUMMARY lines are checked. Tests:
 #           - boot (shell available, simulator platform),
 #           - users and file permissions (sim-env/tests/perm.lua: su, ramfs, flatfs, FAT mount options),
+#           - partitions (sim-env/tests/part.lua: GPT nodes of PART driver, fdisk on disk 5),
 #           - driver configuration strings (sim-env/tests/devcfg.lua, modprobe -c), UART:1 is
 #             connected to the host pseudo terminal and its configuration is checked by termios,
 #           - board model (sim-env/boards/test.lua): GPIO, I2C, I2CEE/eefs, DS2482/DS18B20 (1-Wire),
@@ -27,9 +28,13 @@
 #           - fstest on flatfs, eefs, ext2 and ext3 (journal) partitions of the second disk
 #             (formatted by mkflatfs, mkeefs and mkext programs), ext2 and ext3 are checked by
 #             e2fsck after test (requires e2fsprogs, otherwise check is skipped),
+#           - mkext on areas of disk 6 not aligned to block group size (ext2/3/4, journal, block
+#             sizes, sim-env/tests/mkext.lua: mount and modification by ext4fs), fstest on ext4
+#             area, areas are checked by e2fsck,
 #           - fstest and fsbench on flatfs mounted with options async (deferred file descriptor)
 #             and cache=8 (write-through block cache),
 #           - fsbench on flatfs (smoke test, results are printed with option --perf),
+#           - licenses of the build: file printed by program licenses, SBOM build/sim.spdx,
 #           - other appset linked with simulator (sim-env/testappset mounted by siminit in
 #             /opt/testappset by appsetfs, program appsettest: libc, threads, child process,
 #             search order of programs, start by path and program search path, files of
@@ -106,6 +111,8 @@ import tempfile
 import termios
 import threading
 import time
+import uuid
+import zlib
 
 # --------------------------------------------------------------------------------------------------
 # constants
@@ -126,7 +133,7 @@ PART1_SIZE = 32 * 1024 * 1024 // SECTOR_SIZE
 PART2_START = PART1_START + PART1_SIZE
 PART2_SIZE = DISK_SIZE // SECTOR_SIZE - PART2_START
 
-# second disk (formatted by simulator): partition 1 flatfs, partition 2 eefs, partition 3 ext2,
+# second disk (GPT, formatted by simulator): partition 1 flatfs, partition 2 eefs, partition 3 ext2,
 # partition 4 ext3 (mkext program)
 RAW_DISK_SIZE = 50 * 1024 * 1024
 FLATFS_START = 2048         # sectors
@@ -137,7 +144,28 @@ EEFS_SIZE = 1024 * 1024 // SECTOR_SIZE
 EXT2_START = EEFS_START + EEFS_SIZE
 EXT2_SIZE = 16 * 1024 * 1024 // SECTOR_SIZE
 EXT3_START = EXT2_START + EXT2_SIZE
-EXT3_SIZE = RAW_DISK_SIZE // SECTOR_SIZE - EXT3_START
+EXT3_SIZE = RAW_DISK_SIZE // SECTOR_SIZE - EXT3_START - 33  # backup GPT, last block group not full
+
+# GPT partition types
+GPT_TYPE_LINUX = "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
+GPT_TYPE_DNX = "EDD0027B-CCD9-46D3-A941-BA3FB88153E2"
+GPT_ENTRIES = 128
+
+# partition test disk (empty, partitioned by fdisk)
+PART_DISK = 5
+PART_DISK_SIZE = 8 * 1024 * 1024
+
+# mkext test disk: areas (first sector, sectors, options) formatted by mkext, sizes not aligned
+# to block group size; the last area is used by fstest
+MKEXT_DISK = 6
+MKEXT_AREAS = ((2048, 6000, "-e 2"),
+               (8192, 24000, "-e 2"),
+               (34816, 32734, "-e 3 -j"),
+               (69632, 16600, "-e 3"),
+               (88064, 18000, "-e 4 -b 2048"),
+               (108544, 40000, "-e 4 -j"),
+               (149504, 80002, "-e 4 -j -b 4096"))
+MKEXT_DISK_SIZE = 120 * 1024 * 1024
 
 # block layer test disk (HOSTDISK with emulated constraints, ext2 created by mkext)
 BLK_DISK = 4
@@ -296,16 +324,40 @@ def create_disk_image(path, mkfs_fat, mkfs_ext4):
         run(ext4 + size)
 
 
+def write_gpt(f, disk_size, parts):
+    """Write protective MBR, primary and backup GPT, parts: (type, first LBA, sectors, name)."""
+    sectors = disk_size // SECTOR_SIZE
+    entries = bytearray(GPT_ENTRIES * 128)
+    for i, (ptype, start, size, name) in enumerate(parts):
+        entries[i * 128:(i + 1) * 128] = struct.pack("<16s16sQQQ72s", uuid.UUID(ptype).bytes_le, uuid.uuid4().bytes_le,
+                                                     start, start + size - 1, 0, name.encode("utf-16-le"))
+    entry_sectors = len(entries) // SECTOR_SIZE
+    disk_guid = uuid.uuid4().bytes_le
+
+    def header(lba, alt, entries_lba):
+        h = bytearray(struct.pack("<8sIIIIQQQQ16sQIII", b"EFI PART", 0x10000, 92, 0, 0, lba, alt, 2 + entry_sectors,
+                                  sectors - 2 - entry_sectors, disk_guid, entries_lba, GPT_ENTRIES, 128,
+                                  zlib.crc32(entries)))
+        h[16:20] = struct.pack("<I", zlib.crc32(h))
+        return h + bytes(SECTOR_SIZE - len(h))
+
+    mbr = bytearray(SECTOR_SIZE)
+    mbr[446:462] = mbr_entry(0xee, 1, min(sectors - 1, 0xFFFFFFFF))
+    mbr[510:512] = b"\x55\xaa"
+    for lba, data in ((0, mbr), (1, header(1, sectors - 1, 2)), (2, entries),
+                      (sectors - 1 - entry_sectors, entries),
+                      (sectors - 1, header(sectors - 1, 1, sectors - 1 - entry_sectors))):
+        f.seek(lba * SECTOR_SIZE)
+        f.write(data)
+
+
 def create_raw_disk_image(path):
     with open(path, "wb") as f:
         f.truncate(RAW_DISK_SIZE)
-        mbr = bytearray(SECTOR_SIZE)
-        mbr[446:462] = mbr_entry(0xda, FLATFS_START, FLATFS_SIZE)  # non-FS data
-        mbr[462:478] = mbr_entry(0xda, EEFS_START, EEFS_SIZE)
-        mbr[478:494] = mbr_entry(0x83, EXT2_START, EXT2_SIZE)     # Linux
-        mbr[494:510] = mbr_entry(0x83, EXT3_START, EXT3_SIZE)
-        mbr[510:512] = b"\x55\xaa"
-        f.write(mbr)
+        write_gpt(f, RAW_DISK_SIZE, ((GPT_TYPE_DNX, FLATFS_START, FLATFS_SIZE, "flatfs"),
+                                     (GPT_TYPE_DNX, EEFS_START, EEFS_SIZE, "eefs"),
+                                     (GPT_TYPE_LINUX, EXT2_START, EXT2_SIZE, "ext2"),
+                                     (GPT_TYPE_LINUX, EXT3_START, EXT3_SIZE, "ext3")))
 
 
 def create_romfs_image(path, root, tmpdir):
@@ -353,6 +405,46 @@ class TestRunner:
         return (not self.args.filter) or (self.args.filter.lower() in name.lower())
 
     # run program which prints SUMMARY line, setup commands are executed before (e.g. format, mount)
+    # licenses of the build (sim-licenses.txt.gz copied to /host) printed by program licenses, SBOM
+    # of build (sim.spdx)
+    def licenses_test(self, sim):
+        name = "licenses: file and SBOM"
+        if not self.selected(name):
+            return
+
+        build = os.path.dirname(os.path.abspath(self.args.rom))
+        gz = os.path.join(build, "sim-licenses.txt.gz")
+        if not os.path.isfile(gz):
+            self.result(name, SKIP, "sim-licenses.txt.gz not found")
+            return
+        shutil.copy(gz, self.args.hostfs_dir)
+
+        ok, out = sim.run("licenses /host/sim-licenses.txt.gz", DEFAULT_TIMEOUT)
+        expected = ("dnx RTOS kernel", "FreeRTOS Kernel", "lwIP", "License: LicenseRef-dnx-RTOS",
+                    "License: MIT", "GNU GENERAL PUBLIC LICENSE")
+        missing = [e for e in expected if e not in out]
+        if not ok or missing:
+            self.result(name, FAIL, "licenses: missing %s" % ", ".join(missing))
+            return
+
+        spdx = os.path.join(build, "sim.spdx")
+        if not os.path.isfile(spdx):
+            self.result(name, SKIP, "sim.spdx not found")
+            return
+
+        text = open(spdx).read()
+        packages = text.count("PackageName:")
+        fields = ("SPDXID: SPDXRef-Package-", "PackageDownloadLocation:", "PackageLicenseDeclared:",
+                  "PackageCopyrightText:", "Relationship: SPDXRef-DOCUMENT DESCRIBES")
+        bad = [f for f in fields if text.count(f) != packages]
+        refs = set(re.findall(r"LicenseRef-[\w.\-]+", text))
+        undefined = [r for r in refs if "LicenseID: " + r not in text]
+        if not text.startswith("SPDXVersion: SPDX-2.3") or bad or undefined or packages < 5:
+            self.result(name, FAIL, "sim.spdx: %s" % (bad or undefined or "invalid document"))
+            return
+
+        self.result(name, PASS, "%u packages" % packages)
+
     def appset_test(self, sim):
         name = "appsets: testappset"
         if not any(self.selected(n) for n in (name, "libc: stdio", "kernel: descriptors", "appsetfs: mount/umount")):
@@ -816,6 +908,14 @@ class TestRunner:
         with open(blk_disk, "wb") as f:
             f.truncate(BLK_DISK_SIZE)
 
+        mkext_disk = os.path.join(tmpdir, "mkext.img")
+        with open(mkext_disk, "wb") as f:
+            f.truncate(MKEXT_DISK_SIZE)
+
+        part_disk = os.path.join(tmpdir, "part.img")
+        with open(part_disk, "wb") as f:
+            f.truncate(PART_DISK_SIZE)
+
         romfs = os.path.join(tmpdir, "romfs.img")
         try:
             create_romfs_image(romfs, args.root, tmpdir)
@@ -838,6 +938,8 @@ class TestRunner:
             argv += ["--disk", "1=%s" % disk]
         argv += ["--disk", "2=%s" % raw_disk]
         argv += ["--disk", "%u=%s" % (BLK_DISK, blk_disk)]
+        argv += ["--disk", "%u=%s" % (PART_DISK, part_disk)]
+        argv += ["--disk", "%u=%s" % (MKEXT_DISK, mkext_disk)]
         if romfs:
             argv += ["--disk", "3=%s:ro" % romfs]
         if args.tap:
@@ -904,6 +1006,16 @@ class TestRunner:
                                 "" if ok else out.strip().splitlines()[-1])
                 else:
                     self.result("%s: e2fsck" % name, SKIP, "e2fsck not found (e2fsprogs)")
+
+        # areas formatted by mkext (the last one modified by fstest)
+        if self.selected("mkext: sizes and options"):
+            for i, (start, size, opts) in enumerate(MKEXT_AREAS):
+                name = "mkext: e2fsck %s (%u sectors)" % (opts, size)
+                if e2fsck:
+                    ok, out = check_partition(mkext_disk, start, size, tmpdir, [e2fsck, "-f", "-n"])
+                    self.result(name, PASS if ok else FAIL, "" if ok else out.strip().splitlines()[-1])
+                else:
+                    self.result(name, SKIP, "e2fsck not found (e2fsprogs)")
 
         if self.selected("fstest: ext2 on blkdev"):
             if e2fsck:
@@ -1005,6 +1117,7 @@ class TestRunner:
         self.pipeline_test(sim)
 
         # other appset linked with simulator (make test-sim links sim-env/testappset)
+        self.licenses_test(sim)
         self.appset_test(sim)
 
         # drvset partition (option --drvset)
@@ -1024,6 +1137,15 @@ class TestRunner:
 
         # users and file permissions (ramfs, flatfs on /dev/sdb1 before fstest, FAT mount options)
         self.summary_test(sim, "perm: users and files", "/host/sim-env", "lua perm.lua", FSTEST_TIMEOUT)
+        self.summary_test(sim, "part: GPT, MBR, fdisk", "/host/sim-env", "lua part.lua", FSTEST_TIMEOUT)
+
+        # mkext on areas of disk 6, fstest on the last one (ext4 with journal, 4 KiB blocks)
+        self.summary_test(sim, "mkext: sizes and options", "/host/sim-env",
+                          "lua mkext.lua " + " ".join("%u:%u:%s" % (a, n, o.replace(" ", ","))
+                                                      for a, n, o in MKEXT_AREAS), FSTEST_TIMEOUT)
+        if self.selected("mkext: sizes and options"):
+            self.summary_test(sim, "fstest: ext4 (mkext)", "/mnt/mkext", "fstest", FSTEST_TIMEOUT)
+            sim.run("umount /mnt/mkext")  # journal is clean for e2fsck
 
         shutil.rmtree(os.path.join(args.hostfs_dir, "sim-env"), ignore_errors=True)
 

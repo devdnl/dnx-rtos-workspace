@@ -305,14 +305,9 @@ static void mount_file_systems(void)
                         .hardware_flow_ctrl = true,
                 });
 
-        driver_init2("PART", 0, 0, "/dev/sd0p1", &(const PART_config_t) {.path = "/dev/sdmmc0"});
-        driver_init2("PART", 0, 1, "/dev/sd0p2", &(const PART_config_t) {.path = "/dev/sdmmc0"});
-        driver_init2("PART", 0, 2, "/dev/sd0p3", &(const PART_config_t) {.path = "/dev/sdmmc0"});
-        driver_init2("PART", 0, 3, "/dev/sd0p4", &(const PART_config_t) {.path = "/dev/sdmmc0"});
-
-        scope (int fd = open("/dev/sd0p1", O_RDWR), fd > 0, close(fd)) {
-                ioctl(fd, IOCTL_PART__READ_MBR);
-        }
+        /* /dev/sd0 (whole card), partitions: /dev/sd0p1, ..., named GPT partitions: /dev/sd0-<name> */
+        driver_init2("PART", 0, 0, "/dev/sd0",
+                &(const PART_config_t) {.path = "/dev/sdmmc0", .nodes = "/dev/sd0"});
 
         mkdir("/mnt", 0777);
         mount("fatfs", "/dev/sd0p1", "/mnt", "");

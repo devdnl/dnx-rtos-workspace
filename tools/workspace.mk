@@ -104,6 +104,7 @@ APPSET_BASE    ?= tools/appset
 ROMFS_BASE     ?= tools/romfs
 MKLINKERSCRIPT ?= $(SHELL) ./tools/create_linker_script.sh
 SYNCDIR        ?= $(PYTHON3) ./kernel/tools/syncdir.py
+LICENSES       ?= $(PYTHON3) ./kernel/tools/licenses.py
 
 #---------------------------------------------------------------------------------------------------
 # MACROS
@@ -125,6 +126,7 @@ define build_kernel
 	$(COPY) kernel/build/output/dnx.hex $(TARGET_DIR_NAME)/${$@_APP_NAME}.hex
 	$(COPY) kernel/build/output/dnx.elf $(TARGET_DIR_NAME)/${$@_APP_NAME}.elf
 	$(COPY) kernel/build/output/dnx.bin $(TARGET_DIR_NAME)/${$@_APP_NAME}.bin
+	$(COPY) kernel/build/output/dnx.files $(TARGET_DIR_NAME)/${$@_APP_NAME}.files
 	$(MKDIR) $(TARGET_DIR_NAME)/ioctl
 	$(SYNCDIR) kernel/build/ioctl/ $(TARGET_DIR_NAME)/ioctl/
 	$(REMOVE) kernel/build/ioctl
@@ -141,6 +143,7 @@ define build_appset
 	$(COPY) $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}/output/appset.hex $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.hex
 	$(COPY) $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}/output/appset.elf $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.elf
 	$(COPY) $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}/output/appset.bin $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.bin
+	$(COPY) $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}/output/appset.files $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.files
 endef
 
 # define macro used to build POSIX simulator kernel
@@ -150,6 +153,7 @@ define build_sim_kernel
 	$(REMOVE) kernel/build/ioctl
 	$(MAKE) -C kernel -s -j 1 -fMakefile all CONFIG_DIR=../config/${$@_APP_NAME}
 	$(COPY) kernel/build/output/dnx.a $(TARGET_DIR_NAME)/${$@_APP_NAME}.a
+	$(COPY) kernel/build/output/dnx.files $(TARGET_DIR_NAME)/${$@_APP_NAME}.files
 	$(MKDIR) $(TARGET_DIR_NAME)/ioctl
 	$(SYNCDIR) kernel/build/ioctl/ $(TARGET_DIR_NAME)/ioctl/
 	$(REMOVE) kernel/build/ioctl
@@ -164,6 +168,7 @@ define build_sim_appset
 	$(eval $@_TABLE_SYMBOL = $(4))
 	$(MAKE) -C $(APPSET_BASE) -s -j 1 -fMakefile all APPSET_DIR=${$@_APP_NAME} CONFIG_DIR=${$@_CONFIG_DIR} BUILD_DIR=$(TARGET_DIR_NAME)/${$@_BUILD_NAME} BOARD_NAME=posix PROJECT_OPTS=sim TABLE_SYMBOL=${$@_TABLE_SYMBOL}
 	$(COPY) $(TARGET_DIR_NAME)/${$@_BUILD_NAME}/output/appset.o $(TARGET_DIR_NAME)/${$@_BUILD_NAME}.o
+	$(COPY) $(TARGET_DIR_NAME)/${$@_BUILD_NAME}/output/appset.files $(TARGET_DIR_NAME)/${$@_BUILD_NAME}.files
 endef
 
 # other appsets of the POSIX simulator (SIM_APPSETS): fields of entry, build name, table symbol
@@ -192,6 +197,18 @@ define build_romfs
 	$(MAKE) -C $(ROMFS_BASE) -s -j 1 -fMakefile all ROMFS_DIR=${$@_ROMFS_NAME} CONFIG_DIR=config/${$@_CONFIG_NAME} BUILD_DIR=$(TARGET_DIR_NAME)/${$@_CONFIG_NAME}
 	$(COPY) $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}/romfs.bin $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.bin
 	$(COPY) $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}/romfs.hex $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.hex
+endef
+
+# define macro used to create licenses of build: output name ($(TARGET_DIR_NAME)/<name>.spdx and
+# <name>-licenses.txt.gz), document name, lists of source files (*.files of kernel and appsets),
+# directories of appsets outside the workspace (files without LICENSE.spdx are reported)
+define licenses_report
+	$(eval $@_NAME = $(strip $(1)))
+	$(eval $@_TITLE = $(strip $(2)))
+	$(eval $@_FILES = $(3))
+	$(eval $@_ROOTS = $(4))
+	$(ECHO) "Creating licenses of ${$@_TITLE}: $(TARGET_DIR_NAME)/${$@_NAME}.spdx, $(TARGET_DIR_NAME)/${$@_NAME}-licenses.txt.gz"
+	$(LICENSES) report -o $(TARGET_DIR_NAME)/${$@_NAME} -n "${$@_TITLE}" -r $(CURDIR) $(addprefix -r ,${$@_ROOTS}) ${$@_FILES}
 endef
 
 # define macro to clean appset: configuration name (build directory)
@@ -278,6 +295,9 @@ clean ::
 
 .PHONY : build-sim
 build-sim : _build_prepare build-sim-romfs build-sim-kernel build-sim-appset
+	@$(call licenses_report, sim, dnx RTOS simulator, $(TARGET_DIR_NAME)/$(SIM_KERNEL_CONFIG).files \
+	        $(TARGET_DIR_NAME)/sim-appset.files $(SIM_APPSET_OBJS:.o=.files), \
+	        $(SIM_APPSET_DIR) $(foreach a,$(SIM_APPSETS),$(call sim_appset_dir,$(a))))
 	@$(MAKE) -C kernel -s -j 1 -fMakefile link-sim CONFIG_DIR=../config/$(SIM_KERNEL_CONFIG) \
 	         APPSET_OBJ="../$(TARGET_DIR_NAME)/sim-appset.o $(addprefix ../,$(SIM_APPSET_OBJS))" \
 	         OUTPUT=../$(TARGET_DIR_NAME)/dnx-sim

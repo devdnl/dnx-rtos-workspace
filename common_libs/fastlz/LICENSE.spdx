@@ -1,0 +1,5 @@
+PackageName: FastLZ
+PackageVersion: 0.5.0
+PackageDownloadLocation: https://github.com/ariya/FastLZ
+PackageLicenseDeclared: MIT
+PackageCopyrightText: Copyright (C) 2005-2020 Ariya Hidayat <ariya.hidayat@gmail.com>

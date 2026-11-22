@@ -1,0 +1,5 @@
+PackageName: zlib
+PackageVersion: 1.2.11
+PackageDownloadLocation: https://zlib.net/
+PackageLicenseDeclared: Zlib
+PackageCopyrightText: Copyright (C) 1995-2017 Jean-loup Gailly and Mark Adler

@@ -6,7 +6,10 @@ built separately from the kernel and programmed to flash at
 built-in modules and file systems, so they are used in the same way
 (`driver_init("EXAMPLE", 0, 0, "/dev/example")`, `mount("-", "myfs", "/mnt")`).
 Sources of drvset drivers and file systems do not have to be published with the
-kernel.
+kernel (dnx RTOS drvset exception of the kernel license, `kernel/doc/license.txt`),
+when they use the kernel only through its interface for drvset modules: symbols
+of the kernel symbol table (`kernel/src/include/kernel/ksymtab.h`) and the
+interfaces of drivers, file systems and the drvset partition.
 
 Parts that define the binary interface with the kernel are in the kernel
 repository (`kernel/src/drvset/`):

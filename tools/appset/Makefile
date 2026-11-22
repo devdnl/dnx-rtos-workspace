@@ -231,6 +231,7 @@ UNAME      = /bin/uname -s
 SIZEOF     = /usr/bin/stat -c %s
 WC         = /usr/bin/wc
 PYTHON3    = /usr/bin/python3
+LICENSES   = $(PYTHON3) $(WORKSPACE)/kernel/tools/licenses.py
 SREC_CAT   = /bin/srec_cat
 CODECHECK  = cppcheck
 CC         = $(CC_WRAPPER) $(TOOLCHAIN)gcc
@@ -303,7 +304,7 @@ all : check_appset generate
 	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) build_start
 
 .PHONY : build_start
-build_start : buildobjects linkobjects hex status
+build_start : buildobjects linkobjects hex licenses status
 
 .PHONY : check_appset
 check_appset :
@@ -311,6 +312,13 @@ ifeq ($(APPSET_DIR),)
 	$(error APPSET_DIR is not defined (appset directory, e.g. APPSET_DIR=app-appset))
 endif
 	@if [ ! -d "$(APPSET_DIR)" ]; then $(ECHO) "Appset directory not found: $(APPSET_DIR)"; exit 1; fi
+
+####################################################################################################
+# sources of linked objects (appset.files) for licenses of build (kernel/tools/licenses.py)
+####################################################################################################
+.PHONY : licenses
+licenses :
+	@$(LICENSES) files -o $(TARGET_PATH)/$(PROJECT).files $(TARGET_PATH)/objects.list
 
 ####################################################################################################
 # help

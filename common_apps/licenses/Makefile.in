@@ -1,0 +1,5 @@
+# Makefile for GNU make
+
+CSRC_PROGRAMS   += $(PROG_ROOT_LICENSES)licenses/licenses.c
+CXXSRC_PROGRAMS +=
+HDRLOC_PROGRAMS +=

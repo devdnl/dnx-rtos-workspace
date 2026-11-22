@@ -1,0 +1,4 @@
+Public domain
+
+The author has released this code into the public domain, free of any
+restrictions. The code is presented "as is" without any guarantees.

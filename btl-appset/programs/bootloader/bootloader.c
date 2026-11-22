@@ -371,11 +371,7 @@ static void mount_file_systems(void)
                         .hardware_flow_ctrl = true,
                 });
 
-        driver_init2("PART", 0, 0, "/dev/sd0p1", &(const PART_config_t) {.path = "/dev/sdmmc0"});
-
-        scope (int fd = open("/dev/sd0p1", O_RDWR), fd > 0, close(fd)) {
-                ioctl(fd, IOCTL_PART__READ_MBR);
-        }
+        driver_init2("PART", 0, 0, NULL, &(const PART_config_t) {.path = "/dev/sdmmc0", .nodes = "/dev/sd0"});
 
         mkdir("/sd", 0666);
         mount("fatfs", "/dev/sd0p1", "/sd", "");

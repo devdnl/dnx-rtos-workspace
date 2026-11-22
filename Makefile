@@ -95,6 +95,8 @@ build-all : _build_prepare build-btl build-app
 
 .PHONY : build-app
 build-app : _build_prepare build-app-romfs build-app-kernel build-app-appset
+	@$(call licenses_report, $(PROJECT)_app, $(PROJECT) application, \
+	        $(TARGET_DIR_NAME)/app-kernel.files $(TARGET_DIR_NAME)/app-appset.files, app-appset)
 	@$(SREC_CAT) $(TARGET_DIR_NAME)/app-kernel.hex -Intel $(TARGET_DIR_NAME)/app-appset.hex -Intel $(TARGET_DIR_NAME)/app-romfs.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_app.hex -Intel
 	@$(COPY) -R ./app-dist $(TARGET_DIR_NAME)/app-dist
 	@$(COPY) $(TARGET_DIR_NAME)/app-kernel.bin $(TARGET_DIR_NAME)/app-dist/app-kernel.bin
@@ -105,6 +107,8 @@ build-app : _build_prepare build-app-romfs build-app-kernel build-app-appset
 
 .PHONY : build-btl
 build-btl : _build_prepare build-btl-kernel build-btl-appset
+	@$(call licenses_report, $(PROJECT)_btl, $(PROJECT) bootloader, \
+	        $(TARGET_DIR_NAME)/btl-kernel.files $(TARGET_DIR_NAME)/btl-appset.files, btl-appset)
 	@$(SREC_CAT) $(TARGET_DIR_NAME)/btl-kernel.hex -Intel $(TARGET_DIR_NAME)/btl-appset.hex -Intel -o $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex -Intel
 	@$(OBJCOPY) --input-target=ihex --output-target=binary $(TARGET_DIR_NAME)/$(PROJECT)_btl.hex $(TARGET_DIR_NAME)/$(PROJECT)_btl.bin
 	@$(MKDIR) $(TARGET_DIR_NAME)/btl-dist

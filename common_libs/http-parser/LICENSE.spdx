@@ -1,0 +1,5 @@
+PackageName: http-parser
+PackageVersion: 2.9.4
+PackageDownloadLocation: https://github.com/nodejs/http-parser
+PackageLicenseDeclared: MIT
+PackageCopyrightText: Copyright Joyent, Inc. and other Node contributors.

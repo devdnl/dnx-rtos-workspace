@@ -65,7 +65,7 @@
 #define NETMGR_CONFIG_FILE "/etc/netmgr.conf"
 
 /* number of primary partitions in MBR */
-#define NUMBER_OF_PARTITIONS 4
+#define NUMBER_OF_PARTITIONS 15
 
 /* directory of other appsets linked with the simulator (SIM_APPSETS): /opt/<appset name> */
 #define APPSETS_DIR "/opt"
@@ -93,8 +93,8 @@ static void mount_appsets(void);
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
         char str[100];
-        char disk_path[16];
-        char part_path[16];
+        char disk_path[20];
+        char part_path[20];
         char mnt_path[24];
 };
 
@@ -228,9 +228,11 @@ static bool mount_device(const char *dev, const char *mnt)
 //==============================================================================
 /**
  * @brief Function initialize data disk connected by the simulator --disk
- *        option. Partitions are created according to MBR (/dev/sdX1..4) and
- *        mounted in the /mnt/sdX1..4 folders. If disk has not partitions then
- *        entire disk is mounted in the /mnt/sdX folder.
+ *        option (raw device /dev/hostdiskN). Disk /dev/sdX and its partitions
+ *        are created according to the partition table (GPT or MBR): /dev/sdX1..,
+ *        named GPT partitions /dev/sdX-<name>. Partitions are mounted in the
+ *        /mnt/sdX1.. folders. If disk has not partitions then entire disk is
+ *        mounted in the /mnt/sdX folder.
  *
  * @param disk          host disk number
  */
@@ -239,33 +241,22 @@ static void mount_data_disk(u8_t disk)
 {
         char letter = 'a' + (disk - FIRST_DATA_HOST_DISK);
 
+        snprintf(global->part_path, sizeof(global->part_path), "/dev/hostdisk%u", disk);
         snprintf(global->disk_path, sizeof(global->disk_path), "/dev/sd%c", letter);
 
-        if (driver_init("HOSTDISK", disk, 0, global->disk_path) != 0) {
+        if ((driver_init("HOSTDISK", disk, 0, global->part_path) != 0) ||
+                (driver_init2("PART", disk, 0, global->disk_path,
+                         &(const PART_config_t) {.path = global->part_path, .nodes = global->disk_path}) !=
+                        0)) {
                 return;
-        }
-
-        for (u8_t i = 0; i < NUMBER_OF_PARTITIONS; i++) {
-                snprintf(global->part_path, sizeof(global->part_path), "%s%u", global->disk_path, i + 1);
-                driver_init2("PART", disk, i, global->part_path,
-                        &(const PART_config_t) {.path = global->disk_path});
         }
 
         bool mounted = false;
 
-        snprintf(global->part_path, sizeof(global->part_path), "%s1", global->disk_path);
-        int fd = open(global->part_path, O_RDWR);
-        if (fd >= 0) {
-                if (ioctl(fd, IOCTL_PART__READ_MBR) == 0) {
-                        for (u8_t i = 0; i < NUMBER_OF_PARTITIONS; i++) {
-                                snprintf(global->part_path, sizeof(global->part_path), "%s%u",
-                                        global->disk_path, i + 1);
-                                snprintf(global->mnt_path, sizeof(global->mnt_path), "/mnt/sd%c%u", letter,
-                                        i + 1);
-                                mounted |= mount_device(global->part_path, global->mnt_path);
-                        }
-                }
-                close(fd);
+        for (u8_t i = 1; i <= NUMBER_OF_PARTITIONS; i++) {
+                snprintf(global->part_path, sizeof(global->part_path), "%s%u", global->disk_path, i);
+                snprintf(global->mnt_path, sizeof(global->mnt_path), "/mnt/sd%c%u", letter, i);
+                mounted |= mount_device(global->part_path, global->mnt_path);
         }
 
         if (!mounted) {

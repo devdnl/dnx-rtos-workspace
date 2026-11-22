@@ -1,0 +1,10 @@
+# dnx RTOS workspace: applications, libraries, configuration and tools of this
+# repository (directories below), except components with own LICENSE.spdx
+# (kernel/tools/licenses.py). Directories of projects added to the workspace
+# need own LICENSE.spdx (warning of build otherwise).
+PackageName: dnx RTOS workspace
+PackageDownloadLocation: git+https://github.com/devdnl/dnx-rtos-workspace.git
+PackageLicenseDeclared: MIT
+PackageCopyrightText: Copyright (C) Daniel Zorychta <daniel.zorychta@gmail.com>
+FilesMatch: build/* app-appset/* app-dist/* app-romfs/* btl-appset/* bsp/* common_apps/*
+FilesMatch: common_libs/* config/* sim-env/* tools/* utils/*

@@ -1,0 +1,4 @@
+PackageName: TinyExpr
+PackageDownloadLocation: https://github.com/codeplea/tinyexpr
+PackageLicenseDeclared: Zlib
+PackageCopyrightText: Copyright (c) 2015, 2016 Lewis Van Winkle
