@@ -211,22 +211,39 @@ BSP file (`bsp/*.bsp`). Included BSPs:
 - `utils` – scripts and tools of the user project (not changed by the
   workspace),
 - `Makefile` – build of the project: settings, the core of the workspace
-  `tools/workspace.mk` and targets of the project partitions (see below).
+  `tools/workspace.mk`, example targets `tools/target_*.mk` and own targets of
+  the project (see below).
 
 ### Makefile of the project
-The top-level `Makefile` belongs to the project, the core of the workspace
-`tools/workspace.mk` (macros, POSIX simulator, tests, `help`, `clean`) is
-updated with the workspace and is only included. Partitions are defined by the
-project: names of kernels, appsets and romfs images (configurations in
-`config/<name>`) and their targets. The `Makefile` of the workspace contains
-the example layout: application (`app-kernel`, `app-appset`, `app-romfs`) and
-boot loader (`btl-kernel`, `btl-appset`); a project with another layout (e.g.
-a framework without bootloader) replaces these targets. Minimal project:
+The top-level `Makefile` belongs to the project: it contains settings and own
+targets of the project and includes files of the workspace, which are updated
+with it:
+- `tools/workspace.mk` – the core: macros (`build_kernel`, `build_appset`,
+  `build_sim_kernel`, `build_sim_appset`, `build_romfs`, `install_hex`,
+  `config_*`, ...), `help`, `clean`, `test-drvset`,
+- `tools/target_app.mk` – application (`app-kernel`, `app-appset`,
+  `app-romfs`, update package from `app-dist`, drvset partition):
+  `build-app*`, `install-app*`, `config-app-*`, `appset-rungens`; directories
+  `APP_APPSET_DIR`, `APP_ROMFS_DIR`, `APP_DIST_DIR`, `DRVSET_DIR`,
+- `tools/target_btl.mk` – boot loader (`btl-kernel`, `btl-appset`):
+  `build-btl*`, `install-btl`, `config-btl-*`; directory `BTL_APPSET_DIR`;
+  with targets of the application (included before) also `build-all` and
+  `install`,
+- `tools/target_sim.mk` – POSIX simulator (`sim-kernel`, `sim-appset`,
+  `sim-romfs`, other appsets `SIM_APPSETS`, drvset partition
+  `SIM_DRVSET_DIR`): `build-sim*`, `run-sim`, `run-sim-example`,
+  `config-sim-*`; directories `SIM_APPSET_DIR`, `SIM_ROMFS_DIR`,
+- `tools/target_test_sim.mk` – tests in the simulator: `test-sim` (needs
+  `tools/target_sim.mk`).
+
+Because the targets are not in the project `Makefile`, updating the workspace
+does not need merging of the `Makefile`. The `target_*.mk` files are examples:
+each of them can be removed from the includes and the core works without them.
+A project with another layout (e.g. a framework without bootloader) removes
+the includes it does not use and defines own targets by the macros of the core
+(the example files show how to do it). Minimal project with own layout:
 ```make
 PROJECT = myproject
-# appset and romfs of the simulator
-SIM_APPSET_DIR = my-appset
-SIM_ROMFS_DIR = my-romfs
 include tools/workspace.mk
 
 help ::
@@ -239,13 +256,15 @@ build-my : _build_prepare
 	@$(call build_kernel, my-kernel)
 	@$(call build_appset, my-appset, my-appset, myboard, myopts)
 ```
-Settings of the core are defined by `?=` and set before `include` (names of
-simulator configurations `SIM_KERNEL_CONFIG`, `SIM_APPSET_CONFIG`,
-`SIM_ROMFS_CONFIG`, options of `run-sim-example` `SIM_EXAMPLE_OPTS`, programs,
-...), help of the project is added by `help ::` rules, additional cleaning by
+Settings of the core and of the example targets are defined by `?=` and set
+before `include` (names of simulator configurations `SIM_KERNEL_CONFIG`,
+`SIM_APPSET_CONFIG`, `SIM_ROMFS_CONFIG`, options of `run-sim-example`
+`SIM_EXAMPLE_OPTS`, programs, ...), help of the project is added by `help ::` rules, additional cleaning by
 `clean ::` rules (`clean` of the core cleans the kernel and removes the build
 directory). Macros: `build_kernel <config>`, `build_appset <appset directory>
-<config> <board name> <project options>`, `build_romfs <directory> <config>`,
+<config> <board name> <project options>`, `build_sim_kernel <config>`, `build_sim_appset <appset directory>
+<config directory> <build name> <program table symbol>`, `build_romfs
+<directory> <config>`,
 `clean_kernel`, `clean_appset <config>`, `clean_romfs <config>`, `install_hex
 <file in build directory>`, `config_kernel|config_appset|config_romfs <config>`.
 

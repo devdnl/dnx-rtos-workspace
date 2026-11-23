@@ -1,7 +1,0 @@
-# configuration of kernels (license of kernel)
-PackageName: dnx RTOS kernel configuration
-PackageDownloadLocation: git+https://github.com/devdnl/dnx-rtos-workspace.git
-PackageLicenseDeclared: LicenseRef-dnx-RTOS
-PackageCopyrightText: Copyright (C) Daniel Zorychta <daniel.zorychta@gmail.com>
-PackageComment: GPL-2.0-only, note about programs (system calls), dnx RTOS drvset exception (kernel/doc/license.txt)
-FilesMatch: *-kernel/*

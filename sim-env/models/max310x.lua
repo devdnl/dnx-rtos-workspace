@@ -77,6 +77,7 @@ local UART = {}
 UART.__index = UART
 
 local FIFO_SIZE = 128
+local MAX_LAG = 2 -- ms, transmitter does not catch up longer delay of board thread (see UART:service)
 
 local TYPES = {
     max3107 = { ports = 1, revid = 0xA1 },
@@ -270,6 +271,10 @@ function UART:service()
         local ct = self:char_time()
         if not self.tx_time then
             self.tx_time = now + ct
+        elseif self.tx_time < now - MAX_LAG then
+            -- board thread or simulator was not running (host load): bytes are not sent at once
+            -- (the loopback would overflow RX FIFO before the driver is able to read it)
+            self.tx_time = now - MAX_LAG
         end
         if now < self.tx_time then
             break

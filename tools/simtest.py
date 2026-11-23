@@ -61,6 +61,11 @@
 #
 #         Option --iostat prints block device statistics (iostat) of file system tests.
 #
+#         Filter selects tests whose name contains the text, alternatives are separated by '|'
+#         (e.g. "board: max310x|board: net"). Test which does not finish (timeout) restarts the
+#         simulator, next tests are executed in new instance (hanging program does not receive
+#         their commands).
+#
 #         Usage:
 #           tools/simtest.py [--sim build/dnx-sim] [--rom build/sim-romfs.bin] [--tap tap0]
 #                            [--drvset build/sim-drvset.bin|none]
@@ -124,6 +129,7 @@ FSTEST_TIMEOUT = 300        # seconds
 SDSPI_FSTEST_TIMEOUT = 600  # seconds (SD card model over SPI, about 2.5 minutes)
 NETTEST_TIMEOUT = 600       # seconds
 PERF_TIMEOUT = 300          # seconds
+PERF_SIM_TOLERANCE = 100    # ms, allowed delay of wake-up in perf stress tests (perf -j)
 QUIET_TIME = 0.3            # seconds without output after prompt
 
 SECTOR_SIZE = 512
@@ -188,16 +194,34 @@ SKIP = "SKIP"
 # --------------------------------------------------------------------------------------------------
 class Simulator:
     def __init__(self, argv, log, verbose):
+        self.argv = argv
         self.log = log
         self.verbose = verbose
         self.out = ""
+        self.start()
+
+    def start(self):
         self.pending = b""
         self.pid, self.fd = pty.fork()
         if self.pid == 0:
             try:
-                os.execv(argv[0], argv)
+                os.execv(self.argv[0], self.argv)
             finally:
                 os._exit(127)
+
+    # simulator started again after a test which did not finish (hanging program would receive the
+    # commands of next tests), output (crash check) is continued
+    def restart(self):
+        self.stop()
+        text = "\n$ [simtest] simulator restarted\n"
+        self.out += text
+        self.log.write(text)
+        start = len(self.out)
+        self.start()
+        if not self.read(BOOT_TIMEOUT, lambda: "\n$ " in self.out[start:]):
+            return False
+        self.read(1)
+        return self.run("")[0]
 
     # read output by selected time or until condition is met
     def read(self, timeout, until=None):
@@ -401,8 +425,17 @@ class TestRunner:
         print("%-28s %s%s%s %s" % (name, color, status, reset, info))
         sys.stdout.flush()
 
+    # test did not finish: simulator is restarted, so next tests are not affected (hanging program
+    # does not receive their commands)
+    def recover(self, sim, name):
+        if not sim.restart():
+            print("%-28s simulator restart failed (see log: %s)" % (name, self.args.log))
+            sys.stdout.flush()
+
     def selected(self, name):
-        return (not self.args.filter) or (self.args.filter.lower() in name.lower())
+        if not self.args.filter:
+            return True
+        return any(f and (f in name.lower()) for f in self.args.filter.lower().split("|"))
 
     # run program which prints SUMMARY line, setup commands are executed before (e.g. format, mount)
     # licenses of the build (sim-licenses.txt.gz copied to /host) printed by program licenses, SBOM
@@ -602,7 +635,9 @@ class TestRunner:
         ok, out = sim.run(cmd, timeout)
         dt = time.time() - t
 
-        if cwd:
+        if not ok:
+            self.recover(sim, name)
+        elif cwd:
             sim.run("cd /")
 
         m = SUMMARY.search(out)
@@ -640,6 +675,8 @@ class TestRunner:
         t = time.time()
         ok, out = sim.run(cmd, FSTEST_TIMEOUT)
         dt = time.time() - t
+        if not ok:
+            self.recover(sim, name)
         _, ls = sim.run("ls " + dir)
 
         lines = [l.rstrip() for l in out.splitlines()]
@@ -1190,7 +1227,9 @@ class TestRunner:
         self.summary_test(sim, "udstest", None, ("udstest " + opt).strip(), NETTEST_TIMEOUT)
 
         # system stress tests (threads, heap, synchronization objects, processes)
-        self.summary_test(sim, "perf: stress", None, "perf" if args.perf else "perf -s", PERF_TIMEOUT)
+        # threads of the simulator are threads of the host: wake-up can be delayed by the host load
+        self.summary_test(sim, "perf: stress", None, ("perf" if args.perf else "perf -s") + " -j %u" % PERF_SIM_TOLERANCE,
+                          PERF_TIMEOUT)
 
         if not self.selected("inettest"):
             return
@@ -1235,7 +1274,7 @@ def main():
     parser.add_argument("--log", default=os.path.join(root, "build", "simtest.log"), help="log file")
     parser.add_argument("--keep", action="store_true", help="keep temporary files (disk image, hostfs)")
     parser.add_argument("-v", "--verbose", action="store_true", help="show simulator output")
-    parser.add_argument("filter", nargs="?", default=None, help="run only tests which name contains text")
+    parser.add_argument("filter", nargs="?", default=None, help="run only tests which name contains text (alternatives separated by |)")
     args = parser.parse_args()
     args.root = root
     if args.board == "none":

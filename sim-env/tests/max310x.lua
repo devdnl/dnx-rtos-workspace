@@ -119,15 +119,18 @@ test("Internal loopback of all UARTs (SPI, I2C, MAX3107/3108/3109)", function()
     end
 end)
 
+-- data larger than FIFO: 38400 baud, the driver without IRQ reads the chip periodically (FIFO
+-- filled in 33 ms), at 115200 baud (11 ms) delays of threads of the simulator (host load) cause
+-- overrun of RX FIFO (lost data)
 test("Data larger than FIFO (buffers of driver)", function()
     local data = pattern(1000, 7)
-    expect(configure(M0, CHIP0 .. ",baud=115200,loopback=1,rx_buffer=1024,tx_buffer=256"), "configuration failed")
+    expect(configure(M0, CHIP0 .. ",baud=38400,loopback=1,rx_buffer=1024,tx_buffer=256"), "configuration failed")
     expect(transfer(M0, M0, data) == data, "data mismatch")
 end)
 
 test("Data received when device is not read", function()
-    run("modprobe -c " .. S4 .. " baud=115200,parity=off")
-    expect(configure(M0, CHIP0 .. ",baud=115200,rx_buffer=512"), "configuration failed")
+    run("modprobe -c " .. S4 .. " baud=38400,parity=off")
+    expect(configure(M0, CHIP0 .. ",baud=38400,rx_buffer=512"), "configuration failed")
     local data = pattern(400, 8) -- more than FIFO of chip
     local s = open(S4)
     assert(s:write(data))

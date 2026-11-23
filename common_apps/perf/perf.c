@@ -443,6 +443,7 @@ GLOBAL_VARIABLES_SECTION {
         bool heavy;
         u32_t bench_duration;
         u32_t stress_duration;
+        u32_t timing_tolerance; //!< allowed delay of wake-up [ms]
         const char *progname;
         const char *stdio_dir; //!< directory of file of stdio measurements
         u32_t cpu_freq;
@@ -566,6 +567,7 @@ int main(int argc, char *argv[])
         global->progname = argv[0];
         global->bench_duration = PERF_BENCH_DURATION;
         global->stress_duration = PERF_STRESS_DURATION;
+        global->timing_tolerance = PERF_TIMING_TOLERANCE;
         global->stdio_dir = "/tmp";
 
         for (int i = 1; i < argc; i++) {
@@ -587,6 +589,8 @@ int main(int argc, char *argv[])
                 } else if (isstreq(arg, "-t") && (i + 1 < argc)) {
                         u32_t ms = strtoul(argv[++i], NULL, 0);
                         global->stress_duration = max(100U, ms);
+                } else if (isstreq(arg, "-j") && (i + 1 < argc)) {
+                        global->timing_tolerance = strtoul(argv[++i], NULL, 0);
                 } else if (isstreq(arg, "-r") && (i + 1 < argc)) {
                         repeat = strtoul(argv[++i], NULL, 0);
                 } else if (isstreq(arg, "-f") && (i + 1 < argc)) {
@@ -700,7 +704,7 @@ int main(int argc, char *argv[])
 //==============================================================================
 static void print_usage(const char *name)
 {
-        printf("Usage: %s [-b|-s|-l] [-v] [-x] [-d ms] [-t ms] [-r n] [-f dir] [filter]\n", name);
+        printf("Usage: %s [-b|-s|-l] [-v] [-x] [-d ms] [-t ms] [-j ms] [-r n] [-f dir] [filter]\n", name);
         puts("  (none)  performance measurements, then stress tests");
         puts("  -b      performance measurements only");
         puts("  -s      stress tests only");
@@ -710,6 +714,8 @@ static void print_usage(const char *name)
         puts("          (other programs can be affected, kernel panic possible)");
         puts("  -d      duration of single measurement in ms");
         puts("  -t      duration of single stress test in ms");
+        printf("  -j      allowed delay of wake-up after sleep or timeout in ms (default %u)\n",
+               (unsigned)PERF_TIMING_TOLERANCE);
         puts("  -r      repeat stress tests n times (0: until failure)");
         puts("  -f      directory of temporary file of stdio measurements (default /tmp)");
         puts("  filter  run only measurements/tests which name contains given text");
@@ -1171,7 +1177,7 @@ static u32_t elapsed_ms(clock_t tref)
 static bool time_ok(u32_t dt, u32_t timeout)
 {
         // uptime has 1 ms resolution, so measured time can be shorter by 1 ms
-        return (dt + 1 >= timeout) && (dt <= timeout + PERF_TIMING_TOLERANCE);
+        return (dt + 1 >= timeout) && (dt <= timeout + global->timing_tolerance);
 }
 
 //==============================================================================

@@ -72,6 +72,10 @@ local function temperature(rom)
     return raw / 16, string.unpack("i1", sp, 3), string.unpack("i1", sp, 4)
 end
 
+-- strong pull-up time: conversion of 12 bits takes 750 ms (model: host time), margin for delays of
+-- threads of the simulator (the system time can lag behind the host time when the sleep starts)
+local SPU_MS = 800
+
 local function convert(spu_ms)
     check(ow.transfer(DEV, nil, "\x44", 0, spu_ms))
     if spu_ms == 0 then
@@ -99,7 +103,7 @@ test("SEARCH ROM: all sensors with valid ROM codes", function()
 end)
 
 test("Conversion with strong pull-up, scratchpad of each sensor", function()
-    convert(750)
+    convert(SPU_MS)
     local EXP = { 23.5, -5.25, 60.125 }
     for i, rom in ipairs(ROMS) do
         local t = temperature(rom)
@@ -113,7 +117,7 @@ test("Parasite sensor without strong pull-up: conversion fails", function()
     convert(0)
     expect(temperature(ROMS[1]) == 30.5, "sensor 1 not converted")
     expect(temperature(ROMS[3]) == 60.125, "parasite sensor converted without strong pull-up")
-    convert(750)
+    convert(SPU_MS)
     expect(temperature(ROMS[3]) == 10, "parasite sensor not converted")
 end)
 
@@ -122,7 +126,7 @@ test("ALARM SEARCH (TH, TL written by SKIP ROM)", function()
     local _, th, tl = temperature(ROMS[2])
     expect(th == 50 and tl == -10, "TH/TL not written: " .. th .. " " .. tl)
     control("owu temp 3 70")
-    convert(750)
+    convert(SPU_MS)
     local roms = check(ow.search(DEV, true))
     expect(sorted(roms) == ROMS[3], "alarm: " .. sorted(roms))
 end)

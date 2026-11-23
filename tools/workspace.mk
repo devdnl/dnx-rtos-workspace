@@ -31,12 +31,20 @@
 # sets its settings (variables of this file defined by ?=) and includes this file:
 #
 #     PROJECT = myproject
-#     SIM_APPSET_DIR = my-appset
 #     include tools/workspace.mk
 #
-# and then defines targets of its partitions (kernel, appsets, romfs) by the macros of this file
-# (build_kernel, build_appset, build_romfs, install_hex, config_*). Help of the project is added by
-# "help ::" rules, additional cleaning by "clean ::" rules (run after cleaning of this file).
+# and then includes example targets (each file can be omitted, the core works without them):
+#
+#     include tools/target_app.mk       application (app-kernel, app-appset, app-romfs, drvset)
+#     include tools/target_btl.mk       bootloader (btl-kernel, btl-appset), with application:
+#                                       build-all, install
+#     include tools/target_sim.mk       POSIX simulator (sim-kernel, sim-appset, sim-romfs)
+#     include tools/target_test_sim.mk  tests in POSIX simulator (needs target_sim.mk)
+#
+# or defines own targets of its partitions (kernel, appsets, romfs) by the macros of this file
+# (build_kernel, build_appset, build_sim_kernel, build_sim_appset, build_romfs, install_hex,
+# config_*), the example targets show how to do it. Help of the project is added by "help ::"
+# rules, additional cleaning by "clean ::" rules (run after cleaning of this file).
 ####################################################################################################
 
 #---------------------------------------------------------------------------------------------------
@@ -45,37 +53,6 @@
 PROJECT         ?= project
 TOOLCHAIN       ?= arm-none-eabi-
 TARGET_DIR_NAME ?= build
-
-# POSIX simulator: appset and romfs directories of the simulator system (sources of the project),
-# configuration names (config/<name>)
-SIM_APPSET_DIR    ?= app-appset
-SIM_ROMFS_DIR     ?= app-romfs
-SIM_KERNEL_CONFIG ?= sim-kernel
-SIM_APPSET_CONFIG ?= sim-appset
-SIM_ROMFS_CONFIG  ?= sim-romfs
-
-# POSIX simulator: board panel (run-sim PANEL=1, run-sim-example)
-SIM_PANEL_SOCKET ?= $(TARGET_DIR_NAME)/dnx-panel.sock
-SIM_PANEL_PORT   ?= 8080
-
-# run-sim-example: options of simulator (example board, files of sim-env in /host, network tap0)
-SIM_EXAMPLE_OPTS ?= --board sim-env/boards/example.lua --hostfs host=sim-env --tap tap0
-
-# POSIX simulator: other appsets linked with the simulator kernel (siminit mounts them by appsetfs
-# in /opt/<appset directory name>, programs are started by path): list of <appset directory>
-# [:<configuration directory>] (relative to the workspace or absolute), default configuration is
-# config/sim-appset, e.g. SIM_APPSETS="btl-appset /home/user/project/appset:config/sim-appset";
-# appset is built in $(TARGET_DIR_NAME)/sim-<appset directory name>, so names must be unique
-SIM_APPSETS ?=
-
-# drvset partition of POSIX simulator (option --drvset of simulator, used by test-sim): example
-# driver and file system dsramfs
-SIM_DRVSET_DIR ?= tools/drvset/test/sim
-
-# test-sim: the test appset (programs appsettest and echo) is always linked with the simulator
-ifneq ($(filter test-sim,$(MAKECMDGOALS)),)
-override SIM_APPSETS += sim-env/testappset
-endif
 
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
@@ -171,12 +148,12 @@ define build_sim_appset
 	$(COPY) $(TARGET_DIR_NAME)/${$@_BUILD_NAME}/output/appset.files $(TARGET_DIR_NAME)/${$@_BUILD_NAME}.files
 endef
 
-# other appsets of the POSIX simulator (SIM_APPSETS): fields of entry, build name, table symbol
+# other appsets of the POSIX simulator (entry: <appset directory>[:<configuration directory>]):
+# fields of entry, build name, table symbol
 sim_appset_dir    = $(word 1,$(subst :, ,$(1)))
 sim_appset_config = $(or $(word 2,$(subst :, ,$(1))),config/sim-appset)
 sim_appset_name   = sim-$(notdir $(abspath $(call sim_appset_dir,$(1))))
 sim_appset_symbol = _program_table_desc_$(subst .,_,$(subst -,_,$(notdir $(abspath $(call sim_appset_dir,$(1))))))
-SIM_APPSET_OBJS   = $(foreach a,$(SIM_APPSETS),$(TARGET_DIR_NAME)/$(call sim_appset_name,$(a)).o)
 
 # rule building one of other appsets of the POSIX simulator: entry of SIM_APPSETS
 define sim_appset_rule
@@ -269,19 +246,7 @@ help ::
 	@$(ECHO) "Workspace targets:"
 	@$(ECHO) "   help                this help"
 	@$(ECHO) "   clean               clean project (kernel and $(TARGET_DIR_NAME) directory)"
-	@$(ECHO) "   build-sim           build POSIX simulator (Linux): $(TARGET_DIR_NAME)/dnx-sim"
-	@$(ECHO) "   build-sim-drvset    build drvset partition of simulator: $(TARGET_DIR_NAME)/sim-drvset.bin (SIM_DRVSET_DIR=...,"
-	@$(ECHO) "                       run-sim SIM_OPTS=\"--drvset $(TARGET_DIR_NAME)/sim-drvset.bin\")"
-	@$(ECHO) "   run-sim             build and start POSIX simulator (options: SIM_OPTS=..., PANEL=1"
-	@$(ECHO) "                       board panel in web browser, needs --board, PANEL_OPTS=...)"
-	@$(ECHO) "   run-sim-example     build and start POSIX simulator with example board and panel"
-	@$(ECHO) "                       (http://localhost:$(SIM_PANEL_PORT), /host = sim-env, network tap0,"
-	@$(ECHO) "                       tools/create_tap.sh, options: SIM_OPTS=...)"
-	@$(ECHO) "   test-sim            build and test system in POSIX simulator (options: SIMTEST_OPTS=...)"
-	@$(ECHO) "                       other appsets in simulator: SIM_APPSETS=\"<appset>[:<config>] ...\""
-	@$(ECHO) "                       (test-sim adds sim-env/testappset)"
 	@$(ECHO) "   test-drvset         build and check drvset partitions with test kernel (no hardware needed)"
-	@$(ECHO) "   config-sim-kernel   simulator kernel configuration (also config-sim-appset, config-sim-romfs)"
 	@$(ECHO) ""
 
 .PHONY : _build_prepare
@@ -293,79 +258,6 @@ clean ::
 	@$(call clean_kernel)
 	@$(REMOVE) -r $(TARGET_DIR_NAME)
 
-.PHONY : build-sim
-build-sim : _build_prepare build-sim-romfs build-sim-kernel build-sim-appset
-	@$(call licenses_report, sim, dnx RTOS simulator, $(TARGET_DIR_NAME)/$(SIM_KERNEL_CONFIG).files \
-	        $(TARGET_DIR_NAME)/sim-appset.files $(SIM_APPSET_OBJS:.o=.files), \
-	        $(SIM_APPSET_DIR) $(foreach a,$(SIM_APPSETS),$(call sim_appset_dir,$(a))))
-	@$(MAKE) -C kernel -s -j 1 -fMakefile link-sim CONFIG_DIR=../config/$(SIM_KERNEL_CONFIG) \
-	         APPSET_OBJ="../$(TARGET_DIR_NAME)/sim-appset.o $(addprefix ../,$(SIM_APPSET_OBJS))" \
-	         OUTPUT=../$(TARGET_DIR_NAME)/dnx-sim
-	@$(ECHO) "Target sim built successfully: $(TARGET_DIR_NAME)/dnx-sim --disk 0=$(TARGET_DIR_NAME)/$(SIM_ROMFS_CONFIG).bin:ro"
-
-.PHONY : build-sim-kernel
-build-sim-kernel : _build_prepare
-	@$(call clean_kernel)
-	@$(call build_sim_kernel, $(SIM_KERNEL_CONFIG))
-
-.PHONY : build-sim-appset
-build-sim-appset : _build_prepare $(foreach a,$(SIM_APPSETS),build-$(call sim_appset_name,$(a)))
-	@$(call build_sim_appset, $(SIM_APPSET_DIR), config/$(SIM_APPSET_CONFIG), sim-appset, _program_table_desc)
-
-$(foreach a,$(SIM_APPSETS),$(eval $(call sim_appset_rule,$(a))))
-
-.PHONY : build-sim-drvset
-build-sim-drvset : _build_prepare
-	@$(MAKE) -C tools/drvset -s -fMakefile all DRVSET_DIR=$(SIM_DRVSET_DIR) CONFIG_DIR=config/$(SIM_KERNEL_CONFIG) \
-	         BUILD_DIR=$(TARGET_DIR_NAME)/sim-drvset
-	@$(COPY) $(TARGET_DIR_NAME)/sim-drvset/output/drvset.bin $(TARGET_DIR_NAME)/sim-drvset.bin
-
-.PHONY : build-sim-romfs
-build-sim-romfs : _build_prepare
-	@$(call build_romfs, $(SIM_ROMFS_DIR), $(SIM_ROMFS_CONFIG))
-
-.PHONY : run-sim-example
-run-sim-example : build-sim
-	@$(PYTHON3) tools/simpanel.py --exit-with-parent --socket $(SIM_PANEL_SOCKET) --port $(SIM_PANEL_PORT)\
-	 $(PANEL_OPTS) >$(TARGET_DIR_NAME)/simpanel.log 2>&1 & pid=$$!;\
-	 sleep 0.5; if ! kill -0 $$pid 2>/dev/null; then $(CAT) $(TARGET_DIR_NAME)/simpanel.log; exit 1; fi;\
-	 $(ECHO) "Board panel: http://localhost:$(SIM_PANEL_PORT) (log: $(TARGET_DIR_NAME)/simpanel.log)";\
-	 $(TARGET_DIR_NAME)/dnx-sim --disk 0=$(TARGET_DIR_NAME)/$(SIM_ROMFS_CONFIG).bin:ro --panel $(SIM_PANEL_SOCKET) \
-	 $(SIM_EXAMPLE_OPTS) $(SIM_OPTS);\
-	 st=$$?; kill $$pid 2>/dev/null; exit $$st
-
-.PHONY : run-sim
-run-sim : build-sim
-ifeq ($(PANEL),1)
-	@$(PYTHON3) tools/simpanel.py --exit-with-parent --socket $(SIM_PANEL_SOCKET) --port $(SIM_PANEL_PORT)\
-	 $(PANEL_OPTS) >$(TARGET_DIR_NAME)/simpanel.log 2>&1 & pid=$$!;\
-	 sleep 0.5; if ! kill -0 $$pid 2>/dev/null; then $(CAT) $(TARGET_DIR_NAME)/simpanel.log; exit 1; fi;\
-	 $(ECHO) "Board panel: http://localhost:$(SIM_PANEL_PORT) (log: $(TARGET_DIR_NAME)/simpanel.log)";\
-	 $(TARGET_DIR_NAME)/dnx-sim --disk 0=$(TARGET_DIR_NAME)/$(SIM_ROMFS_CONFIG).bin:ro --panel $(SIM_PANEL_SOCKET) $(SIM_OPTS);\
-	 st=$$?; kill $$pid 2>/dev/null; exit $$st
-else
-	@$(TARGET_DIR_NAME)/dnx-sim --disk 0=$(TARGET_DIR_NAME)/$(SIM_ROMFS_CONFIG).bin:ro $(SIM_OPTS)
-endif
-
-.PHONY : test-sim
-test-sim : build-sim build-sim-drvset
-	@$(MAKE) -C tools/drvset -s -fMakefile check DRVSET_DIR=$(SIM_DRVSET_DIR) CONFIG_DIR=config/$(SIM_KERNEL_CONFIG) \
-	         BUILD_DIR=$(TARGET_DIR_NAME)/sim-drvset KERNEL_ELF=$(TARGET_DIR_NAME)/dnx-sim
-	@$(PYTHON3) tools/simtest.py --sim $(TARGET_DIR_NAME)/dnx-sim --rom $(TARGET_DIR_NAME)/$(SIM_ROMFS_CONFIG).bin\
-	 --drvset $(TARGET_DIR_NAME)/sim-drvset.bin --log $(TARGET_DIR_NAME)/simtest.log $(SIMTEST_OPTS)
-
 .PHONY : test-drvset
 test-drvset :
 	@$(SHELL) tools/drvset/test/test.sh
-
-.PHONY : config-sim-kernel
-config-sim-kernel :
-	@$(call config_kernel, $(SIM_KERNEL_CONFIG))
-
-.PHONY : config-sim-appset
-config-sim-appset :
-	@$(call config_appset, $(SIM_APPSET_CONFIG))
-
-.PHONY : config-sim-romfs
-config-sim-romfs :
-	@$(call config_romfs, $(SIM_ROMFS_CONFIG))

@@ -1,7 +1,9 @@
 # Workspace tools
 
 This directory belongs to the dnx RTOS workspace: the core of the Makefile
-(`workspace.mk`: macros, simulator, tests, included by the project `Makefile`),
+(`workspace.mk`: macros, help, clean; example targets included by the project
+`Makefile`: `target_app.mk` application, `target_btl.mk` bootloader,
+`target_sim.mk` POSIX simulator, `target_test_sim.mk` tests in the simulator),
 build bases of appsets (`appset/`) and romfs (`romfs/`), drvset tools
 (`drvset/`), scripts used by `Makefile` (BSP import/export, configuration,
 flashing, OpenOCD, terminal, linker script generator, Docker image), simulator

@@ -117,12 +117,16 @@ build could not be verified.
 
 ## Build commands (top-level `Makefile`)
 
-The top-level `Makefile` belongs to the project (settings and targets of its
-partitions: `app-*`, `btl-*` in the workspace example) and includes the core
-`tools/workspace.mk` (macros, simulator, `test-sim`, `test-drvset`, `help`,
-`clean`). Change the core only for workspace features; partitions and project
-targets go to the `Makefile` (`help ::` / `clean ::` rules extend help and
-cleaning).
+The top-level `Makefile` belongs to the project (settings and own targets) and
+includes the core `tools/workspace.mk` (macros, `test-drvset`, `help`,
+`clean`) and example targets which projects can drop from the includes:
+`tools/target_app.mk` (`app-*`), `tools/target_btl.mk` (`btl-*`, with app also
+`build-all`, `install`), `tools/target_sim.mk` (`build-sim*`, `run-sim*`,
+`config-sim-*`) and `tools/target_test_sim.mk` (`test-sim`, needs
+`target_sim.mk`). The core must work without the example targets (do not use
+their variables or targets there). Change the core and `target_*.mk` only for
+workspace features; project targets go to the `Makefile` (`help ::` /
+`clean ::` rules extend help and cleaning).
 
 ```sh
 make help               # list targets
@@ -339,10 +343,11 @@ both C preprocessor and make**. Rules:
   `Function definitions`.
 - Every function has a Doxygen comment framed with `//====…` lines
   (`@brief`, `@param[in]/[out]`, `@return`).
-- Licenses: kernel files (and kernel configuration) use GPL-2.0-only with the
-  note about programs and the drvset exception (`kernel/doc/license.txt`);
-  appset programs, libraries and newer files use MIT. Keep the license of the file you edit; ask before
-  choosing a license for a new file if unclear.
+- Licenses: kernel files use GPL-2.0-only with the note about programs and
+  the drvset exception (`kernel/doc/license.txt`); configuration (`config/`,
+  also kernel configuration), appset programs, libraries and newer files use
+  MIT. Keep the license of the file you edit; ask before choosing a license
+  for a new file if unclear.
 - Code, comments and commit messages are in English. Commit messages are short
   sentences ending with a period, e.g. `Fix in the VFS.`, `Improvements in df.`\
 - Formatting for Lua scripts should be done by using command line:
