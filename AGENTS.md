@@ -371,6 +371,18 @@ both C preprocessor and make**. Rules:
   `config/arch/...` or `config/filesystems/...`. Use existing modules (e.g.
   `drivers/zero`, `fs/ramfs`) as templates.
 
+## libc size flags
+
+Flags of `config/<appset>/libc/libc_flags.h` reduce flash usage of libc
+(default: everything enabled; missing flag in older configuration means
+enabled): `__LIBC_ERRNO_STRING_LEN__` (`strerror()`/`perror()`: 0 empty,
+1 number, 2 errno name, 3 description), `__LIBC_PRINTF_FLOAT__` (0 none,
+1 `%f %e %g`, 2 also `%a`; disabled conversion prints `?`, Lua needs it),
+`__LIBC_PRINTF_WIDE__` (`%lc`, `%ls`), `__LIBC_SCANF_FLOAT__` (disabled:
+scanning stops), `__LIBC_STREAM_BUFFERING__` (off: all streams unbuffered).
+Only functions linked by programs cost flash (`--gc-sections`), so the flags
+are for features inside commonly linked functions.
+
 ## Users and file permissions
 
 Kernel flag `__OS_ENABLE_PERMISSIONS__` (see `kernel/AGENTS.md`) and libc flag
@@ -468,6 +480,11 @@ Programs must not depend on the kernel flag; use the libc flag or the
   (terminals, pipes, devices) and `stderr` are unbuffered, so programs that
   read keys from the terminal, share a descriptor with a child process or mix
   `printf()` with `write()` on a terminal work as without buffering.
+- Temporary files: `tmpfile()`, `mkstemp()` (`stdlib.h`) and `tmpnam(buf)`
+  create unique names (`O_CREAT | O_EXCL`) in `P_tmpdir` (libc flag
+  `__LIBC_TMP_DIR__`, default `/tmp`); `tmpfile()` removes the name just after
+  creation (ramfs keeps data of removed open file until the last close, as
+  POSIX `unlink()`), other file systems remove it at `fclose()`.
   `setvbuf()`/`setbuf()` (all modes, own buffer), `ungetc()` (one character),
   `fflush(NULL)` and `flockfile()`/`getc_unlocked()`/`putc_unlocked()` are
   supported; `FILE` has a recursive lock. Output streams are flushed by

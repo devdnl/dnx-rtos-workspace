@@ -90,8 +90,9 @@ The file provides all error codes.
 #define EALREADY        42      //!< Connection already in progress
 #define EBADF           43      //!< Bad file descriptor
 #define EPIPE           44      //!< Broken pipe
+#define ENOTCONN        45      //!< Socket is not connected (POSIX.1)
 #ifndef DOXYGEN
-#define _ENUMBER        45      //!< total supported errors
+#define _ENUMBER        46      //!< total supported errors
 #endif
 #define __ELASTERROR    2000    /* Users can add values starting here */
 

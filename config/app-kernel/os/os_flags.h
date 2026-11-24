@@ -87,14 +87,6 @@ this:SetToolTip("If this option is selected then system is halted in the idle ta
 #define __OS_SLEEP_ON_IDLE__ _YES_
 
 /*--
-this:AddWidget("Combobox", "Color terminal")
-this:AddItem("Yes", "_YES_")
-this:AddItem("No", "_NO_")
-this:SetToolTip("If this function is selected then terminal output can be colorized by using VT100 commands.")
---*/
-#define __OS_COLOR_TERMINAL_ENABLE__ _YES_
-
-/*--
 this:AddWidget("Combobox", "Measure CPU load")
 this:AddItem("Yes", "_YES_")
 this:AddItem("No", "_NO_")
@@ -111,36 +103,12 @@ this:SetToolTip("This function enables time management (RTC).")
 #define __OS_ENABLE_TIMEMAN__ _YES_
 
 /*--
-this:AddWidget("Combobox", "Enable mkdir() function")
-this:AddItem("Yes", "_YES_")
-this:AddItem("No", "_NO_")
-this:SetToolTip("This option enables mkdir() function.")
---*/
-#define __OS_ENABLE_MKDIR__ _YES_
-
-/*--
-this:AddWidget("Combobox", "Enable getcwd() function")
-this:AddItem("Yes", "_YES_")
-this:AddItem("No", "_NO_")
-this:SetToolTip("This function is used to read current working directory.")
---*/
-#define __OS_ENABLE_GETCWD__ _YES_
-
-/*--
 this:AddWidget("Combobox", "Enable mkfifo() function")
 this:AddItem("Yes", "_YES_")
 this:AddItem("No", "_NO_")
-this:SetToolTip("This function is used to create pipe file.")
+this:SetToolTip("This option enables mkfifo() function: named pipes (FIFO) and socket files of UNIX domain sockets. Pipelines of dsh use FIFO files, without this option UDS supports only abstract names.")
 --*/
 #define __OS_ENABLE_MKFIFO__ _YES_
-
-/*--
-this:AddWidget("Combobox", "Enable remove() function")
-this:AddItem("Yes", "_YES_")
-this:AddItem("No", "_NO_")
-this:SetToolTip("This function enables file remove functionality.")
---*/
-#define __OS_ENABLE_REMOVE__ _YES_
 
 /*--
 this:AddWidget("Combobox", "Enable rename() function")
@@ -186,18 +154,10 @@ this:SetToolTip("This option enables reading of file system statistics.")
 #define __OS_ENABLE_STATFS__ _YES_
 
 /*--
-this:AddWidget("Combobox", "Enable mknod() function")
-this:AddItem("Yes", "_YES_")
-this:AddItem("No", "_NO_")
-this:SetToolTip("This option enables creating of device files.")
---*/
-#define __OS_ENABLE_MKNOD__ _YES_
-
-/*--
 this:AddWidget("Combobox", "Enable stat() and fstat() functions")
 this:AddItem("Yes", "_YES_")
 this:AddItem("No", "_NO_")
-this:SetToolTip("This option enables getting statistics of file.")
+this:SetToolTip("This option enables stat() and fstat() functions. Programs use them to check files (ls, cp, test, libc buffering), the option is needed by file permissions and socket files of UNIX domain sockets.")
 --*/
 #define __OS_ENABLE_FSTAT__ _YES_
 
@@ -256,7 +216,7 @@ this:SetToolTip("Maximum number of modules in the drvset partition\n"..
 this:AddWidget("Combobox", "Enable IPC Shared memory")
 this:AddItem("Yes", "_YES_")
 this:AddItem("No", "_NO_")
-this:SetToolTip("This option enables IPC shared memory.")
+this:SetToolTip("This option enables IPC shared memory (shmget(), shmat()). Network manager (netmgr) uses shared memory.")
 --*/
 #define __OS_ENABLE_SHARED_MEMORY__ _YES_
 
@@ -319,17 +279,6 @@ this:AddWidget("Spinbox", 0, 16777216, "Network memory limit [bytes]")
 this:SetToolTip("This option enables memory limit for network subsystem. Use 0 for no limit.")
 --*/
 #define __OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__ 0
-
-/*--
-this:AddWidget("Combobox", "Length of errno messages")
-this:AddItem("Disabled (the lowest ROM usage)", "0")
-this:AddItem("Only numbers (small ROM usage)", "1")
-this:AddItem("Abbreviations (medium ROM usage)", "2")
-this:AddItem("Full names (the highest ROM usage)", "3")
-this:SetToolTip("The error messages are used to deliver users an information about error that occurred by using specified functions. "..
-                "This option is used to translate errno error number to user friendly strings.")
---*/
-#define __OS_ERRNO_STRING_LEN__ 3
 
 /*--
 this:AddWidget("Combobox", "Heap sanity check")

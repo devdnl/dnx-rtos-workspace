@@ -221,8 +221,10 @@ int httpsrv_interpreter_init(httpsrv_thread_t *self)
                 return ECONNREFUSED;
         }
 
+        // abstract name (no file)
         NET_UDS_sockaddr_t sockaddr;
-        snprintf(sockaddr.path, sizeof(sockaddr.path), "httpsrv.%u", gettid());
+        memset(&sockaddr, 0, sizeof(sockaddr));
+        snprintf(sockaddr.path + 1, sizeof(sockaddr.path) - 1, "httpsrv.%u", gettid());
         if (socket_bind(self->interpreter.ipc_socket, &sockaddr, sizeof(sockaddr)) != 0) {
                 VERBOSE("unable to bind IPC socket!\n");
                 socket_close(self->interpreter.ipc_socket);
@@ -521,7 +523,9 @@ static int luafn_send_file(lua_State *L)
 
 //==============================================================================
 /**
- * @brief  IPC request.
+ * @brief  IPC request: ipc.request(address, table). Address of UDS datagram
+ *         socket: path of socket file (e.g. "/run/ctrl") or abstract name
+ *         ("\0ctrl").
  *
  * @param  L            Lua state
  *
@@ -530,7 +534,9 @@ static int luafn_send_file(lua_State *L)
 //==============================================================================
 static int luafn_ipc_request(lua_State *L)
 {
-        const char *address = luaL_checkstring(L, 1);
+        size_t address_len;
+        const char *address = luaL_checklstring(L, 1, &address_len);
+        luaL_argcheck(L, address_len < sizeof(((NET_UDS_sockaddr_t *)0)->path), 1, "address too long");
         luaL_checktype(L, 2, LUA_TTABLE);
 
         httpsrv_thread_t *self = get_http_thread_self(L);
@@ -611,7 +617,9 @@ static int luafn_ipc_request(lua_State *L)
          * Connect to selected address.
          */
         NET_UDS_sockaddr_t server_addr;
-        strlcpy(server_addr.path, address, sizeof(server_addr.path));
+        memset(&server_addr, 0, sizeof(server_addr));
+        memcpy(server_addr.path, address, address_len); // abstract name starts with '\0'
+
         errno = 0;
         if (socket_sendto(self->interpreter.ipc_socket, self->interpreter.tmp_buf, chunk_len, 0, &server_addr,
                     sizeof(server_addr)) != chunk_len) {

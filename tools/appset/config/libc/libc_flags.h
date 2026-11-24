@@ -101,6 +101,62 @@ this:SetToolTip("File with ioctl() function requests definitions. The headers ar
 #define __LIBC_IOCTL_REQUEST_FILE__ "../../build/ioctl/ioctl_requests.h"
 
 /*--
+this:AddWidget("Combobox", "Length of errno messages")
+this:AddItem("Disabled (the lowest ROM usage)", "0")
+this:AddItem("Only numbers (small ROM usage)", "1")
+this:AddItem("Abbreviations (medium ROM usage)", "2")
+this:AddItem("Full names (the highest ROM usage)", "3")
+this:SetToolTip("Strings returned by strerror() and printed by perror(): empty string, error number (e.g. \"2\"), "..
+                "errno name (e.g. \"ENOENT\") or description (e.g. \"No such file or directory\").")
+--*/
+#define __LIBC_ERRNO_STRING_LEN__ 3
+
+/*--
+this:AddWidget("Combobox", "printf() floating point conversions")
+this:AddItem("Disabled (the lowest ROM usage)", "0")
+this:AddItem("%f, %e, %g", "1")
+this:AddItem("%f, %e, %g, %a (the highest ROM usage)", "2")
+this:SetToolTip("Floating point conversions of printf() family. Disabled conversion prints \"?\" (argument is skipped). "..
+                "On CPUs without double precision FPU the conversions link software floating point routines too. "..
+                "Lua needs the conversions (numbers are printed by %g).")
+--*/
+#define __LIBC_PRINTF_FLOAT__ 2
+
+/*--
+this:AddWidget("Combobox", "printf() wide characters (%lc, %ls)")
+this:AddItem("Yes", "_YES_")
+this:AddItem("No", "_NO_")
+this:SetToolTip("Wide character and string conversions of printf() family. Disabled conversion prints \"?\".")
+--*/
+#define __LIBC_PRINTF_WIDE__ _YES_
+
+/*--
+this:AddWidget("Combobox", "scanf() floating point conversions (%f, %g)")
+this:AddItem("Yes", "_YES_")
+this:AddItem("No", "_NO_")
+this:SetToolTip("Floating point conversions of scanf() family. Disabled conversion stops scanning (next fields are not "..
+                "assigned).")
+--*/
+#define __LIBC_SCANF_FLOAT__ _YES_
+
+/*--
+this:AddWidget("Combobox", "Stream buffering")
+this:AddItem("Yes", "_YES_")
+this:AddItem("No", "_NO_")
+this:SetToolTip("Regular files are fully buffered (BUFSIZ bytes of RAM per open file), setvbuf() and setbuf() select "..
+                "other mode. Without buffering all streams are unbuffered (setvbuf() is accepted, buffer is not used): "..
+                "smaller ROM and RAM usage, slower transfers of small blocks.")
+--*/
+#define __LIBC_STREAM_BUFFERING__ _YES_
+
+/*--
+this:AddWidget("Editline", true, "Directory of temporary files")
+this:SetToolTip("Directory of tmpfile() and tmpnam() (P_tmpdir). File system with removing of open files (ramfs) "..
+                "leaves no file after crash of program, on flash file systems (flatfs) temporary files use flash.")
+--*/
+#define __LIBC_TMP_DIR__ "/tmp"
+
+/*--
 this:AddWidget("Combobox", "Heap sanity check on alloc and free")
 this:AddItem("Yes", "_YES_")
 this:AddItem("No", "_NO_")

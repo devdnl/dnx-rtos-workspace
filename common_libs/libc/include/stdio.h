@@ -116,11 +116,18 @@ extern "C" {
 /** @brief Maximum opened files. */
 #define FOPEN_MAX               255
 
-/** @brief Maximum number of temporary files. */
+/** @brief Directory of temporary files (libc flag __LIBC_TMP_DIR__). */
+#ifdef __LIBC_TMP_DIR__
+#define P_tmpdir                __LIBC_TMP_DIR__
+#else
+#define P_tmpdir                "/tmp"
+#endif
+
+/** @brief Minimum number of unique names of temporary files (tmpnam()). */
 #define TMP_MAX                 32
 
-/** @brief Maximum name length of temporary files. */
-#define L_tmpnam                32
+/** @brief Size of buffer of tmpnam() (P_tmpdir "/tmpXXXXXX"). */
+#define L_tmpnam                (sizeof(P_tmpdir) + 10)
 
 
 
@@ -194,6 +201,7 @@ extern "C" {
 #define S_ISPROG(mode_t_m)                      ((mode_t_m & S_IFMT) == S_IFPROG)
 #define S_ISFIFO(mode_t_m)                      ((mode_t_m & S_IFMT) == S_IFIFO)
 #define S_ISBLK(mode_t_m)                       ((mode_t_m & S_IFMT) == S_IFBLK)
+#define S_ISSOCK(mode_t_m)                      ((mode_t_m & S_IFMT) == S_IFSOCK)
 
 #define S_IFREG                                 0000000
 #define S_IFDIR                                 0010000
@@ -202,6 +210,7 @@ extern "C" {
 #define S_IFPROG                                0040000
 #define S_IFIFO                                 0050000
 #define S_IFBLK                                 0060000
+#define S_IFSOCK                                0070000
 
 
 
@@ -1110,7 +1119,13 @@ static inline int setvbuf(FILE *file, char *buffer, int mode, size_t size)
 
 //==============================================================================
 /**
- * @brief Function creates temporary file in "/tmp" directory.
+ * @brief Function creates temporary file in @ref P_tmpdir directory (opened
+ *        for reading and writing, mode 0600).
+ *
+ * The file is created atomically with unique name. It is removed just after
+ * creation when file system keeps data of removed open file (ramfs: no file
+ * is left after crash or kill of program), otherwise it is removed by
+ * fclose() (also at exit()).
  *
  * @return The tmpfile() function returns a stream descriptor, or @ref NULL
  * if a unique filename cannot be generated or the unique file cannot be opened.
@@ -1172,17 +1187,19 @@ static inline int fileno(FILE *fp)
 
 //==============================================================================
 /**
- * @brief Function sets name of temporary file.
+ * @brief Function creates name of not existing file in @ref P_tmpdir
+ *        directory.
  *
- * The routine exist in dnx RTOS only for compatible reasons. Function in this
- * case do nothing.
+ * The file can be created by other program before it is used, mkstemp() and
+ * tmpfile() create the file atomically.
  *
- * @note Function not supported.
+ * @note Buffer is required: there is no static buffer in libc, NULL gives
+ *       error EINVAL.
  *
- * @param str       temporary file name or automatic generated if @ref NULL
+ * @param str       buffer of @ref L_tmpnam bytes
  *
- * @return The tmpnam() function returns a pointer to a unique temporary
- * filename, or @ref NULL if a unique name cannot be generated.
+ * @return The tmpnam() function returns <i>str</i>, or @ref NULL if a unique
+ * name cannot be generated (@ref errno is set).
  *
  * @b Example
  * @code
@@ -1190,19 +1207,20 @@ static inline int fileno(FILE *fp)
 
         // ...
 
-        char *tmpname = tmpnam(NULL);
-        if (tmpname) {
+        char name[L_tmpnam];
+        if (tmpnam(name)) {
                // ...
         }
         // ...
    @endcode
+ *
+ * @see mkstemp(), tmpfile()
  */
 //==============================================================================
 static inline char *tmpnam(char *str)
 {
-        (void) str;
-
-        return NULL;
+        extern char *_libc_tmpnam(char *str);
+        return _libc_tmpnam(str);
 }
 
 //==============================================================================

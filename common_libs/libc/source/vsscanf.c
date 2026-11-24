@@ -38,6 +38,10 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
+/* default: enabled (flag not defined in configuration) */
+#ifndef __LIBC_SCANF_FLOAT__
+#define __LIBC_SCANF_FLOAT__ 1
+#endif
 
 /*==============================================================================
   Local object types
@@ -54,7 +58,9 @@
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+#if __LIBC_SCANF_FLOAT__ > 0
 extern double _libc_strtod(const char *str, char **end);
+#endif
 
 /*==============================================================================
   External objects
@@ -348,6 +354,7 @@ int vsscanf(const char *str, const char *format, va_list args)
                         case 'F':
                         case 'g':
                         case 'G':
+#if __LIBC_SCANF_FLOAT__ > 0
                                 if (str) {
                                         while (*str == ' ') {
                                                 str++;
@@ -365,6 +372,11 @@ int vsscanf(const char *str, const char *format, va_list args)
                                                 read_fields++;
                                         }
                                 }
+#else
+                                // floating point conversions are disabled: scanning is stopped
+                                (void)va_arg(args, float*);
+                                str = NULL;
+#endif
                                 break;
 
                         case 'l':

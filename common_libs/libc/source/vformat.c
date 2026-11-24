@@ -75,6 +75,14 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
+/* defaults: all conversions (flags not defined in configuration) */
+#ifndef __LIBC_PRINTF_FLOAT__
+#define __LIBC_PRINTF_FLOAT__ 2
+#endif
+#ifndef __LIBC_PRINTF_WIDE__
+#define __LIBC_PRINTF_WIDE__ 1
+#endif
+
 #define FL_LEFT  0x01 //!< '-' flag
 #define FL_PLUS  0x02 //!< '+' flag
 #define FL_SPACE 0x04 //!< ' ' flag
@@ -128,6 +136,7 @@ typedef struct {
 /*==============================================================================
   Local objects
 ==============================================================================*/
+#if __LIBC_PRINTF_FLOAT__ > 0
 /** powers of 10 that are exact in double */
 static const double POW10[] = {
         1e0,
@@ -154,6 +163,7 @@ static const double POW10[] = {
         1e21,
         1e22,
 };
+#endif
 
 /*==============================================================================
   Exported objects
@@ -333,6 +343,7 @@ static void fmt_int(_libc_fmt_out_t *out, const spec_t *sp, char conv, uintmax_t
         }
 }
 
+#if __LIBC_PRINTF_FLOAT__ > 0
 //==============================================================================
 /**
  * @brief  Sum of two doubles (|a| >= |b|) as double-double.
@@ -632,6 +643,7 @@ static void fp_out_digits(_libc_fmt_out_t *out, const fpdec_t *d, int pos, int c
         }
 }
 
+#if __LIBC_PRINTF_FLOAT__ > 1
 //==============================================================================
 /**
  * @brief  Print hexadecimal floating point field (%a, %A).
@@ -729,6 +741,8 @@ __attribute__((noinline)) static void fmt_hexfloat(_libc_fmt_out_t *out, const s
         }
 }
 
+#endif
+
 //==============================================================================
 /**
  * @brief  Print floating point field (%f, %F, %e, %E, %g, %G, %a, %A).
@@ -773,10 +787,12 @@ __attribute__((noinline)) static void fmt_float(_libc_fmt_out_t *out, const spec
                 return;
         }
 
+#if __LIBC_PRINTF_FLOAT__ > 1
         if (lconv == 'a') {
                 fmt_hexfloat(out, sp, upper, sign, be, mant);
                 return;
         }
+#endif
 
         fpdec_t d;
         if (val == 0.0) {
@@ -882,6 +898,9 @@ __attribute__((noinline)) static void fmt_float(_libc_fmt_out_t *out, const spec
         }
 }
 
+#endif
+
+#if __LIBC_PRINTF_WIDE__ > 0
 //==============================================================================
 /**
  * @brief  Print wide string or character (%ls, %lc) in C locale.
@@ -928,6 +947,8 @@ __attribute__((noinline)) static bool fmt_wstr(_libc_fmt_out_t *out, const spec_
 
         return true;
 }
+
+#endif
 
 //==============================================================================
 /**
@@ -1168,6 +1189,7 @@ int _libc_vformat(_libc_fmt_out_t *out, const char *format, va_list arg)
 
                 case 'c':
                         if (len == LEN_L) {
+#if __LIBC_PRINTF_WIDE__ > 0
                                 wchar_t wc[2] = {(wchar_t)va_arg(ap, int), 0};
                                 if (wc[0] == 0) {
                                         char c = '\0';
@@ -1175,6 +1197,10 @@ int _libc_vformat(_libc_fmt_out_t *out, const char *format, va_list arg)
                                 } else if (!fmt_wstr(out, &sp, wc, 1)) {
                                         out->error = true;
                                 }
+#else
+                                (void)va_arg(ap, int);
+                                fmt_str(out, &sp, "?", 1);
+#endif
                         } else {
                                 char c = (char)va_arg(ap, int);
                                 fmt_str(out, &sp, &c, 1);
@@ -1183,6 +1209,7 @@ int _libc_vformat(_libc_fmt_out_t *out, const char *format, va_list arg)
 
                 case 's':
                         if (len == LEN_L) {
+#if __LIBC_PRINTF_WIDE__ > 0
                                 const wchar_t *ws = va_arg(ap, const wchar_t *);
                                 if (!ws) {
                                         ws = L"(null)";
@@ -1190,6 +1217,10 @@ int _libc_vformat(_libc_fmt_out_t *out, const char *format, va_list arg)
                                 if (!fmt_wstr(out, &sp, ws, (sp.prec < 0) ? SIZE_MAX : (size_t)sp.prec)) {
                                         out->error = true;
                                 }
+#else
+                                (void)va_arg(ap, const wchar_t *);
+                                fmt_str(out, &sp, "?", 1);
+#endif
                         } else {
                                 const char *s = va_arg(ap, const char *);
                                 if (!s) {
@@ -1219,7 +1250,19 @@ int _libc_vformat(_libc_fmt_out_t *out, const char *format, va_list arg)
                 case 'a':
                 case 'A': {
                         double v = (len == LEN_LD) ? (double)va_arg(ap, long double) : va_arg(ap, double);
+#if __LIBC_PRINTF_FLOAT__ > 1
                         fmt_float(out, &sp, conv, v);
+#elif __LIBC_PRINTF_FLOAT__ > 0
+                        if ((conv | 0x20) != 'a') {
+                                fmt_float(out, &sp, conv, v);
+                                break;
+                        }
+                        fmt_str(out, &sp, "?", 1);
+#else
+                        // floating point conversions are disabled (argument is skipped)
+                        (void)v;
+                        fmt_str(out, &sp, "?", 1);
+#endif
                         break;
                 }
 

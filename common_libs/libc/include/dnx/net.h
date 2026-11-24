@@ -607,10 +607,35 @@ typedef struct {
         u64_t           rx_packets; /*!< Number of received packets.*/
 } NET_UDS_status_t;
 
-/** UDS socket address. */
+/**
+ * UDS socket address: path of socket file or abstract name.
+ *
+ * Path of socket file: socket_bind() creates the file (type S_IFSOCK, mode
+ * 0777 & ~umask, error EADDRINUSE when file exists, so server removes old file
+ * before bind), socket_connect() and socket_sendto() need write permission of
+ * the file. The file is not removed when socket is closed (remove() does it,
+ * established connections are not affected). Relative path is resolved by
+ * current working directory, address of bound socket is absolute path. Socket
+ * files can be created only on file systems with special files (ramfs, e.g.
+ * /run), kernel without mkfifo() or fstat() supports only abstract
+ * names (ENOTSUP).
+ *
+ * Abstract name: path[0] is '\0', name follows (NUL terminated). File is not
+ * created and permissions are not checked, peer can be checked by
+ * socket_get_peer_credentials().
+ *
+ * Unnamed socket (address of not bound socket): path[0] and path[1] are '\0'.
+ */
 typedef struct {
         char path[64];
 } NET_UDS_sockaddr_t;
+
+/** Credentials of process (peer of connected socket). */
+typedef struct {
+        pid_t pid;
+        uid_t uid;
+        gid_t gid;
+} NET_credentials_t;
 
 /*==============================================================================
   Exported objects
@@ -1078,6 +1103,24 @@ extern int socket_set_send_timeout(SOCKET *socket, uint32_t timeout);
  */
 //==============================================================================
 extern int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr, size_t addr_size);
+
+//==============================================================================
+/**
+ * @brief  The function gets credentials of peer of connected socket (UDS):
+ *         process that called socket_connect() (client) or socket_listen()
+ *         (server).
+ *
+ * @param  socket       The socket.
+ * @param  cred         Obtained credentials.
+ *
+ * @return On success 0 is returned, otherwise -1 and @ref errno value is set
+ *         appropriately (ENOTCONN: socket is not connected, ENOTSUP: other
+ *         network family).
+ *
+ * @see socket_connect(), socket_accept()
+ */
+//==============================================================================
+extern int socket_get_peer_credentials(SOCKET *socket, NET_credentials_t *cred);
 
 //==============================================================================
 /**

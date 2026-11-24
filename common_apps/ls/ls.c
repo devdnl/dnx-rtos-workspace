@@ -188,6 +188,9 @@ int main(int argc, char *argv[])
                                         case S_IFIFO:
                                                 type = VT100_FONT_COLOR_BROWN "p";
                                                 break;
+                                        case S_IFSOCK:
+                                                type = VT100_FONT_COLOR_MAGENTA "s";
+                                                break;
                                         default:
                                                 type = "?";
                                                 break;

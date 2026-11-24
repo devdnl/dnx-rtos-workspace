@@ -34,6 +34,8 @@
           on the same descriptor work as before,
         - setvbuf()/setbuf() select other mode or own buffer,
         - buffer is allocated at first read or write,
+        - __LIBC_STREAM_BUFFERING__ == _NO_: all streams are unbuffered
+          (setvbuf() is accepted, buffer is not used),
         - all output streams are flushed by exit(), at return from main() and
           before new process is created (process_create(), system()).
 
@@ -55,6 +57,11 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
+/* default: enabled (flag not defined in configuration) */
+#ifndef __LIBC_STREAM_BUFFERING__
+#define __LIBC_STREAM_BUFFERING__ 1
+#endif
+
 #define NO_OWNER     (-2)
 #define get_appctx() ((_libc_app_ctx_t *)_libc_appctx_get())
 
@@ -276,6 +283,11 @@ static void stream_setup(FILE *file)
 //==============================================================================
 static bool stream_buffer(FILE *file)
 {
+#if __LIBC_STREAM_BUFFERING__ == 0
+        // buffering is disabled: all streams are unbuffered
+        (void)file;
+        return false;
+#endif
         stream_setup(file);
 
         if (file->flag.mode == _IONBF) {
@@ -307,6 +319,11 @@ static bool stream_buffer(FILE *file)
 //==============================================================================
 static bool flush_write(FILE *file)
 {
+#if __LIBC_STREAM_BUFFERING__ == 0
+        // no buffered data
+        (void)file;
+        return true;
+#endif
         bool ok = true;
 
         if (file->flag.wr) {
@@ -600,52 +617,6 @@ FILE *_libc_fdopen(int fd, const char *mode)
         }
 
         return stream_new(fd);
-}
-
-//==============================================================================
-/**
- * @brief Function creates temporary file.
- *
- * File is removed when stream is closed.
- *
- * @return The tmpfile() function returns a stream descriptor, or @ref NULL
- * if a unique filename cannot be generated or the unique file cannot be opened.
- * In the latter case, @ref errno is set to indicate the error.
- */
-//==============================================================================
-FILE *_libc_tmpfile(void)
-{
-        uint64_t time_ms = 0;
-        int err = _libc_syscall(_LIBC_SYS_GETUPTIMEMS, &time_ms);
-        if (err) {
-                return NULL;
-        }
-
-        char path[64];
-        snprintf(path, sizeof(path), "/tmp/%llu", time_ms);
-
-        FILE *f = _libc_fopen(path, "r+");
-        if (!f) {
-                f = _libc_fopen(path, "w");
-                if (f) {
-                        _libc_fclose(f);
-
-                        f = _libc_fopen(path, "r+");
-                        if (f) {
-                                f->tmppath = strdup(path);
-                                if (f->tmppath) {
-                                        return f;
-                                }
-
-                                _libc_fclose(f);
-                        }
-                }
-
-        } else {
-                _libc_fclose(f);
-        }
-
-        return NULL;
 }
 
 //==============================================================================

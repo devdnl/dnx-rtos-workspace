@@ -8,8 +8,7 @@ Brief   Unix Domain Socket (UDS) test and benchmark program.
         Usage: udstest [-t|-p|-l] [-v] [-n netname] [-d ms] [filter]
           (none)  functional tests, then performance measurements
           -t      functional tests only
-          -p      performance measurements only (also works with older UDS
-                  implementations, so results of kernels can be compared)
+          -p      performance measurements only
           -l      list tests and measurements
           -v      verbose mode
           -n      UDS network name (default: unix)
@@ -18,8 +17,10 @@ Brief   Unix Domain Socket (UDS) test and benchmark program.
 
         Functional tests check behaviour of the UDS stack including closing
         of sockets that are used by other threads (wake-up of blocked
-        operations). Test socket paths have prefix "udst<pid>." so many
-        instances can run at the same time.
+        operations), socket files (in UDSTEST_FILE_DIR, default /run),
+        permissions and peer credentials. Test sockets use abstract names
+        with prefix "udst<pid>." (socket files too) so many instances can run
+        at the same time.
 
         NOTE: functional tests expect UDS with lifetime and wake-up fixes.
               Older UDS fails most of tests and closing of connected sockets
@@ -83,6 +84,15 @@ Brief   Unix Domain Socket (UDS) test and benchmark program.
 #define UDSTEST_CLIENT_ROUNDS 10
 #endif
 
+/** Directory of test socket files (file system with special files, e.g. ramfs). */
+#ifndef UDSTEST_FILE_DIR
+#define UDSTEST_FILE_DIR "/run"
+#endif
+
+/** User and group of thread without privileges (permission tests). */
+#define TEST_UID 1000
+#define TEST_GID 1000
+
 #define IO_BUF_SIZE    4096
 #define SAFE_TIMEOUT   5000 /* timeout that protects test from hang [ms] */
 #define BENCH_TIMEOUT  1000 /* receive timeout of benchmark helpers [ms] */
@@ -103,6 +113,7 @@ Brief   Unix Domain Socket (UDS) test and benchmark program.
 #include <dnx/thread.h>
 #include <dnx/net.h>
 #include <dnx/vt100.h>
+#include <sys/stat.h>
 
 /*==============================================================================
   Local macros
@@ -170,6 +181,8 @@ typedef struct {
         SOCKET *sock;       //!< socket used by job
         SOCKET *acc;        //!< accepted socket
         const char *name;   //!< socket name (connect, sendto)
+        const NET_UDS_sockaddr_t *addr; //!< socket address (connect as user TEST_UID)
+        NET_credentials_t cred; //!< peer credentials
         u8_t *buf;          //!< data buffer
         size_t len;         //!< data/chunk length
         size_t count;       //!< number of repetitions
@@ -194,6 +207,9 @@ static const char *make_msg(int err, const char *fmt, ...);
 static void res_printf(const char *fmt, ...);
 static u32_t elapsed_ms(clock_t tref);
 static void mkaddr(NET_UDS_sockaddr_t *addr, const char *name);
+static void mkfile(NET_UDS_sockaddr_t *addr, const char *name);
+static bool addr_eq(const NET_UDS_sockaddr_t *a, const NET_UDS_sockaddr_t *b);
+static const char *addr_str(const NET_UDS_sockaddr_t *addr);
 static SOCKET *sock_new(NET_socket_type_t type);
 static void sock_close(SOCKET **sock);
 static int sock_bind(SOCKET *sock, const char *name);
@@ -221,6 +237,7 @@ static int th_stream_sink_sender(void *arg);
 static int th_dgram_echo(void *arg);
 static int th_dgram_sender(void *arg);
 static int th_conn_server(void *arg);
+static int th_user_connect(void *arg);
 
 static const char *test_dgram_basic(void);
 static const char *test_dgram_errors(void);
@@ -236,6 +253,10 @@ static const char *test_stream_peer_close_send(void);
 static const char *test_stream_listener_close(void);
 static const char *test_stream_connect_timeout(void);
 static const char *test_concurrent_clients(void);
+static const char *test_abstract_names(void);
+static const char *test_socket_files(void);
+static const char *test_socket_file_replaced(void);
+static const char *test_permissions_credentials(void);
 static const char *test_memory_leak(void);
 
 static void bench_stream_throughput(size_t chunk);
@@ -285,6 +306,10 @@ static const test_entry_t TEST_TAB[] = {
         {.name = "Stream: listener close refuses waiting client", .fn = test_stream_listener_close},
         {.name = "Stream: connect timeout and stale request", .fn = test_stream_connect_timeout},
         {.name = "Stream: concurrent clients", .fn = test_concurrent_clients},
+        {.name = "Abstract names", .fn = test_abstract_names},
+        {.name = "Socket files: bind, connect, remove", .fn = test_socket_files},
+        {.name = "Socket files: replaced file", .fn = test_socket_file_replaced},
+        {.name = "Socket files: permissions, peer credentials", .fn = test_permissions_credentials},
         {.name = "Network memory released", .fn = test_memory_leak},
 };
 
@@ -646,7 +671,50 @@ static u32_t elapsed_ms(clock_t tref)
 static void mkaddr(NET_UDS_sockaddr_t *addr, const char *name)
 {
         memset(addr, 0, sizeof(*addr));
-        snprintf(addr->path, sizeof(addr->path), "%s%s", global->prefix, name);
+        snprintf(addr->path + 1, sizeof(addr->path) - 1, "%s%s", global->prefix, name);
+}
+
+//==============================================================================
+/**
+ * @brief  Create address of socket file of this program instance.
+ *
+ * @param  addr         address
+ * @param  name         socket name
+ */
+//==============================================================================
+static void mkfile(NET_UDS_sockaddr_t *addr, const char *name)
+{
+        memset(addr, 0, sizeof(*addr));
+        snprintf(addr->path, sizeof(addr->path), UDSTEST_FILE_DIR "/%s%s", global->prefix, name);
+}
+
+//==============================================================================
+/**
+ * @brief  Compare addresses (stack and mkaddr()/mkfile() clear unused bytes).
+ *
+ * @param  a            address
+ * @param  b            address
+ *
+ * @return True if addresses are equal.
+ */
+//==============================================================================
+static bool addr_eq(const NET_UDS_sockaddr_t *a, const NET_UDS_sockaddr_t *b)
+{
+        return memcmp(a, b, sizeof(*a)) == 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Printable address: path or abstract name ('\0' is skipped).
+ *
+ * @param  addr         address
+ *
+ * @return Address string.
+ */
+//==============================================================================
+static const char *addr_str(const NET_UDS_sockaddr_t *addr)
+{
+        return (addr->path[0] == '\0') ? addr->path + 1 : addr->path;
 }
 
 //==============================================================================
@@ -1007,6 +1075,44 @@ static int th_connect(void *arg)
         job->ret = sock_connect(job->sock, job->name);
         job->err = (job->ret != 0) ? (errno ? errno : EIO) : 0;
         job->elapsed = elapsed_ms(tref);
+
+        return 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Connect to job->addr as user TEST_UID (thread credentials), store
+ *         peer credentials. Connected socket is closed when job->stop is set.
+ *
+ * @param  arg          job
+ *
+ * @return 0
+ */
+//==============================================================================
+static int th_user_connect(void *arg)
+{
+        job_t *job = arg;
+
+        job->ret = -1;
+
+        if ((thread_setgid(TEST_GID) != 0) || (thread_setuid(TEST_UID) != 0)) {
+                job->err = errno ? errno : EIO;
+                return 0;
+        }
+
+        job->ret = socket_connect(job->sock, job->addr, sizeof(*job->addr));
+        job->err = (job->ret != 0) ? (errno ? errno : EIO) : 0;
+
+        if (job->ret == 0) {
+                if (socket_get_peer_credentials(job->sock, &job->cred) != 0) {
+                        job->ret = -1;
+                        job->err = errno ? errno : EIO;
+                }
+
+                while (!job->stop) {
+                        msleep(10);
+                }
+        }
 
         return 0;
 }
@@ -1413,7 +1519,7 @@ static const char *test_dgram_basic(void)
         CHECK((n == 5) && (memcmp(buf, "hello", 5) == 0), "socket_recvfrom(): %d", n);
 
         mkaddr(&exp, "db");
-        CHECK(isstreq(from.path, exp.path), "wrong sender address '%s', expected '%s'", from.path, exp.path);
+        CHECK(addr_eq(&from, &exp), "wrong sender address '%s', expected '%s'", addr_str(&from), addr_str(&exp));
 
         CHECK(socket_sendto(a, "reply", 5, NET_FLAGS__NONE, &from, sizeof(from)) == 5,
                 "socket_sendto(reply)");
@@ -1463,7 +1569,7 @@ static const char *test_dgram_errors(void)
                 "sendto not terminated path");
 
         mkaddr(&addr, "nonexistent");
-        EXPECT_ERR(socket_sendto(b, "x", 1, NET_FLAGS__NONE, &addr, sizeof(addr)), ENOENT,
+        EXPECT_ERR(socket_sendto(b, "x", 1, NET_FLAGS__NONE, &addr, sizeof(addr)), ECONNREFUSED,
                 "sendto nonexistent socket");
 
         // datagram longer than maximum datagram size of every configuration
@@ -1624,18 +1730,18 @@ static const char *test_stream_basic(void)
         CHECK((n == 2) && (elapsed_ms(tref) < UDSTEST_WAKEUP_LIMIT), "recv(available): %d", n);
 
         // connected sockets return address of peer: client is connected to accepted
-        // socket and the client is not bound, so both addresses are empty
+        // socket and the client is not bound, so both addresses are unnamed
         memset(&addr, 'x', sizeof(addr));
         CHECK(socket_get_address(cli, &addr, sizeof(addr)) == 0, "socket_get_address(client)");
-        CHECK(addr.path[0] == '\0', "client peer address '%s'", addr.path);
+        CHECK((addr.path[0] == '\0') && (addr.path[1] == '\0'), "client peer address '%s'", addr_str(&addr));
         memset(&addr, 'x', sizeof(addr));
         CHECK(socket_get_address(acc, &addr, sizeof(addr)) == 0, "socket_get_address(accepted)");
-        CHECK(addr.path[0] == '\0', "accepted peer address '%s'", addr.path);
+        CHECK((addr.path[0] == '\0') && (addr.path[1] == '\0'), "accepted peer address '%s'", addr_str(&addr));
 
         // not connected socket returns own address
         CHECK(socket_get_address(srv, &addr, sizeof(addr)) == 0, "socket_get_address(server)");
         mkaddr(&exp, "sb");
-        CHECK(isstreq(addr.path, exp.path), "server address '%s', expected '%s'", addr.path, exp.path);
+        CHECK(addr_eq(&addr, &exp), "server address '%s', expected '%s'", addr_str(&addr), addr_str(&exp));
 
         EXPECT_ERR(sock_connect(cli, "sb"), EISCONN, "connect of connected socket");
 
@@ -1665,19 +1771,19 @@ static const char *test_stream_conn_errors(void)
         CHECK((cli = sock_new(NET_SOCKET_TYPE__STREAM)) != NULL, "socket_open()");
         socket_set_recv_timeout(cli, 1000);
 
-        EXPECT_ERR(sock_connect(cli, "nonexistent"), ENOENT, "connect to nonexistent socket");
+        EXPECT_ERR(sock_connect(cli, "nonexistent"), ECONNREFUSED, "connect to nonexistent socket");
 
         CHECK((nl = sock_new(NET_SOCKET_TYPE__STREAM)) != NULL, "socket_open()");
         CHECK(sock_bind(nl, "snl") == 0, "socket_bind()");
-        EXPECT_ERR(sock_connect(cli, "snl"), ENOENT, "connect to not listening socket");
+        EXPECT_ERR(sock_connect(cli, "snl"), ECONNREFUSED, "connect to not listening socket");
 
         CHECK((srv = sock_listen("sce")) != NULL, "listen");
         CHECK((dg = sock_new(NET_SOCKET_TYPE__DATAGRAM)) != NULL, "socket_open()");
         EXPECT_ERR(sock_connect(dg, "sce"), ECONNREFUSED, "connect datagram to stream socket");
 
         EXPECT_ERR(socket_listen(cli), EINVAL, "listen on not bound socket");
-        EXPECT_ERR(socket_recv(cli, &c, 1, NET_FLAGS__NONE), ECONNREFUSED, "recv on not connected socket");
-        EXPECT_ERR(socket_send(cli, &c, 1, NET_FLAGS__NONE), ECONNREFUSED, "send on not connected socket");
+        EXPECT_ERR(socket_recv(cli, &c, 1, NET_FLAGS__NONE), ENOTCONN, "recv on not connected socket");
+        EXPECT_ERR(socket_send(cli, &c, 1, NET_FLAGS__NONE), ENOTCONN, "send on not connected socket");
 
 cleanup:
         sock_close(&dg);
@@ -2139,6 +2245,355 @@ static const char *test_concurrent_clients(void)
 cleanup:
         job_join(&server);
         sock_close(&srv);
+        return exit_msg;
+}
+
+//==============================================================================
+/**
+ * @brief  Abstract names: name is not a file, unnamed socket address, too long
+ *         name, rebind.
+ *
+ * @return Error message.
+ */
+//==============================================================================
+static const char *test_abstract_names(void)
+{
+        const char *exit_msg = SUCCESS_MSG;
+        SOCKET *a = NULL;
+        SOCKET *b = NULL;
+        NET_UDS_sockaddr_t addr, exp;
+        struct stat st;
+
+        CHECK((a = sock_new(NET_SOCKET_TYPE__DATAGRAM)) != NULL, "socket_open()");
+        CHECK((b = sock_new(NET_SOCKET_TYPE__DATAGRAM)) != NULL, "socket_open()");
+
+        // not bound socket is unnamed
+        memset(&addr, 'x', sizeof(addr));
+        CHECK(socket_get_address(a, &addr, sizeof(addr)) == 0, "socket_get_address()");
+        CHECK((addr.path[0] == '\0') && (addr.path[1] == '\0'), "address of not bound socket '%s'", addr_str(&addr));
+
+        // abstract name does not create file (also not in CWD)
+        CHECK(sock_bind(a, "an") == 0, "socket_bind()");
+        mkaddr(&exp, "an");
+        CHECK(stat(exp.path + 1, &st) != 0, "file of abstract name created");
+        CHECK(socket_get_address(a, &addr, sizeof(addr)) == 0, "socket_get_address()");
+        CHECK(addr_eq(&addr, &exp), "address '%s', expected '%s'", addr_str(&addr), addr_str(&exp));
+
+        // socket is bound once
+        EXPECT_ERR(sock_bind(a, "an2"), EINVAL, "second bind");
+
+        // name fills whole address (no NUL terminator)
+        memset(&addr, 'n', sizeof(addr));
+        addr.path[0] = '\0';
+        EXPECT_ERR(socket_bind(b, &addr, sizeof(addr)), EINVAL, "bind to too long name");
+
+        // the longest name
+        addr.path[sizeof(addr.path) - 1] = '\0';
+        CHECK(socket_bind(b, &addr, sizeof(addr)) == 0, "bind to the longest name");
+        CHECK(socket_sendto(a, "x", 1, NET_FLAGS__NONE, &addr, sizeof(addr)) == 1, "sendto the longest name");
+
+cleanup:
+        sock_close(&a);
+        sock_close(&b);
+        return exit_msg;
+}
+
+//==============================================================================
+/**
+ * @brief  Socket files: bind creates file, used file, open of socket file,
+ *         connect by relative path, file is kept after close, stale file and
+ *         removed file, regular file, datagram sender address.
+ *
+ * @return Error message.
+ */
+//==============================================================================
+static const char *test_socket_files(void)
+{
+        const char *exit_msg = SUCCESS_MSG;
+        SOCKET *srv = NULL;
+        SOCKET *cli = NULL;
+        SOCKET *acc = NULL;
+        SOCKET *x = NULL;
+        FILE *f = NULL;
+        bool cwd_changed = false;
+        NET_UDS_sockaddr_t addr, rel, dg;
+        struct stat st;
+        char cwd[64];
+        char buf[8];
+
+        mkfile(&addr, "sf");
+        mkfile(&dg, "sfd");
+        remove(addr.path);
+        remove(dg.path);
+
+        CHECK(getcwd(cwd, sizeof(cwd)) != NULL, "getcwd()");
+
+        CHECK((srv = sock_new(NET_SOCKET_TYPE__STREAM)) != NULL, "socket_open()");
+        int err = socket_bind(srv, &addr, sizeof(addr));
+        if ((err != 0) && ((errno == ENOTSUP) || (errno == ENOENT) || (errno == EROFS))) {
+                exit_msg = SKIP("socket files not supported in " UDSTEST_FILE_DIR);
+                goto cleanup;
+        }
+        CHECK(err == 0, "socket_bind(%s)", addr.path);
+        CHECK(socket_listen(srv) == 0, "socket_listen()");
+
+        // file of socket: type and mode (umask applied)
+        mode_t mask = umask(0);
+        umask(mask);
+        CHECK(stat(addr.path, &st) == 0, "stat(%s)", addr.path);
+        CHECK(S_ISSOCK(st.st_mode), "file type 0%o, expected socket", (unsigned)(st.st_mode & S_IFMT));
+        CHECK((st.st_mode & S_IPMT) == (0777 & ~mask), "file mode 0%o, expected 0%o", (unsigned)(st.st_mode & S_IPMT),
+                (unsigned)(0777 & ~mask));
+
+        // socket file cannot be opened, used file cannot be bound
+        errno = 0;
+        f = fopen(addr.path, "r");
+        int open_errno = errno;
+        CHECK((f == NULL) && (open_errno == ENXIO), "fopen() of socket file: %s", f ? "success" : strerror(open_errno));
+        CHECK((x = sock_new(NET_SOCKET_TYPE__STREAM)) != NULL, "socket_open()");
+        EXPECT_ERR(socket_bind(x, &addr, sizeof(addr)), EADDRINUSE, "bind to used socket file");
+        sock_close(&x);
+
+        // connect by relative path (CWD), server address is absolute path
+        CHECK(chdir(UDSTEST_FILE_DIR) == 0, "chdir()");
+        cwd_changed = true;
+        memset(&rel, 0, sizeof(rel));
+        snprintf(rel.path, sizeof(rel.path), "./%ssf", global->prefix);
+
+        CHECK((cli = sock_new(NET_SOCKET_TYPE__STREAM)) != NULL, "socket_open()");
+        job_t job;
+        memset(&job, 0, sizeof(job));
+        job.sock = srv;
+        CHECK(job_start(&job, th_accept), "job_start()");
+        err = socket_connect(cli, &rel, sizeof(rel));
+        int conn_errno = errno;
+        job_join(&job);
+        acc = job.acc;
+        errno = conn_errno;
+        CHECK(err == 0, "connect by relative path %s", rel.path);
+        CHECK(job.err == 0, "accept: %s", strerror(job.err));
+
+        CHECK(chdir(cwd) == 0, "chdir()");
+        cwd_changed = false;
+
+        CHECK(send_all(cli, "abc", 3) == 0, "send()");
+        CHECK((recv_all(acc, buf, 3) == 0) && (memcmp(buf, "abc", 3) == 0), "recv()");
+
+        NET_UDS_sockaddr_t peer;
+        CHECK(socket_get_address(cli, &peer, sizeof(peer)) == 0, "socket_get_address()");
+        CHECK((peer.path[0] == '\0') && (peer.path[1] == '\0'), "peer address '%s'", addr_str(&peer));
+        CHECK(socket_get_address(srv, &peer, sizeof(peer)) == 0, "socket_get_address()");
+        CHECK(addr_eq(&peer, &addr), "server address '%s', expected '%s'", addr_str(&peer), addr.path);
+
+        // file is kept after close: stale file refuses connection
+        sock_close(&acc);
+        sock_close(&cli);
+        sock_close(&srv);
+        CHECK(stat(addr.path, &st) == 0, "socket file removed by close");
+
+        CHECK((cli = sock_new(NET_SOCKET_TYPE__STREAM)) != NULL, "socket_open()");
+        EXPECT_ERR(socket_connect(cli, &addr, sizeof(addr)), ECONNREFUSED, "connect to stale socket file");
+
+        // removed file
+        CHECK(remove(addr.path) == 0, "remove()");
+        EXPECT_ERR(socket_connect(cli, &addr, sizeof(addr)), ENOENT, "connect to removed socket file");
+
+        // regular file is not a socket
+        CHECK((f = fopen(addr.path, "w")) != NULL, "fopen()");
+        fclose(f);
+        f = NULL;
+        EXPECT_ERR(socket_connect(cli, &addr, sizeof(addr)), ECONNREFUSED, "connect to regular file");
+        CHECK((x = sock_new(NET_SOCKET_TYPE__STREAM)) != NULL, "socket_open()");
+        EXPECT_ERR(socket_bind(x, &addr, sizeof(addr)), EADDRINUSE, "bind to regular file");
+        sock_close(&x);
+        CHECK(remove(addr.path) == 0, "remove()");
+
+        // datagram: sender address is path of socket file
+        CHECK((srv = sock_new(NET_SOCKET_TYPE__DATAGRAM)) != NULL, "socket_open()");
+        CHECK((x = sock_new(NET_SOCKET_TYPE__DATAGRAM)) != NULL, "socket_open()");
+        socket_set_recv_timeout(srv, SAFE_TIMEOUT);
+        CHECK(socket_bind(srv, &dg, sizeof(dg)) == 0, "socket_bind()");
+        CHECK(socket_bind(x, &addr, sizeof(addr)) == 0, "socket_bind()");
+        CHECK(socket_sendto(x, "dg", 2, NET_FLAGS__NONE, &dg, sizeof(dg)) == 2, "socket_sendto()");
+        memset(&peer, 'x', sizeof(peer));
+        int n = socket_recvfrom(srv, buf, sizeof(buf), NET_FLAGS__NONE, &peer, sizeof(peer));
+        CHECK((n == 2) && (memcmp(buf, "dg", 2) == 0), "socket_recvfrom(): %d", n);
+        CHECK(addr_eq(&peer, &addr), "sender address '%s', expected '%s'", addr_str(&peer), addr.path);
+
+cleanup:
+        if (cwd_changed) {
+                chdir(cwd);
+        }
+        if (f) {
+                fclose(f);
+        }
+        sock_close(&x);
+        sock_close(&acc);
+        sock_close(&cli);
+        sock_close(&srv);
+        remove(addr.path);
+        remove(dg.path);
+        return exit_msg;
+}
+
+//==============================================================================
+/**
+ * @brief  Socket file removed and created again by other socket: connection
+ *         goes to the new socket, the old socket keeps its connections.
+ *
+ * @return Error message.
+ */
+//==============================================================================
+static const char *test_socket_file_replaced(void)
+{
+        const char *exit_msg = SUCCESS_MSG;
+        SOCKET *old = NULL;
+        SOCKET *new = NULL;
+        SOCKET *cli = NULL;
+        SOCKET *acc = NULL;
+        NET_UDS_sockaddr_t addr;
+        job_t job;
+        memset(&job, 0, sizeof(job));
+
+        mkfile(&addr, "sr");
+        remove(addr.path);
+
+        CHECK((old = sock_new(NET_SOCKET_TYPE__STREAM)) != NULL, "socket_open()");
+        int err = socket_bind(old, &addr, sizeof(addr));
+        if ((err != 0) && ((errno == ENOTSUP) || (errno == ENOENT) || (errno == EROFS))) {
+                exit_msg = SKIP("socket files not supported in " UDSTEST_FILE_DIR);
+                goto cleanup;
+        }
+        CHECK(err == 0, "socket_bind(%s)", addr.path);
+        CHECK(socket_listen(old) == 0, "socket_listen()");
+
+        CHECK(remove(addr.path) == 0, "remove()");
+        CHECK((new = sock_new(NET_SOCKET_TYPE__STREAM)) != NULL, "socket_open()");
+        CHECK(socket_bind(new, &addr, sizeof(addr)) == 0, "bind to path of removed socket file");
+        CHECK(socket_listen(new) == 0, "socket_listen()");
+
+        socket_set_recv_timeout(old, 300);
+        socket_set_recv_timeout(new, SAFE_TIMEOUT);
+
+        CHECK((cli = sock_new(NET_SOCKET_TYPE__STREAM)) != NULL, "socket_open()");
+        job.sock = new;
+        CHECK(job_start(&job, th_accept), "job_start()");
+        err = socket_connect(cli, &addr, sizeof(addr));
+        int conn_errno = errno;
+        job_join(&job);
+        acc = job.acc;
+        errno = conn_errno;
+        CHECK(err == 0, "socket_connect()");
+        CHECK(job.err == 0, "accept by new socket: %s", strerror(job.err));
+
+        // old socket does not get connections
+        SOCKET *x = NULL;
+        CHECK((socket_accept(old, &x) != 0) || (x == NULL), "old socket accepted connection");
+
+cleanup:
+        sock_close(&acc);
+        sock_close(&cli);
+        sock_close(&new);
+        sock_close(&old);
+        remove(addr.path);
+        return exit_msg;
+}
+
+//==============================================================================
+/**
+ * @brief  Write permission of socket file is checked by connect (thread of
+ *         user TEST_UID), peer credentials of both sides of connection.
+ *
+ * @return Error message.
+ */
+//==============================================================================
+static const char *test_permissions_credentials(void)
+{
+        const char *exit_msg = SUCCESS_MSG;
+        SOCKET *srv = NULL;
+        SOCKET *cli = NULL;
+        SOCKET *acc = NULL;
+        NET_UDS_sockaddr_t addr;
+        NET_credentials_t cred;
+        job_t job;
+        memset(&job, 0, sizeof(job));
+
+        mkfile(&addr, "sp");
+        remove(addr.path);
+
+        // credentials of connection of the same process
+        int err = sock_pair("sp", &srv, &cli, &acc);
+        CHECK(err == 0, "connection: %s", strerror(err));
+        CHECK(socket_get_peer_credentials(acc, &cred) == 0, "socket_get_peer_credentials(accepted)");
+        CHECK((cred.pid == getpid()) && (cred.uid == geteuid()), "peer of accepted: pid %u uid %u", (unsigned)cred.pid,
+                (unsigned)cred.uid);
+        CHECK(socket_get_peer_credentials(cli, &cred) == 0, "socket_get_peer_credentials(client)");
+        CHECK((cred.pid == getpid()) && (cred.uid == geteuid()), "peer of client: pid %u uid %u", (unsigned)cred.pid,
+                (unsigned)cred.uid);
+        EXPECT_ERR(socket_get_peer_credentials(srv, &cred), ENOTCONN, "credentials of not connected socket");
+        sock_close(&acc);
+        sock_close(&cli);
+        sock_close(&srv);
+
+        if (geteuid() != 0) {
+                exit_msg = SKIP("needs root (thread of other user)");
+                goto cleanup;
+        }
+
+        if (thread_setuid(0) != 0) {
+                exit_msg = SKIP("system without users and permissions");
+                goto cleanup;
+        }
+
+        CHECK((srv = sock_new(NET_SOCKET_TYPE__STREAM)) != NULL, "socket_open()");
+        err = socket_bind(srv, &addr, sizeof(addr));
+        if ((err != 0) && ((errno == ENOTSUP) || (errno == ENOENT) || (errno == EROFS))) {
+                exit_msg = SKIP("socket files not supported in " UDSTEST_FILE_DIR);
+                goto cleanup;
+        }
+        CHECK(err == 0, "socket_bind(%s)", addr.path);
+        CHECK(socket_listen(srv) == 0, "socket_listen()");
+        socket_set_recv_timeout(srv, SAFE_TIMEOUT);
+
+        // without write permission of other users
+        CHECK(chmod(addr.path, 0755) == 0, "chmod()");
+        CHECK((cli = sock_new(NET_SOCKET_TYPE__STREAM)) != NULL, "socket_open()");
+        job.sock = cli;
+        job.addr = &addr;
+        CHECK(job_start(&job, th_user_connect), "job_start()");
+        job_join(&job);
+        CHECK((job.ret != 0) && (job.err == EACCES), "connect without permission: %d (%s), expected EACCES", job.ret,
+                strerror(job.err));
+        sock_close(&cli);
+
+        // with write permission: credentials of user thread and server
+        CHECK(chmod(addr.path, 0777) == 0, "chmod()");
+        CHECK((cli = sock_new(NET_SOCKET_TYPE__STREAM)) != NULL, "socket_open()");
+        memset(&job, 0, sizeof(job));
+        job.sock = cli;
+        job.addr = &addr;
+        CHECK(job_start(&job, th_user_connect), "job_start()");
+        err = socket_accept(srv, &acc);
+        int acc_errno = errno;
+        if (err == 0) {
+                err = socket_get_peer_credentials(acc, &cred);
+                acc_errno = errno;
+        }
+        job.stop = true;
+        job_join(&job);
+        errno = acc_errno;
+        CHECK(err == 0, "socket_accept()");
+        CHECK((job.ret == 0), "connect with permission: %s", strerror(job.err));
+        CHECK((cred.pid == getpid()) && (cred.uid == TEST_UID) && (cred.gid == TEST_GID),
+                "peer of accepted: pid %u uid %u gid %u", (unsigned)cred.pid, (unsigned)cred.uid, (unsigned)cred.gid);
+        CHECK((job.cred.uid == 0) && (job.cred.pid == getpid()), "peer of client: pid %u uid %u",
+                (unsigned)job.cred.pid, (unsigned)job.cred.uid);
+
+cleanup:
+        sock_close(&acc);
+        sock_close(&cli);
+        sock_close(&srv);
+        remove(addr.path);
         return exit_msg;
 }
 

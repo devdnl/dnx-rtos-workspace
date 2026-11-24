@@ -157,6 +157,8 @@ static const char *mode_to_str(mode_t mode)
                 return "block device";
         } else if (S_ISFIFO(mode)) {
                 return "named pipe";
+        } else if (S_ISSOCK(mode)) {
+                return "socket";
         } else if (S_ISPROG(mode)) {
                 return "program";
         } else {

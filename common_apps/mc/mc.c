@@ -752,6 +752,8 @@ static void draw_panel(panel_t *p, int x, int w, bool active)
                         prefix = '+';
                 } else if (S_ISFIFO(e->mode)) {
                         prefix = '|';
+                } else if (S_ISSOCK(e->mode)) {
+                        prefix = '=';
                 } else if (S_ISLNK(e->mode)) {
                         prefix = '~';
                 }

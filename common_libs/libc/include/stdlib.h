@@ -1258,6 +1258,47 @@ static inline float strtof(const char *nptr, char **endptr)
         return _libc_strtof(nptr, endptr);
 }
 
+//==============================================================================
+/**
+ * @brief  The function creates and opens unique file.
+ *
+ * The last six characters of <i>template</i> must be "XXXXXX", they are
+ * replaced by the suffix that makes the name unique. The file is created
+ * atomically (O_CREAT | O_EXCL) with mode 0600 and opened for reading and
+ * writing. The file is not removed automatically.
+ *
+ * @param  template     template of file name (modified)
+ *
+ * @return File descriptor, or -1 and @ref errno is set (@ref EINVAL: template
+ *         does not end with "XXXXXX", @ref EEXIST: unique name not found,
+ *         errors of open()).
+ *
+ * @b Example
+ * @code
+        #include <stdlib.h>
+        #include <stdio.h>
+        #include <unistd.h>
+
+        // ...
+        char name[] = P_tmpdir "/dataXXXXXX";
+        int fd = mkstemp(name);
+        if (fd >= 0) {
+                // ...
+                close(fd);
+                remove(name);
+        }
+        // ...
+   @endcode
+ *
+ * @see tmpfile(), tmpnam()
+ */
+//==============================================================================
+static inline int mkstemp(char *template)
+{
+        extern int _libc_mkstemp(char *template);
+        return _libc_mkstemp(template);
+}
+
 #ifdef __cplusplus
 }
 #endif

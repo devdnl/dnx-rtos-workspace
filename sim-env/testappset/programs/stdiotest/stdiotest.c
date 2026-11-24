@@ -43,6 +43,7 @@
 #include <sys/ioctl.h>
 #include <dnx/os.h>
 #include <dnx/thread.h>
+#include <dirent.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -54,6 +55,7 @@
 #define BIG_SIZE     1000 /* bigger than BUFSIZ */
 #define THREAD_LINES 200
 #define CMD_LEN      96
+#define TMP_FILES    16
 
 /*==============================================================================
   Local types, enums definitions
@@ -82,6 +84,10 @@ static const char *test_flush_all(void);
 static const char *test_exit_flush(void);
 static const char *test_pipe_eof(void);
 static const char *test_threads(void);
+static const char *test_remove_open(void);
+static const char *test_tmpfile(void);
+static const char *test_tmpfile_unique(void);
+static const char *test_mkstemp_tmpnam(void);
 
 /*==============================================================================
   Local object definitions
@@ -111,6 +117,10 @@ static const test_t TESTS[] = {
         {.name = "Flush at return from main() and exit()", .fn = test_exit_flush},
         {.name = "EOF of closed pipe (no extra bytes)", .fn = test_pipe_eof},
         {.name = "Stream shared by threads", .fn = test_threads},
+        {.name = "remove() of open file (ramfs /tmp)", .fn = test_remove_open},
+        {.name = "tmpfile(): write, read, no file left", .fn = test_tmpfile},
+        {.name = "tmpfile(): unique files", .fn = test_tmpfile_unique},
+        {.name = "mkstemp(), tmpnam()", .fn = test_mkstemp_tmpnam},
 };
 
 /*==============================================================================
@@ -846,6 +856,227 @@ static const char *test_threads(void)
 
         if (!err && (lines != 2 * THREAD_LINES)) {
                 err = fail("wrong number of lines", lines);
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Number of entries in directory.
+ *
+ * @param  path         directory path
+ *
+ * @return Number of entries or -1.
+ */
+//==============================================================================
+static int dir_entries(const char *path)
+{
+        DIR *dir = opendir(path);
+        if (!dir) {
+                return -1;
+        }
+
+        int n = 0;
+        while (readdir(dir)) {
+                n++;
+        }
+
+        closedir(dir);
+        return n;
+}
+
+//==============================================================================
+/**
+ * @brief  Removed open file: name is free at once (new file with the same
+ *         name is other file), data of open file are kept until close.
+ *
+ * @return NULL on success, otherwise error message.
+ */
+//==============================================================================
+static const char *test_remove_open(void)
+{
+        FILE *old = fopen(FILE_B, "w+");
+        if (!old) {
+                return "fopen failed";
+        }
+
+        const char *err = NULL;
+        FILE *new = NULL;
+
+        if ((fputs("old", old) == EOF) || (fflush(old) != 0) || (remove(FILE_B) != 0)) {
+                err = "write or remove failed";
+
+        } else if (file_size(FILE_B) != -1) {
+                err = "name exists after remove()";
+
+        } else if (!(new = fopen(FILE_B, "w+")) || (fputs("new data", new) == EOF) || (fflush(new) != 0)) {
+                err = "new file with the same name not created";
+
+        } else {
+                rewind(old);
+                if (!fgets(global->line, sizeof(global->line), old) || (strcmp(global->line, "old") != 0)) {
+                        err = "data of removed open file changed";
+                }
+        }
+
+        fclose(old);
+
+        if (new) {
+                if (!err && (file_size(FILE_B) != 8)) {
+                        err = fail("wrong size of new file", file_size(FILE_B));
+                }
+                fclose(new);
+        }
+
+        remove(FILE_B);
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Temporary file is read back and its name is removed just after
+ *         creation (P_tmpdir on ramfs).
+ *
+ * @return NULL on success, otherwise error message.
+ */
+//==============================================================================
+static const char *test_tmpfile(void)
+{
+        int entries = dir_entries(P_tmpdir);
+
+        FILE *f = tmpfile();
+        if (!f) {
+                return fail("tmpfile failed, errno", errno);
+        }
+
+        const char *err = NULL;
+
+        if (dir_entries(P_tmpdir) != entries) {
+                err = fail("file left in " P_tmpdir ", entries", dir_entries(P_tmpdir));
+
+        } else if ((fputs("temporary data", f) == EOF) || (fflush(f) != 0)) {
+                err = "write failed";
+
+        } else {
+                rewind(f);
+                if (!fgets(global->line, sizeof(global->line), f) || (strcmp(global->line, "temporary data") != 0)) {
+                        err = "wrong data read back";
+                }
+        }
+
+        fclose(f);
+
+        if (!err && (dir_entries(P_tmpdir) != entries)) {
+                err = "directory changed after fclose()";
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Temporary files created one after another (the same millisecond)
+ *         are different files.
+ *
+ * @return NULL on success, otherwise error message.
+ */
+//==============================================================================
+static const char *test_tmpfile_unique(void)
+{
+        FILE *f[TMP_FILES];
+        const char *err = NULL;
+        int n;
+
+        for (n = 0; n < TMP_FILES; n++) {
+                f[n] = tmpfile();
+                if (!f[n]) {
+                        err = fail("tmpfile failed, file", n);
+                        break;
+                }
+
+                if (fputc('a' + n, f[n]) == EOF) {
+                        err = fail("fputc failed, file", n);
+                        n++;
+                        break;
+                }
+        }
+
+        for (int i = 0; i < n; i++) {
+                rewind(f[i]);
+                int c = getc(f[i]);
+                if (!err && ((c != 'a' + i) || (getc(f[i]) != EOF))) {
+                        err = fail("wrong content of file", i);
+                }
+                fclose(f[i]);
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  mkstemp() creates unique file (mode 0600), wrong template, tmpnam().
+ *
+ * @return NULL on success, otherwise error message.
+ */
+//==============================================================================
+static const char *test_mkstemp_tmpnam(void)
+{
+        char name1[] = P_tmpdir "/stdiotestXXXXXX";
+        char name2[] = P_tmpdir "/stdiotestXXXXXX";
+        const char *err = NULL;
+
+        int fd1 = mkstemp(name1);
+        int fd2 = mkstemp(name2);
+        struct stat st;
+
+        if ((fd1 < 0) || (fd2 < 0)) {
+                err = fail("mkstemp failed, errno", errno);
+
+        } else if (strcmp(name1, name2) == 0) {
+                err = "the same names";
+
+        } else if (strstr(name1, "XXXXXX")) {
+                err = "template not replaced";
+
+        } else if ((stat(name1, &st) != 0) || ((st.st_mode & S_IPMT) != (S_IRUSR | S_IWUSR))) {
+                err = fail("wrong mode of file", (long)(st.st_mode & S_IPMT));
+
+        } else if ((write(fd1, "x", 1) != 1) || (lseek(fd1, 0, SEEK_SET) != 0) ||
+                   (read(fd1, global->line, 2) != 1)) {
+                err = "read/write failed";
+        }
+
+        if (fd1 >= 0) {
+                close(fd1);
+                remove(name1);
+        }
+
+        if (fd2 >= 0) {
+                close(fd2);
+                remove(name2);
+        }
+
+        if (!err) {
+                char bad[] = P_tmpdir "/stdiotestXXXX";
+                errno = 0;
+                if ((mkstemp(bad) != -1) || (errno != EINVAL)) {
+                        err = "mkstemp() accepted wrong template";
+                }
+        }
+
+        if (!err) {
+                char name[L_tmpnam];
+                if (tmpnam(name) != name) {
+                        err = fail("tmpnam failed, errno", errno);
+
+                } else if ((strncmp(name, P_tmpdir "/", sizeof(P_tmpdir)) != 0) || (stat(name, &st) == 0)) {
+                        err = "wrong name of tmpnam()";
+
+                } else if (tmpnam(NULL) != NULL) {
+                        err = "tmpnam(NULL) returned name";
+                }
         }
 
         return err;

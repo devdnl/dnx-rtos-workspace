@@ -66,7 +66,7 @@ part that was changed, e.g. only the appset during application development.
 - file systems: ramfs, procfs, romfs, FAT/exFAT (fatfs), EXT2/3/4 (ext4fs),
   eefs (EEPROM file system), flatfs, hostfs (host directory, simulator),
 - network: TCP/IP (lwIP based inet), CAN network (cannet), simple IPC (sipc),
-  Unix domain sockets (uds).
+  Unix domain sockets (uds: socket files with permissions and abstract names).
 
 The minimal hardware requirements are about 64 KiB of flash and 20 KiB of RAM,
 but the real needs depend on the configuration.

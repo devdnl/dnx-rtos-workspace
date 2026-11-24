@@ -223,6 +223,7 @@ typedef enum {
         _LIBC_SYS_UMASK,                  // int errno (const mode_t *mask (NULL: get), mode_t *old)
         _LIBC_SYS_GETEUID,                // int errno (uid_t *uid)
         _LIBC_SYS_GETEGID,                // int errno (gid_t *gid)
+        _LIBC_SYS_NETGETPEERCRED,         // int errno (int *fd, NET_credentials_t *cred)
 } _libc_syscall_t;
 // clang-format on
 

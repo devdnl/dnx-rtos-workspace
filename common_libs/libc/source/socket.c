@@ -518,6 +518,33 @@ int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr, size_t addr
         return err ? -1 : 0;
 }
 
+//==============================================================================
+/**
+ * @brief  The function gets credentials of peer of connected socket (UDS):
+ *         process that called socket_connect() (client) or socket_listen()
+ *         (server).
+ *
+ * @param  socket       The socket.
+ * @param  cred         Obtained credentials.
+ *
+ * @return On success 0 is returned, otherwise -1 and @ref errno value is set
+ *         appropriately (ENOTCONN: socket is not connected, ENOTSUP: other
+ *         network family).
+ *
+ * @see socket_connect(), socket_accept()
+ */
+//==============================================================================
+int socket_get_peer_credentials(SOCKET *socket, NET_credentials_t *cred)
+{
+        if (!socket or !cred) {
+                errno = EINVAL;
+                return -1;
+        }
+
+        int err = _libc_syscall(_LIBC_SYS_NETGETPEERCRED, &socket->fd, cred);
+        return err ? -1 : 0;
+}
+
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -401,7 +401,7 @@ this:SetToolTip("LWIP_MULTICAST_PING==1: respond to multicast pings (default is 
 this:AddWidget("Combobox", "LWIP_DHCP")
 this:AddItem("Disable (0)", "0")
 this:AddItem("Enable (1)", "1")
-this:SetToolTip("LWIP_DHCP==1: Enable DHCP module.")
+this:SetToolTip("LWIP_DHCP==1: Enable DHCP module. Disabled: DHCP configuration of interface returns ENOTSUP (static address only).")
 --*/
 #define __NETWORK_LWIP_DHCP__ 1
 /*--

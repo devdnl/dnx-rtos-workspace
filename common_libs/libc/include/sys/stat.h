@@ -95,6 +95,8 @@ extern "C" {
 #define S_ISPROG(mode_t_m)
 /** @brief Check if file is a FIFO. */
 #define S_ISFIFO(mode_t_m)
+/** @brief Check if file is a socket (UNIX domain socket bound to path). */
+#define S_ISSOCK(mode_t_m)
 #endif
 
 /*==============================================================================
