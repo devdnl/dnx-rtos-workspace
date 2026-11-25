@@ -330,8 +330,31 @@ architectures are not exported, they have default values after import.
 `./tools/config_sync.sh` synchronizes all configuration directories and BSP
 files with the default configurations (after a new configuration flag is added
 to the kernel, appset or romfs): BSP files are imported and exported again
-with the same directories, then the default BSP (`bsp/stm32h747i-disc1.bsp`)
-and the simulator BSP (`bsp/posix-sim.bsp`) are applied.
+with the same directories, then BSP files given as arguments are applied in
+the given order (`./tools/config_sync.sh bsp/myboard.bsp bsp/posix-sim.bsp`);
+without arguments the default BSP (`bsp/stm32h747i-disc1.bsp`) and the
+simulator BSP (`bsp/posix-sim.bsp`) are applied.
+
+### Update of the project from the workspace
+A project based on the workspace is updated by `make workspace-sync`
+(`tools/workspace_sync.py`, Python 3.11+) according to the definition file of
+the project `utils/workspace_sync.toml` (example with description of all
+options: `tools/workspace_sync.toml`):
+- workspace: local directory (`path`) or git repository (`git`, `ref`),
+- kernel: checked out from git as detached HEAD (`ref`: branch, tag, commit or
+  `"workspace"` – commit used by the workspace) or copied from a directory,
+- `[[sync]]` entries: directories and files of the workspace copied to the
+  project (`mode = "mirror"` also removes files not existing in the workspace,
+  `"update"` keeps other files), with `include`/`exclude` patterns (own files
+  of the project in directories of the workspace) and another destination
+  (`dst`, e.g. a workspace appset as a base of an appset of the project),
+- configuration: `tools/config_sync.sh` with BSP files of the project that
+  restore its configuration.
+
+Options (`SYNC_OPTS="..."` of make): `-n` shows changes without changing
+anything, `-v` lists changed files, `-s files,kernel,config` selects steps,
+`-c FILE` another definition file, `-f` synchronizes even with uncommitted
+changes in synchronized paths (refused by default).
 
 ### Configuration
 Each part has its own configuration (TUI configtool):

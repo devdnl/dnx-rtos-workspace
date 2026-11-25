@@ -87,6 +87,7 @@ ROMFS_BASE     ?= tools/romfs
 MKLINKERSCRIPT ?= $(SHELL) ./tools/create_linker_script.sh
 SYNCDIR        ?= $(PYTHON3) ./kernel/tools/syncdir.py
 LICENSES       ?= $(PYTHON3) ./kernel/tools/licenses.py
+WORKSPACE_SYNC ?= $(PYTHON3) ./tools/workspace_sync.py
 
 #---------------------------------------------------------------------------------------------------
 # MACROS
@@ -252,6 +253,7 @@ help ::
 	@$(ECHO) "   help                this help"
 	@$(ECHO) "   clean               clean project (kernel and $(TARGET_DIR_NAME) directory)"
 	@$(ECHO) "   test-drvset         build and check drvset partitions with test kernel (no hardware needed)"
+	@$(ECHO) "   workspace-sync      synchronize project with workspace (utils/workspace_sync.toml, options SYNC_OPTS=-n ...)"
 	@$(ECHO) ""
 
 .PHONY : _build_prepare
@@ -262,6 +264,10 @@ _build_prepare :
 clean ::
 	@$(call clean_kernel)
 	@$(REMOVE) -r $(TARGET_DIR_NAME)
+
+.PHONY : workspace-sync
+workspace-sync :
+	@$(WORKSPACE_SYNC) $(SYNC_OPTS)
 
 .PHONY : test-drvset
 test-drvset :

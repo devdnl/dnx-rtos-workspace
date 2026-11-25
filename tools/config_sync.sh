@@ -12,9 +12,13 @@
 #               reset to the default configuration before import) and exported
 #               again with the same configuration directories (each directory
 #               is optimized for its CPU architecture)
-#            5. bsp/stm32h747i-disc1.bsp is applied to set the default
-#               configuration of the project, bsp/posix-sim.bsp is applied to
-#               set the configuration of the simulator (config/sim-*)
+#            5. BSP files given as arguments are applied in the given order
+#               to restore the configuration of the project; without
+#               arguments bsp/stm32h747i-disc1.bsp (default configuration of
+#               the workspace) and bsp/posix-sim.bsp (configuration of the
+#               simulator, config/sim-*) are applied
+#
+#          Usage: tools/config_sync.sh [BSP file...]
 #
 # @note    All paths are relative to the workspace root (the parent
 #          directory of this script).
@@ -48,6 +52,13 @@ ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 source tools/bsp_common.sh
+
+for bsp in "$@"; do
+    if [ ! -f "$bsp" ]; then
+        echo "[error] BSP file not found: $bsp" >&2
+        exit 1
+    fi
+done
 
 
 #--- Step 1: sync kernel configurations ---------------------------------------
@@ -109,11 +120,14 @@ for bsp in bsp/*.bsp; do
     bash tools/bsp_export.sh "$bsp" "$dirs"
 done
 
-#--- Step 5: apply the default BSP of the project -----------------------------
-echo "==> Apply default BSP bsp/stm32h747i-disc1.bsp"
-bash tools/bsp_import.sh bsp/stm32h747i-disc1.bsp
+#--- Step 5: apply BSP files of the project -----------------------------------
+if [ $# -eq 0 ]; then
+    set -- bsp/stm32h747i-disc1.bsp bsp/posix-sim.bsp
+fi
 
-echo "==> Apply simulator BSP bsp/posix-sim.bsp"
-bash tools/bsp_import.sh bsp/posix-sim.bsp
+for bsp in "$@"; do
+    echo "==> Apply BSP $bsp"
+    bash tools/bsp_import.sh "$bsp"
+done
 
 echo "== Configuration synchronized."

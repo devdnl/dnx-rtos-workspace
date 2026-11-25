@@ -71,7 +71,13 @@ The default configuration targets **stm32h7** (`__CPU_ARCH__` in
   holds the simulator configuration (`config/sim-*`). `tools/bsp_export.sh <bsp>
   ["app*|btl*"]` exports selected directories, each optimized for its own
   `__CPU_ARCH__`; `tools/config_sync.sh` re-syncs all configs and BSPs with the
-  defaults (run it after adding a configuration flag).
+  defaults (run it after adding a configuration flag; arguments: BSP files
+  applied at the end, default `bsp/stm32h747i-disc1.bsp bsp/posix-sim.bsp`).
+- `tools/workspace_sync.py` (`make workspace-sync`) updates a project based on
+  the workspace by its definition `utils/workspace_sync.toml` (example
+  `tools/workspace_sync.toml`): files (`[[sync]]` mirror/update with
+  include/exclude), kernel (git detached HEAD or copy), config_sync with BSPs
+  of the project; never creates branches.
 - `app-romfs/` — files packed into the ROMFS image (owner and modes of files
   set by `config/*-romfs/config.h`: `__ROMFS_UID__`, `__ROMFS_GID__`,
   `__ROMFS_FILE_MODE__`, `__ROMFS_DIR_MODE__` and exceptions

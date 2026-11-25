@@ -1,0 +1,97 @@
+# Example definition of the synchronization of a project with the dnx RTOS
+# workspace (tools/workspace_sync.py). Copy it to utils/workspace_sync.toml of
+# the project and adjust it. Relative paths of the workspace and of the kernel
+# are relative to the directory of the definition file, paths of [[sync]]
+# entries are relative to the workspace (src) and to the project (dst).
+#
+# Patterns of include and exclude: pattern without '/' matches the name of any
+# path component ("build", "*.bak"), pattern with '/' matches the path relative
+# to the synchronized directory ("programs/myprog", "libs/*.mk").
+
+# patterns excluded in all [[sync]] entries (.git, __pycache__ and *.pyc are
+# always excluded)
+exclude = []
+
+#-------------------------------------------------------------------------------
+# Source of the workspace: local directory or git repository (one of them).
+#-------------------------------------------------------------------------------
+[workspace]
+path = "../../dnx-rtos-workspace"
+# git = "https://github.com/devdnl/dnx-rtos-workspace.git"
+# ref = "develop"                     # branch, tag or commit (default develop)
+
+#-------------------------------------------------------------------------------
+# Kernel (directory kernel of the project):
+#   source = "git"   checked out (detached HEAD) from git: ref is a branch, tag,
+#                    commit or "workspace" (default: commit used by the
+#                    workspace, kernel/ of a workspace directory or submodule
+#                    of a workspace repository); git is URL of the repository
+#                    (default: origin of kernel/, submodule URL of the
+#                    workspace)
+#   source = "path"  copied from directory path (mirror; .git and build are
+#                    not copied, own patterns in exclude)
+#   source = "none"  not synchronized
+#-------------------------------------------------------------------------------
+[kernel]
+source = "git"
+ref = "workspace"
+# git = "https://github.com/devdnl/dnx-rtos-kernel.git"
+# source = "path"
+# path = "../../dnx-rtos-workspace/kernel"
+
+#-------------------------------------------------------------------------------
+# Directories and files of the workspace copied to the project:
+#   src      path in the workspace (directory or file)
+#   dst      path in the project (default: src)
+#   mode     "mirror": changed files are copied and files not existing in the
+#            workspace are removed (default); "update": changed files are
+#            copied, other files of the project are kept
+#   include  only matching files are synchronized (default: all)
+#   exclude  matching files are neither copied nor removed (own files of the
+#            project in directories of the workspace)
+#-------------------------------------------------------------------------------
+[[sync]]
+src = "tools"
+
+[[sync]]
+src = "common_libs"
+# exclude = ["mylib"]                 # own library of the project
+
+[[sync]]
+src = "common_apps"
+
+[[sync]]
+src = "sim-env"
+exclude = ["boards/myboard.lua"]      # own board of the simulator
+
+[[sync]]
+src = "btl-appset"
+
+# program and library list of the workspace appset, own programs of the
+# project in the appset are kept
+[[sync]]
+src = "app-appset"
+mode = "update"
+
+# the same appset of the workspace as a base of another appset of the project
+# [[sync]]
+# src = "app-appset"
+# dst = "ptr-app-appset"
+# include = ["libs/*.mk"]
+
+[[sync]]
+src = "LICENSES"
+
+[[sync]]
+src = "run_container.py"
+
+#-------------------------------------------------------------------------------
+# Configuration: sync = true runs tools/config_sync.sh (configurations
+# synchronized with defaults of the kernel, appset and romfs, BSP files of the
+# project re-imported and re-exported), then BSP files of the list are applied
+# in the given order to restore the configuration of the project; sync = false
+# only applies the BSP files.
+#-------------------------------------------------------------------------------
+[config]
+sync = true
+bsp = ["bsp/stm32h747i-disc1.bsp", "bsp/posix-sim.bsp"]
