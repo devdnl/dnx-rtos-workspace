@@ -140,6 +140,15 @@
 #define FSTEST_EMPTY_DIRS -1
 #endif
 
+/**
+ * Search (execute) permission of directories follows read permission.
+ *  1: yes (hostfs: directory of host without search permission is unusable),
+ *  0: no, -1: detect at run time by file system name (statfs()).
+ */
+#ifndef FSTEST_DIR_SEARCH_FROM_READ
+#define FSTEST_DIR_SEARCH_FROM_READ -1
+#endif
+
 /** errno expected when read-only file system rejects modification (0: any). */
 #ifndef FSTEST_RO_ERRNO
 #define FSTEST_RO_ERRNO EROFS
@@ -394,6 +403,7 @@ GLOBAL_VARIABLES_SECTION {
         bool full_permissions;  //!< all permission bits are stored
         size_t name_max;        //!< maximum tested file name length
         bool empty_dirs;        //!< empty directories are stored (reference data)
+        bool dir_search_read;   //!< search permission of directories follows read permission
         char msg_buf[192];
         char path[2][FSTEST_PATH_BUF_LEN];
         u8_t wbuf[FSTEST_IO_BUF_SIZE];
@@ -706,6 +716,7 @@ static void detect_fs_caps(void)
         bool fat = false;
         bool eefs = false;
         bool romfs = false;
+        bool hostfs = false;
         const char *fsname = "?";
 
 #if FSTEST_USE_STATFS
@@ -717,6 +728,7 @@ static void detect_fs_caps(void)
                 fat = (strstr(fsname, "FAT") != NULL) || (strstr(fsname, "fat") != NULL);
                 eefs = (strcmp(fsname, "eefs") == 0);
                 romfs = (strcmp(fsname, "romfs") == 0);
+                hostfs = (strcmp(fsname, "hostfs") == 0);
         }
 #endif
 
@@ -746,13 +758,21 @@ static void detect_fs_caps(void)
 #endif
         (void)romfs;
 
+#if FSTEST_DIR_SEARCH_FROM_READ < 0
+        global->dir_search_read = hostfs;
+#else
+        global->dir_search_read = FSTEST_DIR_SEARCH_FROM_READ;
+#endif
+        (void)hostfs;
+
         if (global->name_max > FSTEST_LONG_NAME_MAX) {
                 global->name_max = FSTEST_LONG_NAME_MAX;
         }
 
-        printf("File system: %s (names: %s, max %u chars, permissions: %s%s)\n", fsname,
+        printf("File system: %s (names: %s, max %u chars, permissions: %s%s%s)\n", fsname,
                 global->case_sensitive ? "case sensitive" : "case insensitive", (unsigned)global->name_max,
                 global->full_permissions ? "full" : "write bit only",
+                global->dir_search_read ? ", directory search from read" : "",
                 global->empty_dirs ? "" : ", no empty directories");
 }
 
@@ -2242,6 +2262,9 @@ static const char *test_dir_mode(void)
                 CHECK(S_ISDIR(st.st_mode), "chmod(%lo) changed directory type (mode: %lo)",
                         (unsigned long)MODE[i], (unsigned long)st.st_mode);
                 mode_t expected = expected_mode(MODE[i], writable);
+                if (global->dir_search_read) {
+                        expected |= (expected & (S_IRUSR | S_IRGRP | S_IROTH)) >> 2;
+                }
                 CHECK((st.st_mode & S_IPMT) == expected, "chmod(%lo): mode %lo, expected %lo",
                         (unsigned long)MODE[i], (unsigned long)(st.st_mode & S_IPMT),
                         (unsigned long)expected);
