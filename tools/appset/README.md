@@ -59,6 +59,7 @@ make -C tools/appset all APPSET_DIR=<appset> [CONFIG_DIR=<config>] [BUILD_DIR=<b
 | `APPSET_DIR` | appset directory (`programs/`, `libs/`), required to build |
 | `CONFIG_DIR` | appset configuration, default: `tools/appset/config` |
 | `BUILD_DIR` | build directory (objects, generated files, `output/appset.{elf,hex,bin,o}`), default: `build/<appset name>` |
+| `APPSET_DEFS` | definitions added to `build/defs.h`: `NAME` (`#define NAME`) or `NAME=VALUE` (`#define NAME VALUE`, number or identifier), separated by spaces |
 | `TABLE_SYMBOL` | POSIX simulator: global symbol of the program table in `output/appset.o`, default: `_program_table_desc` (main appset), other appsets linked with the same kernel use unique names (`SIM_APPSETS` of the workspace), their table references are put in the section `dnx_appset_tables` (name, size), `siminit` mounts them by `appsetfs` |
 
 Relative paths are relative to the workspace directory. The workspace build
@@ -66,6 +67,26 @@ uses `config/<name>` and `build/<name>` (e.g. `config/sim-appset` and
 `build/sim-appset` for the simulator appset built from `app-appset`), so
 appsets built from the same directory with different configurations do not
 share objects.
+
+The build generates `build/defs.h` in the build directory (included by
+`#include <build/defs.h>`): `COMMIT_HASH`, `BRANCH_NAME`, `BOARD_NAME`,
+`BOARD_NAME_<board>`, `PROJECT_<board>`, `PROJECT_OPTS` and definitions of `APPSET_DEFS`. The
+workspace passes `APPSET_DEFS` of the project Makefile to all appsets, of the
+board and of the simulator, so a program can test the project independently
+of the target and `ARCH_posix` only where the simulator differs:
+```
+APPSET_DEFS = STEROWNIK HW_REV=2                 # project Makefile
+build-btl-appset : APPSET_DEFS += BOOTLOADER     # definition of one appset
+```
+```c
+#include <build/defs.h>
+
+#if defined(STEROWNIK) and (HW_REV >= 2)
+...
+#endif
+```
+The file is updated only when its content changes, so programs including it
+are rebuilt after a change of the definitions.
 
 Targets:
 

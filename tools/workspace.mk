@@ -54,6 +54,11 @@ PROJECT         ?= project
 TOOLCHAIN       ?= arm-none-eabi-
 TARGET_DIR_NAME ?= build
 
+# definitions of the project added to build/defs.h of each appset (board and simulator), e.g.
+# APPSET_DEFS = STEROWNIK HW_REV=2 gives "#define STEROWNIK" and "#define HW_REV 2"; an appset can
+# have own definitions by a target-specific variable: build-btl-appset : APPSET_DEFS += BOOTLOADER
+APPSET_DEFS     ?=
+
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
 #---------------------------------------------------------------------------------------------------
@@ -116,7 +121,7 @@ define build_appset
 	$(eval $@_CONFIG_NAME = $(2))
 	$(eval $@_BOARD_NAME = $(3))
 	$(eval $@_PROJECT_OPTS = $(4))
-	$(MAKE) -C $(APPSET_BASE) -s -j 1 -fMakefile all APPSET_DIR=${$@_APP_NAME} CONFIG_DIR=config/${$@_CONFIG_NAME} BUILD_DIR=$(TARGET_DIR_NAME)/${$@_CONFIG_NAME} BOARD_NAME=${$@_BOARD_NAME} PROJECT_OPTS=${$@_PROJECT_OPTS}
+	$(MAKE) -C $(APPSET_BASE) -s -j 1 -fMakefile all APPSET_DIR=${$@_APP_NAME} CONFIG_DIR=config/${$@_CONFIG_NAME} BUILD_DIR=$(TARGET_DIR_NAME)/${$@_CONFIG_NAME} BOARD_NAME=${$@_BOARD_NAME} PROJECT_OPTS=${$@_PROJECT_OPTS} APPSET_DEFS="$(APPSET_DEFS)"
 	$(COPY) $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}/output/appset.hex $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.hex
 	$(COPY) $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}/output/appset.elf $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.elf
 	$(COPY) $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}/output/appset.bin $(TARGET_DIR_NAME)/${$@_CONFIG_NAME}.bin
@@ -143,7 +148,7 @@ define build_sim_appset
 	$(eval $@_CONFIG_DIR = $(2))
 	$(eval $@_BUILD_NAME = $(3))
 	$(eval $@_TABLE_SYMBOL = $(4))
-	$(MAKE) -C $(APPSET_BASE) -s -j 1 -fMakefile all APPSET_DIR=${$@_APP_NAME} CONFIG_DIR=${$@_CONFIG_DIR} BUILD_DIR=$(TARGET_DIR_NAME)/${$@_BUILD_NAME} BOARD_NAME=posix PROJECT_OPTS=sim TABLE_SYMBOL=${$@_TABLE_SYMBOL}
+	$(MAKE) -C $(APPSET_BASE) -s -j 1 -fMakefile all APPSET_DIR=${$@_APP_NAME} CONFIG_DIR=${$@_CONFIG_DIR} BUILD_DIR=$(TARGET_DIR_NAME)/${$@_BUILD_NAME} BOARD_NAME=posix PROJECT_OPTS=sim TABLE_SYMBOL=${$@_TABLE_SYMBOL} APPSET_DEFS="$(APPSET_DEFS)"
 	$(COPY) $(TARGET_DIR_NAME)/${$@_BUILD_NAME}/output/appset.o $(TARGET_DIR_NAME)/${$@_BUILD_NAME}.o
 	$(COPY) $(TARGET_DIR_NAME)/${$@_BUILD_NAME}/output/appset.files $(TARGET_DIR_NAME)/${$@_BUILD_NAME}.files
 endef

@@ -35,6 +35,8 @@
 #               programs and libraries, directories of local ones)
 #   CONFIG_DIR  appset configuration (default: tools/appset/config)
 #   BUILD_DIR   build directory (default: build/<appset name>)
+#   APPSET_DEFS definitions added to build/defs.h: NAME (#define NAME) or NAME=VALUE
+#               (#define NAME VALUE), separated by spaces
 #   TABLE_SYMBOL  POSIX simulator: name of the global symbol of the program table
 #               (default: _program_table_desc, the main appset), other appsets
 #               linked with the same kernel need unique names
@@ -48,6 +50,14 @@ BASE_DIR    := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 WORKSPACE   := $(abspath $(BASE_DIR)/../..)
 COMMON_APPS := $(WORKSPACE)/common_apps
 COMMON_LIBS := $(WORKSPACE)/common_libs
+
+# name and value of definition of APPSET_DEFS (NAME or NAME=VALUE)
+defs_name  = $(firstword $(subst =, ,$(1)))
+defs_value = $(if $(findstring =,$(1)),$(patsubst $(call defs_name,$(1))=%,%,$(1)))
+define NEWLINE
+
+
+endef
 
 # path relative to workspace (or absolute)
 ws_path = $(abspath $(if $(filter /%,$(1)),$(1),$(WORKSPACE)/$(1)))
@@ -431,8 +441,8 @@ generate :
 	@$(ECHO) "#define BOARD_NAME \"$(BOARD_NAME)\"" >> $(TARGET_DIR_NAME)/build-tmp/defs.h
 	@$(ECHO) "#define BOARD_NAME_$(BOARD_NAME)" >> $(TARGET_DIR_NAME)/build-tmp/defs.h
 	@$(ECHO) "#define PROJECT_$(BOARD_NAME)" >> $(TARGET_DIR_NAME)/build-tmp/defs.h
-	@$(ECHO) "#define PROJECT \"$(BOARD_NAME)\"" >> $(TARGET_DIR_NAME)/build-tmp/defs.h
 	@$(ECHO) "#define PROJECT_OPTS \"$(PROJECT_OPTS)\"" >> $(TARGET_DIR_NAME)/build-tmp/defs.h
+	$(foreach d,$(APPSET_DEFS),@$(ECHO) "#define $(strip $(call defs_name,$(d)) $(call defs_value,$(d)))" >> $(TARGET_DIR_NAME)/build-tmp/defs.h$(NEWLINE))
 	@$(ECHO) "#define COMPILE_EPOCH_TIME $(shell $(DATE) "+%s")" > $(TARGET_DIR_NAME)/build-tmp/vars.h
 	@$(SYNCDIR) $(TARGET_DIR_NAME)/build-tmp/ $(TARGET_DIR_NAME)/build/
 

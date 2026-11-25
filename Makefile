@@ -47,6 +47,9 @@ TARGET_DIR_NAME = build
 APPSET_BOARD = boardname
 APPSET_OPTS = proj_opts
 
+# definitions of the project in build/defs.h of all appsets, board and simulator (NAME or NAME=VALUE)
+APPSET_DEFS =
+
 # POSIX simulator: appset and romfs of the simulator system
 SIM_APPSET_DIR = app-appset
 SIM_ROMFS_DIR = app-romfs

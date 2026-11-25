@@ -134,7 +134,10 @@ build directory given as arguments, e.g.:
 make -C tools/appset all APPSET_DIR=app-appset CONFIG_DIR=config/app-appset BUILD_DIR=build/app-appset
 ```
 The top-level targets (`build-app-appset`, `build-btl-appset`, ...) do this,
-see `tools/appset/README.md`. A new appset is a new directory with
+see `tools/appset/README.md`. Definitions of the project for programs are set by
+`APPSET_DEFS` in the project `Makefile` (e.g. `APPSET_DEFS = MYPROJECT HW_REV=2`):
+the build puts them to `build/defs.h` of each appset, of the board and of the
+simulator (`#include <build/defs.h>`, `#ifdef MYPROJECT`). A new appset is a new directory with
 `programs/` and `libs/` and its configuration in `config/` (copy of the default
 configuration `tools/appset/config`). The ROMFS image is built the same way by
 `tools/romfs` from the directory with files of the image (`app-romfs`).
