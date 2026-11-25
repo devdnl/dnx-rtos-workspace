@@ -1262,14 +1262,14 @@ static inline float strtof(const char *nptr, char **endptr)
 /**
  * @brief  The function creates and opens unique file.
  *
- * The last six characters of <i>template</i> must be "XXXXXX", they are
+ * The last six characters of <i>template_name</i> must be "XXXXXX", they are
  * replaced by the suffix that makes the name unique. The file is created
  * atomically (O_CREAT | O_EXCL) with mode 0600 and opened for reading and
  * writing. The file is not removed automatically.
  *
- * @param  template     template of file name (modified)
+ * @param  template_name     template_name of file name (modified)
  *
- * @return File descriptor, or -1 and @ref errno is set (@ref EINVAL: template
+ * @return File descriptor, or -1 and @ref errno is set (@ref EINVAL: template_name
  *         does not end with "XXXXXX", @ref EEXIST: unique name not found,
  *         errors of open()).
  *
@@ -1293,10 +1293,10 @@ static inline float strtof(const char *nptr, char **endptr)
  * @see tmpfile(), tmpnam()
  */
 //==============================================================================
-static inline int mkstemp(char *template)
+static inline int mkstemp(char *template_name)
 {
-        extern int _libc_mkstemp(char *template);
-        return _libc_mkstemp(template);
+        extern int _libc_mkstemp(char *template_name);
+        return _libc_mkstemp(template_name);
 }
 
 #ifdef __cplusplus
