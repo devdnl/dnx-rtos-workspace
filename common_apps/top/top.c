@@ -166,8 +166,9 @@ int main(int argc, char *argv[])
                         const char *fmtbegin = global->show_threads ? VT100_FONT_BOLD : "";
                         const char *stack_color = "";
 
-                        uint stack_max_usage_percent = global->pstat.stack_max_usage * 100 /
-                                global->pstat.stack_size;
+                        uint stack_max_usage_percent = (global->pstat.stack_size > 0)
+                                ? global->pstat.stack_max_usage * 100 / global->pstat.stack_size
+                                : 0;
                         if (stack_max_usage_percent >= 85) {
                                 stack_color = VT100_FONT_COLOR_RED;
                         } else if (stack_max_usage_percent >= 75) {
@@ -190,8 +191,9 @@ int main(int argc, char *argv[])
                                         thread_stat_t stat;
                                         if (thread_stat(global->pstat.pid, tid, &stat) == 0) {
 
-                                                stack_max_usage_percent = stat.stack_max_usage * 100 /
-                                                        stat.stack_size;
+                                                stack_max_usage_percent = (stat.stack_size > 0)
+                                                        ? stat.stack_max_usage * 100 / stat.stack_size
+                                                        : 0;
                                                 stack_color = "";
                                                 if (stack_max_usage_percent >= 85) {
                                                         stack_color = VT100_FONT_COLOR_RED;
