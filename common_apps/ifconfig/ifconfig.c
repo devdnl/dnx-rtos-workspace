@@ -87,31 +87,28 @@ PROGRAM_PARAMS(ifconfig, STACK_DEPTH_LOW);
 //==============================================================================
 static void print_help_msg(const char *prog_name)
 {
-        printf("Usage: %s <network> [add=<family>:<path>] [up=<options>] [down] [rm]\n", prog_name);
-        printf("General options:\n");
-        printf("  network       network name\n");
-        printf("  add=<family>:<path>\n");
-        printf("                add network of family (inet, sipc, cannet, uds) with\n");
-        printf("                interface file (e.g. inet1 add=inet:/dev/eth1)\n");
-        printf("  up=<options>  configure network\n");
-        printf("  down          disable network\n");
-        printf("  rm            remove network\n");
-        printf("  -h, --help    this help\n");
+        printf("Usage: %s [<network> [add=<family>[:<path>] | up[=<options>] | down | rm]]\n", prog_name);
+        printf("  (no arguments)  status of all networks\n");
+        printf("  <network>       status of network\n");
+        printf("  add=<family>[:<path>]\n");
+        printf("                  add network of family inet, sipc or cannet with interface\n");
+        printf("                  file (e.g. inet1 add=inet:/dev/eth1), uds (unix) without path\n");
+        printf("  up[=<options>]  configure network (options of family below)\n");
+        printf("  down            disable network\n");
+        printf("  rm              remove network\n");
+        printf("  -h, --help      this help\n");
         printf("\n");
-        printf("Options for INET:\n");
-        printf("  Static: %s INET up=address,netmask,gateway\n", prog_name);
-        printf("  DHCP  : %s INET up=dhcp\n", prog_name);
-        printf("\n");
-        printf("Options for SIPC:\n");
-        printf("  MTU setup  : %s SIPC up=MTU\n", prog_name);
-        printf("  Default MTU: %s SIPC up=auto\n", prog_name);
-        printf("\n");
-        printf("Options for CANNET:\n");
-        printf("  %s CANNET up=address\n", prog_name);
-        printf("\n");
-        printf("Options for UDS:\n");
-        printf("  %s UDS up\n", prog_name);
-        printf("\n");
+        printf("INET:\n");
+        printf("  %s <network> up=<address>,<netmask>,<gateway>\n", prog_name);
+        printf("  %s <network> up=dhcp\n", prog_name);
+        printf("  e.g. %s inet up=192.168.1.10,255.255.255.0,192.168.1.1\n", prog_name);
+        printf("SIPC:\n");
+        printf("  %s <network> up=<MTU>     MTU in bytes\n", prog_name);
+        printf("  %s <network> up=auto      default MTU (1024 B)\n", prog_name);
+        printf("CANNET:\n");
+        printf("  %s <network> up=<address>\n", prog_name);
+        printf("UDS:\n");
+        printf("  %s <network> up\n", prog_name);
 }
 
 //==============================================================================
@@ -397,29 +394,28 @@ static void print_network_status(const char *network, NET_family_t family)
  * @brief  Add network.
  *
  * @param  netname      network name
- * @param  args         <family>:<interface path>
+ * @param  args         <family>[:<interface path>]
  *
  * @return Program status.
  */
 //==============================================================================
 static int add_network(const char *netname, const char *args)
 {
-        static const char *const FAMILY[] = {"inet", "sipc", "cannet", "uds"};
+        static const char *const FAMILY[] = {"inet", "sipc", "cannet", "uds", "unix"};
         static const NET_family_t FAMILY_ID[] = {NET_FAMILY__INET, NET_FAMILY__SIPC, NET_FAMILY__CANNET,
-                NET_FAMILY__UDS};
+                NET_FAMILY__UDS, NET_FAMILY__UDS};
 
         const char *path = strchr(args, ':');
-        if (path) {
-                for (size_t i = 0; i < ARRAY_SIZE(FAMILY); i++) {
-                        if ((strlen(FAMILY[i]) == cast(size_t, path - args)) &&
-                                (strncmp(FAMILY[i], args, path - args) == 0)) {
+        size_t len = path ? cast(size_t, path - args) : strlen(args);
 
-                                if (ifadd(netname, FAMILY_ID[i], path + 1) != 0) {
-                                        perror(netname);
-                                        return EXIT_FAILURE;
-                                }
-                                return EXIT_SUCCESS;
+        for (size_t i = 0; i < ARRAY_SIZE(FAMILY); i++) {
+                if ((strlen(FAMILY[i]) == len) && (strncmp(FAMILY[i], args, len) == 0)) {
+
+                        if (ifadd(netname, FAMILY_ID[i], path ? path + 1 : NULL) != 0) {
+                                perror(netname);
+                                return EXIT_FAILURE;
                         }
+                        return EXIT_SUCCESS;
                 }
         }
 
@@ -484,6 +480,9 @@ int main(int argc, char *argv[])
 
                         } else if (isstreqn(argv[i], "up=", 3)) {
                                 up_args = argv[i] + 3;
+
+                        } else if (isstreq(argv[i], "up")) {
+                                up_args = "";
 
                         } else {
                                 netname = argv[i];
