@@ -52,9 +52,9 @@ SIM_ROMFS_CONFIG  ?= sim-romfs
 SIM_PANEL_SOCKET ?= $(TARGET_DIR_NAME)/dnx-panel.sock
 SIM_PANEL_PORT   ?= 8080
 
-# run-sim, run-sim-example: command prefix of simulator, e.g. SIM_DEBUG="gdbserver :2345" starts it
-# under gdbserver for a debugger (tools/dnx-sim.launch of Eclipse)
-SIM_DEBUG ?=
+# attach-sim: gdbserver attached to the running simulator for a debugger (tools/dnx-sim.launch of Eclipse)
+SIM_GDB_PORT ?= 2345
+GDBSERVER    ?= gdbserver
 
 # run-sim-example: options of simulator (example board, files of sim-env in /host, network tap0)
 SIM_EXAMPLE_OPTS ?= --board sim-env/boards/example.lua --hostfs host=sim-env --tap tap0
@@ -85,9 +85,9 @@ help ::
 	@$(ECHO) "   run-sim             build and start POSIX simulator (options: SIM_OPTS=..., PANEL=1"
 	@$(ECHO) "                       board panel in web browser, needs --board, PANEL_OPTS=...)"
 	@$(ECHO) "   run-sim-example     build and start POSIX simulator with example board and panel"
-	@$(ECHO) "                       (run-sim*: SIM_DEBUG=\"gdbserver :2345\" starts simulator for debugger)"
 	@$(ECHO) "                       (http://localhost:$(SIM_PANEL_PORT), /host = sim-env, network tap0,"
 	@$(ECHO) "                       tools/create_tap.sh, options: SIM_OPTS=...)"
+	@$(ECHO) "   attach-sim          attach gdbserver (port SIM_GDB_PORT=$(SIM_GDB_PORT)) to running simulator for debugger"
 	@$(ECHO) "   config-sim-kernel   simulator kernel configuration (also config-sim-appset, config-sim-romfs)"
 	@$(ECHO) ""
 
@@ -128,9 +128,21 @@ run-sim-example : build-sim
 	 $(PANEL_OPTS) >$(TARGET_DIR_NAME)/simpanel.log 2>&1 & pid=$$!;\
 	 sleep 0.5; if ! kill -0 $$pid 2>/dev/null; then $(CAT) $(TARGET_DIR_NAME)/simpanel.log; exit 1; fi;\
 	 $(ECHO) "Board panel: http://localhost:$(SIM_PANEL_PORT) (log: $(TARGET_DIR_NAME)/simpanel.log)";\
-	 $(SIM_DEBUG) $(TARGET_DIR_NAME)/dnx-sim --disk 0=$(TARGET_DIR_NAME)/$(SIM_ROMFS_CONFIG).bin:ro --panel $(SIM_PANEL_SOCKET) \
+	 $(TARGET_DIR_NAME)/dnx-sim --disk 0=$(TARGET_DIR_NAME)/$(SIM_ROMFS_CONFIG).bin:ro --panel $(SIM_PANEL_SOCKET) \
 	 $(SIM_EXAMPLE_OPTS) $(SIM_OPTS);\
 	 st=$$?; kill $$pid 2>/dev/null; exit $$st
+
+# simulator is started in its terminal (run-sim* in another terminal), the newest process of
+# $(TARGET_DIR_NAME)/dnx-sim is attached; Ctrl+\ terminates simulator and gdbserver
+.PHONY : attach-sim
+attach-sim :
+	@sim=$$(readlink -f $(TARGET_DIR_NAME)/dnx-sim); pid=;\
+	 for p in $$(ls -1d /proc/[0-9]* 2>/dev/null | sort -t/ -k3 -n); do\
+	  [ "$$(readlink $$p/exe 2>/dev/null)" = "$$sim" ] && pid=$${p#/proc/};\
+	 done;\
+	 if [ -z "$$pid" ]; then $(ECHO) "[error] simulator $(TARGET_DIR_NAME)/dnx-sim is not running"; exit 1; fi;\
+	 $(ECHO) "Attach to simulator (PID $$pid), debugger at localhost:$(SIM_GDB_PORT)";\
+	 $(GDBSERVER) --attach :$(SIM_GDB_PORT) $$pid
 
 .PHONY : run-sim
 run-sim : build-sim
@@ -139,10 +151,10 @@ ifeq ($(PANEL),1)
 	 $(PANEL_OPTS) >$(TARGET_DIR_NAME)/simpanel.log 2>&1 & pid=$$!;\
 	 sleep 0.5; if ! kill -0 $$pid 2>/dev/null; then $(CAT) $(TARGET_DIR_NAME)/simpanel.log; exit 1; fi;\
 	 $(ECHO) "Board panel: http://localhost:$(SIM_PANEL_PORT) (log: $(TARGET_DIR_NAME)/simpanel.log)";\
-	 $(SIM_DEBUG) $(TARGET_DIR_NAME)/dnx-sim --disk 0=$(TARGET_DIR_NAME)/$(SIM_ROMFS_CONFIG).bin:ro --panel $(SIM_PANEL_SOCKET) $(SIM_OPTS);\
+	 $(TARGET_DIR_NAME)/dnx-sim --disk 0=$(TARGET_DIR_NAME)/$(SIM_ROMFS_CONFIG).bin:ro --panel $(SIM_PANEL_SOCKET) $(SIM_OPTS);\
 	 st=$$?; kill $$pid 2>/dev/null; exit $$st
 else
-	@$(SIM_DEBUG) $(TARGET_DIR_NAME)/dnx-sim --disk 0=$(TARGET_DIR_NAME)/$(SIM_ROMFS_CONFIG).bin:ro $(SIM_OPTS)
+	@$(TARGET_DIR_NAME)/dnx-sim --disk 0=$(TARGET_DIR_NAME)/$(SIM_ROMFS_CONFIG).bin:ro $(SIM_OPTS)
 endif
 
 .PHONY : config-sim-kernel

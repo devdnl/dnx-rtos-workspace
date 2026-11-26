@@ -14,6 +14,10 @@ container_name = Path.cwd().name + '-' + short_hash
 cont_platform = "docker"
 pwd = os.path.abspath(os.getcwd())
 
+# port of gdbserver attached to the simulator (make attach-sim, SIM_GDB_PORT), published to the
+# host on systems without host network of the container (Windows, macOS)
+GDB_PORT = 2345
+
 # definition of the workspace synchronization of the project (tools/workspace_sync.py)
 WORKSPACE_SYNC_CONFIG = os.path.join("utils", "workspace_sync.toml")
 
@@ -113,12 +117,14 @@ if not exists:
         cmd += [
             "-v", "/dev:/dev",
             "-v", "/etc/localtime:/etc/localtime:ro",
+            "-p", f"{GDB_PORT}:{GDB_PORT}",
         ]
 
     elif system == "Windows":
         pwd = pwd.replace("\\", "/")
         display_env = os.environ.get("DISPLAY", "host.docker.internal:0")
         cmd += [
+            "-p", f"{GDB_PORT}:{GDB_PORT}",
         ]
 
     cmd += [
@@ -139,10 +145,14 @@ if not exists:
     run(cmd)
 
 elif len(sys.argv) > 1:
-    run([cont_platform, "start", container_name])
+    # container already running (e.g. interactive shell in another terminal): only run the command
+    running = get_output([cont_platform, "inspect", "-f", "{{.State.Running}}", container_name]) == "true"
+    if not running:
+        run([cont_platform, "start", container_name])
     run([cont_platform, "exec", container_name] + sys.argv[1:])
-    run([cont_platform, "exec", container_name, "sync"])
-    run([cont_platform, "kill", container_name])
+    if not running:
+        run([cont_platform, "exec", container_name, "sync"])
+        run([cont_platform, "kill", container_name])
 
 else:
     run([cont_platform, "start", "-ai", container_name])

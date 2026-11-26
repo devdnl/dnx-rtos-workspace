@@ -296,7 +296,9 @@ cd ..
 ./run_container.py make build-app   # run single command in the container
 ```
 The container is created once per workspace directory and the workspace is
-mounted at the same path as on the host. After the image is rebuilt (e.g.
+mounted at the same path as on the host. A single command stops the container
+after it is done, unless the container is already running (interactive shell in
+another terminal), then the command is only run in it. After the image is rebuilt (e.g.
 `tools/Dockerfile` was changed) the old container has to be removed
 (`docker rm <name>`), then it is created again from the new image. On Linux the
 container is started in privileged mode with the host network and `/dev`, so
@@ -563,28 +565,43 @@ sudo iptables -t nat -A POSTROUTING -s 192.168.77.0/24 ! -o tap0 -j MASQUERADE
 
 #### Debugging
 `build/dnx-sim` is one executable (kernel and programs, `-ggdb3 -Os`) debugged by
-gdb of the host or of the container (`gdb`, `gdbserver`). `SIM_DEBUG` is a
-command prefix of the simulator in `run-sim` and `run-sim-example` (and an
-example for run targets of a project):
+gdb (`gdb`, `gdbserver` are also in the container). The simulator runs in its
+terminal as usual and the debugger is attached to it (a program started by
+gdbserver is not in the foreground of the terminal and stops on the terminal
+configuration):
 ```
-make run-sim SIM_DEBUG="gdbserver :2345"    # simulator waits for debugger
+make run-sim                 # terminal 1 (or run-sim-example, run target of project)
+./run_container.py make attach-sim    # terminal 2: gdbserver at localhost:2345
 ```
-Run it in the terminal (interactive shell of the container, `./run_container.py`),
-the simulator console stays there. Eclipse: import `tools/dnx-sim.launch` (GDB
+`attach-sim` attaches gdbserver (`SIM_GDB_PORT`, default 2345) to the newest
+running `build/dnx-sim`; `run_container.py` only runs the command in an
+already running container. Eclipse: import `tools/dnx-sim.launch` (GDB
 Hardware Debugging, `gdb`, remote target `localhost:2345`, symbols of
 `build/dnx-sim`; set the project in the Main tab when it has another name) and
 start it; the container uses the host network, so the debugger of the host
-connects too. The simulator passes signals to its threads, gdb has to pass them
-without stopping (initialization commands of the launch file):
+connects too. The simulator uses signals, gdb has to pass them without stopping
+(initialization commands of the launch file):
 ```
 handle SIGALRM nostop noprint pass      # tick of FreeRTOS
 handle SIGUSR1 nostop noprint pass      # task switch
 handle SIG33 nostop noprint pass        # musl threads
 handle SIG34 nostop noprint pass
+handle SIGQUIT nostop noprint pass      # Ctrl+\ terminates simulator
 set print thread-events off
 ```
 Tasks are threads of the simulator (LWP, without task names); a stop in the
-debugger stops the whole simulator including the tick.
+debugger stops the whole simulator including the tick. `Ctrl+\` terminates the
+simulator, gdbserver and the debug session.
+
+On Windows and macOS the container has no host network: `run_container.py`
+publishes the gdbserver port 2345 when the container is created (a container
+created before has to be removed). The gdb of the host started by Eclipse has to
+support the target i386-linux (e.g. `gdb-multiarch`; gdb of MinGW usually
+supports only Windows programs), or gdb of the container is used in its shell
+(`gdb build/dnx-sim`, `target remote :2345`). When the source paths of the
+container differ from the host paths (Windows), they are mapped in Eclipse
+(Source Lookup, Path Mapping) or by an initialization command
+`set substitute-path <container path> <host path>`.
 
 ### Automatic tests
 The system can be tested without hardware (e.g. in CI) by `make test-sim`

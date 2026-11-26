@@ -114,7 +114,8 @@ cd tools && ./build_docker_image.py      # once: build the image
 `run_container.py` creates the container on its first call and then always
 opens an interactive shell, ignoring any arguments. A command passed as
 arguments runs only once the container already exists. After running it, the
-script stops the container. Only the project directory is mounted, plus the
+script stops the container, unless the container was already running (e.g. an
+interactive shell in another terminal), then only the command is run. Only the project directory is mounted, plus the
 workspace and kernel directories of `utils/workspace_sync.toml` (`path`) outside
 the project, at the paths seen by `tools/workspace_sync.py`; an existing
 container without them gets a warning (remove it to create it again). The image
@@ -179,10 +180,12 @@ Notes:
 - Toolchain: `i686-unknown-linux-musl-` (static 32-bit executable). The kernel
   and appset assume 32-bit pointers, so the simulator is always built as i386.
   dnx code is compiled with `-funsigned-char` (the same `char` as on ARM).
-- Debugging: `make run-sim SIM_DEBUG="gdbserver :2345"` (`SIM_DEBUG` is the
-  command prefix of the simulator), Eclipse `tools/dnx-sim.launch`; gdb must
-  pass SIGALRM (tick), SIGUSR1 (task switch), SIG33/SIG34 (musl) without
-  stopping (`handle <sig> nostop noprint pass`).
+- Debugging: the simulator runs in its terminal, `make attach-sim` attaches
+  gdbserver (localhost:2345) to it (a program started by gdbserver is not in the
+  terminal foreground and stops on `tcsetattr`), Eclipse `tools/dnx-sim.launch`;
+  gdb must pass SIGALRM (tick), SIGUSR1 (task switch), SIG33/SIG34 (musl) and
+  SIGQUIT (Ctrl+\ terminates) without stopping (`handle <sig> nostop noprint pass`).
+  On Windows/macOS (no host network) `run_container.py` publishes port 2345.
 - Kernel parts: `src/cpu/posix` (`cpuctl.c`, `host/host.c`), FreeRTOS port
   `src/kernel/dnx-ports/GCC/Posix`, drivers `uart/posix`, `gpio/posix`,
   `i2c/posix`, `spi/posix`, `ltdc/posix`, `eth/posix`, `hostdisk/posix`
