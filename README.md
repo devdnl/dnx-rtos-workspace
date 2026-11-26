@@ -561,6 +561,31 @@ sudo sysctl -w net.ipv4.ip_forward=1
 sudo iptables -t nat -A POSTROUTING -s 192.168.77.0/24 ! -o tap0 -j MASQUERADE
 ```
 
+#### Debugging
+`build/dnx-sim` is one executable (kernel and programs, `-ggdb3 -Os`) debugged by
+gdb of the host or of the container (`gdb`, `gdbserver`). `SIM_DEBUG` is a
+command prefix of the simulator in `run-sim` and `run-sim-example` (and an
+example for run targets of a project):
+```
+make run-sim SIM_DEBUG="gdbserver :2345"    # simulator waits for debugger
+```
+Run it in the terminal (interactive shell of the container, `./run_container.py`),
+the simulator console stays there. Eclipse: import `tools/dnx-sim.launch` (GDB
+Hardware Debugging, `gdb`, remote target `localhost:2345`, symbols of
+`build/dnx-sim`; set the project in the Main tab when it has another name) and
+start it; the container uses the host network, so the debugger of the host
+connects too. The simulator passes signals to its threads, gdb has to pass them
+without stopping (initialization commands of the launch file):
+```
+handle SIGALRM nostop noprint pass      # tick of FreeRTOS
+handle SIGUSR1 nostop noprint pass      # task switch
+handle SIG33 nostop noprint pass        # musl threads
+handle SIG34 nostop noprint pass
+set print thread-events off
+```
+Tasks are threads of the simulator (LWP, without task names); a stop in the
+debugger stops the whole simulator including the tick.
+
 ### Automatic tests
 The system can be tested without hardware (e.g. in CI) by `make test-sim`
 (script `tools/simtest.py`). The simulator is started in a pseudo terminal, the

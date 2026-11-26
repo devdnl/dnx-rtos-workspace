@@ -33,7 +33,8 @@ RUN zypper --non-interactive refresh &&\
     clang clang-tools\
     StyLua\
     lua55 lua55-devel lua55-luarocks lua55-luafilesystem\
-    dosfstools e2fsprogs
+    dosfstools e2fsprogs\
+    gdb gdbserver
 RUN zypper clean -a
 
 # environment variables

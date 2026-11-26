@@ -179,6 +179,10 @@ Notes:
 - Toolchain: `i686-unknown-linux-musl-` (static 32-bit executable). The kernel
   and appset assume 32-bit pointers, so the simulator is always built as i386.
   dnx code is compiled with `-funsigned-char` (the same `char` as on ARM).
+- Debugging: `make run-sim SIM_DEBUG="gdbserver :2345"` (`SIM_DEBUG` is the
+  command prefix of the simulator), Eclipse `tools/dnx-sim.launch`; gdb must
+  pass SIGALRM (tick), SIGUSR1 (task switch), SIG33/SIG34 (musl) without
+  stopping (`handle <sig> nostop noprint pass`).
 - Kernel parts: `src/cpu/posix` (`cpuctl.c`, `host/host.c`), FreeRTOS port
   `src/kernel/dnx-ports/GCC/Posix`, drivers `uart/posix`, `gpio/posix`,
   `i2c/posix`, `spi/posix`, `ltdc/posix`, `eth/posix`, `hostdisk/posix`
