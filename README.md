@@ -301,6 +301,11 @@ mounted at the same path as on the host. After the image is rebuilt (e.g.
 (`docker rm <name>`), then it is created again from the new image. On Linux the
 container is started in privileged mode with the host network and `/dev`, so
 the host serial ports and TAP interfaces are available also in the container.
+Directories of the workspace synchronization outside the project
+(`utils/workspace_sync.toml`: `[workspace] path`, `[kernel] path`) are mounted
+too, at the paths seen by `tools/workspace_sync.py` (a link to the workspace
+next to the project works in the container); a container created before has to
+be removed to get them (`run_container.py` prints a warning).
 
 ### Select board
 Import the BSP file of the selected board to the `config` directory:

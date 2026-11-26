@@ -114,7 +114,11 @@ cd tools && ./build_docker_image.py      # once: build the image
 `run_container.py` creates the container on its first call and then always
 opens an interactive shell, ignoring any arguments. A command passed as
 arguments runs only once the container already exists. After running it, the
-script stops the container. The image needs network access to Docker Hub,
+script stops the container. Only the project directory is mounted, plus the
+workspace and kernel directories of `utils/workspace_sync.toml` (`path`) outside
+the project, at the paths seen by `tools/workspace_sync.py`; an existing
+container without them gets a warning (remove it to create it again). The image
+needs network access to Docker Hub,
 developer.arm.com and sourceforge.net.
 
 If the toolchain is not available in your environment, do not try to install a
