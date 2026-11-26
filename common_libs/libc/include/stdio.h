@@ -64,211 +64,231 @@ extern "C" {
  *
  * Buffer size is configurable from system configuration.
  */
-#define BUFSIZ                  128
+#define BUFSIZ 128
 
 /** @brief Set stream to fully buffered.@see setvbuf() */
-#define _IOFBF                  0
+#define _IOFBF 0
 
 /** @brief Set stream to line buffered. @see setvbuf() */
-#define _IOLBF                  1
+#define _IOLBF 1
 
 /** @brief Set stream to unbuffered. @see setvbuf() */
-#define _IONBF                  2
+#define _IONBF 2
 
 #ifndef NULL
 /** @brief Zero pointer value. */
-#define NULL                    0
+#define NULL 0
 #endif
 
 #ifndef EOF
 /** @brief End Of File value. */
-#define EOF                     (-1)
+#define EOF (-1)
 #endif
 
 #ifndef ETX
 /** @brief End Of Text value. */
-#define ETX                     0x03
+#define ETX 0x03
 #endif
 
 #ifndef EOT
 /** @brief End Of Transfer value. */
-#define EOT                     0x04
+#define EOT 0x04
 #endif
 
 #ifndef SEEK_SET
 /** @brief Set file position to specified value. @see fseek() */
-#define SEEK_SET                0
+#define SEEK_SET 0
 #endif
 
 #ifndef SEEK_CUR
 /** @brief Set file position to current position plus offset. @see fseek() */
-#define SEEK_CUR                1
+#define SEEK_CUR 1
 #endif
 
 #ifndef SEEK_END
 /** @brief Set file position at the end of file plus offset. @see fseek() */
-#define SEEK_END                2
+#define SEEK_END 2
 #endif
 
 /** @brief Maximum length of file name. */
-#define FILENAME_MAX            255
+#define FILENAME_MAX 255
 
 /** @brief Maximum opened files. */
-#define FOPEN_MAX               255
+#define FOPEN_MAX 255
 
 /** @brief Directory of temporary files (libc flag __LIBC_TMP_DIR__). */
 #ifdef __LIBC_TMP_DIR__
-#define P_tmpdir                __LIBC_TMP_DIR__
+#define P_tmpdir __LIBC_TMP_DIR__
 #else
-#define P_tmpdir                "/tmp"
+#define P_tmpdir "/tmp"
 #endif
 
 /** @brief Minimum number of unique names of temporary files (tmpnam()). */
-#define TMP_MAX                 32
+#define TMP_MAX 32
 
 /** @brief Size of buffer of tmpnam() (P_tmpdir "/tmpXXXXXX"). */
-#define L_tmpnam                (sizeof(P_tmpdir) + 10)
-
-
+#define L_tmpnam (sizeof(P_tmpdir) + 10)
 
 #ifndef O_RDONLY
-#define O_RDONLY                                00
+#define O_RDONLY 00
 #endif
 
 #ifndef O_WRONLY
-#define O_WRONLY                                01
+#define O_WRONLY 01
 #endif
 
 #ifndef O_RDWR
-#define O_RDWR                                  02
+#define O_RDWR 02
 #endif
 
 #ifndef O_CREAT
-#define O_CREAT                                 0100
+#define O_CREAT 0100
 #endif
 
 #ifndef O_EXCL
-#define O_EXCL                                  0200
+#define O_EXCL 0200
 #endif
 
 #ifndef O_TRUNC
-#define O_TRUNC                                 01000
+#define O_TRUNC 01000
 #endif
 
 #ifndef O_APPEND
-#define O_APPEND                                02000
+#define O_APPEND 02000
 #endif
 
 #ifndef O_NONBLOCK
-#define O_NONBLOCK                              04000
+#define O_NONBLOCK 04000
 #endif
 
 #ifndef O_DIRECTORY
-#define O_DIRECTORY                             0200000
+#define O_DIRECTORY 0200000
 #endif
 
 #ifndef O_SHARED
-#define O_SHARED                                0400000
+#define O_SHARED 0400000
 #endif
 
 /* modes */
-#define S_IRWXU                                 0000700    /* RWX mask for owner */
-#define S_IRUSR                                 0000400    /* R for owner */
-#define S_IWUSR                                 0000200    /* W for owner */
-#define S_IXUSR                                 0000100    /* X for owner */
+#define S_IRWXU 0000700 /* RWX mask for owner */
+#define S_IRUSR 0000400 /* R for owner */
+#define S_IWUSR 0000200 /* W for owner */
+#define S_IXUSR 0000100 /* X for owner */
 
-#define S_IRWXG                                 0000070    /* RWX mask for group */
-#define S_IRGRP                                 0000040    /* R for group */
-#define S_IWGRP                                 0000020    /* W for group */
-#define S_IXGRP                                 0000010    /* X for group */
+#define S_IRWXG 0000070 /* RWX mask for group */
+#define S_IRGRP 0000040 /* R for group */
+#define S_IWGRP 0000020 /* W for group */
+#define S_IXGRP 0000010 /* X for group */
 
-#define S_IRWXO                                 0000007    /* RWX mask for other */
-#define S_IROTH                                 0000004    /* R for other */
-#define S_IWOTH                                 0000002    /* W for other */
-#define S_IXOTH                                 0000001    /* X for other */
+#define S_IRWXO 0000007 /* RWX mask for other */
+#define S_IROTH 0000004 /* R for other */
+#define S_IWOTH 0000002 /* W for other */
+#define S_IXOTH 0000001 /* X for other */
 
-#define S_ISUID                                 0004000    /* set user id on execution */
-#define S_ISGID                                 0002000    /* set group id on execution */
-#define S_ISVTX                                 0001000    /* save swapped text even after use */
+#define S_ISUID 0004000 /* set user id on execution */
+#define S_ISGID 0002000 /* set group id on execution */
+#define S_ISVTX 0001000 /* save swapped text even after use */
 
-#define S_IPMT                                  (000777)
-#define S_IFMT                                  (070000)
+#define S_IPMT (000777)
+#define S_IFMT (070000)
 
-#define S_ISREG(mode_t_m)                       ((mode_t_m & S_IFMT) == S_IFREG)
-#define S_ISDIR(mode_t_m)                       ((mode_t_m & S_IFMT) == S_IFDIR)
-#define S_ISCHR(mode_t_m)                       ((mode_t_m & S_IFMT) == S_IFCHR)
-#define S_ISLNK(mode_t_m)                       ((mode_t_m & S_IFMT) == S_IFLNK)
-#define S_ISPROG(mode_t_m)                      ((mode_t_m & S_IFMT) == S_IFPROG)
-#define S_ISFIFO(mode_t_m)                      ((mode_t_m & S_IFMT) == S_IFIFO)
-#define S_ISBLK(mode_t_m)                       ((mode_t_m & S_IFMT) == S_IFBLK)
-#define S_ISSOCK(mode_t_m)                      ((mode_t_m & S_IFMT) == S_IFSOCK)
+#define S_ISREG(mode_t_m)  ((mode_t_m & S_IFMT) == S_IFREG)
+#define S_ISDIR(mode_t_m)  ((mode_t_m & S_IFMT) == S_IFDIR)
+#define S_ISCHR(mode_t_m)  ((mode_t_m & S_IFMT) == S_IFCHR)
+#define S_ISLNK(mode_t_m)  ((mode_t_m & S_IFMT) == S_IFLNK)
+#define S_ISPROG(mode_t_m) ((mode_t_m & S_IFMT) == S_IFPROG)
+#define S_ISFIFO(mode_t_m) ((mode_t_m & S_IFMT) == S_IFIFO)
+#define S_ISBLK(mode_t_m)  ((mode_t_m & S_IFMT) == S_IFBLK)
+#define S_ISSOCK(mode_t_m) ((mode_t_m & S_IFMT) == S_IFSOCK)
 
-#define S_IFREG                                 0000000
-#define S_IFDIR                                 0010000
-#define S_IFCHR                                 0020000
-#define S_IFLNK                                 0030000
-#define S_IFPROG                                0040000
-#define S_IFIFO                                 0050000
-#define S_IFBLK                                 0060000
-#define S_IFSOCK                                0070000
+#define S_IFREG  0000000
+#define S_IFDIR  0010000
+#define S_IFCHR  0020000
+#define S_IFLNK  0030000
+#define S_IFPROG 0040000
+#define S_IFIFO  0050000
+#define S_IFBLK  0060000
+#define S_IFSOCK 0070000
 
+#define STACK_DEPTH_MINIMAL    (64)
+#define STACK_DEPTH_VERY_LOW   (2 * STACK_DEPTH_MINIMAL)
+#define STACK_DEPTH_LOW        (4 * STACK_DEPTH_MINIMAL)
+#define STACK_DEPTH_MEDIUM     (8 * STACK_DEPTH_MINIMAL)
+#define STACK_DEPTH_LARGE      (16 * STACK_DEPTH_MINIMAL)
+#define STACK_DEPTH_VERY_LARGE (32 * STACK_DEPTH_MINIMAL)
+#define STACK_DEPTH_HUGE       (64 * STACK_DEPTH_MINIMAL)
+#define STACK_DEPTH_VERY_HUGE  (128 * STACK_DEPTH_MINIMAL)
 
-
-
-#define STACK_DEPTH_MINIMAL            (64)
-#define STACK_DEPTH_VERY_LOW           (2*STACK_DEPTH_MINIMAL)
-#define STACK_DEPTH_LOW                (4*STACK_DEPTH_MINIMAL)
-#define STACK_DEPTH_MEDIUM             (8*STACK_DEPTH_MINIMAL)
-#define STACK_DEPTH_LARGE              (16*STACK_DEPTH_MINIMAL)
-#define STACK_DEPTH_VERY_LARGE         (32*STACK_DEPTH_MINIMAL)
-#define STACK_DEPTH_HUGE               (64*STACK_DEPTH_MINIMAL)
-#define STACK_DEPTH_VERY_HUGE          (128*STACK_DEPTH_MINIMAL)
-
-
-#define _GVAR_STRUCT_NAME               global_variables
-#define GLOBAL_VARIABLES_SECTION        struct _GVAR_STRUCT_NAME
-#define GLOBAL_VARIABLES_SECTION_BEGIN  struct _GVAR_STRUCT_NAME {
-#define GLOBAL_VARIABLES_SECTION_END    };
-#define GLOBAL_VARIABLES_TYPE(_type)    GLOBAL_VARIABLES_SECTION{_type _;}
+#define _GVAR_STRUCT_NAME              global_variables
+#define GLOBAL_VARIABLES_SECTION       struct _GVAR_STRUCT_NAME
+#define GLOBAL_VARIABLES_SECTION_BEGIN struct _GVAR_STRUCT_NAME {
+#define GLOBAL_VARIABLES_SECTION_END \
+        }                            \
+        ;
+#define GLOBAL_VARIABLES_TYPE(_type) \
+        GLOBAL_VARIABLES_SECTION {   \
+                _type _;             \
+        }
 
 #ifdef __cplusplus
-#       include <stdlib.h>
-#       include <stddef.h>
-        inline void* operator new     (size_t size) noexcept {return malloc(size);}
-        inline void* operator new[]   (size_t size) noexcept {return malloc(size);}
-        inline void  operator delete  (void* ptr  ) noexcept {free(ptr);}
-        inline void  operator delete[](void* ptr  ) noexcept {free(ptr);}
-#       define _PROGMAN_CXX extern "C"
-#       define _PROGMAN_EXTERN_C extern "C"
+#include <stdlib.h>
+#include <stddef.h>
+inline void *operator new(size_t size) noexcept
+{
+        return malloc(size);
+}
+inline void *operator new[](size_t size) noexcept
+{
+        return malloc(size);
+}
+inline void operator delete(void *ptr) noexcept
+{
+        free(ptr);
+}
+inline void operator delete[](void *ptr) noexcept
+{
+        free(ptr);
+}
+inline void operator delete(void *ptr, size_t) noexcept
+{
+        free(ptr);
+}
+inline void operator delete[](void *ptr, size_t) noexcept
+{
+        free(ptr);
+}
+#define _PROGMAN_CXX      extern "C"
+#define _PROGMAN_EXTERN_C extern "C"
 #else
-#       define _PROGMAN_CXX
-#       define _PROGMAN_EXTERN_C extern
+#define _PROGMAN_CXX
+#define _PROGMAN_EXTERN_C extern
 #endif
-
 
 #define main __main
 /* program flags (PROGRAM_PARAMS_FLAGS()) */
 #define PROGRAM_FLAG_PRIVILEGED (1 << 0) /* program runs as root (effective IDs 0), real IDs of caller */
 
-#define PROGRAM_PARAMS_FLAGS(_name_, stack_depth, preffered_app_ram, flags)\
-        static int __main(int argc, char *argv[]);\
-        _PROGMAN_CXX const size_t __builtin_app_##_name_##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
-        _PROGMAN_CXX const size_t __builtin_app_##_name_##_ss__ = stack_depth;\
-        _PROGMAN_CXX const char *const *const __builtin_app_##_name_##_pref_ram__ = preffered_app_ram;\
-        _PROGMAN_CXX const uint32_t __builtin_app_##_name_##_flags__ = flags;\
-        _PROGMAN_CXX int __builtin_app_##_name_##_main(int argc, char *argv[]) {return __main(argc, argv);}
+#define PROGRAM_PARAMS_FLAGS(_name_, stack_depth, preffered_app_ram, flags)                            \
+        static int __main(int argc, char *argv[]);                                                     \
+        _PROGMAN_CXX const size_t __builtin_app_##_name_##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);    \
+        _PROGMAN_CXX const size_t __builtin_app_##_name_##_ss__ = stack_depth;                         \
+        _PROGMAN_CXX const char *const *const __builtin_app_##_name_##_pref_ram__ = preffered_app_ram; \
+        _PROGMAN_CXX const uint32_t __builtin_app_##_name_##_flags__ = flags;                          \
+        _PROGMAN_CXX int __builtin_app_##_name_##_main(int argc, char *argv[])                         \
+        {                                                                                              \
+                return __main(argc, argv);                                                             \
+        }
 
-#define PROGRAM_PARAMS(_name_, stack_depth)\
-        PROGRAM_PARAMS_FLAGS(_name_, stack_depth, NULL, 0)
+#define PROGRAM_PARAMS(_name_, stack_depth) PROGRAM_PARAMS_FLAGS(_name_, stack_depth, NULL, 0)
 
-#define PROGRAM_PARAMS_EXTENDED(_name_, stack_depth, preffered_app_ram)\
+#define PROGRAM_PARAMS_EXTENDED(_name_, stack_depth, preffered_app_ram) \
         PROGRAM_PARAMS_FLAGS(_name_, stack_depth, preffered_app_ram, 0)
 
-#define stdin  (((_libc_app_ctx_t*)(_libc_appctx_get()))->_stdin)
-#define stdout (((_libc_app_ctx_t*)(_libc_appctx_get()))->_stdout)
-#define stderr (((_libc_app_ctx_t*)(_libc_appctx_get()))->_stderr)
-#define _getglobal ((struct _GVAR_STRUCT_NAME*)_libc_global_get())
-#define global _getglobal
+#define stdin      (((_libc_app_ctx_t *)(_libc_appctx_get()))->_stdin)
+#define stdout     (((_libc_app_ctx_t *)(_libc_appctx_get()))->_stdout)
+#define stderr     (((_libc_app_ctx_t *)(_libc_appctx_get()))->_stderr)
+#define _getglobal ((struct _GVAR_STRUCT_NAME *)_libc_global_get())
+#define global     _getglobal
 
 /*==============================================================================
   Exported object types
@@ -411,7 +431,7 @@ static inline FILE *fdopen(int fd, const char *mode)
 //==============================================================================
 static inline int fclose(FILE *file)
 {
-        extern int _libc_fclose(FILE *file);
+        extern int _libc_fclose(FILE * file);
         return _libc_fclose(file);
 }
 
@@ -615,7 +635,7 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 //==============================================================================
 static inline int fseek(FILE *file, int64_t offset, int mode)
 {
-        extern int _libc_fseek(FILE *file, int64_t offset, int mode);
+        extern int _libc_fseek(FILE * file, int64_t offset, int mode);
         return _libc_fseek(file, offset, mode);
 }
 
@@ -754,7 +774,7 @@ static inline void rewind(FILE *file)
 //==============================================================================
 static inline int64_t ftell(FILE *file)
 {
-        extern int64_t _libc_ftell(FILE *file);
+        extern int64_t _libc_ftell(FILE * file);
         return _libc_ftell(file);
 }
 
@@ -852,7 +872,7 @@ static inline int fgetpos(FILE *file, fpos_t *pos)
 //==============================================================================
 static inline int fflush(FILE *file)
 {
-        extern int _libc_fflush(FILE *file);
+        extern int _libc_fflush(FILE * file);
         return _libc_fflush(file);
 }
 
@@ -899,7 +919,7 @@ static inline int fflush(FILE *file)
 //==============================================================================
 static inline int feof(FILE *file)
 {
-        extern int _libc_feof(FILE *file);
+        extern int _libc_feof(FILE * file);
         return _libc_feof(file);
 }
 
@@ -946,7 +966,7 @@ static inline int feof(FILE *file)
 //==============================================================================
 static inline void clearerr(FILE *file)
 {
-        extern void _libc_clearerr(FILE *file);
+        extern void _libc_clearerr(FILE * file);
         return _libc_clearerr(file);
 }
 
@@ -997,7 +1017,7 @@ static inline void clearerr(FILE *file)
 //==============================================================================
 static inline int ferror(FILE *file)
 {
-        extern int _libc_ferror(FILE *file);
+        extern int _libc_ferror(FILE * file);
         return _libc_ferror(file);
 }
 
@@ -1070,7 +1090,7 @@ extern void perror(const char *s);
 //==============================================================================
 static inline void setbuf(FILE *file, char *buffer)
 {
-        extern int _libc_setvbuf(FILE *file, char *buffer, int mode, size_t size);
+        extern int _libc_setvbuf(FILE * file, char *buffer, int mode, size_t size);
         _libc_setvbuf(file, buffer, buffer ? _IOFBF : _IONBF, BUFSIZ);
 }
 
@@ -1113,7 +1133,7 @@ static inline void setbuf(FILE *file, char *buffer)
 //==============================================================================
 static inline int setvbuf(FILE *file, char *buffer, int mode, size_t size)
 {
-        extern int _libc_setvbuf(FILE *file, char *buffer, int mode, size_t size);
+        extern int _libc_setvbuf(FILE * file, char *buffer, int mode, size_t size);
         return _libc_setvbuf(file, buffer, mode, size);
 }
 
@@ -1181,7 +1201,7 @@ static inline FILE *tmpfile(void)
 //==============================================================================
 static inline int fileno(FILE *fp)
 {
-        extern int _libc_fileno(FILE *fp);
+        extern int _libc_fileno(FILE * fp);
         return _libc_fileno(fp);
 }
 

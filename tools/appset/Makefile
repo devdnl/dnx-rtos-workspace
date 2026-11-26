@@ -149,10 +149,12 @@ CXXFLAGS = -c -MMD -MP \
            -g \
            -ggdb3 \
            -Os \
-           -std=c++11 \
+           -std=c++20 \
            -ffunction-sections \
            -fno-rtti \
            -fno-exceptions \
+           -fno-threadsafe-statics \
+           -fno-use-cxa-atexit \
            -fno-unwind-tables \
            $(MCU_CFLAGS) \
            -Wall \
