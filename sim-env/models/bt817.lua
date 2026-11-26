@@ -33,7 +33,9 @@
 
   Memory map (Table 5-1): RAM_G 000000..0FFFFF (sparse, writable chip ID at
   0C0000), ROM 200000, RAM_DL 300000 (8 kB), RAM_REG 302000, RAM_CMD 308000
-  (4 kB FIFO). Registers are little endian and byte accessible, reserved
+  (4 kB FIFO ring: a continuous access wraps from 308FFF to 308000, as the
+  host libraries write commands to RAM_CMD + REG_CMD_WRITE without splitting
+  at the end of the ring). Registers are little endian and byte accessible, reserved
   addresses read as 0.
 
   Host commands (Table 4-5): ACTIVE, STANDBY, SLEEP, PWRDOWN (core off, SPI
@@ -51,9 +53,11 @@
   transaction which read it, REG_CMD_READ/WRITE and REG_CMDB_SPACE/
   REG_CMDB_WRITE implement the command FIFO (processed at the end of the
   transaction which wrote REG_CMD_WRITE or REG_CMDB_WRITE; a burst write to
-  REG_CMDB_WRITE keeps the address), write to REG_DLSWAP renders the display
+  REG_CMDB_WRITE keeps the address; when the FIFO is full during a write to
+  REG_CMDB_WRITE, it is processed during the transfer as by the chip, data
+  without space are lost with warning), write to REG_DLSWAP renders the display
   list, sets the SWAP flag and clears REG_DLSWAP, REG_CPURESET bit 0 resets the
-  coprocessor (FIFO pointers), REG_PLAYBACK_PLAY ends after length/freq seconds and
+  coprocessor (FIFO pointers, fault), REG_PLAYBACK_PLAY ends after length/freq seconds and
   sets the PLAYBACK flag, REG_SPI_WIDTH keeps its value but Dual/Quad channel
   mode is not supported (warning once, Single mode kept), REG_GPIO/GPIOX keep
   their bits (bit 7/15 = DISP pin - not connected to the LCD of the panel).
@@ -84,7 +88,12 @@
   else 0. CMD_TEXT, CMD_NUMBER, CMD_SPINNER and other commands with known
   arguments are parsed but not executed (warning once; CMD_CALIBRATE returns
   success),
-  commands of the media engine and flash memory drain the FIFO (warning).
+  CMD_LOADIMAGE with data in the FIFO skips the JPEG/PNG image (the end is
+  found by the image structure, it is not decoded, warning once),
+  commands of the media engine and flash memory and errors (e.g. invalid
+  CMD_INFLATE stream) cause coprocessor fault as BT81x: REG_CMD_READ reads FFFh
+  (REG_CMDB_SPACE has low bits set), the message is in RAM_ERR_REPORT (309800h),
+  the FIFO is not processed until REG_CPURESET (warning).
 
   Display list: DISPLAY ends the list, instructions are CLEAR/CLEAR_COLOR_A/RGB,
   COLOR_RGB/A, TAG/TAG_MASK/CLEAR_TAG (tag buffer: drawn pixels get the tag
@@ -96,13 +105,19 @@
   (line stride in bytes)/SIZE (+_H)/PALETTE_SOURCE, CELL and the cell of
   VERTEX2II (cell n starts at source + n * stride * layout height, e.g. glyphs
   of own fonts), CMD_SETBITMAP (layout instructions of the handle), BEGIN/END with
-  primitives BITMAPS(1), POINTS(2, circles), LINES(3), LINE_STRIP(4), RECTS(9)
+  primitives BITMAPS(1), POINTS(2, circles), LINES(3), LINE_STRIP(4, round
+  ends), RECTS(9, corners rounded by LINE_WIDTH > 1 px: radius LINE_WIDTH, the
+  rectangle grows by LINE_WIDTH - 1 px) anti-aliased (edges of POINTS, LINES
+  and rounded RECTS),
   and bitmap formats ARGB1555, ARGB4, ARGB2, RGB565, RGB332, L8, L4, L2, L1
   (luminance is alpha of COLOR_RGB), PALETTED565/4444/8 (palette at
   PALETTE_SOURCE), colors of bitmaps are multiplied by COLOR_RGB/COLOR_A;
   CALL/JUMP (instruction index)/RETURN, MACRO (executes REG_MACRO_0/1) and
-  SAVE/RESTORE_CONTEXT. ALPHA_FUNC/BLEND_FUNC/
-  STENCIL_*/COLOR_MASK are accepted without effect, bitmap transforms/swizzle
+  SAVE/RESTORE_CONTEXT, COLOR_MASK without color channels (only tags and
+  alpha are drawn, e.g. alpha masks: nothing visible, CLEAR keeps colors; a
+  partial mask is drawn as all channels, warning once). ALPHA_FUNC/STENCIL_* are
+  accepted without effect, BLEND_FUNC other than the default is drawn as default
+  (warning once; there is no alpha channel in the frame), bitmap transforms/swizzle
   ignored (warning once), EDGE_STRIP_* and ROM fonts are not drawn. The display
   list is interpreted in Lua, pixels are drawn in C (board API gfx: RAM_G and
   the command FIFO are gfx.memory buffers, the frame with the tag buffer is a
@@ -169,6 +184,7 @@ local R_RAW_XY, R_SCREEN_XY = 0x47, 0x49
 local R_TAG_XY, R_TOUCH_TAG = 0x4A, 0x4B
 local R_TAG1_XY = 0x4C -- REG_TOUCH_TAG1_XY, TAG1, ... TAG4_XY, TAG4 (extended mode)
 local TRACKER_BASE = 0x309000 -- REG_TRACKER, REG_TRACKER_1..4
+local ERR_REPORT, ERR_REPORT_SIZE = 0x309800, 128 -- RAM_ERR_REPORT: message of coprocessor fault
 local R_RZTHRESH = 0x46
 local R_CTOUCH4_Y, R_CTOUCH4_X = 0x48, 0x5B
 local R_CTOUCH2_XY, R_CTOUCH3_XY = 0x63, 0x64
@@ -186,7 +202,7 @@ local C_SLIDER, C_SCROLLBAR, C_TOGGLE, C_GAUGE = 0x10, 0x11, 0x12, 0x13
 local C_CLOCK, C_CALIBRATE, C_SPINNER, C_STOP = 0x14, 0x15, 0x16, 0x17
 local C_MEMCRC, C_REGREAD, C_MEMWRITE, C_MEMSET = 0x18, 0x19, 0x1A, 0x1B
 local C_MEMZERO, C_MEMCPY, C_APPEND, C_SNAPSHOT = 0x1C, 0x1D, 0x1E, 0x1F
-local C_GETPTR, C_INFLATE, C_LOADIDENTITY = 0x23, 0x22, 0x26
+local C_GETPTR, C_INFLATE, C_LOADIMAGE, C_LOADIDENTITY = 0x23, 0x22, 0x24, 0x26
 local C_TRANSLATE, C_SCALE, C_ROTATE, C_SETMATRIX = 0x27, 0x28, 0x29, 0x2A
 local C_SETFONT, C_TRACK, C_DIAL, C_NUMBER = 0x2B, 0x2C, 0x2D, 0x2E
 local C_SCREENSAVER, C_SKETCH, C_LOGO, C_COLDSTART = 0x2F, 0x30, 0x31, 0x32
@@ -203,7 +219,7 @@ local C_NEWLIST, C_ENDLIST = 0x68, 0x69
 -- argument words after the command word (16-bit arguments are packed in pairs,
 -- "S": trailing string, terminated by NUL and padded to a whole word); commands
 -- of the media engine are not listed (their payload length is unknown) and
--- drain the FIFO
+-- cause coprocessor fault
 local COPRO_ARGS = {
     [C_TEXT] = "2S",
     [C_BUTTON] = "3S",
@@ -273,6 +289,7 @@ local COPRO_EXEC = {
     [C_APPEND] = { 2 },
     [C_MEMWRITE] = { 2 },
     [C_INFLATE] = { 1 },
+    [C_LOADIMAGE] = { 2 },
 }
 
 local PARTS = { bt817 = 0x17, bt818 = 0x18 }
@@ -499,6 +516,11 @@ function DEV:mem_read(addr)
     if a < CMD_BASE + CMD_SIZE then
         return self.ram_cmd:get(a - CMD_BASE)
     end
+    if a >= ERR_REPORT and a < ERR_REPORT + ERR_REPORT_SIZE then -- message of coprocessor fault
+        local msg = self.err_report or ""
+        local i = a - ERR_REPORT + 1
+        return i <= #msg and msg:byte(i) or 0
+    end
     if a >= TRACKER_BASE and a < TRACKER_BASE + 20 then -- REG_TRACKER..REG_TRACKER_4
         local v = self.tracker_regs[((a - TRACKER_BASE) >> 2) + 1] or 0
         return (v >> ((a & 3) * 8)) & 0xFF
@@ -520,9 +542,7 @@ function DEV:mem_write(addr, byte)
     elseif a < REG_BASE + REG_SIZE then
         local off, sh = (a - REG_BASE) >> 2, ((a & 3) * 8)
         if off == R_CMDB_WRITE then -- FIFO port: every byte access appends one byte
-            self.ram_cmd:set(self.cmd_write, byte)
-            self.cmd_write = (self.cmd_write + 1) & (CMD_SIZE - 1)
-            self.fifo_pending = true -- processed at the end of the transaction
+            self:fifo_write(string.char(byte & 0xFF)) -- processed at the end of the transaction
         else
             local cur = self:reg_read(off, true) or 0
             self:reg_write(off, (cur & ~(0xFF << sh)) | ((byte & 0xFF) << sh))
@@ -543,11 +563,14 @@ function DEV:reg_read(off, raw)
         return math.floor((host.time_ms() - self.t0) * (self.regs[R_FREQUENCY] or 60000000) / 1000)
     end
     if off == R_CMDB_SPACE then
+        if self.fault then -- coprocessor fault: REG_CMD_READ is FFFh (space has low bits set)
+            return (0xFFF - self.cmd_write - 4) & 0xFFF
+        end
         local pending = (self.cmd_write - self.cmd_read) & (CMD_SIZE - 1)
         return math.max(CMD_SIZE - pending - 4, 0)
     end
     if off == R_CMD_READ then
-        return self.cmd_read
+        return self.fault and 0xFFF or self.cmd_read
     end -- live FIFO pointers
     if off == R_CMD_WRITE then
         return self.cmd_write
@@ -591,9 +614,10 @@ function DEV:reg_write(off, v)
         self.fifo_pending = true
     elseif off == R_CMD_READ then
         self.cmd_read = v & (CMD_SIZE - 1)
-    elseif off == R_CPURESET and (v & 1) == 1 then -- coprocessor reset: FIFO is empty
+    elseif off == R_CPURESET and (v & 1) == 1 then -- coprocessor reset: FIFO is empty, fault cleared
         self.cmd_read, self.cmd_write, self.stream, self.copro_wait = 0, 0, nil, nil
         self.dl_off = 0
+        self.fault, self.err_report = nil, nil
     elseif off == R_PCLK then
         self:update_display()
     elseif off == R_CMD_DL then
@@ -693,7 +717,9 @@ function DEV:transfer(byte)
 
     if t == "data" then -- streaming write/read
         local a = self.addr
-        if not (self.wr and (a & ~3) == REG_BASE + R_CMDB_WRITE * 4) then -- burst to CMDB_WRITE: same address
+        if a >= CMD_BASE and a < CMD_BASE + CMD_SIZE then -- RAM_CMD: address wraps within the ring
+            self.addr = CMD_BASE + ((a - CMD_BASE + 1) & (CMD_SIZE - 1))
+        elseif not (self.wr and (a & ~3) == REG_BASE + R_CMDB_WRITE * 4) then -- burst to CMDB_WRITE: same address
             self.addr = (a + 1) & 0x3FFFFF -- continuous address
         end
         if self.wr then
@@ -715,9 +741,19 @@ function DEV:transfer_block(data)
         if self.tx == "data" and self.state ~= "off" then
             local cnt, a = n - i + 1, self.addr
             if self.wr and (a & ~3) == REG_BASE + R_CMDB_WRITE * 4 then -- FIFO burst
-                self.cmd_write = self:fifo_put(self.cmd_write, i == 1 and data or data:sub(i))
-                self.fifo_pending = true
+                self:fifo_write(i == 1 and data or data:sub(i))
                 res[#res + 1] = string.rep("\xFF", cnt)
+                break
+            elseif a >= CMD_BASE and a < CMD_BASE + CMD_SIZE then -- RAM_CMD (address wraps within the ring)
+                local pos = a - CMD_BASE
+                if self.wr then -- data only, the coprocessor sees it after REG_CMD_WRITE update
+                    pos = self:fifo_put(pos, i == 1 and data or data:sub(i))
+                    res[#res + 1] = string.rep("\xFF", cnt)
+                else
+                    res[#res + 1] = self:fifo_get(pos, cnt)
+                    pos = (pos + cnt) & (CMD_SIZE - 1)
+                end
+                self.addr = CMD_BASE + pos
                 break
             elseif a + cnt - 1 <= RAM_G_TOP then -- RAM_G (continuous address)
                 if self.wr then
@@ -877,9 +913,45 @@ function DEV:fifo_avail() -- bytes pending in FIFO
     return (self.cmd_write - self.cmd_read) & (CMD_SIZE - 1)
 end
 
+-- data written to REG_CMDB_WRITE: when the FIFO is full, the coprocessor
+-- processes it during the transfer (as the chip does, e.g. a burst of
+-- CMD_INFLATE data longer than REG_CMDB_SPACE), data without space are lost
+function DEV:fifo_write(data)
+    if self.fault then
+        return -- coprocessor stopped: data are ignored
+    end
+    local k, n = 1, #data
+    while k <= n do
+        local free = CMD_SIZE - 4 - self:fifo_avail()
+        if free <= 0 then
+            self:process_fifo()
+            free = CMD_SIZE - 4 - self:fifo_avail()
+            if self.fault then
+                return
+            end
+        end
+        if free <= 0 then
+            self:warn_once("overflow", "command FIFO overflow: data written without REG_CMDB_SPACE are lost")
+            return
+        end
+        local m = math.min(free, n - k + 1)
+        self.cmd_write = self:fifo_put(self.cmd_write, data:sub(k, k + m - 1))
+        self.fifo_pending = true
+        k = k + m
+    end
+end
+
+-- coprocessor fault (as BT81x): REG_CMD_READ reads FFFh, message in
+-- RAM_ERR_REPORT, the FIFO is not processed until REG_CPURESET
+function DEV:copro_fault(msg)
+    self.fault, self.stream = true, nil
+    self.err_report = msg:sub(1, ERR_REPORT_SIZE - 1)
+    print("bt817: coprocessor fault: " .. msg .. " (REG_CMD_READ = FFFh, recovery by REG_CPURESET)")
+end
+
 -- bytes of a coprocessor command including its word (MEMWRITE/INFLATE: header,
 -- their data are processed as a stream), nil when the command is not written
--- completely yet, second value true for unknown commands (FIFO is drained)
+-- completely yet, second value true for unknown commands (coprocessor fault)
 function DEV:fifo_cmd_size(c)
     local avail = self:fifo_avail()
     local exec = COPRO_EXEC[c]
@@ -893,7 +965,7 @@ function DEV:fifo_cmd_size(c)
     local spec = COPRO_ARGS[c]
     if not spec then
         return nil, true
-    end -- unknown/media command: drain
+    end -- unknown/media command: fault
     local nargs = type(spec) == "number" and spec or tonumber((spec:sub(1, 1)))
     local need = 4 + nargs * 4
     if avail < need then
@@ -950,9 +1022,8 @@ function DEV:stream_step()
             self.mem_gen = (self.mem_gen or 0) + 1
         end
         if state == "error" then
-            self:warn_once("inflate", "CMD_INFLATE: " .. tostring(used) .. ", FIFO drained")
-            self.cmd_read, self.stream = self.cmd_write, nil
-            return true
+            self:copro_fault("inflate: " .. tostring(used))
+            return false
         end
         self.cmd_read = (self.cmd_read + used) & (CMD_SIZE - 1)
         st.consumed = st.consumed + used
@@ -963,6 +1034,15 @@ function DEV:stream_step()
             self:warn_once("adler", "CMD_INFLATE: Adler-32 of the stream does not match")
         end
         self.inflate_end = st.ptr + st.out
+        st.kind = "pad"
+    elseif st.kind == "image" then -- CMD_LOADIMAGE: the image is skipped
+        local ok, err = self:image_step(st)
+        if err then
+            self:copro_fault("loadimage: " .. err)
+            return false
+        elseif not ok then
+            return false
+        end
         st.kind = "pad"
     end
     while st.consumed % 4 ~= 0 do -- data are padded to words
@@ -976,12 +1056,131 @@ function DEV:stream_step()
     return true
 end
 
+-- JPEG/PNG data of CMD_LOADIMAGE following in the FIFO: the end of the image
+-- is found by its structure (PNG chunks to IEND, JPEG segments and entropy
+-- coded data to EOI), the image is not decoded; returns true at the end, false
+-- when more data are needed, nil and message for invalid data
+function DEV:image_step(st)
+    local function avail()
+        return self:fifo_avail()
+    end
+    local function peek(n)
+        return self:fifo_get(self.cmd_read, n)
+    end
+    local function consume(n)
+        self.cmd_read = (self.cmd_read + n) & (CMD_SIZE - 1)
+        st.consumed = st.consumed + n
+    end
+    while true do
+        if st.skip and st.skip > 0 then -- bytes of chunk/segment
+            local n = math.min(st.skip, avail())
+            if n == 0 then
+                return false
+            end
+            consume(n)
+            st.skip = st.skip - n
+            if st.skip > 0 then
+                return false
+            end
+        end
+        local ps = st.ps
+        if ps == "sig" then
+            if avail() < 8 then
+                return false
+            end
+            local h = peek(8)
+            if h == "\x89PNG\r\n\x1A\n" then
+                consume(8)
+                st.ps = "png"
+            elseif h:sub(1, 2) == "\xFF\xD8" then
+                consume(2)
+                st.ps = "jpeg"
+            else
+                return nil, "unknown image format"
+            end
+        elseif ps == "png" then -- chunk: length, type, data, CRC
+            if avail() < 8 then
+                return false
+            end
+            local len, typ = string.unpack(">I4c4", peek(8))
+            consume(8)
+            st.skip = len + 4
+            if typ == "IEND" then
+                st.ps = "end"
+            end
+        elseif ps == "jpeg" then -- marker
+            if avail() < 2 then
+                return false
+            end
+            local b1, b2 = peek(2):byte(1, 2)
+            if b1 ~= 0xFF then
+                return nil, "invalid JPEG marker"
+            end
+            if b2 == 0xFF then -- fill byte
+                consume(1)
+            elseif b2 == 0xD9 then -- EOI
+                consume(2)
+                return true
+            elseif b2 == 0x01 or (b2 >= 0xD0 and b2 <= 0xD8) then -- markers without length
+                consume(2)
+            else
+                if avail() < 4 then
+                    return false
+                end
+                local len = string.unpack(">I2", peek(4), 3)
+                if len < 2 then
+                    return nil, "invalid JPEG segment"
+                end
+                consume(4)
+                st.skip = len - 2
+                if b2 == 0xDA then -- SOS: entropy coded data follow
+                    st.ps = "scan"
+                end
+            end
+        elseif ps == "scan" then -- entropy coded data to marker (not FF00, RSTn)
+            local n = avail()
+            if n == 0 then
+                return false
+            end
+            local data = peek(n)
+            local i, found = 1, false
+            while true do
+                local k = data:find("\xFF", i, true)
+                if not k then
+                    consume(n)
+                    return false
+                end
+                if k == n then -- marker byte not written yet
+                    consume(k - 1)
+                    return false
+                end
+                local b = data:byte(k + 1)
+                if b == 0x00 or (b >= 0xD0 and b <= 0xD7) then
+                    i = k + 2
+                else
+                    consume(k - 1)
+                    found = true
+                    break
+                end
+            end
+            if found then
+                st.ps = "jpeg"
+            end
+        else -- "end" (PNG after IEND)
+            return true
+        end
+    end
+end
+
 function DEV:start_inflate(ptr)
     self.stream = { kind = "inflate", ptr = ptr, out = 0, consumed = 0, z = gfx.inflater(ptr) }
 end
 
 function DEV:process_fifo()
     self.fifo_pending = nil
+    if self.fault then
+        return -- stopped until REG_CPURESET
+    end
     if self.copro_wait then -- CMD_WAIT delays the rest of the FIFO
         if host.time_ms() < self.copro_wait then
             if not self.wait_scheduled then
@@ -1012,14 +1211,14 @@ function DEV:process_fifo()
             if (w & 0xFFFFFF00) == 0xFFFFFF00 then
                 local c = w & 0xFF
                 local need, drain_now = self:fifo_cmd_size(c)
-                if drain_now then -- unusable command: drop the FIFO
-                    self.cmd_read = self.cmd_write
-                    self:warn_once(
-                        "copro" .. c,
-                        string.format("coprocessor command %02Xh is not supported, FIFO drained", c)
-                    )
+                if drain_now then -- unusable command: coprocessor fault
+                    self:copro_fault(string.format("unsupported command %02Xh", c))
+                    break
                 elseif need then
                     self:coprocessor(c, pos) -- consumes its words from FIFO
+                    if self.fault then
+                        break
+                    end
                     if self.copro_wait then -- rest of the FIFO after CMD_WAIT
                         self.regs[R_CMD_DL] = self.dl_off
                         self:process_fifo()
@@ -1294,6 +1493,16 @@ function DEV:coprocessor(c, pos)
         local ptr = arg()
         finish()
         self:start_inflate(ptr)
+    elseif c == C_LOADIMAGE then -- JPEG/PNG data follow in the FIFO stream (skipped)
+        local ptr, opts = arg(), arg()
+        finish()
+        if (opts & 0x50) ~= 0 then -- OPT_MEDIAFIFO, OPT_FLASH
+            self:copro_fault("CMD_LOADIMAGE from media FIFO or flash is not supported")
+            return
+        end
+        self:warn_once("loadimage", "CMD_LOADIMAGE: JPEG/PNG image is skipped (not decoded)")
+        self.inflate_end = ptr
+        self.stream = { kind = "image", ptr = ptr, ps = "sig", consumed = 0 }
     elseif c == C_APPEND then -- memory to display list
         local ptr, n = arg(), arg()
         finish()
@@ -1471,6 +1680,7 @@ function DEV:swap()
     local prim, verts = nil, {}
     local handles, palette, cur_handle, cur_cell = {}, 0, 0, 0
     local tag, tag_mask, clear_tag = 255, 1, 0 -- TAG, TAG_MASK, CLEAR_TAG
+    local cmask = 0xF -- COLOR_MASK (bits r, g, b, a): without r, g, b only tags are drawn
 
     -- scissor and tag of the canvas (C) follow the state before drawing
     local cv_sx, cv_sy, cv_sw, cv_sh, cv_tag, cv_mask
@@ -1498,19 +1708,32 @@ function DEV:swap()
         return (fr << 16) | (fg << 8) | fbc
     end
 
+    local function alpha() -- COLOR_A, nothing visible when COLOR_MASK disables colors
+        return (cmask & 0xE) ~= 0 and fa or 0
+    end
+
     local function fill(x0, y0, x1, y1) -- filled rectangle of current color, inclusive corners
         sync()
-        cv:rect(x0, y0, x1, y1, color(), fa)
+        cv:rect(x0, y0, x1, y1, color(), alpha())
+    end
+
+    local function rects(x0, y0, x1, y1) -- RECTS: corners rounded by LINE_WIDTH (radius)
+        sync()
+        if line_width > 16 then
+            cv:rrect(x0, y0, x1, y1, line_width / 16, color(), alpha())
+        else
+            cv:rect(x0, y0, x1, y1, color(), alpha())
+        end
     end
 
     local function disc(px, py, rad) -- filled circle of current color
         sync()
-        cv:disc(px, py, rad, color(), fa)
+        cv:disc(px, py, rad, color(), alpha())
     end
 
     local function line(x0, y0, x1, y1) -- line of width 2 * LINE_WIDTH
         sync()
-        cv:line(x0, y0, x1, y1, line_width / 16, color(), fa)
+        cv:line(x0, y0, x1, y1, line_width / 16, color(), alpha())
     end
 
     local function tight_bytes(fmt, bw) -- bytes per row, packed
@@ -1558,7 +1781,7 @@ function DEV:swap()
         end
         local base = b.source + (cell or 0) * row * lh -- cells follow each other (row * layout height)
         sync()
-        cv:bitmap(ram, base, fmt, row, bw, math.min(bh, lh), x, y, color(), fa, palette)
+        cv:bitmap(ram, base, fmt, row, bw, math.min(bh, lh), x, y, color(), alpha(), palette)
     end
 
     local stack = {} -- SAVE/RESTORE_CONTEXT
@@ -1587,6 +1810,7 @@ function DEV:swap()
             tag_mask,
             clear_tag,
             cur_cell,
+            cmask,
         }
     end
     local function restore_state(st)
@@ -1596,14 +1820,14 @@ function DEV:swap()
         sx, sy, sw, sh, cr, cg, cb, ca = st[1], st[2], st[3], st[4], st[5], st[6], st[7], st[8]
         fr, fg, fbc, fa, frac, tx, ty = st[9], st[10], st[11], st[12], st[13], st[14], st[15]
         point_size, line_width, cur_handle, palette = st[16], st[17], st[18], st[19]
-        tag, tag_mask, clear_tag, cur_cell = st[20], st[21], st[22], st[23]
+        tag, tag_mask, clear_tag, cur_cell, cmask = st[20], st[21], st[22], st[23], st[24]
     end
 
     local function vertex(px, py, hd, cell)
         if prim == P_RECTS then
             verts[#verts + 1] = { px, py }
             if #verts == 2 then
-                fill(verts[1][1], verts[1][2], verts[2][1], verts[2][2], fr, fg, fbc, fa)
+                rects(verts[1][1], verts[1][2], verts[2][1], verts[2][2])
                 verts = {}
             end
         elseif prim == P_POINTS then
@@ -1696,7 +1920,7 @@ function DEV:swap()
                 return exec(self.regs[((wd & 1) == 0) and R_MACRO_0 or R_MACRO_1] or 0, i, 1)
             end
         elseif op == 0x26 then -- CLEAR (color/stencil/tag) in the scissor rectangle
-            local c, t = (wd & 4) ~= 0, (wd & 1) ~= 0
+            local c, t = (wd & 4) ~= 0 and (cmask & 0xE) ~= 0, (wd & 1) ~= 0
             if c or t then
                 sync()
                 cv:clear(c and ((cr << 16) | (cg << 8) | cb) or nil, t and clear_tag or nil)
@@ -1715,9 +1939,18 @@ function DEV:swap()
             tx = s17(wd & 0x1FFFF) -- VERTEX_TRANSLATE_X
         elseif op == 0x2C then
             ty = s17(wd & 0x1FFFF) -- VERTEX_TRANSLATE_Y
-        elseif (op >= 0x09 and op <= 0x0C) or op == 0x11 or op == 0x13 or op == 0x20 or op == 0x2D or op == 0x30 then
-            -- ALPHA_FUNC, STENCIL_FUNC, BLEND_FUNC, STENCIL_OP, CLEAR_STENCIL, STENCIL_MASK,
-            -- COLOR_MASK, NOP, INT_FRR: accepted without effect
+        elseif op == 0x20 then -- COLOR_MASK
+            cmask = wd & 0xF
+            if (cmask & 0xE) ~= 0 and (cmask & 0xE) ~= 0xE then
+                self:warn_once("cmask", "COLOR_MASK of some color channels is drawn as all channels")
+            end
+        elseif op == 0x0B then -- BLEND_FUNC
+            if (wd & 0x3F) ~= ((2 << 3) | 4) then
+                self:warn_once("blend", "BLEND_FUNC other than (SRC_ALPHA, ONE_MINUS_SRC_ALPHA) is drawn as default")
+            end
+        elseif (op >= 0x09 and op <= 0x0C) or op == 0x11 or op == 0x13 or op == 0x2D or op == 0x30 then
+            -- ALPHA_FUNC, STENCIL_FUNC, STENCIL_OP, CLEAR_STENCIL, STENCIL_MASK,
+            -- NOP, INT_FRR: accepted without effect
         elseif (op >= 0x15 and op <= 0x1A) or op == 0x2E or op == 0x2F then
             self:warn_once("bmtransform", "bitmap transform/swizzle is ignored") -- BITMAP_TRANSFORM_*, EXT_FORMAT, SWIZZLE
         else

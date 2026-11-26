@@ -498,6 +498,147 @@ test("CMD_INFLATE: long stream (blocks interrupted by FIFO), next command, Adler
     expect(rd(0x40000, #small) == small, "data of stream with wrong Adler-32")
 end)
 
+test("Burst to REG_CMDB_WRITE longer than the FIFO (consumed during the transfer)", function()
+    local parts, t, x = {}, {}, 7
+    for _ = 1, 12 do
+        for i = 1, 1000 do
+            x = (x * 1103515245 + 12345) & 0x7FFFFFFF
+            t[i] = (x >> 16) & 0xFF
+        end
+        parts[#parts + 1] = string.char(table.unpack(t, 1, 1000))
+    end
+    local data = table.concat(parts)
+    local z = zlib_stream(data, 2500)
+    expect(#z > 2 * 4096, "stream is too short: " .. #z)
+    wr(REG_CMDB_WRITE, words(INFLATE, 0x50000) .. padded(z) .. words(MEMWRITE, 0x60000, #data) .. data)
+    expect(wait_idle(), "FIFO not processed")
+    expect(rd(0x50000, #data) == data, "inflated data differ")
+    expect(rd(0x60000, #data) == data, "MEMWRITE data differ")
+    expect(rd32(REG_CMD_READ) ~= 0xFFF, "coprocessor fault")
+end)
+
+-- write by RAM_CMD + REG_CMD_WRITE (FT81x HAL: Ft_Gpu_Hal_WrCmdBuf); data are not
+-- split at the end of the ring, the chip wraps the address within RAM_CMD
+local function ramcmd_write(data)
+    local pos = 1
+    local t0 = dnx.sys.uptime()
+    while pos <= #data do
+        local wp, rp = rd32(REG_CMD_WRITE), rd32(REG_CMD_READ)
+        local free = 4092 - ((wp - rp) & 0xFFF)
+        if free > 0 then
+            local n = math.min(free, #data - pos + 1)
+            wr(RAM_CMD + wp, data:sub(pos, pos + n - 1))
+            wr16(REG_CMD_WRITE, ((wp + n + 3) & 0xFFC) & 0xFFF)
+            pos = pos + n
+        elseif dnx.sys.uptime() - t0 > 3000 then
+            error("command FIFO full", 2)
+        else
+            dnx.sys.msleep(5)
+        end
+    end
+end
+
+test("Write to RAM_CMD + REG_CMD_WRITE across the end of the ring (FT81x HAL)", function()
+    -- move the FIFO pointers near the end of the ring
+    local fill = (0xF00 - rd32(REG_CMD_WRITE) - 12) & 0xFFC
+    cmd(words(MEMWRITE, 0x7F000, fill) .. string.rep("\0", fill))
+    expect(wait_idle(), "FIFO not processed")
+    expect(rd32(REG_CMD_WRITE) == 0xF00, "write pointer " .. rd32(REG_CMD_WRITE))
+    -- INFLATE command and stream by separate writes, as transfer_image() of SGL
+    local parts, t, x = {}, {}, 11
+    for _ = 1, 10 do
+        for i = 1, 1000 do
+            x = (x * 1103515245 + 12345) & 0x7FFFFFFF
+            t[i] = (x >> 16) & 0x0F -- L4-like data (compressible)
+        end
+        parts[#parts + 1] = string.char(table.unpack(t, 1, 1000))
+    end
+    local data = table.concat(parts)
+    local z = zlib_stream(data, 1800)
+    ramcmd_write(words(INFLATE, 0x80000))
+    ramcmd_write(z) -- odd length: padding by REG_CMD_WRITE alignment
+    ramcmd_write(words(MEMWRITE, 0x8F000, 4) .. "wrap")
+    expect(wait_idle(), "FIFO not processed")
+    expect(rd32(REG_CMD_READ) ~= 0xFFF, "coprocessor fault")
+    expect(rd(0x80000, #data) == data, "inflated data differ")
+    expect(rd(0x8F000, 4) == "wrap", "command after the stream: " .. rd(0x8F000, 4))
+    -- one long write (frame of SGL, up to 4000 bytes) across the end of the ring
+    local wp = rd32(REG_CMD_WRITE)
+    local n = 4000 - (4000 % 4)
+    local blob = string.rep("\x5A", n - 12)
+    ramcmd_write(words(MEMWRITE, 0x8E000, #blob) .. blob)
+    expect(wait_idle(), "FIFO not processed")
+    expect(((wp + n) & 0xFFF) < wp, "write did not cross the end of the ring")
+    expect(rd(0x8E000, #blob) == blob, "MEMWRITE data across the end of the ring differ")
+    -- reading RAM_CMD across the end of the ring
+    local back = rd(RAM_CMD + 0xFFC, 8)
+    expect(back == rd(RAM_CMD + 0xFFC, 4) .. rd(RAM_CMD, 4), "RAM_CMD read does not wrap")
+end)
+
+test("CMD_LOADIMAGE: JPEG/PNG in the FIFO are skipped, next command executed", function()
+    local LOADIMAGE = CMD(0x24)
+    local function chunk(typ, data)
+        return string.pack(">I4", #data) .. typ .. data .. "\0\0\0\0"
+    end
+    local png = "\x89PNG\r\n\x1A\n"
+        .. chunk("IHDR", string.pack(">I4I4BBBBB", 4, 2, 8, 2, 0, 0, 0))
+        .. chunk("IDAT", string.rep("\xAB", 999))
+        .. chunk("IEND", "")
+    local function seg(m, data)
+        return "\xFF" .. string.char(m) .. string.pack(">I2", #data + 2) .. data
+    end
+    local jpeg = "\xFF\xD8"
+        .. seg(0xE0, "JFIF\0\1\1\0\0\1\0\1\0\0")
+        .. seg(0xDB, string.rep("\1", 65))
+        .. seg(0xC0, "\8\0\2\0\4\1\1\x11\0")
+        .. seg(0xDA, "\1\1\0\0\x3F\0")
+        .. "\x12\xFF\x00\x34\xFF\xD0\x56\xFF\xFF\xD9" -- FF00, RST0, fill byte, EOI
+    -- the image in one transfer
+    cmd(words(LOADIMAGE, 0x90000, 0) .. padded(png) .. words(MEMWRITE, 0x91000, 4) .. "png!")
+    expect(wait_idle(), "FIFO not processed")
+    expect(rd32(REG_CMD_READ) ~= 0xFFF, "coprocessor fault (PNG)")
+    expect(rd(0x91000, 4) == "png!", "command after PNG: " .. rd(0x91000, 4))
+    -- the image in small pieces (structure across writes)
+    local data = words(LOADIMAGE, 0x92000, 0) .. padded(jpeg) .. words(MEMWRITE, 0x93000, 4) .. "jpg!"
+    for k = 1, #data, 8 do
+        wr(REG_CMDB_WRITE, data:sub(k, k + 7))
+    end
+    expect(wait_idle(), "FIFO not processed")
+    expect(rd32(REG_CMD_READ) ~= 0xFFF, "coprocessor fault (JPEG)")
+    expect(rd(0x93000, 4) == "jpg!", "command after JPEG: " .. rd(0x93000, 4))
+end)
+
+-- coprocessor recovery after fault (sequence of EVE host libraries)
+local function cpu_reset()
+    wr32(REG_CPURESET, 1)
+    wr32(REG_CMD_READ, 0)
+    wr32(REG_CMD_WRITE, 0)
+    wr32(REG_CMD_DL, 0)
+    wr32(REG_CPURESET, 0)
+end
+
+test("Coprocessor fault: REG_CMD_READ FFFh, RAM_ERR_REPORT, recovery by REG_CPURESET", function()
+    local RAM_ERR_REPORT = 0x309800
+    -- invalid deflate block (type 3) after valid zlib header, then a command
+    cmd(words(INFLATE, 0x70000) .. padded("\x78\x01\x07\x00") .. words(MEMWRITE, 0x70100, 4) .. "FAIL")
+    dnx.sys.msleep(20)
+    expect(rd32(REG_CMD_READ) == 0xFFF, string.format("REG_CMD_READ %X", rd32(REG_CMD_READ)))
+    expect(rd32(REG_CMDB_SPACE) & 3 ~= 0, string.format("REG_CMDB_SPACE %X", rd32(REG_CMDB_SPACE)))
+    local msg = rd(RAM_ERR_REPORT, 128):match("^[^%z]*")
+    expect(msg:find("inflate", 1, true) == 1, "RAM_ERR_REPORT: " .. msg)
+    expect(rd(0x70100, 4) ~= "FAIL", "command after fault is executed")
+    cpu_reset()
+    expect(rd32(REG_CMD_READ) == 0, "REG_CMD_READ after reset " .. rd32(REG_CMD_READ))
+    cmd(words(MEMWRITE, 0x70100, 4) .. "OK!!")
+    expect(wait_idle() and rd(0x70100, 4) == "OK!!", "coprocessor after recovery")
+    -- unknown command
+    cmd(words(0xFFFFFF7F))
+    dnx.sys.msleep(20)
+    expect(rd32(REG_CMD_READ) == 0xFFF, "unknown command: no fault")
+    cpu_reset()
+    expect(rd32(REG_CMD_READ) == 0 and rd(RAM_ERR_REPORT, 1) == "\0", "fault cleared")
+end)
+
 test("CMD_APPEND and bitmaps (RGB565, L8 colored by COLOR_RGB)", function()
     local bmp = string.rep(string.pack("<I2", 0xF800), 4) .. string.rep(string.pack("<I2", 0x07E0), 4)
     cmd(words(MEMWRITE, 0x3000, #bmp) .. bmp)
@@ -681,6 +822,63 @@ test("Tags: TAG, TAG_MASK, CLEAR_TAG, REG_TOUCH_TAG", function()
     control("eve touch 0 0 0")
 end)
 
+test("COLOR_MASK without colors: alpha mask of SGL progress bar (only tags drawn)", function()
+    local function COLOR_MASK(r, g, b, a)
+        return 0x20000000 | (r << 3) | (g << 2) | (b << 1) | a
+    end
+    local BLEND_FUNC = 0x0B000000 | (3 << 3) | 5 -- DST_ALPHA, ONE_MINUS_DST_ALPHA
+    cmd(
+        words(DLSTART, CLEAR_COLOR_RGB(0, 0, 64), CLEAR_TAG(0), CLEAR(1, 1, 1), BEGIN(RECTS))
+            .. words(COLOR_RGB(255, 0, 0), VERTEX2F(10 * 16, 10 * 16), VERTEX2F(50 * 16, 50 * 16))
+            .. words(COLOR_RGB(255, 255, 255), COLOR_MASK(0, 0, 0, 1), CLEAR_COLOR_RGB(0, 255, 0), CLEAR(1, 0, 0))
+            .. words(TAG(40), BEGIN(POINTS), POINT_SIZE(10 * 16), VERTEX2F(30 * 16, 30 * 16))
+            .. words(COLOR_MASK(1, 1, 1, 1), BLEND_FUNC, 0x0B000000 | (2 << 3) | 4, END, DISPLAY, SWAP)
+    )
+    expect(wait_idle(), "FIFO not processed")
+    expect_pixels({
+        { 30, 30, RED }, -- point in alpha only
+        { 12, 12, RED }, -- CLEAR(1, 0, 0) of alpha only
+        { 100, 100, BG },
+    })
+    expect(touch_tag(30, 30) == 40, "tag of masked point " .. rd32(REG_TOUCH_TAG))
+    control("eve touch 0 0 0")
+end)
+
+test("RECTS with LINE_WIDTH: rounded corners, anti-aliased edges, tags", function()
+    cmd(
+        words(DLSTART, CLEAR_COLOR_RGB(0, 0, 64), CLEAR_TAG(0), CLEAR(1, 1, 1), COLOR_RGB(255, 0, 0))
+            .. words(
+                TAG(77),
+                LINE_WIDTH(10 * 16),
+                BEGIN(RECTS),
+                VERTEX2F(50 * 16, 50 * 16),
+                VERTEX2F(150 * 16, 100 * 16)
+            )
+            .. words(LINE_WIDTH(16), VERTEX2F(200 * 16, 50 * 16), VERTEX2F(210 * 16, 60 * 16), END, DISPLAY, SWAP)
+    )
+    expect(wait_idle(), "FIFO not processed")
+    expect_pixels({
+        { 41, 75, RED }, -- rectangle grows by LINE_WIDTH - 1 px
+        { 40, 75, BG },
+        { 159, 75, RED },
+        { 160, 75, BG },
+        { 100, 41, RED },
+        { 100, 40, BG },
+        { 41, 41, BG }, -- rounded corner
+        { 44, 44, RED },
+        { 200, 50, RED }, -- LINE_WIDTH 1 px: sharp rectangle on the vertices
+        { 210, 60, RED },
+        { 199, 50, BG },
+        { 211, 60, BG },
+    })
+    local v = tonumber(pixel(43, 44), 16) -- edge of the corner: partial coverage
+    local r5, g6 = v >> 11, (v >> 5) & 0x3F
+    expect(r5 > 4 and r5 < 28 and g6 == 0, "anti-aliased edge " .. pixel(43, 44))
+    expect(touch_tag(44, 44) == 77, "tag inside the corner " .. rd32(REG_TOUCH_TAG))
+    expect(touch_tag(41, 41) == 0, "tag outside the corner " .. rd32(REG_TOUCH_TAG))
+    control("eve touch 0 0 0")
+end)
+
 test("Widgets: BUTTON with tag, KEYS tags are characters, FGCOLOR", function()
     cmd(
         words(DLSTART, CLEAR(1, 1, 1), FGCOLOR, 0xFF0000, TAG(1))
@@ -755,6 +953,7 @@ test("Unchanged frame is not rendered again, RAM_G change renders", function()
 end)
 
 test("Performance: upload and rendering (printed)", function()
+    collectgarbage() -- data of previous tests (memory of the system)
     local function now()
         return dnx.sys.uptime()
     end

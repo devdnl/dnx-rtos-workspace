@@ -754,8 +754,9 @@ panel by `canvas:push(lcd)`.
 | `cv:tag(tag, mask)` | tag written by drawing when `mask` is `true` (default 255, `true`) |
 | `cv:clear(color, tag)` | clear scissor area: color and/or tag (`nil`: not cleared) |
 | `cv:rect(x0, y0, x1, y1, color [, alpha])` | filled rectangle, corners in pixels (rounded, inclusive) |
-| `cv:disc(x, y, radius, color [, alpha])` | filled circle (pixels with distance <= radius) |
-| `cv:line(x0, y0, x1, y1, half, color [, alpha])` | line of width `2 * half` pixels |
+| `cv:rrect(x0, y0, x1, y1, radius, color [, alpha])` | rectangle with rounded corners, anti-aliased (radius <= 1: `cv:rect`, larger radius extends the rectangle by `radius - 1`, as `RECTS` with `LINE_WIDTH` of EVE) |
+| `cv:disc(x, y, radius, color [, alpha])` | filled circle, anti-aliased (edge at radius: half coverage) |
+| `cv:line(x0, y0, x1, y1, half, color [, alpha])` | line of width `2 * half` pixels with round ends, anti-aliased |
 | `cv:bitmap(mem, source, format, stride, width, height, x, y, color, alpha [, palette])` | bitmap in EVE format (`BITMAP_LAYOUT`: ARGB1555, L1, L2, L4, L8, RGB332, ARGB2, ARGB4, RGB565, PALETTED565/4444/8) from memory: L formats are the alpha of `color`, other formats are multiplied by `color`; returns `false` for not supported formats |
 | `cv:tag_at(x, y)`, `cv:pixel(x, y)` | tag, pixel `0xRRGGBB` |
 | `cv:reset()` | black, tags 0, default scissor and tag |
@@ -763,7 +764,8 @@ panel by `canvas:push(lcd)`.
 | `cv.width`, `cv.height` | size |
 
 Colors are `0xRRGGBB` with alpha 0..255 (default 255), drawing blends
-`src * a + dst * (255 - a)` and writes the tag also for transparent pixels
+`src * a + dst * (255 - a)` (anti-aliased edges: `a` scaled by coverage of the
+pixel, tag written from half coverage) and writes the tag also for transparent pixels
 (alpha test of EVE is not modeled).
 
 `gfx.inflater(addr)` is a zlib stream decoder (RFC 1950/1951, e.g. CMD_INFLATE
@@ -794,7 +796,15 @@ the chip: the display list writes the tag buffer (`TAG`, `TAG_MASK`,
 `CLEAR_TAG`, tags of widgets, keys of `CMD_KEYS` have tags of their
 characters), `REG_TOUCH_TAG` (and `REG_TOUCH_TAG1..4` in extended mode) is the
 tag at the touch point, `CMD_TRACK` reports the value of sliders/dials in
-`REG_TRACKER`. Options and methods are described in the model file.
+`REG_TRACKER`. Errors of the coprocessor (invalid `CMD_INFLATE` stream, unsupported command)
+cause a fault as in BT81x: `REG_CMD_READ` reads `FFFh`, the message is in
+`RAM_ERR_REPORT`, the host recovers by `REG_CPURESET`. A burst to
+`REG_CMDB_WRITE` longer than the free space is processed during the transfer
+(as by the chip). `RAM_CMD` is a ring: a write to `RAM_CMD + REG_CMD_WRITE`
+(EVE host libraries, e.g. FT81x HAL) wraps from `308FFFh` to `308000h`.
+`COLOR_MASK` without color channels draws only tags (alpha masks are not
+visible), `CMD_LOADIMAGE` skips the JPEG/PNG image (not decoded). Options and
+methods are described in the model file.
 
 Example (`boards/example.lua`, page `panel/example/`, demo
 `demos/evedemo.lua`) – BT817 on SPI:3, CS PD0, INT_N PD1:
