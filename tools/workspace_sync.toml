@@ -1,8 +1,11 @@
 # Example definition of the synchronization of a project with the dnx RTOS
 # workspace (tools/workspace_sync.py). Copy it to utils/workspace_sync.toml of
 # the project and adjust it. Relative paths of the workspace and of the kernel
-# are relative to the directory of the definition file, paths of [[sync]]
-# entries are relative to the workspace (src) and to the project (dst).
+# are relative to the directory of the definition file (symbolic links are
+# resolved: ".." of a linked directory is the parent of its target), paths of
+# [[sync]] entries are relative to the workspace (src) and to the project (dst).
+# A destination or kernel directory that is a symbolic link in the project is
+# skipped: the linked directory is shared with its target and is not changed.
 #
 # Patterns of include and exclude: pattern without '/' matches the name of any
 # path component ("build", "*.bak"), pattern with '/' matches the path relative

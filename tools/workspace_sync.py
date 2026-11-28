@@ -59,7 +59,7 @@ try:
 except ModuleNotFoundError:
     sys.exit("[error] Python 3.11 or newer is required (tomllib)")
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 DEFAULT_CONFIG = "utils/workspace_sync.toml"
 STEPS = ("files", "kernel", "config")
 MODES = ("mirror", "update")
@@ -100,9 +100,21 @@ def is_git_repo(path):
 
 
 def abspath(base, path):
-    """Path relative to base (or absolute, with ~ expanded)."""
+    """Path relative to base (or absolute, with ~ expanded), symbolic links are
+    resolved (".." of a link is the parent of its target)."""
     path = os.path.expanduser(path)
-    return os.path.normpath(path if os.path.isabs(path) else os.path.join(base, path))
+    return os.path.realpath(path if os.path.isabs(path) else os.path.join(base, path))
+
+
+def project_link(rel):
+    """Target of symbolic link when path of project (or one of its directories
+    in the project) is a link, None otherwise."""
+    path = ROOT_DIR
+    for part in rel.split("/"):
+        path = os.path.join(path, part)
+        if os.path.islink(path):
+            return os.path.realpath(path)
+    return None
 
 
 #-------------------------------------------------------------------------------
@@ -352,6 +364,10 @@ def step_files(cfg, ws_dir, args):
         if not os.path.lexists(src):
             raise SyncError(f"not found in workspace: {e['src']}")
         name = e["src"] if e["src"] == e["dst"] else f"{e['src']} -> {e['dst']}"
+        link = project_link(e["dst"])
+        if link:
+            log(f"    {name}: skipped, symbolic link to {link}")
+            continue
         changes = sync_tree(src, dst, e["mode"], e["include"],
                             exclude_all + e["exclude"], args.dry_run)
         report(f"{name} ({e['mode']})", changes, args.verbose)
@@ -371,6 +387,11 @@ def step_kernel(cfg, ws, args):
 
     if source == "none":
         log("==> Kernel: not synchronized (source = \"none\")")
+        return
+
+    link = project_link("kernel")
+    if link:
+        log(f"==> Kernel: skipped, symbolic link to {link}")
         return
 
     if source == "path":

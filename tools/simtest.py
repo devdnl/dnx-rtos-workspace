@@ -57,6 +57,9 @@
 #           - perf stress tests (threads, heap, synchronization objects, processes), with --perf
 #             option also performance measurements of perf program,
 #           - inettest (TCP/IP, only with --tap option, TAP interface must be prepared),
+#           - uptime wrap (separate simulator started by option --uptime before 32-bit millisecond
+#             counters wrap, e.g. lwIP time): network of board, udstest and perf stress tests
+#             executed after the wrap,
 #           - no application crash and kernel panic.
 #
 #         Option --iostat prints block device statistics (iostat) of file system tests.
@@ -130,6 +133,7 @@ SDSPI_FSTEST_TIMEOUT = 600  # seconds (SD card model over SPI, about 2.5 minutes
 NETTEST_TIMEOUT = 600       # seconds
 PERF_TIMEOUT = 300          # seconds
 PERF_SIM_TOLERANCE = 100    # ms, allowed delay of wake-up in perf stress tests (perf -j)
+WRAP_BEFORE = 20000         # ms, uptime wrap tests: simulator starts this time before 2^32 ms
 QUIET_TIME = 0.3            # seconds without output after prompt
 
 SECTOR_SIZE = 512
@@ -609,6 +613,67 @@ class TestRunner:
         finally:
             sim.stop()
 
+    # simulator started by option --uptime before 2^32 ms (49.7 days): 32-bit millisecond counters
+    # (lwIP time, timeouts of programs) wrap, tests are executed after the wrap
+    def uptime_wrap_test(self, log, tmpdir):
+        names = ["uptime wrap: time", "uptime wrap: udstest", "uptime wrap: perf: stress"]
+        if self.args.board:
+            names.insert(1, "uptime wrap: board: net")
+        if not any(self.selected(n) for n in names):
+            return
+
+        hostfs_dir = os.path.join(tmpdir, "wrap-hostfs")
+        shutil.copytree(os.path.join(self.args.root, "sim-env", "tests"), os.path.join(hostfs_dir, "sim-env"))
+
+        start_ms = (1 << 32) - WRAP_BEFORE
+        argv = [self.args.sim, "--disk", "0=%s:ro" % self.args.rom, "--hostfs", "host=" + hostfs_dir,
+                "--uptime", str(start_ms)]
+        if self.args.board:
+            argv += ["--board", self.args.board]
+
+        log.write("\n$ %s\n" % " ".join(argv))
+        t0 = time.time()
+        sim = Simulator(argv, log, self.args.verbose)
+        try:
+            if not sim.read(BOOT_TIMEOUT, lambda: "\n$ " in sim.out):
+                self.result(names[0], FAIL, "system does not start (see log: %s)" % self.args.log)
+                return
+
+            # network of board configured by netmgr, then wait for the wrap
+            if self.args.board:
+                end = time.time() + NETWORK_TIMEOUT
+                while time.time() < end:
+                    ok, out = sim.run("ifconfig")
+                    if (not ok) or ("STATIC IP" in out) or ("DHCP CONFIGURED" in out):
+                        break
+                    sim.read(1)
+
+            wait = WRAP_BEFORE / 1000 + 2 - (time.time() - t0)
+            if wait > 0:
+                sim.read(wait)
+            sim.read(0.5)
+            sim.run("")
+
+            # uptime after the wrap (2^32 ms = 49 days 17:02:47.296), less than 1 minute later
+            if self.selected(names[0]):
+                ok, out = sim.run("lua -e \"print('uptime_ms=' .. require('dnx').sys.uptime())\"")
+                m = re.search(r"uptime_ms=(\d+)", out)
+                ms = int(m.group(1)) if m else 0
+                after = (1 << 32) <= ms < (1 << 32) + 60000
+                self.result(names[0], PASS if ok and after else FAIL,
+                            ("uptime %u ms (2^32 + %d ms)" % (ms, ms - (1 << 32))) if m else "uptime not found")
+
+            if self.args.board:
+                self.summary_test(sim, "uptime wrap: board: net", "/host/sim-env", "lua net.lua", DEFAULT_TIMEOUT)
+            self.summary_test(sim, "uptime wrap: udstest", None, "udstest -t", NETTEST_TIMEOUT)
+            self.summary_test(sim, "uptime wrap: perf: stress", None, "perf -s -j %u" % PERF_SIM_TOLERANCE,
+                              PERF_TIMEOUT)
+
+            if CRASH.search(sim.out):
+                self.result("uptime wrap (crash)", FAIL, "see log: %s" % self.args.log)
+        finally:
+            sim.stop()
+
     def summary_test(self, sim, name, cwd, cmd, timeout, setup=(), device=None):
         if not self.selected(name):
             return
@@ -1012,6 +1077,9 @@ class TestRunner:
 
             # partition with incorrect header: system starts without partition
             self.drvset_bad_image_test(log, tmpdir)
+
+            # 32-bit millisecond counters wrap (separate simulator)
+            self.uptime_wrap_test(log, tmpdir)
 
             if self.selected("crash") or not args.filter:
                 if CRASH.search(sim.out):

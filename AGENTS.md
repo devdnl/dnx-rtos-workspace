@@ -196,7 +196,15 @@ Notes:
   compiled without dnx `lib/` headers (dnx redefines `pid_t`, `time_t`,
   `struct timeval`, ...). The only interface between both sides is
   `src/cpu/posix/host/host.h` (basic C types only). Host calls are short,
-  non-blocking and executed in the critical section.
+  non-blocking and executed in the critical section (`lock()`: the function
+  name is kept, Ctrl+\ prints the running process and its blocked host call;
+  termination signals are not blocked by the port, so a blocked host call does
+  not prevent termination). `--uptime <ms>` sets the initial uptime (dnx tick
+  counter, not FreeRTOS tick) for tests of 32-bit millisecond counters wrap
+  (simtest "uptime wrap"). Timeouts of board conditions use `CLOCK_MONOTONIC`.
+  Board requests (I2C/SPI) never wait without limit (mutexes locked with the
+  request timeout); `request timeout` shows the reason and the work of the board
+  thread (e.g. `board does not respond, board thread: timers of models for 5003 ms`).
 - `--uart <n>=pty[:<link>]|<device>|board` connects UART0..15 to PTY, host
   serial port or board model (UART0 is the simulator terminal by default).
   `uart/posix` sends data in chunks (writer or service thread), host writes

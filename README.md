@@ -358,6 +358,10 @@ options: `tools/workspace_sync.toml`):
 - configuration: `tools/config_sync.sh` with BSP files of the project that
   restore its configuration.
 
+Destinations and the kernel that are symbolic links in the project (shared
+directories) are skipped; relative paths of the definition resolve symbolic
+links.
+
 Options (`SYNC_OPTS="..."` of make): `-n` shows changes without changing
 anything, `-v` lists changed files, `-s files,kernel,config` selects steps,
 `-c FILE` another definition file, `-f` synchronizes even with uncommitted
@@ -480,7 +484,7 @@ started also outside the container. Program options:
 ```
 build/dnx-sim [--ram <KiB>] [--disk <n>=<file>[:ro]] [--hostfs <name>=<dir>]
               [--uart <n>=pty[:<link>]|<device>] [--tap <name>]
-              [--board <script> [--panel <socket>]]
+              [--board <script> [--panel <socket>]] [--uptime <ms>]
 make run-sim SIM_OPTS="--hostfs host=."
 ```
 - `--ram` sets size of RAM (in KiB),
@@ -527,11 +531,18 @@ make run-sim SIM_OPTS="--hostfs host=."
   in a web browser by `tools/simpanel.py`,
   e.g. `make run-sim PANEL=1 SIM_OPTS="--board sim-env/boards/example.lua"`
   and `http://localhost:8080`; pages are defined in `sim-env/panel/`
-  (see `sim-env/README.md`).
+  (see `sim-env/README.md`),
+- `--uptime` sets the initial system time (uptime) in milliseconds, e.g.
+  `--uptime 4294900000` starts about 1 minute before 32-bit millisecond
+  counters wrap (2^32 ms = 49.7 days: lwIP time, timeouts of programs stored in
+  32 bits); the tick counter of FreeRTOS is not changed (it handles its own wrap).
 
 RTC (`/dev/rtc`) uses the host clock, time set in dnx is kept as offset to the
-host time (until simulator restart). `Ctrl+\` terminates the simulator,
-`reboot` restarts it with the same options.
+host time (until simulator restart). `Ctrl+\` terminates the simulator also
+when it does not respond (e.g. a task blocked in a call of the host library),
+the message shows the process running at that moment and its blocked host call,
+e.g. `*** dnx RTOS simulator terminated (process "cat", blocked in host call
+_host_fs_open) ***`; `reboot` restarts the simulator with the same options.
 
 #### Disk images
 Disk image with FAT and ext4 partitions can be created e.g. by:
@@ -650,6 +661,7 @@ test programs are executed in the shell and their `SUMMARY:` lines are checked:
 | `dsh: pipeline`  | shell pipeline finishes when the writer ends (EOF of pipe) |
 | `libc: stdio`    | `stdiotest` (test appset): buffering of regular files, `setvbuf()` modes and user buffer, `fseek()`/`ftell()`, update mode, `ungetc()`, `fgets()`, big blocks, `fflush(NULL)`, flush at return from `main()` and `exit()`, EOF of closed pipe, `flockfile()` with threads |
 | `inettest`       | TCP/IP (only with `--tap`) |
+| `uptime wrap: ...` | separate simulator started by `--uptime` 20 s before 2^32 ms: uptime after the wrap, network of the board (`net.lua`), `udstest`, `perf -s` executed after 32-bit millisecond counters wrap |
 | no crash/panic   | no APP CRASH or KERNEL PANIC during tests |
 
 ```
