@@ -149,13 +149,15 @@ CXXFLAGS = -c -MMD -MP \
            -g \
            -ggdb3 \
            -Os \
-           -std=c++20 \
+           -std=gnu++20 \
            -ffunction-sections \
            -fno-rtti \
            -fno-exceptions \
            -fno-threadsafe-statics \
            -fno-use-cxa-atexit \
            -fno-unwind-tables \
+           -fdata-sections \
+           -fno-asynchronous-unwind-tables \
            $(MCU_CFLAGS) \
            -Wall \
            -Wextra \
@@ -170,6 +172,8 @@ CXXFLAGS = -c -MMD -MP \
            -Werror=stringop-overflow \
            -Werror=overflow \
            -Werror=array-bounds \
+           -Wno-missing-field-initializers \
+           -nostdinc++ \
            -include $(CONFIG) \
            -ffile-prefix-map=$(WORKSPACE)/= \
            -I$(BUILD_DIR)\
