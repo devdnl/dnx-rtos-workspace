@@ -208,6 +208,7 @@
 		["__EMI_SDRAM_REFRESH_RATE_MS__"]="64";
 		["__EMI_SDRAM_RPIPE__"]="2";
 		["__EMI_SDRAM_SDCLK__"]="2";
+		["__EMI_SDRAM_TEST_ENABLE__"]="_YES_";
 		["__EMI_SDRAM_TMRD__"]="2";
 		["__EMI_SDRAM_TRAS_NS__"]="42";
 		["__EMI_SDRAM_TRC_NS__"]="60";

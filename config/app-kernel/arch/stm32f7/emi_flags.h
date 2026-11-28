@@ -166,6 +166,15 @@ this:AddWidget("Spinbox", 1, 128, "SDRAM: Refresh rate [ms]")
 --*/
 #define __EMI_SDRAM_REFRESH_RATE_MS__ 64
 
+/*--
+this:AddWidget("Combobox", "SDRAM: Memory test at startup")
+this:AddItem("Disable", "_NO_")
+this:AddItem("Enable", "_YES_")
+this:SetToolTip("Test of memory and measurement of transfer speed at driver initialization. "..
+                "Disable to speed up system start.")
+--*/
+#define __EMI_SDRAM_TEST_ENABLE__ _YES_
+
 /*----------------------------------------------------------------------------*/
 /*--
 this:AddWidget("Combobox", "SDRAM1: Memory bank")
