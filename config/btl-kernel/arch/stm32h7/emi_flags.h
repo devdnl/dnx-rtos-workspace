@@ -96,14 +96,25 @@ this:AddItem("3 x HCLK periods", "3")
 #define __EMI_SDRAM_SDCLK__ 2
 
 /*--
-this:AddWidget("Spinbox", 1, 16, "SDRAM: Row precharge delay (tRP)")
+this:AddWidget("Spinbox", 1, 200, "SDRAM: Clock frequency (SDCLK) [MHz]")
+this:SetToolTip("Frequency of the SDRAM clock: FMC clock divided by SDRAM clock period "..
+                "(round up). It is used to calculate timings given in ns.")
 --*/
-#define __EMI_SDRAM_TRP__ 2
+#define __EMI_SDRAM_FREQ_MHZ__ 100
 
 /*--
-this:AddWidget("Spinbox", 1, 16, "SDRAM: Row cycle delay (tRC)")
+this:AddWidget("Spinbox", 1, 1000, "SDRAM: Row precharge delay (tRP) [ns]")
+this:SetToolTip("Value from the SDRAM datasheet [ns]. Round up fractional values. "..
+                "Number of clock cycles is calculated from the SDRAM clock frequency.")
 --*/
-#define __EMI_SDRAM_TRC__ 7
+#define __EMI_SDRAM_TRP_NS__ 18
+
+/*--
+this:AddWidget("Spinbox", 1, 1000, "SDRAM: Row cycle delay (tRC) [ns]")
+this:SetToolTip("Value from the SDRAM datasheet [ns]: the greater of tRC and tRFC. "..
+                "Round up fractional values.")
+--*/
+#define __EMI_SDRAM_TRC_NS__ 60
 
 /*--
 this:AddWidget("Spinbox", 1, 3, "SDRAM: CAS Latency (CAS)")
@@ -111,22 +122,35 @@ this:AddWidget("Spinbox", 1, 3, "SDRAM: CAS Latency (CAS)")
 #define __EMI_SDRAM_CAS__ 3
 
 /*--
-this:AddWidget("Spinbox", 1, 16, "SDRAM: Self refresh time (tRAS)")
+this:AddWidget("Spinbox", 1, 1000, "SDRAM: Self refresh time (tRAS) [ns]")
+this:SetToolTip("Value from the SDRAM datasheet [ns]. Round up fractional values. "..
+                "Number of clock cycles is calculated from the SDRAM clock frequency.")
 --*/
-#define __EMI_SDRAM_TRAS__ 4
+#define __EMI_SDRAM_TRAS_NS__ 42
 
 /*--
-this:AddWidget("Spinbox", 1, 16, "SDRAM: Exit Self-refresh delay (tXSR)")
+this:AddWidget("Spinbox", 1, 1000, "SDRAM: Exit Self-refresh delay (tXSR) [ns]")
+this:SetToolTip("Value from the SDRAM datasheet [ns]. Round up fractional values. "..
+                "Number of clock cycles is calculated from the SDRAM clock frequency.")
 --*/
-#define __EMI_SDRAM_TXSR__ 7
+#define __EMI_SDRAM_TXSR_NS__ 70
 
 /*--
-this:AddWidget("Spinbox", 1, 16, "SDRAM: Write Recovery Time (tWR)")
+this:AddWidget("Spinbox", 0, 1000, "SDRAM: Write Recovery Time (tWR) [ns]")
+this:SetToolTip("Value from the SDRAM datasheet [ns] (tWR, tDPL or tRDL). Set 0 if "..
+                "the datasheet gives the value only in clock cycles.")
 --*/
-#define __EMI_SDRAM_TWR__ 2
+#define __EMI_SDRAM_TWR_NS__ 12
 
 /*--
-this:AddWidget("Spinbox", 1, 16, "SDRAM: Load to Active delay (tMRD)")
+this:AddWidget("Spinbox", 1, 16, "SDRAM: Write Recovery Time (tWR) minimum [cycles]")
+this:SetToolTip("Minimal number of cycles. The greater value of this and tWR [ns] is used. "..
+                "The driver increases it when required by FMC (tRAS - tRCD, tRC - tRCD - tRP).")
+--*/
+#define __EMI_SDRAM_TWR_MIN_CLK__ 2
+
+/*--
+this:AddWidget("Spinbox", 1, 16, "SDRAM: Load to Active delay (tMRD) [cycles]")
 this:SetToolTip("Define the delay between a Load Mode Register command and an "..
                 "Active or Refresh command.")
 --*/
@@ -183,9 +207,11 @@ this:AddItem("11 bits", "3")
 #define __EMI_SDRAM_1_NC__ 0
 
 /*--
-this:AddWidget("Spinbox", 1, 16, "SDRAM1: Row to column delay (tRCD)")
+this:AddWidget("Spinbox", 1, 1000, "SDRAM1: Row to column delay (tRCD) [ns]")
+this:SetToolTip("Value from the SDRAM datasheet [ns]. Round up fractional values. "..
+                "Number of clock cycles is calculated from the SDRAM clock frequency.")
 --*/
-#define __EMI_SDRAM_1_TRCD__ 2
+#define __EMI_SDRAM_1_TRCD_NS__ 18
 
 /*--
 this:AddWidget("Editline", true, "SDRAM1: Memory regions")
@@ -234,9 +260,11 @@ this:AddItem("11 bits", "3")
 #define __EMI_SDRAM_2_NC__ 1
 
 /*--
-this:AddWidget("Spinbox", 1, 16, "SDRAM2: Row to column delay (tRCD)")
+this:AddWidget("Spinbox", 1, 1000, "SDRAM2: Row to column delay (tRCD) [ns]")
+this:SetToolTip("Value from the SDRAM datasheet [ns]. Round up fractional values. "..
+                "Number of clock cycles is calculated from the SDRAM clock frequency.")
 --*/
-#define __EMI_SDRAM_2_TRCD__ 2
+#define __EMI_SDRAM_2_TRCD_NS__ 18
 
 /*--
 this:AddWidget("Editline", true, "SDRAM2: Memory regions")
